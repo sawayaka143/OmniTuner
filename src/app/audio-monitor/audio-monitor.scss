@@ -1,0 +1,106 @@
+:host {
+  display: block;
+  padding: 1.5rem;
+  font-family: system-ui, sans-serif;
+}
+
+.monitor {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+h2 {
+  margin: 0 0 1rem;
+  font-weight: 500;
+}
+
+.toggle-btn {
+  padding: 0.6rem 1.4rem;
+  font-size: 1rem;
+  cursor: pointer;
+  border: 1px solid #888;
+  border-radius: 6px;
+  background: #f5f5f5;
+
+  &:hover {
+    background: #e0e0e0;
+  }
+}
+
+.status {
+  margin: 0.75rem 0;
+  font-size: 0.9rem;
+
+  &.active {
+    color: #2e7d32;
+  }
+
+  &.idle {
+    color: #888;
+  }
+}
+
+.freq-display {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.freq-value {
+  font-size: 2rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: #1b5e20;
+}
+
+.freq-value--inactive {
+  color: #ccc;
+}
+
+.note-name {
+  font-size: 1.6rem;
+  font-weight: 500;
+  color: #333;
+
+  &.sharp {
+    color: #e65100;
+  }
+}
+
+.cents {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #555;
+
+  &.flat {
+    color: #1565c0;
+  }
+
+  &.sharp {
+    color: #e65100;
+  }
+}
+
+.bars-container {
+  margin-top: 1.5rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 0.5rem;
+  background: #fafafa;
+}
+
+.bars {
+  display: flex;
+  align-items: flex-end;
+  height: 200px;
+  gap: 1px;
+}
+
+.bar {
+  flex: 1;
+  min-width: 1px;
+  background: linear-gradient(to top, #43a047, #66bb6a);
+  border-radius: 1px 1px 0 0;
+  transition: height 30ms linear;
+}

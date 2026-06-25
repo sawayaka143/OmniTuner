@@ -1,0 +1,38 @@
+<div class="monitor">
+  <h2>Microphone Audio Monitor</h2>
+
+  <button (click)="toggleCapture()" class="toggle-btn">
+    {{ isCapturing() ? '⏹ Stop Capture' : '🎤 Start Capture' }}
+  </button>
+
+  @if (isCapturing()) {
+    <p class="status active">Capturing …</p>
+  } @else {
+    <p class="status idle">Idle — click Start to begin</p>
+  }
+
+  <div class="freq-display">
+    @if (frequency(); as freq) {
+      <span class="freq-value">{{ freq.toFixed(1) }} Hz</span>
+    } @else {
+      <span class="freq-value freq-value--inactive">— Hz</span>
+    }
+    @if (noteInfo(); as note) {
+      <span class="note-name" [class.sharp]="note.name.includes('#')">{{ note.name }}</span>
+      <span class="cents" [class.flat]="note.cents < -5" [class.sharp]="note.cents > 5">
+        @if (note.cents > 0) { +{{ note.cents }}¢ }
+        @else { {{ note.cents }}¢ }
+      </span>
+    }
+  </div>
+
+  @if (audioData(); as data) {
+    <div class="bars-container">
+      <div class="bars">
+        @for (value of data; track $index) {
+          <div class="bar" [style.height.px]="barHeight(value)"></div>
+        }
+      </div>
+    </div>
+  }
+</div>
