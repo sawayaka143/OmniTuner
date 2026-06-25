@@ -31,9 +31,6 @@
  $radius-full: 0.75rem;
  $radius-pill: 9999px;
 
-// --- Fonts ---
-@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;600&family=Hanken+Grotesk:wght@300;400;500&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 
 // --- Base Layout ---
 .tuner-app {
@@ -57,14 +54,16 @@
 }
 
 .header-inner {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   padding: $stack-md $container-padding;
   padding-left: 24px;
 }
 
 .app-title {
+  grid-column: 1;
+  justify-self: start;
   font-size: 24px;
   line-height: 32px;
   font-weight: 500;
@@ -78,6 +77,8 @@
 }
 
 .nav-desktop {
+  grid-column: 2;
+  justify-self: center;
   display: none;
   align-items: center;
   gap: 24px;
@@ -123,6 +124,13 @@
   }
 }
 
+.header-actions {
+  grid-column: 3;
+  justify-self: end;
+  display: flex;
+  align-items: center;
+}
+
 .icon-btn {
   background: none;
   border: none;
@@ -138,34 +146,42 @@
   }
 }
 
-// --- Main Content ---
 .app-main {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  max-width: 640px;
-  margin: 0 auto;
   width: 100%;
-  padding: $stack-lg $container-padding;
+  padding: $stack-lg 0;
   gap: $stack-lg;
   position: relative;
   box-sizing: border-box;
 }
 
-// --- Selectors ---
 .selectors {
   width: 100%;
+  padding: 0 $container-padding;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   align-items: center;
   gap: $stack-md;
   z-index: 10;
   
-  @media (min-width: 768px) {
-    flex-direction: row;
+  @media (min-width: 480px) {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    
+    .toggle-group {
+      grid-column: 2;
+    }
+    
+    .dropdown-btn {
+      grid-column: 3;
+      justify-self: end;
+    }
   }
 }
 
@@ -247,13 +263,16 @@
 // --- Meter Area ---
 .meter-area {
   width: 100%;
+  max-width: 640px;
+  padding: 0 $container-padding;
+  box-sizing: border-box;
   flex-grow: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   position: relative;
-  margin: $stack-lg 0;
+  margin: $stack-md 0 0 0;
 }
 
 .meter-arc {
@@ -430,17 +449,18 @@
 // --- Strings Grid ---
 .strings-grid {
   width: 100%;
+  max-width: 360px;
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  gap: $unit;
-  margin-top: auto;
+  gap: 6px;
+  margin-top: 0;
 }
 
 .string-btn {
   background-color: $color-surface-container-high;
   border: 1px solid $color-outline-variant;
-  padding: 12px 0;
-  border-radius: $radius-default;
+  padding: 8px 0;
+  border-radius: $radius-lg;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -464,63 +484,12 @@
 
 .string-note {
   font-family: 'Geist', sans-serif;
-  font-size: 14px;
-  line-height: 20px;
+  font-size: 12px;
+  line-height: 16px;
   color: $color-on-surface-variant;
   
   .string-btn.active & {
     color: $color-primary;
     font-weight: 700;
-  }
-}
-
-// --- Footer ---
-.app-footer {
-  background-color: $color-surface-dim;
-  margin-top: auto;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.footer-inner {
-  max-width: 640px;
-  margin: 0 auto;
-  padding: $stack-lg $container-padding;
-  border-top: 1px solid $color-outline-variant;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: $stack-sm;
-}
-
-.footer-text {
-  font-family: 'Geist', sans-serif;
-  font-size: 12px;
-  line-height: 16px;
-  letter-spacing: 0.1em;
-  font-weight: 600;
-  color: $color-on-surface-variant;
-  margin: 0;
-}
-
-.footer-links {
-  display: flex;
-  gap: 16px;
-
-  a {
-    font-family: 'Geist', sans-serif;
-    font-size: 12px;
-    line-height: 16px;
-    letter-spacing: 0.1em;
-    font-weight: 600;
-    color: $color-on-surface-variant;
-    opacity: 0.6;
-    text-decoration: underline;
-    transition: color 0.2s, opacity 0.2s;
-
-    &:hover {
-      color: $color-primary;
-      opacity: 1;
-    }
   }
 }
