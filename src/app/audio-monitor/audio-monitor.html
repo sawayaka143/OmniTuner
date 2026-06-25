@@ -1,4 +1,4 @@
-<div class="tuner-app">
+<div class="tuner-app" (click)="dropdownOpen() && dropdownOpen.set(false)">
   <!-- TopAppBar -->
   <header class="app-header">
     <div class="header-inner">
@@ -31,15 +31,45 @@
   <main class="app-main">
     <!-- Instrument & Tuning Selectors -->
     <div class="selectors">
-      <div class="toggle-group">
-        <button class="toggle-btn active">Guitar</button>
-        <button class="toggle-btn">Ukulele</button>
+      <div class="toggle-group" role="radiogroup" aria-label="Instrument selection">
+        @for (inst of instruments; track inst.id) {
+          <button
+            class="toggle-btn"
+            role="radio"
+            [attr.aria-checked]="selectedInstrumentId() === inst.id"
+            [class.active]="selectedInstrumentId() === inst.id"
+            (click)="selectInstrument(inst.id); $event.stopPropagation()">
+            {{ inst.label }}
+          </button>
+        }
       </div>
       
-      <button class="dropdown-btn">
-        <span class="dropdown-label">STANDARD E</span>
-        <span class="material-symbols-outlined dropdown-icon">expand_more</span>
-      </button>
+      <div class="dropdown-wrapper">
+        <button
+          class="dropdown-btn"
+          [attr.aria-expanded]="dropdownOpen()"
+          aria-haspopup="listbox"
+          (click)="toggleDropdown(); $event.stopPropagation()">
+          <span class="dropdown-label">{{ currentTuning().label }}</span>
+          <span class="material-symbols-outlined dropdown-icon"
+                [class.rotated]="dropdownOpen()">expand_more</span>
+        </button>
+
+        @if (dropdownOpen()) {
+          <ul class="dropdown-menu" role="listbox" aria-label="Tuning selection"
+              (click)="$event.stopPropagation()">
+            @for (tuning of availableTunings(); track tuning.id) {
+              <li role="option"
+                  [attr.aria-selected]="currentTuning().id === tuning.id"
+                  class="dropdown-item"
+                  [class.selected]="currentTuning().id === tuning.id"
+                  (click)="selectTuning(tuning.id)">
+                {{ tuning.label }}
+              </li>
+            }
+          </ul>
+        }
+      </div>
     </div>
 
     <!-- Meter Area -->
@@ -84,8 +114,9 @@
     </div>
 
     <!-- Reference Strings (Target Notes) -->
-    <div class="strings-grid">
-      @for (str of guitarStrings; track str.name) {
+    <div class="strings-grid"
+         [style.grid-template-columns]="'repeat(' + currentStrings().length + ', 1fr)'">
+      @for (str of currentStrings(); track str.name) {
         <button class="string-btn" [class.active]="activeString() === str.name">
           <span class="string-note">{{ str.name }}</span>
         </button>

@@ -90,12 +90,11 @@
 
 .nav-link {
   color: $color-on-surface-variant;
+  text-decoration: none;
   transition: color 0.2s;
   
   &.active {
     color: $color-primary;
-    border-bottom: 1px solid $color-primary;
-    padding-bottom: 4px;
     opacity: 0.8;
   }
 
@@ -151,10 +150,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   width: 100%;
-  padding: $stack-lg 0;
-  gap: $stack-lg;
+  padding: $stack-md 0 $stack-lg;
+  gap: $stack-md;
   position: relative;
   box-sizing: border-box;
 }
@@ -178,7 +177,7 @@
       grid-column: 2;
     }
     
-    .dropdown-btn {
+    .dropdown-wrapper {
       grid-column: 3;
       justify-self: end;
     }
@@ -230,6 +229,10 @@
   }
 }
 
+.dropdown-wrapper {
+  position: relative;
+}
+
 .dropdown-btn {
   display: flex;
   align-items: center;
@@ -258,6 +261,61 @@
 .dropdown-icon {
   font-size: 18px;
   color: $color-on-surface-variant;
+  transition: transform 0.2s ease;
+
+  &.rotated {
+    transform: rotate(180deg);
+  }
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 100%;
+  background-color: $color-surface-container-high;
+  border: 1px solid $color-outline-variant;
+  border-radius: $radius-lg;
+  padding: 4px 0;
+  margin: 0;
+  list-style: none;
+  z-index: 100;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  animation: dropdown-appear 0.15s ease-out;
+}
+
+@keyframes dropdown-appear {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-item {
+  font-family: 'Geist', sans-serif;
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  color: $color-on-surface-variant;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+  white-space: nowrap;
+
+  &:hover {
+    background-color: $color-surface-variant;
+    color: $color-on-surface;
+  }
+
+  &.selected {
+    color: $color-primary;
+    background-color: $color-surface-container;
+  }
 }
 
 // --- Meter Area ---
@@ -266,13 +324,11 @@
   max-width: 640px;
   padding: 0 $container-padding;
   box-sizing: border-box;
-  flex-grow: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   position: relative;
-  margin: $stack-md 0 0 0;
+  margin: $stack-sm 0 0 0;
 }
 
 .meter-arc {
@@ -449,9 +505,10 @@
 // --- Strings Grid ---
 .strings-grid {
   width: 100%;
-  max-width: 360px;
+  max-width: 400px;
+  padding: 0 $container-padding;
+  box-sizing: border-box;
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
   gap: 6px;
   margin-top: 0;
 }
