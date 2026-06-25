@@ -1,38 +1,109 @@
-<div class="monitor">
-  <h2>Microphone Audio Monitor</h2>
-
-  <button (click)="toggleCapture()" class="toggle-btn">
-    {{ isCapturing() ? '⏹ Stop Capture' : '🎤 Start Capture' }}
-  </button>
-
-  @if (isCapturing()) {
-    <p class="status active">Capturing …</p>
-  } @else {
-    <p class="status idle">Idle — click Start to begin</p>
-  }
-
-  <div class="freq-display">
-    @if (frequency(); as freq) {
-      <span class="freq-value">{{ freq.toFixed(1) }} Hz</span>
-    } @else {
-      <span class="freq-value freq-value--inactive">— Hz</span>
-    }
-    @if (noteInfo(); as note) {
-      <span class="note-name" [class.sharp]="note.name.includes('#')">{{ note.name }}</span>
-      <span class="cents" [class.flat]="note.cents < -5" [class.sharp]="note.cents > 5">
-        @if (note.cents > 0) { +{{ note.cents }}¢ }
-        @else { {{ note.cents }}¢ }
-      </span>
-    }
-  </div>
-
-  @if (audioData(); as data) {
-    <div class="bars-container">
-      <div class="bars">
-        @for (value of data; track $index) {
-          <div class="bar" [style.height.px]="barHeight(value)"></div>
-        }
+<div class="tuner-app">
+  <!-- TopAppBar -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="app-title">OmniTuner</div>
+      
+      <nav class="nav-desktop">
+        <a class="nav-link active" href="#">Tuner</a>
+      </nav>
+      
+      <div class="actions-mobile">
+        <button class="icon-btn">
+          <span class="material-symbols-outlined">settings</span>
+        </button>
+      </div>
+      
+      <div class="actions-desktop">
+        <button class="icon-btn primary">
+          <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">tune</span>
+        </button>
+        <button class="icon-btn">
+          <span class="material-symbols-outlined">settings</span>
+        </button>
       </div>
     </div>
-  }
+  </header>
+
+  <!-- Main Content Canvas -->
+  <main class="app-main">
+    <!-- Instrument & Tuning Selectors -->
+    <div class="selectors">
+      <div class="toggle-group">
+        <button class="toggle-btn active">Guitar</button>
+        <button class="toggle-btn">Ukulele</button>
+      </div>
+      
+      <button class="dropdown-btn">
+        <span class="dropdown-label">STANDARD E</span>
+        <span class="material-symbols-outlined dropdown-icon">expand_more</span>
+      </button>
+    </div>
+
+    <!-- Meter Area -->
+    <div class="meter-area">
+      <div class="meter-arc">
+        <!-- Ticks Container -->
+        <div class="ticks-container">
+          @for (tick of ticks; track tick.angle) {
+            <div class="tick"
+                 [class.major]="tick.isMajor"
+                 [class.minor]="!tick.isMajor"
+                 [style.transform]="'rotate(' + tick.angle + 'deg)'">
+            </div>
+          }
+        </div>
+
+        <!-- Center Notch -->
+        <div class="center-notch"></div>
+        <div class="in-tune-indicator" [class.in-tune]="isTuned()"></div>
+
+        <!-- The Needle -->
+        <div class="needle" 
+             [class.in-tune]="isTuned()"
+             [style.transform]="'rotate(' + needleAngle() + 'deg)'">
+        </div>
+
+        <!-- Pivot Cover -->
+        <div class="pivot-cover"></div>
+      </div>
+
+      <!-- Pitch Display -->
+      <div class="pitch-display">
+        <div class="pitch-row">
+          <span class="pitch-note">{{ noteInfo()?.noteName || '—' }}</span>
+          <span class="pitch-octave">{{ noteInfo()?.octave || '' }}</span>
+        </div>
+        <div class="pitch-hz">{{ currentHz() }}</div>
+        <div class="pitch-cents" [class.in-tune-text]="isTuned()">
+          {{ centsOffset() }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Reference Strings (Target Notes) -->
+    <div class="strings-grid">
+      @for (str of guitarStrings; track str.name) {
+        <button class="string-btn" [class.active]="activeString() === str.name">
+          <span class="string-note">{{ str.name }}</span>
+        </button>
+      }
+    </div>
+
+    <button (click)="toggleCapture()" class="capture-btn">
+      {{ isCapturing() ? 'Stop' : 'Start' }}
+    </button>
+  </main>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="footer-inner">
+      <p class="footer-text">© 2024 Acoustic Precision. Studio-grade 440Hz Reference.</p>
+      <div class="footer-links">
+        <a href="#">Documentation</a>
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+      </div>
+    </div>
+  </footer>
 </div>
