@@ -17,7 +17,7 @@ export class AudioCaptureService {
 
   private smoothedFrequency = 0;
   private readonly SMOOTHING_FACTOR = 0.1;
-  private readonly CONFIDENCE_THRESHOLD = 0.25;
+  private readonly CONFIDENCE_THRESHOLD = 0.3;
 
   constructor() {
     this.worker = new Worker(new URL('./pitch-detector.worker', import.meta.url));
@@ -49,7 +49,7 @@ export class AudioCaptureService {
     this.audioContext = new AudioContext();
     this.source = this.audioContext.createMediaStreamSource(this.stream);
     this.analyser = this.audioContext.createAnalyser();
-    this.analyser.fftSize = 8192;
+    this.analyser.fftSize = 4096;
     this.source.connect(this.analyser);
 
     this.isCapturing.set(true);
