@@ -9,7 +9,7 @@ export const INSTRUMENTS: Instrument[] = [
     tunings: [
       {
         id: 'standard',
-        label: 'STANDARD E',
+        label: 'E STANDARD',
         strings: [
           { name: 'E2', freq: 82.41 },
           { name: 'A2', freq: 110.00 },
@@ -33,7 +33,7 @@ export const INSTRUMENTS: Instrument[] = [
       },
       {
         id: 'eb',
-        label: 'E♭',
+        label: 'E♭ STANDARD',
         strings: [
           { name: 'E♭2', freq: 77.78 },
           { name: 'A♭2', freq: 103.83 },
