@@ -1,25 +1,24 @@
-<div class="tuner-app" (click)="dropdownOpen() && dropdownOpen.set(false)">
-  <!-- TopAppBar -->
+<!--<div class="tuner-app" (click)="dropdownOpen() && dropdownOpen.set(false)">
   <header class="app-header">
     <div class="header-inner">
       <div class="app-title">OmniTuner</div>
-      
+
       <nav class="nav-desktop">
         <a class="nav-link active" href="#">Tuner</a>
       </nav>
-      
+
       <div class="header-actions">
         <div class="actions-mobile">
-          <button class="icon-btn">
+          <button class="btn ghost">
             <span class="material-symbols-outlined">settings</span>
           </button>
         </div>
-        
+
         <div class="actions-desktop">
-          <button class="icon-btn primary">
+          <button class="btn ghost">
             <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">tune</span>
           </button>
-          <button class="icon-btn">
+          <button class="btn ghost">
             <span class="material-symbols-outlined">settings</span>
           </button>
         </div>
@@ -27,14 +26,11 @@
     </div>
   </header>
 
-  <!-- Main Content Canvas -->
   <main class="app-main">
-    <!-- Instrument & Tuning Selectors -->
     <div class="selectors">
-      <div class="toggle-group" role="radiogroup" aria-label="Instrument selection">
+      <div class="seg" role="radiogroup" aria-label="Instrument selection">
         @for (inst of instruments; track inst.id) {
           <button
-            class="toggle-btn"
             role="radio"
             [attr.aria-checked]="selectedInstrumentId() === inst.id"
             [class.active]="selectedInstrumentId() === inst.id"
@@ -43,10 +39,10 @@
           </button>
         }
       </div>
-      
+
       <div class="dropdown-wrapper">
         <button
-          class="dropdown-btn"
+          class="btn"
           [attr.aria-expanded]="dropdownOpen()"
           aria-haspopup="listbox"
           (click)="toggleDropdown(); $event.stopPropagation()">
@@ -56,7 +52,7 @@
         </button>
 
         @if (dropdownOpen()) {
-          <ul class="dropdown-menu" role="listbox" aria-label="Tuning selection"
+          <ul class="dropdown-menu card" role="listbox" aria-label="Tuning selection"
               (click)="$event.stopPropagation()">
             @for (tuning of availableTunings(); track tuning.id) {
               <li role="option"
@@ -72,10 +68,8 @@
       </div>
     </div>
 
-    <!-- Meter Area -->
     <div class="meter-area">
-      <div class="meter-arc">
-        <!-- Ticks Container -->
+      <div class="meter-arc card">
         <div class="ticks-container">
           @for (tick of ticks; track tick.angle) {
             <div class="tick"
@@ -86,21 +80,17 @@
           }
         </div>
 
-        <!-- Center Notch -->
         <div class="center-notch"></div>
         <div class="in-tune-indicator" [class.in-tune]="isTuned()"></div>
 
-        <!-- The Needle -->
-        <div class="needle" 
+        <div class="needle"
              [class.in-tune]="isTuned()"
              [style.transform]="'rotate(' + needleAngle() + 'deg)'">
         </div>
 
-        <!-- Pivot Cover -->
         <div class="pivot-cover"></div>
       </div>
 
-      <!-- Pitch Display -->
       <div class="pitch-display">
         <div class="pitch-row">
           <span class="pitch-note">{{ noteInfo()?.noteName || '—' }}</span>
@@ -113,7 +103,6 @@
       </div>
     </div>
 
-    <!-- Reference Strings (Target Notes) -->
     <div class="strings-grid"
          [style.grid-template-columns]="'repeat(' + currentStrings().length + ', 1fr)'">
       @for (str of currentStrings(); track str.name) {
@@ -123,10 +112,134 @@
       }
     </div>
 
-    <button (click)="toggleCapture()" class="capture-btn">
+    <button (click)="toggleCapture()" class="btn primary" style="min-width: 140px">
       {{ isCapturing() ? 'Stop' : 'Start' }}
     </button>
   </main>
+</div>-->
 
 
+<div class="tuner-app" (click)="dropdownOpen() && dropdownOpen.set(false)">
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="app-title">OmniTuner</div>
+
+      <nav class="nav-desktop">
+        <a class="nav-link active" href="#">Tuner</a>
+      </nav>
+
+      <div class="header-actions">
+        <div class="actions-mobile">
+          <button class="btn ghost">
+            <span class="material-symbols-outlined">settings</span>
+          </button>
+        </div>
+
+        <div class="actions-desktop">
+          <button class="btn ghost">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">tune</span>
+          </button>
+          <button class="btn ghost">
+            <span class="material-symbols-outlined">settings</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <div class="selectors">
+      <div class="seg" role="radiogroup" aria-label="Instrument selection" [style.--seg-count]="instruments.length">
+        <div class="seg-indicator" [style.transform]="'translateX(' + (selectedInstrumentIndex() * 100) + '%)'"></div>
+        
+        @for (inst of instruments; track inst.id) {
+          <button
+            role="radio"
+            [attr.aria-checked]="selectedInstrumentId() === inst.id"
+            [class.active]="selectedInstrumentId() === inst.id"
+            (click)="selectInstrument(inst.id); $event.stopPropagation()">
+            {{ inst.label }}
+          </button>
+        }
+      </div>
+
+      <div class="dropdown-wrapper">
+        <button
+          class="btn"
+          [attr.aria-expanded]="dropdownOpen()"
+          aria-haspopup="listbox"
+          (click)="toggleDropdown(); $event.stopPropagation()">
+          <span class="dropdown-label">{{ currentTuning().label }}</span>
+          <span class="material-symbols-outlined dropdown-icon"
+                [class.rotated]="dropdownOpen()">expand_more</span>
+        </button>
+
+        @if (dropdownOpen()) {
+          <ul class="dropdown-menu card" role="listbox" aria-label="Tuning selection"
+              (click)="$event.stopPropagation()">
+            @for (tuning of availableTunings(); track tuning.id) {
+              <li role="option"
+                  [attr.aria-selected]="currentTuning().id === tuning.id"
+                  class="dropdown-item"
+                  [class.selected]="currentTuning().id === tuning.id"
+                  (click)="selectTuning(tuning.id)">
+                {{ tuning.label }}
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    </div>
+
+    <!-- Wrapped in tuner-stage to constrain width perfectly -->
+    <div class="tuner-stage">
+      <div class="meter-area">
+        <div class="meter-arc card">
+          <div class="ticks-container">
+            @for (tick of ticks; track tick.angle) {
+              <div class="tick"
+                   [class.major]="tick.isMajor"
+                   [class.minor]="!tick.isMajor"
+                   [style.transform]="'rotate(' + tick.angle + 'deg)'">
+              </div>
+            }
+          </div>
+
+          <div class="center-notch"></div>
+          <div class="in-tune-indicator" [class.in-tune]="isTuned()"></div>
+
+          <div class="needle"
+               [class.in-tune]="isTuned()"
+               [style.transform]="'rotate(' + needleAngle() + 'deg)'">
+          </div>
+
+          <div class="pivot-cover"></div>
+        </div>
+
+        <div class="pitch-display">
+          <div class="pitch-row">
+            <span class="pitch-note">{{ noteInfo()?.noteName || '—' }}</span>
+            <span class="pitch-octave">{{ noteInfo()?.octave || '' }}</span>
+          </div>
+          <div class="pitch-hz">{{ currentHz() }}</div>
+          <div class="pitch-cents" [class.in-tune-text]="isTuned()">
+            {{ centsOffset() }}
+          </div>
+        </div>
+      </div>
+
+      <div class="strings-grid"
+           [style.grid-template-columns]="'repeat(' + currentStrings().length + ', 1fr)'">
+        @for (str of currentStrings(); track str.name) {
+          <button class="string-btn" [class.active]="activeString() === str.name">
+            <span class="string-note">{{ str.name }}</span>
+          </button>
+        }
+      </div>
+    </div>
+
+    <button (click)="toggleCapture()" class="btn primary capture-btn" style="min-width: 140px">
+      {{ isCapturing() ? 'Stop' : 'Start' }}
+    </button>
+  </main>
 </div>

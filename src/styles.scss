@@ -1,13 +1,152 @@
-@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;600&family=Hanken+Grotesk:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500;6..72,600&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 
-$color-background: #131313;
+:root {
+  --bg:       #15101c;
+  --bg-1:     #1c1626;
+  --bg-2:     #241c30;
+  --bg-3:     #2e2440;
 
-html {
-  background-color: $color-background;
+  --line:     #2c2440;
+  --line-2:   #3d3258;
+
+  --fg:       #ece4f3;
+  --fg-dim:   #b6a8c8;
+  --fg-mute:  #7d6d96;
+  --fg-faint: #4d4263;
+
+  --accent:     #c89fd9;
+  --accent-fg:  #1a1124;
+
+  --ok:   oklch(76% 0.13 150);
+  --warn: oklch(78% 0.14 60);
+  --bad:  oklch(72% 0.17 20);
+
+  --selection: rgba(200, 159, 217, 0.28);
+
+  --serif: 'Newsreader', 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  --r: 4px;
+  --shadow-soft: 0 1px 0 rgba(0, 0, 0, 0.3), 0 4px 14px rgba(0, 0, 0, 0.25);
 }
 
-body {
+html, body {
   margin: 0;
-  background-color: $color-background;
+  background-color: var(--bg);
+  color: var(--fg);
+  font-family: var(--mono);
+}
+
+h1, h2, h3 {
+  font-family: var(--serif);
+  font-weight: 500;
+  letter-spacing: -0.012em;
+}
+
+::selection {
+  background: var(--selection);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: var(--bg-1);
+  color: var(--fg);
+  font-family: var(--mono);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.btn:hover {
+  border-color: var(--fg-mute);
+  background: var(--bg-2);
+}
+
+.btn.primary {
+  background: var(--accent);
+  color: var(--accent-fg);
+  border-color: var(--accent);
+}
+
+.btn.primary:hover {
+  background: color-mix(in oklab, var(--accent) 88%, var(--fg) 12%);
+  border-color: color-mix(in oklab, var(--accent) 88%, var(--fg) 12%);
+}
+
+.btn.ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--fg-dim);
+}
+
+.btn.ghost:hover {
+  background: var(--bg-2);
+  color: var(--fg);
+}
+
+.btn.danger:hover {
+  color: var(--bad);
+  border-color: var(--bad);
+}
+
+input, textarea, select {
+  font-family: var(--mono);
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  padding: 10px 12px;
+  outline: none;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: var(--accent);
+}
+
+.card, .pane {
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: var(--shadow-soft);
+}
+
+.toolbar, .pane-head {
+  background: var(--bg-2);
+  border-bottom: 1px solid var(--line);
+  color: var(--fg-mute);
+  padding: 10px 14px;
+}
+
+.seg, .tabs {
+  display: inline-flex;
+  gap: 2px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: 3px;
+}
+
+.seg button, .tabs button {
+  padding: 6px 14px;
+  border: none;
+  background: transparent;
+  color: var(--fg-mute);
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: var(--mono);
+}
+
+.seg button:hover, .tabs button:hover {
+  color: var(--fg);
+}
+
+.seg button.active, .tabs button.active {
+  background: var(--bg-3);
+  color: var(--fg);
 }
