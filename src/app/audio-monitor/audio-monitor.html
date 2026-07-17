@@ -29,7 +29,8 @@
   <main class="app-main">
     <div class="selectors">
       <div class="seg" role="radiogroup" aria-label="Instrument selection" [style.--seg-count]="instruments.length">
-        <div class="seg-indicator" [style.transform]="'translateX(' + (selectedInstrumentIndex() * 100) + '%)'"></div>
+        <div class="seg-indicator"
+             [style.transform]="'translateX(' + (selectedInstrumentIndex() * 100) + '%)' + (isDeforming() ? ' scaleX(1.18) scaleY(0.82)' : '')"></div>
         
         @for (inst of instruments; track inst.id) {
           <button
@@ -117,7 +118,7 @@
       </div>
     </div>
 
-    <button (click)="toggleCapture()" class="btn primary capture-btn" style="min-width: 140px">
+    <button (click)="toggleCapture()" class="btn primary capture-btn" [class.active]="isCapturing()" style="min-width: 140px">
       {{ isCapturing() ? 'Stop' : 'Start' }}
     </button>
   </main>

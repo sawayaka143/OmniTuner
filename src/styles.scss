@@ -2,25 +2,25 @@
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 
 :root {
-  --bg:       #15101c;
-  --bg-1:     #1c1626;
-  --bg-2:     #241c30;
-  --bg-3:     #2e2440;
+  --bg: #15101c;
+  --bg-1: #1c1626;
+  --bg-2: #241c30;
+  --bg-3: #2e2440;
 
-  --line:     #2c2440;
-  --line-2:   #3d3258;
+  --line: #2c2440;
+  --line-2: #3d3258;
 
-  --fg:       #ece4f3;
-  --fg-dim:   #b6a8c8;
-  --fg-mute:  #7d6d96;
+  --fg: #ece4f3;
+  --fg-dim: #b6a8c8;
+  --fg-mute: #7d6d96;
   --fg-faint: #4d4263;
 
-  --accent:     #c89fd9;
-  --accent-fg:  #1a1124;
+  --accent: #c89fd9;
+  --accent-fg: #1a1124;
 
-  --ok:   oklch(76% 0.13 150);
+  --ok: oklch(76% 0.13 150);
   --warn: oklch(78% 0.14 60);
-  --bad:  oklch(72% 0.17 20);
+  --bad: oklch(72% 0.17 20);
 
   --selection: rgba(200, 159, 217, 0.28);
 
@@ -31,14 +31,17 @@
   --shadow-soft: 0 1px 0 rgba(0, 0, 0, 0.3), 0 4px 14px rgba(0, 0, 0, 0.25);
 }
 
-html, body {
+html,
+body {
   margin: 0;
   background-color: var(--bg);
   color: var(--fg);
   font-family: var(--mono);
 }
 
-h1, h2, h3 {
+h1,
+h2,
+h3 {
   font-family: var(--serif);
   font-weight: 500;
   letter-spacing: -0.012em;
@@ -95,7 +98,9 @@ h1, h2, h3 {
   border-color: var(--bad);
 }
 
-input, textarea, select {
+input,
+textarea,
+select {
   font-family: var(--mono);
   color: var(--fg);
   background: var(--bg);
@@ -105,25 +110,30 @@ input, textarea, select {
   outline: none;
 }
 
-input:focus, textarea:focus, select:focus {
+input:focus,
+textarea:focus,
+select:focus {
   border-color: var(--accent);
 }
 
-.card, .pane {
+.card,
+.pane {
   background: var(--bg-1);
   border: 1px solid var(--line);
   border-radius: 6px;
   box-shadow: var(--shadow-soft);
 }
 
-.toolbar, .pane-head {
+.toolbar,
+.pane-head {
   background: var(--bg-2);
   border-bottom: 1px solid var(--line);
   color: var(--fg-mute);
   padding: 10px 14px;
 }
 
-.seg, .tabs {
+.seg,
+.tabs {
   display: inline-flex;
   gap: 2px;
   background: var(--bg-2);
@@ -132,7 +142,8 @@ input:focus, textarea:focus, select:focus {
   padding: 3px;
 }
 
-.seg button, .tabs button {
+.seg button,
+.tabs button {
   padding: 6px 14px;
   border: none;
   background: transparent;
@@ -142,11 +153,19 @@ input:focus, textarea:focus, select:focus {
   font-family: var(--mono);
 }
 
-.seg button:hover, .tabs button:hover {
+.seg button:hover,
+.tabs button:hover {
   color: var(--fg);
 }
 
-.seg button.active, .tabs button.active {
+.seg button.active,
+.tabs button.active {
   background: var(--bg-3);
   color: var(--fg);
+}
+
+.seg button.active,
+.tabs button.active {
+  background: var(--glass-highlight);
+  color: var(--text);
 }

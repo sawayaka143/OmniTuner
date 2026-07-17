@@ -1,11 +1,11 @@
 import { Component, OnInit, OnDestroy, inject, computed, signal } from '@angular/core';
 import { AudioCaptureService } from '../services/audio-capture-service';
 import { NOTE_NAMES, INSTRUMENTS } from '../data/instrument.constants';
+import { TuningString } from '../models/instrument.model';
 
 interface Tick {
   angle: number;
   isMajor: boolean;
-  isCenter: boolean;
 }
 
 @Component({
@@ -15,7 +15,7 @@ interface Tick {
 })
 export class AudioMonitor implements OnInit, OnDestroy {
   protected readonly selectedInstrumentIndex = computed(() => {
-    return INSTRUMENTS.findIndex(i => i.id === this.selectedInstrumentId());
+    return INSTRUMENTS.findIndex((i) => i.id === this.selectedInstrumentId());
   });
   private readonly audioCapture = inject(AudioCaptureService);
 
@@ -23,31 +23,27 @@ export class AudioMonitor implements OnInit, OnDestroy {
   protected readonly isCapturing = this.audioCapture.isCapturing;
   protected readonly frequency = this.audioCapture.frequency;
 
-  /** Currently selected instrument index */
   protected readonly selectedInstrumentId = signal<string>('guitar');
 
-  /** Currently selected tuning id */
   protected readonly selectedTuningId = signal<string>('standard');
 
-  /** Whether the tuning dropdown is open */
   protected readonly dropdownOpen = signal(false);
 
-  protected readonly currentInstrument = computed(() =>
-    INSTRUMENTS.find(i => i.id === this.selectedInstrumentId()) ?? INSTRUMENTS[0]
+  protected readonly isDeforming = signal(false);
+  private deformTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  protected readonly currentInstrument = computed(
+    () => INSTRUMENTS.find((i) => i.id === this.selectedInstrumentId()) ?? INSTRUMENTS[0],
   );
 
-  protected readonly availableTunings = computed(() =>
-    this.currentInstrument().tunings
-  );
+  protected readonly availableTunings = computed(() => this.currentInstrument().tunings);
 
   protected readonly currentTuning = computed(() => {
     const tunings = this.availableTunings();
-    return tunings.find(t => t.id === this.selectedTuningId()) ?? tunings[0];
+    return tunings.find((t) => t.id === this.selectedTuningId()) ?? tunings[0];
   });
 
-  protected readonly currentStrings = computed(() =>
-    this.currentTuning().strings
-  );
+  protected readonly currentStrings = computed(() => this.currentTuning().strings);
 
   protected readonly instruments = INSTRUMENTS;
 
@@ -66,7 +62,7 @@ export class AudioMonitor implements OnInit, OnDestroy {
       name: `${noteName}${octave}`,
       noteName,
       octave: octave.toString(),
-      cents
+      cents,
     };
   });
 
@@ -90,16 +86,26 @@ export class AudioMonitor implements OnInit, OnDestroy {
     const info = this.noteInfo();
     if (!info) return '—';
     if (Math.abs(info.cents) < 5) return 'IN TUNE';
-    return info.cents < 0
-      ? `${Math.abs(info.cents)}¢ FLAT`
-      : `${info.cents}¢ SHARP`;
+    return info.cents < 0 ? `${Math.abs(info.cents)}¢ FLAT` : `${info.cents}¢ SHARP`;
   });
 
   protected readonly activeString = computed(() => {
-    const info = this.noteInfo();
-    if (!info) return null;
-    const found = this.currentStrings().find(s => s.name === info.name);
-    return found ? found.name : null;
+    const f = this.frequency();
+    if (!f || f <= 0) return null;
+
+    const strings = this.currentStrings();
+    let closest: TuningString | null = null;
+    let minRatio = Infinity;
+
+    for (const s of strings) {
+      const ratio = Math.abs(Math.log2(f / s.freq));
+      if (ratio < minRatio) {
+        minRatio = ratio;
+        closest = s;
+      }
+    }
+
+    return closest && minRatio < 0.09 ? closest.name : null;
   });
 
   public ticks: Tick[] = [];
@@ -119,25 +125,31 @@ export class AudioMonitor implements OnInit, OnDestroy {
     const maxAngle = 60;
 
     for (let i = 0; i < numTicks; i++) {
-      const angle = -maxAngle + (i * (maxAngle * 2) / (numTicks - 1));
-      const isCenter = i === Math.floor(numTicks / 2);
-      const isMajor = i % 5 === 0 && !isCenter;
+      const angle = -maxAngle + (i * (maxAngle * 2)) / (numTicks - 1);
+      const isMajor = i % 5 === 0 && i !== Math.floor(numTicks / 2);
 
-      if (isCenter) continue;
-
-      this.ticks.push({ angle, isMajor, isCenter });
+      this.ticks.push({ angle, isMajor });
     }
   }
 
   protected selectInstrument(instrumentId: string): void {
     if (this.selectedInstrumentId() === instrumentId) return;
     this.selectedInstrumentId.set(instrumentId);
-    // Reset to the first tuning of the new instrument
-    const instrument = INSTRUMENTS.find(i => i.id === instrumentId);
+    const instrument = INSTRUMENTS.find((i) => i.id === instrumentId);
     if (instrument) {
       this.selectedTuningId.set(instrument.tunings[0].id);
     }
     this.dropdownOpen.set(false);
+
+    // Trigger squish deformation on the seg-indicator
+    if (this.deformTimeout !== null) {
+      clearTimeout(this.deformTimeout);
+    }
+    this.isDeforming.set(true);
+    this.deformTimeout = setTimeout(() => {
+      this.isDeforming.set(false);
+      this.deformTimeout = null;
+    }, 220);
   }
 
   protected selectTuning(tuningId: string): void {
@@ -146,7 +158,7 @@ export class AudioMonitor implements OnInit, OnDestroy {
   }
 
   protected toggleDropdown(): void {
-    this.dropdownOpen.update(v => !v);
+    this.dropdownOpen.update((v) => !v);
   }
 
   protected toggleCapture(): void {
