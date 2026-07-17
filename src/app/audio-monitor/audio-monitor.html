@@ -74,26 +74,28 @@
     <!-- Wrapped in tuner-stage to constrain width perfectly -->
     <div class="tuner-stage">
       <div class="meter-area">
-        <div class="meter-arc card">
+        <div class="horizontal-meter">
+          <div class="meter-track"></div>
+          
+          <div class="needle meter-needle" [class.in-tune]="isTuned()" [style.left]="needleLeft()"></div>
+          
           <div class="ticks-container">
-            @for (tick of ticks; track tick.angle) {
-              <div class="tick"
-                   [class.major]="tick.isMajor"
-                   [class.minor]="!tick.isMajor"
-                   [style.transform]="'rotate(' + tick.angle + 'deg)'">
+            @for (tick of ticks; track $index) {
+              <div class="meter-tick"
+                   [class.major]="tick.type === 'major'"
+                   [class.center]="tick.type === 'center'"
+                   [style.left]="tick.leftPos">
               </div>
             }
           </div>
-
-          <div class="center-notch"></div>
-          <div class="in-tune-indicator" [class.in-tune]="isTuned()"></div>
-
-          <div class="needle"
-               [class.in-tune]="isTuned()"
-               [style.transform]="'rotate(' + needleAngle() + 'deg)'">
+          
+          <div class="meter-labels">
+            <span>-50</span>
+            <span>-25</span>
+            <span class="center-label">0</span>
+            <span>+25</span>
+            <span>+50</span>
           </div>
-
-          <div class="pivot-cover"></div>
         </div>
 
         <div class="pitch-display">

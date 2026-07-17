@@ -1,46 +1,7 @@
 @use 'sass:map';
 
-$colors: (
-  background: #15101c,
-  surface: #15101c,
-  surface-dim: #15101c,
-  surface-container-lowest: #15101c,
-  surface-container-low: #1c1626,
-  surface-container: #241c30,
-  surface-container-high: #241c30,
-  surface-container-highest: #2e2440,
-  surface-variant: #2e2440,
-  surface-bright: #2e2440,
-  primary: #ece4f3,
-  on-surface: #ece4f3,
-  on-surface-variant: #b6a8c8,
-  outline-variant: #3d3258,
-  secondary: #c89fd9,
-  fg-mute: #7d6d96,
-  fg-faint: #4d4263,
-  ok: oklch(76% 0.13 150),
-);
-
-$typography: (
-  serif: (
-    'Newsreader',
-    'Source Serif 4',
-    Georgia,
-    'Times New Roman',
-    serif,
-  ),
-  mono: (
-    'JetBrains Mono',
-    ui-monospace,
-    'SF Mono',
-    Menlo,
-    Consolas,
-    monospace,
-  ),
-);
 
 $spacing: (
-  gutter: 16px,
   stack-sm: 8px,
   stack-md: 16px,
   stack-lg: 32px,
@@ -50,8 +11,6 @@ $spacing: (
 
 $radii: (
   default: 4px,
-  lg: 4px,
-  xl: 6px,
   full: 8px,
   pill: 9999px,
 );
@@ -61,13 +20,6 @@ $breakpoints: (
   md: 768px,
 );
 
-@function color($key) {
-  @return map.get($colors, $key);
-}
-
-@function font($key) {
-  @return map.get($typography, $key);
-}
 
 @function spacing($key) {
   @return map.get($spacing, $key);
@@ -106,17 +58,17 @@ $breakpoints: (
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: color(background);
-  color: color(on-surface);
-  font-family: font(mono);
+  background-color: var(--canvas);
+  color: var(--text);
+  font-family: var(--mono);
   font-size: 13.5px;
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   font-feature-settings: 'calt', 'liga';
 
   .app-header {
-    background-color: color(surface-container-low);
-    border-bottom: 1px solid color(surface-container);
+    background-color: var(--surface-container-low);
+    border-bottom: 1px solid var(--surface-container);
     position: sticky;
     top: 0;
     z-index: 50;
@@ -133,12 +85,12 @@ $breakpoints: (
       grid-column: 1;
       justify-self: start;
       align-self: center;
-      font-family: font(mono);
+      font-family: var(--mono);
       font-size: 24px;
       line-height: 1;
       font-weight: 700;
       letter-spacing: -0.015em;
-      color: color(primary);
+      color: var(--text);
     }
 
     .nav-desktop {
@@ -154,18 +106,18 @@ $breakpoints: (
     }
 
     .nav-link {
-      color: color(on-surface-variant);
+      color: var(--muted);
       text-decoration: none;
       transition: color 0.2s;
       font-size: 12.5px;
 
       &.active {
-        color: color(primary);
+        color: var(--text);
         opacity: 0.8;
       }
 
       &:hover {
-        color: color(primary);
+        color: var(--text);
       }
     }
 
@@ -200,7 +152,7 @@ $breakpoints: (
       background: none;
       border: none;
       cursor: pointer;
-      color: color(on-surface-variant);
+      color: var(--muted);
       transition: color 0.2s;
       padding: 0;
       display: flex;
@@ -208,7 +160,7 @@ $breakpoints: (
 
       &:hover,
       &.primary {
-        color: color(primary);
+        color: var(--text);
       }
     }
   }
@@ -255,8 +207,8 @@ $breakpoints: (
   .seg {
     display: flex;
     position: relative;
-    background-color: var(--bg-2);
-    border: 1px solid var(--line);
+    background-color: var(--glass-pill-bg);
+    border: 1px solid var(--glass-border);
     border-radius: radius(pill);
     padding: 3px;
     overflow: hidden;
@@ -267,7 +219,7 @@ $breakpoints: (
       bottom: 3px;
       left: 3px;
       width: calc((100% - 6px) / var(--seg-count, 1));
-      background-color: var(--bg-3);
+      background-color: var(--glass-highlight);
       border-radius: radius(pill);
       transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
       z-index: 0;
@@ -282,12 +234,12 @@ $breakpoints: (
       padding: 8px 24px;
       font-size: 14px;
       font-family: font(mono);
-      color: var(--fg-dim);
+      color: var(--muted);
       cursor: pointer;
       transition: color 0.3s;
 
       &.active {
-        color: var(--fg);
+        color: var(--text);
       }
     }
   }
@@ -303,12 +255,12 @@ $breakpoints: (
 
     .dropdown-label {
       @extend %dropdown-typography;
-      color: var(--fg);
+      color: var(--text);
     }
 
     .dropdown-icon {
       font-size: 16px;
-      color: var(--fg-dim);
+      color: var(--muted);
       transition: transform 0.2s ease;
 
       &.rotated {
@@ -324,7 +276,7 @@ $breakpoints: (
       width: 100%;
       box-sizing: border-box;
 
-      background-color: var(--bg-3);
+      background-color: var(--glass-bg);
       border: 1px solid var(--outline-variant);
       border-radius: radius(default);
       padding: 4px 0;
@@ -338,7 +290,7 @@ $breakpoints: (
 
     .dropdown-item {
       @extend %dropdown-typography;
-      color: var(--fg-dim);
+      color: var(--muted);
       padding: 8px 16px;
       cursor: pointer;
       transition:
@@ -347,20 +299,20 @@ $breakpoints: (
       white-space: nowrap;
 
       &:hover {
-        background-color: var(--bg-2);
-        color: var(--fg);
+        background-color: var(--glass-pill-hover);
+        color: var(--text);
       }
 
       &.selected {
         color: var(--accent);
-        background-color: var(--bg-2);
+        background-color: var(--glass-pill-hover);
       }
     }
   }
 
   .tuner-stage {
     width: 100%;
-    max-width: 400px;
+    max-width: 600px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -376,120 +328,93 @@ $breakpoints: (
     align-items: center;
     position: relative;
 
-    .meter-arc {
+    .horizontal-meter {
+      --meter-padding-top: 60px;
+      --meter-padding-bottom: 48px;
+      --tick-container-top: 60px;
+      --tick-container-height: 48px;
+      --tick-offset-top: -10px;
+      --tick-height-minor: 24px;
+      --tick-height-major: 32px;
+      --tick-height-center: 44px;
+      --needle-top: 61px;
+      --needle-height: 72px;
+
+      width: 100%;
       position: relative;
-      width: 100%;
-      height: 200px;
-      overflow: hidden;
-      display: flex;
-      justify-content: center;
-      align-items: flex-end;
-      background: var(--bg-1);
-      border: 1px solid var(--line);
-      border-top-left-radius: 200px;
-      border-top-right-radius: 200px;
-      border-bottom-left-radius: 0;
-      border-bottom-right-radius: 0;
-      border-bottom: 1px solid var(--bg);
-      box-shadow:
-        var(--shadow-soft),
-        inset 0 1px 3px 0 rgba(0, 0, 0, 0.5),
-        inset 0 1px 2px -1px rgba(0, 0, 0, 1);
-    }
+      padding-top: var(--meter-padding-top);
+      padding-bottom: var(--meter-padding-bottom);
+      
+      .meter-track {
+        position: relative;
+        height: 2px;
+        background: var(--glass-border);
+        width: 100%;
+        border-radius: 1px;
+      }
+      
+      .ticks-container {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: var(--tick-container-top);
+        height: var(--tick-container-height);
+      }
 
-    .ticks-container {
-      position: absolute;
-      bottom: 0;
-      width: 100%;
-      height: 100%;
-      transform-origin: bottom center;
-      display: flex;
-      justify-content: center;
-    }
-
-    .tick {
-      position: absolute;
-      bottom: 0;
-      height: 190px;
-      transform-origin: bottom center;
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-
-      &.major::after {
-        content: '';
+      .meter-tick {
+        position: absolute;
+        top: var(--tick-offset-top);
         width: 2px;
-        height: 12px;
-        background-color: var(--fg-dim);
-        border-radius: radius(pill);
-        margin-top: 8px;
+        height: var(--tick-height-minor);
+        background: var(--meter-tick-minor);
+        transform: translateX(-50%);
+        
+        &.major {
+          height: var(--tick-height-major);
+          top: calc(var(--tick-offset-top) - 4px);
+          background: var(--meter-tick-major);
+        }
+        &.center {
+          height: var(--tick-height-center);
+          top: calc(var(--tick-offset-top) - 10px);
+          width: 3px;
+          background: var(--success);
+        }
       }
 
-      &.minor::after {
-        content: '';
-        width: 1px;
-        height: 6px;
-        background-color: var(--line);
-        border-radius: radius(pill);
-        margin-top: 8px;
+      .meter-needle {
+        position: absolute;
+        top: var(--needle-top); 
+        left: 50%;
+        width: 6px;
+        height: var(--needle-height);
+        background: var(--accent);
+        transform: translate(-50%, -50%);
+        transition: left 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease;
+        z-index: 10;
+        border-radius: 3px;
+
+        &.in-tune {
+          background: var(--success);
+        }
       }
-    }
 
-    .center-notch {
-      position: absolute;
-      bottom: 16px;
-      width: 4px;
-      height: 32px;
-      background-color: var(--fg);
-      z-index: 10;
-      border-radius: radius(pill);
-    }
+      .meter-labels {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        margin-top: 36px;
 
-    .in-tune-indicator {
-      position: absolute;
-      bottom: 4px;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background-color: var(--bg-3);
-      z-index: 10;
-      transition: background-color 0.2s ease;
-
-      &.in-tune {
-        background-color: var(--ok);
+        span {
+          font-family: var(--mono);
+          font-size: 14px;
+          color: var(--muted);
+          
+          &.center-label {
+            color: var(--success);
+          }
+        }
       }
-    }
-
-    .needle {
-      position: absolute;
-      bottom: 0;
-      width: 1.5px;
-      height: 180px;
-      background-color: var(--fg);
-      transform-origin: bottom center;
-      border-top-left-radius: radius(pill);
-      border-top-right-radius: radius(pill);
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
-      z-index: 20;
-      transition:
-        transform 0.1s ease-out,
-        background-color 0.2s ease;
-
-      &.in-tune {
-        background-color: var(--ok);
-      }
-    }
-
-    .pivot-cover {
-      position: absolute;
-      bottom: -16px;
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background-color: var(--bg-3);
-      border: 1px solid var(--line);
-      z-index: 30;
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
     }
   }
 
@@ -507,42 +432,42 @@ $breakpoints: (
 
     .pitch-note {
       font-family: var(--serif);
-      font-size: 84px;
-      line-height: 90px;
+      font-size: 140px;
+      line-height: 140px;
       letter-spacing: -0.04em;
       font-weight: 300;
-      color: var(--fg);
+      color: var(--text);
     }
 
     .pitch-octave {
-      font-size: 24px;
-      line-height: 32px;
+      font-size: 40px;
+      line-height: 48px;
       font-weight: 500;
-      color: var(--fg-dim);
-      margin-bottom: 8px;
+      color: var(--muted);
+      margin-bottom: 16px;
 
       @include respond-to(md) {
-        font-size: 32px;
-        line-height: 40px;
+        font-size: 56px;
+        line-height: 64px;
       }
     }
 
     .pitch-hz {
       font-family: var(--mono);
-      font-size: 14px;
-      line-height: 20px;
-      color: var(--ok);
+      font-size: 24px;
+      line-height: 32px;
+      color: var(--success);
       margin-top: spacing(unit);
       letter-spacing: 0.05em;
     }
 
     .pitch-cents {
       font-family: var(--mono);
-      font-size: 12px;
-      line-height: 16px;
+      font-size: 20px;
+      line-height: 28px;
       letter-spacing: 0.1em;
       font-weight: 600;
-      color: var(--fg-dim);
+      color: var(--muted);
       margin-top: spacing(stack-sm);
       opacity: 0.6;
       transition:
@@ -550,7 +475,7 @@ $breakpoints: (
         opacity 0.2s;
 
       &.in-tune-text {
-        color: var(--ok);
+        color: var(--success);
         opacity: 1;
       }
     }
@@ -559,15 +484,15 @@ $breakpoints: (
   .strings-grid {
     width: 100%;
     display: grid;
-    /* grid-template-columns: repeat(auto-fit, minmax(50px, 1fr)); */
-    gap: 6px;
-    margin-top: 0;
+    gap: 12px;
+    margin-top: 16px;
 
     .string-btn {
-      background-color: var(--bg-2);
-      border: 1px solid var(--line);
-      padding: 8px 0;
-      border-radius: 6px;
+      background-color: var(--glass-pill-bg);
+      border: 1px solid var(--glass-border);
+      padding: 16px 0;
+      // was hardcoded 8px — exact match for $radii full
+      border-radius: radius(full);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -582,11 +507,11 @@ $breakpoints: (
 
       &:hover {
         opacity: 1;
-        border-color: var(--fg-mute);
+        border-color: var(--muted);
       }
 
       &.active {
-        background-color: var(--bg-3);
+        background-color: var(--glass-highlight);
         border-color: var(--accent);
         opacity: 1;
         box-shadow: 0 0 12px 2px color-mix(in srgb, var(--accent) 25%, transparent);
@@ -595,40 +520,22 @@ $breakpoints: (
 
     .string-note {
       font-family: var(--mono);
-      font-size: 12px;
-      line-height: 16px;
-      color: var(--fg-dim);
+      font-size: 16px;
+      line-height: 24px;
+      color: var(--muted);
 
       .string-btn.active & {
-        color: var(--fg);
+        color: var(--text);
         font-weight: 700;
       }
     }
   }
-}
 
-/* ===== Waveform Visualizer ===== */
-.waveform-container {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 3px;
-  height: 32px;
-  position: absolute;
-  bottom: 144px;
-  left: 0;
-  right: 0;
-  opacity: 0.3;
-  pointer-events: none;
-}
-
-.wave-bar {
-  width: 2px;
-  background: var(--muted);
-  border-radius: 1px;
-  transition: height 0.1s ease-out, background 0.2s;
-  
-  &.active {
-    background: var(--accent);
+  .btn.capture-btn {
+    font-size: 20px;
+    padding: 16px 48px;
+    border-radius: 32px;
+    margin-top: 24px;
+    box-shadow: 0 4px 14px var(--btn-primary-dim-border);
   }
 }

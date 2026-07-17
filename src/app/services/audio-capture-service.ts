@@ -4,7 +4,6 @@ import { Injectable, signal, DestroyRef, inject } from '@angular/core';
 export class AudioCaptureService {
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly audioData = signal<Float32Array | null>(null);
   readonly frequency = signal<number | null>(null);
   readonly isCapturing = signal(false);
 
@@ -68,7 +67,6 @@ export class AudioCaptureService {
     this.analyser = null;
     this.source = null;
     this.stream = null;
-    this.audioData.set(null);
     this.frequency.set(null);
     this.isCapturing.set(false);
   }
@@ -81,13 +79,6 @@ export class AudioCaptureService {
     const tick = (): void => {
       if (!this.analyser || !this.audioContext) return;
       this.analyser.getFloatTimeDomainData(buffer);
-
-      const displayLen = 256;
-      const display = new Float32Array(displayLen);
-      for (let i = 0; i < displayLen; i++) {
-        display[i] = buffer[Math.floor((i * buffer.length) / displayLen)];
-      }
-      this.audioData.set(display);
 
       this.worker?.postMessage({
         buffer: buffer.slice(),

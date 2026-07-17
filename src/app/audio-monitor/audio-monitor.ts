@@ -4,8 +4,8 @@ import { NOTE_NAMES, INSTRUMENTS } from '../data/instrument.constants';
 import { TuningString } from '../models/instrument.model';
 
 interface Tick {
-  angle: number;
-  isMajor: boolean;
+  leftPos: string;
+  type: 'normal' | 'major' | 'center';
 }
 
 @Component({
@@ -19,7 +19,6 @@ export class AudioMonitor implements OnInit, OnDestroy {
   });
   private readonly audioCapture = inject(AudioCaptureService);
 
-  protected readonly audioData = this.audioCapture.audioData;
   protected readonly isCapturing = this.audioCapture.isCapturing;
   protected readonly frequency = this.audioCapture.frequency;
 
@@ -76,10 +75,13 @@ export class AudioMonitor implements OnInit, OnDestroy {
     return info ? Math.abs(info.cents) < 5 : false;
   });
 
-  protected readonly needleAngle = computed(() => {
+  protected readonly needleLeft = computed(() => {
     const info = this.noteInfo();
-    if (!info) return 0;
-    return Math.max(-60, Math.min(60, (info.cents / 50) * 60));
+    if (!info) return '50%';
+    let cents = info.cents;
+    if (cents < -50) cents = -50;
+    if (cents > 50) cents = 50;
+    return `${50 + cents}%`;
   });
 
   protected readonly centsOffset = computed(() => {
@@ -121,14 +123,20 @@ export class AudioMonitor implements OnInit, OnDestroy {
   }
 
   private generateTicks(): void {
-    const numTicks = 41;
-    const maxAngle = 60;
+    const totalTicks = 41;
+    this.ticks = [];
 
-    for (let i = 0; i < numTicks; i++) {
-      const angle = -maxAngle + (i * (maxAngle * 2)) / (numTicks - 1);
-      const isMajor = i % 5 === 0 && i !== Math.floor(numTicks / 2);
+    for (let i = 0; i < totalTicks; i++) {
+      const leftPos = `${(i / (totalTicks - 1)) * 100}%`;
+      let type: 'normal' | 'major' | 'center' = 'normal';
+      
+      if (i === 20) {
+        type = 'center';
+      } else if (i % 5 === 0) {
+        type = 'major';
+      }
 
-      this.ticks.push({ angle, isMajor });
+      this.ticks.push({ leftPos, type });
     }
   }
 
