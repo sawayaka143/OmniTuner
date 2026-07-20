@@ -1,0 +1,8 @@
+<div class="strings-grid"
+     [style.grid-template-columns]="'repeat(' + strings().length + ', 1fr)'">
+  @for (str of strings(); track str.name) {
+    <button class="string-btn" [class.active]="activeString() === str.name" type="button">
+      <span class="string-note">{{ str.name }}</span>
+    </button>
+  }
+</div>

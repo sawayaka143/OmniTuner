@@ -1,143 +1,91 @@
-import { Component, OnInit, OnDestroy, inject, computed, signal } from '@angular/core';
+import { Component, inject, computed, signal, DestroyRef, OnInit } from '@angular/core';
 import { AudioCaptureService } from '../services/audio-capture-service';
-import { NOTE_NAMES, INSTRUMENTS } from '../data/instrument.constants';
-import { TuningString } from '../models/instrument.model';
-
-interface Tick {
-  leftPos: string;
-  type: 'normal' | 'major' | 'center';
-}
+import { INSTRUMENTS } from '../data/instrument.constants';
+import { InstrumentSelector } from '../components/instrument-selector/instrument-selector';
+import { PitchMeter, Tick } from '../components/pitch-meter/pitch-meter';
+import { PitchDisplay } from '../components/pitch-display/pitch-display';
+import { StringList } from '../components/string-list/string-list';
+import {
+  noteFromFrequency,
+  hzDisplay,
+  centsOffsetDisplay,
+  needlePosition,
+  isInTune,
+  findClosestString,
+} from '../utils/pitch-utils';
 
 @Component({
   selector: 'app-audio-monitor',
+  imports: [InstrumentSelector, PitchMeter, PitchDisplay, StringList],
   templateUrl: './audio-monitor.html',
   styleUrl: './audio-monitor.scss',
 })
-export class AudioMonitor implements OnInit, OnDestroy {
-  protected readonly selectedInstrumentIndex = computed(() => {
-    return INSTRUMENTS.findIndex((i) => i.id === this.selectedInstrumentId());
-  });
+export class AudioMonitor implements OnInit {
   private readonly audioCapture = inject(AudioCaptureService);
+  private readonly destroyRef = inject(DestroyRef);
 
-  protected readonly isCapturing = this.audioCapture.isCapturing;
-  protected readonly frequency = this.audioCapture.frequency;
+  readonly isCapturing = this.audioCapture.isCapturing;
+  readonly frequency = this.audioCapture.frequency;
 
-  protected readonly selectedInstrumentId = signal<string>('guitar');
+  readonly selectedInstrumentId = signal('guitar');
+  readonly selectedTuningId = signal('standard');
+  readonly dropdownOpen = signal(false);
+  readonly isDeforming = signal(false);
 
-  protected readonly selectedTuningId = signal<string>('standard');
-
-  protected readonly dropdownOpen = signal(false);
-
-  protected readonly isDeforming = signal(false);
   private deformTimeout: ReturnType<typeof setTimeout> | null = null;
 
-  protected readonly currentInstrument = computed(
+  readonly instruments = INSTRUMENTS;
+  readonly ticks: Tick[] = [];
+
+  readonly selectedInstrumentIndex = computed(() =>
+    INSTRUMENTS.findIndex((i) => i.id === this.selectedInstrumentId()),
+  );
+
+  private readonly currentInstrument = computed(
     () => INSTRUMENTS.find((i) => i.id === this.selectedInstrumentId()) ?? INSTRUMENTS[0],
   );
 
-  protected readonly availableTunings = computed(() => this.currentInstrument().tunings);
+  readonly availableTunings = computed(() => this.currentInstrument().tunings);
 
-  protected readonly currentTuning = computed(() => {
+  readonly currentTuning = computed(() => {
     const tunings = this.availableTunings();
     return tunings.find((t) => t.id === this.selectedTuningId()) ?? tunings[0];
   });
 
-  protected readonly currentStrings = computed(() => this.currentTuning().strings);
+  readonly currentStrings = computed(() => this.currentTuning().strings);
 
-  protected readonly instruments = INSTRUMENTS;
-
-  protected readonly noteInfo = computed(() => {
+  readonly noteInfo = computed(() => {
     const f = this.frequency();
-    if (f === null || f <= 0) return null;
-
-    const semitones = 12 * Math.log2(f / 440);
-    const rounded = Math.round(semitones);
-    const cents = Math.round((semitones - rounded) * 100);
-    const idx = ((rounded % 12) + 12) % 12;
-    const octave = 4 + Math.floor((rounded + 9) / 12);
-    const noteName = NOTE_NAMES[idx];
-
-    return {
-      name: `${noteName}${octave}`,
-      noteName,
-      octave: octave.toString(),
-      cents,
-    };
+    return f ? noteFromFrequency(f) : null;
   });
 
-  protected readonly currentHz = computed(() => {
-    const f = this.frequency();
-    return f ? `${f.toFixed(2)} Hz` : '— Hz';
-  });
+  readonly currentHz = computed(() => hzDisplay(this.frequency()));
 
-  protected readonly isTuned = computed(() => {
-    const info = this.noteInfo();
-    return info ? Math.abs(info.cents) < 5 : false;
-  });
+  readonly isTuned = computed(() => isInTune(this.noteInfo()));
 
-  protected readonly needleLeft = computed(() => {
-    const info = this.noteInfo();
-    if (!info) return '50%';
-    let cents = info.cents;
-    if (cents < -50) cents = -50;
-    if (cents > 50) cents = 50;
-    return `${50 + cents}%`;
-  });
+  readonly needleLeft = computed(() => needlePosition(this.noteInfo()));
 
-  protected readonly centsOffset = computed(() => {
-    const info = this.noteInfo();
-    if (!info) return '—';
-    if (Math.abs(info.cents) < 5) return 'IN TUNE';
-    return info.cents < 0 ? `${Math.abs(info.cents)}¢ FLAT` : `${info.cents}¢ SHARP`;
-  });
+  readonly centsOffset = computed(() => centsOffsetDisplay(this.noteInfo()));
 
-  protected readonly activeString = computed(() => {
-    const f = this.frequency();
-    if (!f || f <= 0) return null;
-
-    const strings = this.currentStrings();
-    let closest: TuningString | null = null;
-    let minRatio = Infinity;
-
-    for (const s of strings) {
-      const ratio = Math.abs(Math.log2(f / s.freq));
-      if (ratio < minRatio) {
-        minRatio = ratio;
-        closest = s;
-      }
-    }
-
-    return closest && minRatio < 0.09 ? closest.name : null;
-  });
-
-  public ticks: Tick[] = [];
+  readonly activeString = computed(() =>
+    findClosestString(this.frequency(), this.currentStrings()),
+  );
 
   ngOnInit(): void {
-    this.generateTicks();
-  }
-
-  ngOnDestroy(): void {
-    if (this.isCapturing()) {
-      this.audioCapture.stopCapture();
-    }
-  }
-
-  private generateTicks(): void {
     const totalTicks = 41;
-    this.ticks = [];
-
     for (let i = 0; i < totalTicks; i++) {
       const leftPos = `${(i / (totalTicks - 1)) * 100}%`;
       let type: 'normal' | 'major' | 'center' = 'normal';
-      
-      if (i === 20) {
-        type = 'center';
-      } else if (i % 5 === 0) {
-        type = 'major';
-      }
-
+      if (i === 20) type = 'center';
+      else if (i % 5 === 0) type = 'major';
       this.ticks.push({ leftPos, type });
     }
+
+    this.destroyRef.onDestroy(() => {
+      if (this.isCapturing()) {
+        this.audioCapture.stopCapture();
+      }
+    });
   }
 
   protected selectInstrument(instrumentId: string): void {
@@ -148,11 +96,7 @@ export class AudioMonitor implements OnInit, OnDestroy {
       this.selectedTuningId.set(instrument.tunings[0].id);
     }
     this.dropdownOpen.set(false);
-
-    // Trigger squish deformation on the seg-indicator
-    if (this.deformTimeout !== null) {
-      clearTimeout(this.deformTimeout);
-    }
+    if (this.deformTimeout !== null) clearTimeout(this.deformTimeout);
     this.isDeforming.set(true);
     this.deformTimeout = setTimeout(() => {
       this.isDeforming.set(false);
@@ -167,6 +111,10 @@ export class AudioMonitor implements OnInit, OnDestroy {
 
   protected toggleDropdown(): void {
     this.dropdownOpen.update((v) => !v);
+  }
+
+  protected closeDropdown(): void {
+    this.dropdownOpen.set(false);
   }
 
   protected toggleCapture(): void {

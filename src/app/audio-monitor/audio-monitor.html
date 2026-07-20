@@ -1,127 +1,39 @@
-<div class="tuner-app" (click)="dropdownOpen() && dropdownOpen.set(false)">
-  <header class="app-header">
-    <div class="header-inner">
-      <div class="app-title">OmniTuner</div>
+<main class="app-main" (click)="closeDropdown()">
+  <app-instrument-selector
+    [instruments]="instruments"
+    [selectedInstrumentId]="selectedInstrumentId()"
+    [selectedInstrumentIndex]="selectedInstrumentIndex()"
+    [availableTunings]="availableTunings()"
+    [selectedTuningId]="selectedTuningId()"
+    [currentTuning]="currentTuning()"
+    [isDeforming]="isDeforming()"
+    [dropdownOpen]="dropdownOpen()"
+    (selectInstrument)="selectInstrument($event)"
+    (selectTuning)="selectTuning($event)"
+    (toggleDropdown)="toggleDropdown()"
+    (closeDropdown)="closeDropdown()" />
 
-      <nav class="nav-desktop">
-        <a class="nav-link active" href="#">Tuner</a>
-      </nav>
+  <div class="tuner-stage">
+    <div class="meter-area">
+      <app-pitch-meter
+        [ticks]="ticks"
+        [needleLeft]="needleLeft()"
+        [isTuned]="isTuned()" />
 
-      <div class="header-actions">
-        <div class="actions-mobile">
-          <button class="btn ghost">
-            <span class="material-symbols-outlined">settings</span>
-          </button>
-        </div>
-
-        <div class="actions-desktop">
-          <button class="btn ghost">
-            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">tune</span>
-          </button>
-          <button class="btn ghost">
-            <span class="material-symbols-outlined">settings</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  </header>
-
-  <main class="app-main">
-    <div class="selectors">
-      <div class="seg" role="radiogroup" aria-label="Instrument selection" [style.--seg-count]="instruments.length">
-        <div class="seg-indicator"
-             [style.transform]="'translateX(' + (selectedInstrumentIndex() * 100) + '%)' + (isDeforming() ? ' scaleX(1.18) scaleY(0.82)' : '')"></div>
-        
-        @for (inst of instruments; track inst.id) {
-          <button
-            role="radio"
-            [attr.aria-checked]="selectedInstrumentId() === inst.id"
-            [class.active]="selectedInstrumentId() === inst.id"
-            (click)="selectInstrument(inst.id); $event.stopPropagation()">
-            {{ inst.label }}
-          </button>
-        }
-      </div>
-
-      <div class="dropdown-wrapper">
-        <button
-          class="btn"
-          [attr.aria-expanded]="dropdownOpen()"
-          aria-haspopup="listbox"
-          (click)="toggleDropdown(); $event.stopPropagation()">
-          <span class="dropdown-label">{{ currentTuning().label }}</span>
-          <span class="material-symbols-outlined dropdown-icon"
-                [class.rotated]="dropdownOpen()">expand_more</span>
-        </button>
-
-        @if (dropdownOpen()) {
-          <ul class="dropdown-menu card" role="listbox" aria-label="Tuning selection"
-              (click)="$event.stopPropagation()">
-            @for (tuning of availableTunings(); track tuning.id) {
-              <li role="option"
-                  [attr.aria-selected]="currentTuning().id === tuning.id"
-                  class="dropdown-item"
-                  [class.selected]="currentTuning().id === tuning.id"
-                  (click)="selectTuning(tuning.id)">
-                {{ tuning.label }}
-              </li>
-            }
-          </ul>
-        }
-      </div>
+      <app-pitch-display
+        [noteName]="noteInfo()?.noteName ?? null"
+        [octave]="noteInfo()?.octave ?? null"
+        [hz]="currentHz()"
+        [centsOffset]="centsOffset()"
+        [isTuned]="isTuned()" />
     </div>
 
-    <!-- Wrapped in tuner-stage to constrain width perfectly -->
-    <div class="tuner-stage">
-      <div class="meter-area">
-        <div class="horizontal-meter">
-          <div class="meter-track"></div>
-          
-          <div class="needle meter-needle" [class.in-tune]="isTuned()" [style.left]="needleLeft()"></div>
-          
-          <div class="ticks-container">
-            @for (tick of ticks; track $index) {
-              <div class="meter-tick"
-                   [class.major]="tick.type === 'major'"
-                   [class.center]="tick.type === 'center'"
-                   [style.left]="tick.leftPos">
-              </div>
-            }
-          </div>
-          
-          <div class="meter-labels">
-            <span>-50</span>
-            <span>-25</span>
-            <span class="center-label">0</span>
-            <span>+25</span>
-            <span>+50</span>
-          </div>
-        </div>
+    <app-string-list
+      [strings]="currentStrings()"
+      [activeString]="activeString()" />
+  </div>
 
-        <div class="pitch-display">
-          <div class="pitch-row">
-            <span class="pitch-note">{{ noteInfo()?.noteName || '—' }}</span>
-            <span class="pitch-octave">{{ noteInfo()?.octave || '' }}</span>
-          </div>
-          <div class="pitch-hz">{{ currentHz() }}</div>
-          <div class="pitch-cents" [class.in-tune-text]="isTuned()">
-            {{ centsOffset() }}
-          </div>
-        </div>
-      </div>
-
-      <div class="strings-grid"
-           [style.grid-template-columns]="'repeat(' + currentStrings().length + ', 1fr)'">
-        @for (str of currentStrings(); track str.name) {
-          <button class="string-btn" [class.active]="activeString() === str.name">
-            <span class="string-note">{{ str.name }}</span>
-          </button>
-        }
-      </div>
-    </div>
-
-    <button (click)="toggleCapture()" class="btn primary capture-btn" [class.active]="isCapturing()" style="min-width: 140px">
-      {{ isCapturing() ? 'Stop' : 'Start' }}
-    </button>
-  </main>
-</div>
+  <button (click)="toggleCapture()" class="btn primary capture-btn" [class.active]="isCapturing()" type="button" style="min-width: 140px">
+    {{ isCapturing() ? 'Stop' : 'Start' }}
+  </button>
+</main>

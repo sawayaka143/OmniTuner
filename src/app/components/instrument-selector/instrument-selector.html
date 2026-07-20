@@ -1,0 +1,42 @@
+<div class="selectors" (click)="closeDropdown.emit()">
+  <div class="seg" role="radiogroup" aria-label="Instrument selection" [style.--seg-count]="instruments().length">
+    <div class="seg-indicator"
+         [style.transform]="'translateX(' + (selectedInstrumentIndex() * 100) + '%)' + (isDeforming() ? ' scaleX(1.18) scaleY(0.82)' : '')"></div>
+    @for (inst of instruments(); track inst.id) {
+      <button
+        role="radio"
+        [attr.aria-checked]="selectedInstrumentId() === inst.id"
+        [class.active]="selectedInstrumentId() === inst.id"
+        (click)="selectInstrument.emit(inst.id); $event.stopPropagation()">
+        {{ inst.label }}
+      </button>
+    }
+  </div>
+
+  <div class="dropdown-wrapper">
+    <button
+      class="btn"
+      [attr.aria-expanded]="dropdownOpen()"
+      aria-haspopup="listbox"
+      (click)="toggleDropdown.emit(); $event.stopPropagation()">
+      <span class="dropdown-label">{{ currentTuning().label }}</span>
+      <span class="material-symbols-outlined dropdown-icon"
+            [class.rotated]="dropdownOpen()">expand_more</span>
+    </button>
+
+    @if (dropdownOpen()) {
+      <ul class="dropdown-menu card" role="listbox" aria-label="Tuning selection"
+          (click)="$event.stopPropagation()">
+        @for (tuning of availableTunings(); track tuning.id) {
+          <li role="option"
+              [attr.aria-selected]="selectedTuningId() === tuning.id"
+              class="dropdown-item"
+              [class.selected]="selectedTuningId() === tuning.id"
+              (click)="selectTuning.emit(tuning.id)">
+            {{ tuning.label }}
+          </li>
+        }
+      </ul>
+    }
+  </div>
+</div>

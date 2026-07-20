@@ -1,0 +1,82 @@
+@use 'sass:map';
+
+$spacing: (
+  stack-sm: 8px,
+  stack-lg: 32px,
+  unit: 4px,
+);
+
+$breakpoints: (
+  md: 768px,
+);
+
+@function spacing($key) {
+  @return map.get($spacing, $key);
+}
+
+@mixin respond-to($breakpoint) {
+  @media (min-width: map.get($breakpoints, $breakpoint)) {
+    @content;
+  }
+}
+
+.pitch-display {
+  margin-top: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  .pitch-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .pitch-note {
+    font-family: var(--serif);
+    font-size: 140px;
+    line-height: 140px;
+    letter-spacing: -0.04em;
+    font-weight: 300;
+    color: var(--text);
+  }
+
+  .pitch-octave {
+    font-size: 40px;
+    line-height: 48px;
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: 16px;
+
+    @include respond-to(md) {
+      font-size: 56px;
+      line-height: 64px;
+    }
+  }
+
+  .pitch-hz {
+    font-family: var(--mono);
+    font-size: 24px;
+    line-height: 32px;
+    color: var(--success);
+    margin-top: spacing(unit);
+    letter-spacing: 0.05em;
+  }
+
+  .pitch-cents {
+    font-family: var(--mono);
+    font-size: 20px;
+    line-height: 28px;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+    color: var(--muted);
+    margin-top: spacing(stack-sm);
+    opacity: 0.6;
+    transition: color 0.2s, opacity 0.2s;
+
+    &.in-tune-text {
+      color: var(--success);
+      opacity: 1;
+    }
+  }
+}

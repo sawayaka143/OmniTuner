@@ -1,0 +1,12 @@
+<div class="pitch-display">
+  <div class="pitch-row">
+    <span class="pitch-note">{{ noteName() || '\u2014' }}</span>
+    @if (octave(); as o) {
+      <span class="pitch-octave">{{ o }}</span>
+    }
+  </div>
+  <div class="pitch-hz">{{ hz() }}</div>
+  <div class="pitch-cents" [class.in-tune-text]="isTuned()">
+    {{ centsOffset() }}
+  </div>
+</div>
