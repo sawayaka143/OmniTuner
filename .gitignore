@@ -78,9 +78,11 @@ lerna-debug.log*
 # ------------------------------------------------------------------------------
 # 6. AI Assistants & Tooling Caches
 # ------------------------------------------------------------------------------
+.agents/
 .claude/
 .codex/
 .gemini/
+.zcode/
 skills-lock.json
 
 # Impeccable Local State & Caches
