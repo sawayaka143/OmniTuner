@@ -1,0 +1,65 @@
+<main class="app-main" (click)="closePickers()">
+  <div class="scales-controls">
+    <app-root-note-picker
+      [notes]="rootNotes"
+      [selected]="rootNote()"
+      [open]="rootPickerOpen()"
+      (select)="selectRoot($event)"
+      (toggle)="toggleRootPicker()"
+      (close)="closePickers()" />
+
+    <app-scale-picker
+      [scales]="scales"
+      [selectedId]="scaleId()"
+      [open]="scalePickerOpen()"
+      (select)="selectScale($event)"
+      (toggle)="toggleScalePicker()"
+      (close)="closePickers()" />
+
+    <div class="seg" role="radiogroup" aria-label="Tuning mode" [style.--seg-count]="2">
+      <div
+        class="seg-indicator"
+        [style.transform]="tuningMode() === 'standard' ? 'translateX(0%)' : 'translateX(100%)'"></div>
+      <button
+        type="button"
+        role="radio"
+        [attr.aria-checked]="tuningMode() === 'standard'"
+        [class.active]="tuningMode() === 'standard'"
+        (click)="setTuningMode('standard'); $event.stopPropagation()">
+        Standard
+      </button>
+      <button
+        type="button"
+        role="radio"
+        [attr.aria-checked]="tuningMode() === 'custom'"
+        [class.active]="tuningMode() === 'custom'"
+        (click)="setTuningMode('custom'); $event.stopPropagation()">
+        Custom
+      </button>
+    </div>
+  </div>
+
+  @if (tuningMode() === 'custom') {
+    <div class="tuning-panel card" (click)="$event.stopPropagation()">
+      <app-custom-tuning
+        [values]="customNotes()"
+        [errors]="customErrors()"
+        (change)="onCustomChange($event.index, $event.value)" />
+      @if (hasCustomError()) {
+        <p class="tuning-warning" role="status">
+          Enter a valid note for every string. The standard tuning board remains visible until then.
+        </p>
+      }
+    </div>
+  }
+
+  <div class="fretboard-stage">
+    <app-fretboard
+      [cells]="cells()"
+      [fretCount]="fretCount"
+      [scaleLabel]="currentScale().label"
+      [rootLabel]="rootNote()" />
+  </div>
+
+  <app-interval-legend [intervals]="legendIntervals()" />
+</main>

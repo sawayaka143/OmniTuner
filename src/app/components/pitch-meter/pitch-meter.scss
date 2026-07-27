@@ -3,16 +3,16 @@
 }
 
 .horizontal-meter {
-  --meter-padding-top: 60px;
-  --meter-padding-bottom: 48px;
-  --tick-container-top: 60px;
+  --meter-padding-top: 50px;
+  --meter-padding-bottom: 40px;
+  --tick-container-top: 50px;
   --tick-container-height: 48px;
   --tick-offset-top: -10px;
-  --tick-height-minor: 24px;
+  --tick-height-minor: 22px;
   --tick-height-major: 32px;
   --tick-height-center: 44px;
-  --needle-top: 61px;
-  --needle-height: 72px;
+  --needle-top: 52px;
+  --needle-height: 68px;
 
   width: 100%;
   position: relative;
@@ -21,10 +21,9 @@
 
   .meter-track {
     position: relative;
-    height: 2px;
-    background: var(--glass-border);
+    height: 1px;
+    background: var(--border-medium);
     width: 100%;
-    border-radius: 1px;
   }
 
   .ticks-container {
@@ -38,7 +37,7 @@
   .meter-tick {
     position: absolute;
     top: var(--tick-offset-top);
-    width: 2px;
+    width: 1px;
     height: var(--tick-height-minor);
     background: var(--meter-tick-minor);
     transform: translateX(-50%);
@@ -51,8 +50,8 @@
     &.center {
       height: var(--tick-height-center);
       top: calc(var(--tick-offset-top) - 10px);
-      width: 3px;
-      background: var(--success);
+      width: 2px;
+      background: #ffffff;
     }
   }
 
@@ -60,16 +59,17 @@
     position: absolute;
     top: var(--needle-top);
     left: 50%;
-    width: 6px;
+    width: 4px;
     height: var(--needle-height);
-    background: var(--accent);
+    background: var(--needle-color);
     transform: translate(-50%, -50%);
-    transition: left 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease;
+    transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease;
     z-index: 10;
-    border-radius: 3px;
+    border-radius: 2px;
 
     &.in-tune {
-      background: var(--success);
+      background: var(--in-tune-color);
+      width: 5px;
     }
   }
 
@@ -77,15 +77,18 @@
     display: flex;
     justify-content: space-between;
     width: 100%;
-    margin-top: 36px;
+    margin-top: 32px;
 
     span {
       font-family: var(--mono);
-      font-size: 14px;
-      color: var(--muted);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
 
       &.center-label {
-        color: var(--success);
+        color: #ffffff;
+        font-weight: 600;
       }
     }
   }

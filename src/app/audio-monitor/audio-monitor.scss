@@ -1,28 +1,3 @@
-@use 'sass:map';
-
-$spacing: (
-  stack-sm: 8px,
-  stack-md: 16px,
-  stack-lg: 32px,
-  unit: 4px,
-  container-padding: 24px,
-);
-
-$breakpoints: (
-  sm: 480px,
-  md: 768px,
-);
-
-@function spacing($key) {
-  @return map.get($spacing, $key);
-}
-
-@mixin respond-to($breakpoint) {
-  @media (min-width: map.get($breakpoints, $breakpoint)) {
-    @content;
-  }
-}
-
 :host {
   display: contents;
 }
@@ -34,20 +9,21 @@ $breakpoints: (
   align-items: center;
   justify-content: flex-start;
   width: 100%;
-  padding: spacing(stack-lg) 0 spacing(stack-lg);
-  gap: spacing(stack-lg);
+  padding: 16px 0 48px;
+  gap: 24px;
   position: relative;
   box-sizing: border-box;
 }
 
 .tuner-stage {
+  margin-top: 160px;
   width: 100%;
-  max-width: 500px;
+  max-width: 520px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: spacing(stack-lg);
-  padding: 0 spacing(container-padding);
+  gap: 28px;
+  padding: 0 24px;
   box-sizing: border-box;
 }
 
@@ -60,9 +36,17 @@ $breakpoints: (
 }
 
 .btn.capture-btn {
-  font-size: 20px;
-  padding: 16px 48px;
-  border-radius: 32px;
-  margin-top: 24px;
-}
+  font-size: 15px;
+  font-weight: 600;
+  padding: 14px 44px;
+  border-radius: var(--r-pill);
+  margin-top: 16px;
+  min-width: 150px;
+  letter-spacing: 0.02em;
 
+  &.active {
+    background: var(--surface-container-high);
+    color: #ffffff;
+    border-color: var(--border-active);
+  }
+}

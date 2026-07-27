@@ -1,0 +1,30 @@
+<div class="tuning-editor" role="group" aria-label="Custom tuning editor">
+  <div class="tuning-header">
+    <span>String 1 (highest)</span>
+    <span>String 6 (lowest)</span>
+  </div>
+  <div class="tuning-fields">
+    @for (value of values(); track $index) {
+      <div class="field" [class.invalid]="errors()[$index]">
+        <label class="field-label" [for]="'string-' + $index">String {{ $index + 1 }}</label>
+        <input
+          class="tuning-input"
+          [id]="'string-' + $index"
+          type="text"
+          maxlength="3"
+          inputmode="text"
+          autocomplete="off"
+          spellcheck="false"
+          [value]="value"
+          [attr.aria-invalid]="errors()[$index]"
+          [attr.aria-describedby]="errors()[$index] ? 'string-' + $index + '-err' : null"
+          placeholder="â€”"
+          (input)="onInput($event, $index)" />
+      </div>
+      @if (errors()[$index]) {
+        <span class="visually-hidden" [id]="'string-' + $index + '-err'">Invalid note</span>
+      }
+    }
+  </div>
+  <p class="tuning-hint">Enter any note name (e.g. E, Bb, F#, D#). Octaves are ignored.</p>
+</div>

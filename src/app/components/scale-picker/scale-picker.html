@@ -1,0 +1,27 @@
+<div class="dropdown-wrapper">
+  <button
+    class="btn"
+    type="button"
+    [attr.aria-expanded]="open()"
+    aria-haspopup="listbox"
+    (click)="toggle.emit(); $event.stopPropagation()">
+    <span class="dropdown-label">Scale: {{ selectedLabel() }}</span>
+    <span class="material-symbols-outlined dropdown-icon" [class.rotated]="open()">expand_more</span>
+  </button>
+
+  @if (open()) {
+    <ul class="dropdown-menu card" role="listbox" aria-label="Scale selection"
+        (click)="$event.stopPropagation()">
+      @for (scale of scales(); track scale.id) {
+        <li
+          role="option"
+          [attr.aria-selected]="selectedId() === scale.id"
+          class="dropdown-item"
+          [class.selected]="selectedId() === scale.id"
+          (click)="select.emit(scale.id)">
+          {{ scale.label }}
+        </li>
+      }
+    </ul>
+  }
+</div>

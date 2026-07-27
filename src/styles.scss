@@ -2,176 +2,139 @@
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 
 :root {
-  /* --- Core Theme --- */
-  --canvas: #161514;
-  --surface-container-low: #1e1c1a;
-  --surface-container: #282624;
-  --text: #f8f8f8;
-  --muted: #8e8e93;
+  /* --- Core Studio Monochrome Palette --- */
+  --canvas: #121211;
+  --surface-container-low: #181817;
+  --surface-container: #222220;
+  --surface-container-high: #2c2c29;
 
-  /* --- Accents & Status --- */
-  --accent: #d4570a;
-  --success: #7d8c5c;
-  --primary-text-dim: #ffac7b;
+  /* --- Text & Contrast --- */
+  --text: #f5f5f3;
+  --text-muted: #888882;
+  --text-dim: #62625d;
 
-  /* --- Glass & Translucents --- */
-  --glass-bg: rgba(40, 38, 36, 0.6);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-highlight: rgba(255, 255, 255, 0.15);
-  --glass-pill-bg: rgba(255, 255, 255, 0.05);
-  --glass-pill-hover: rgba(255, 255, 255, 0.08);
+  /* --- Borders & Surfaces --- */
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-medium: rgba(255, 255, 255, 0.16);
+  --border-active: rgba(255, 255, 255, 0.4);
 
-  /* --- UI Specifics --- */
-  --meter-tick-minor: rgba(255, 255, 255, 0.2);
-  --meter-tick-major: rgba(255, 255, 255, 0.4);
-  --btn-primary-dim-bg: rgba(212, 87, 10, 0.25);
-  --btn-primary-dim-border: rgba(212, 87, 10, 0.4);
+  /* --- Meter & Tuning States (Strictly Monochrome) --- */
+  --meter-tick-minor: rgba(255, 255, 255, 0.15);
+  --meter-tick-major: rgba(255, 255, 255, 0.35);
+  --needle-color: #f5f5f3;
+  --in-tune-color: #ffffff;
 
   /* --- Typography --- */
-  --serif: 'Newsreader', 'Source Serif 4', Georgia, 'Times New Roman', serif;
-  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --serif: 'Newsreader', Georgia, 'Times New Roman', serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 
   /* --- Misc --- */
-  --r: 4px;
-  --shadow-soft: 0 1px 0 rgba(0, 0, 0, 0.3), 0 4px 14px rgba(0, 0, 0, 0.25);
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-pill: 9999px;
+  --shadow-flat: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 html,
 body {
   margin: 0;
+  padding: 0;
   background-color: var(--canvas);
   color: var(--text);
   font-family: var(--mono);
+  font-size: 13.5px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 h1,
 h2,
 h3 {
   font-family: var(--serif);
-  font-weight: 500;
-  letter-spacing: -0.012em;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  margin: 0;
 }
 
 ::selection {
-  background: rgba(212, 87, 10, 0.28);
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
 }
 
+/* Tactile Button Standards */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 7px 14px;
-  border: 1px solid var(--glass-border);
-  border-radius: var(--r);
-  background: var(--glass-bg);
+  padding: 8px 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-md);
+  background: var(--surface-container-low);
   color: var(--text);
   font-family: var(--mono);
-  font-size: 12.5px;
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+  user-select: none;
 }
 
 .btn:hover {
-  border-color: var(--muted);
-  background: var(--glass-pill-hover);
+  background: var(--surface-container);
+  border-color: var(--border-medium);
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--border-active);
+  outline-offset: 2px;
 }
 
 .btn.primary {
-  background: var(--btn-primary-dim-bg);
-  color: var(--primary-text-dim);
-  border-color: var(--btn-primary-dim-border);
+  background: var(--text);
+  color: var(--canvas);
+  border-color: var(--text);
+  font-weight: 600;
 }
 
 .btn.primary:hover {
-  background: var(--accent);
-  color: var(--text);
-  border-color: var(--accent);
+  background: #e4e4e0;
+  border-color: #e4e4e0;
+}
+
+.btn.primary.active {
+  background: var(--text);
+  color: var(--canvas);
+  border-color: var(--text);
 }
 
 .btn.ghost {
   background: transparent;
   border-color: transparent;
-  color: var(--muted);
+  color: var(--text-muted);
 }
 
 .btn.ghost:hover {
-  background: var(--glass-pill-hover);
+  background: var(--surface-container-low);
   color: var(--text);
 }
 
-.btn.danger:hover {
-  color: #d44a4a;
-  border-color: #d44a4a;
-}
-
-input,
-textarea,
-select {
-  font-family: var(--mono);
-  color: var(--text);
-  background: var(--canvas);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--r);
-  padding: 10px 12px;
-  outline: none;
-}
-
-input:focus,
-textarea:focus,
-select:focus {
-  border-color: var(--accent);
-}
-
+/* Card & Surface Panels */
 .card,
 .pane {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: 6px;
-  box-shadow: var(--shadow-soft);
-}
-
-.toolbar,
-.pane-head {
-  background: var(--glass-bg);
-  border-bottom: 1px solid var(--glass-border);
-  color: var(--muted);
-  padding: 10px 14px;
-}
-
-.seg,
-.tabs {
-  display: inline-flex;
-  gap: 2px;
-  background: var(--glass-pill-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--r);
-  padding: 3px;
-}
-
-.seg button,
-.tabs button {
-  padding: 6px 14px;
-  border: none;
-  background: transparent;
-  color: var(--muted);
-  border-radius: 3px;
-  cursor: pointer;
-  font-family: var(--mono);
-}
-
-.seg button:hover,
-.tabs button:hover {
-  color: var(--text);
-}
-
-.seg button.active,
-.tabs button.active {
-  background: var(--glass-highlight);
-  color: var(--text);
-}
-
-.seg button.active,
-.tabs button.active {
-  background: var(--glass-highlight);
-  color: var(--text);
+  background: var(--surface-container-low);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-flat);
 }

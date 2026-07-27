@@ -1,25 +1,55 @@
-# See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+# ==============================================================================
+# Production-Ready .gitignore for Angular / TypeScript / Node.js
+# ==============================================================================
 
-# Compiled output
-/dist
-/tmp
-/out-tsc
-/bazel-out
+# ------------------------------------------------------------------------------
+# 1. Environment & Sensitive Files
+# ------------------------------------------------------------------------------
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+*.pem
+*.key
+*.cert
+*.crt
 
-# Node
-/node_modules
-npm-debug.log
-yarn-error.log
+# ------------------------------------------------------------------------------
+# 2. Dependencies & Package Managers
+# ------------------------------------------------------------------------------
+/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+.pnpm-store/
 
-# IDEs and editors
-.idea/
-.project
-.classpath
-.c9/
-*.launch
-.settings/
-*.sublime-workspace
+# ------------------------------------------------------------------------------
+# 3. Build & Compilation Outputs
+# ------------------------------------------------------------------------------
+/dist/
+/tmp/
+/out-tsc/
+/bazel-out/
+/.angular/
+/.vercel/
+/build/
 
+# ------------------------------------------------------------------------------
+# 4. Testing & Coverage Reports
+# ------------------------------------------------------------------------------
+/coverage/
+/.nyc_output/
+/testem.log
+/__screenshots__/
+*.lcov
+
+# ------------------------------------------------------------------------------
+# 5. IDEs & Code Editors
+# ------------------------------------------------------------------------------
 # Visual Studio Code
 .vscode/*
 !.vscode/settings.json
@@ -27,19 +57,67 @@ yarn-error.log
 !.vscode/launch.json
 !.vscode/extensions.json
 !.vscode/mcp.json
-.history/*
+.history/
 
-# Miscellaneous
-/.angular/cache
-.sass-cache/
-/connect.lock
-/coverage
-/libpeerconnection.log
-testem.log
-/typings
-__screenshots__/
+# JetBrains (WebStorm / IntelliJ)
+.idea/
+*.iws
+*.iml
+*.ipr
 
-# System files
+# Miscellaneous Editors
+.project
+.classpath
+.c9/
+.settings/
+*.sublime-workspace
+*.sublime-project
+*.swp
+*.swo
+
+# ------------------------------------------------------------------------------
+# 6. AI Assistants & Tooling Caches
+# ------------------------------------------------------------------------------
+.claude/
+.codex/
+.gemini/
+skills-lock.json
+
+# Impeccable Local State & Caches
+.impeccable/config.local.json
+.impeccable/hook.cache.json
+.impeccable/hook.pending.json
+.impeccable/*.png
+.impeccable/live/server.json
+.impeccable/live/sessions/
+.impeccable/live/previews/
+.impeccable/live/annotations/
+.impeccable/live/cache/
+.impeccable/live/manual-edit-apply-transaction.json
+.impeccable/live/manual-edit-events.jsonl
+.impeccable/live/manual-edit-evidence/
+.impeccable/live/pending-manual-edits.json
+.impeccable/live/deferred-svelte-component-accepts.json
+.impeccable/live/*.png
+
+# ------------------------------------------------------------------------------
+# 7. Operating System & System Files
+# ------------------------------------------------------------------------------
+# macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
 Thumbs.db
-.vercel
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.fuse_hidden*
+.directory

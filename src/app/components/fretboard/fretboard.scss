@@ -1,0 +1,167 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.fretboard-scroll {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 2px 8px;
+  box-sizing: border-box;
+
+  /* Thin, on-theme scrollbar */
+  &::-webkit-scrollbar {
+    height: 8px;
+  }
+  &::-webkit-scrollbar-track {
+    background: var(--surface-container-low);
+    border-radius: var(--r-pill);
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--surface-container-high);
+    border-radius: var(--r-pill);
+  }
+}
+
+.fretboard {
+  /* Geometry tokens. 15 frets * 48px ≈ 880px before the open column. */
+  --open-w: 48px;
+  --fret-w: 48px;
+  --row-h: 44px;
+
+  display: inline-grid;
+  min-width: calc(var(--open-w) + var(--fret-w) * var(--fret-count));
+  grid-template-columns: var(--open-w) repeat(var(--fret-count), var(--fret-w));
+  align-items: center;
+  background-color: var(--surface-container-low);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-flat);
+}
+
+/* ---- Fret number header ---- */
+.fret-numbers {
+  display: contents;
+}
+
+.fret-number {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  height: 28px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border-subtle);
+
+  &.open-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  &.is-marker {
+    color: var(--text-muted);
+  }
+}
+
+.inlay-mark {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: var(--border-medium);
+}
+
+.inlay-pair {
+  display: flex;
+  gap: 4px;
+}
+
+/* ---- String rows ---- */
+.string-row {
+  display: contents;
+}
+
+.open-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--row-h);
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-right: 1px solid var(--border-medium); /* nut edge */
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.fret-cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--row-h);
+  border-bottom: 1px solid var(--border-subtle);
+  border-right: 1px solid var(--border-subtle); /* fret wire */
+
+  /* The nut: a heavier line between the open note and fret 1. */
+  &.has-nut {
+    border-right: 2px solid var(--border-active);
+  }
+
+  /* Faint string line running through the row, on top of cells. */
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 1px;
+    background-color: var(--border-medium);
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+}
+
+/* Remove trailing bottom border on the last string row visually — keep grid clean */
+.string-row:last-of-type .fret-cell,
+.string-row:last-of-type .open-note {
+  border-bottom: 0;
+}
+
+/* ---- Dots ---- */
+.fret-dot {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  transition: transform 0.1s ease;
+
+  &.is-root {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
+    font-weight: 800;
+    /* Halo ring to distinguish the root from other scale tones. */
+    box-shadow:
+      0 0 0 2px var(--surface-container-low),
+      0 0 0 4px rgba(255, 255, 255, 0.5),
+      0 1px 4px rgba(0, 0, 0, 0.5);
+  }
+}

@@ -1,0 +1,53 @@
+<div
+  class="fretboard-scroll"
+  role="figure"
+  [attr.aria-label]="'Fretboard showing ' + scaleLabel() + ' in ' + rootLabel() + '. Highest string on top.'">
+  <div class="fretboard" [style.--fret-count]="fretCount()">
+    <div class="fret-numbers" aria-hidden="true">
+      <span class="fret-number open-label">open</span>
+      @for (n of fretNumbers().slice(1); track n) {
+        <span class="fret-number" [class.is-marker]="singleInlays.has(n) || doubleInlays.has(n)">
+          {{ n }}
+          @if (doubleInlays.has(n)) {
+            <span class="inlay-pair"><span class="inlay-mark"></span><span class="inlay-mark"></span></span>
+          } @else if (singleInlays.has(n)) {
+            <span class="inlay-mark"></span>
+          }
+        </span>
+      }
+    </div>
+
+    @for (row of cells(); track $index) {
+      <div class="string-row">
+        <div class="open-note fret-cell has-nut" [attr.aria-label]="'Open string: ' + row[0].noteName">
+          @if (row[0].interval) {
+            <span
+              class="fret-dot"
+              [class.is-root]="row[0].isRoot"
+              [style.background-color]="row[0].color"
+              [style.color]="textColorOn(row[0].color)"
+              [title]="row[0].noteName + ' (' + row[0].interval.label + ')'">
+              {{ row[0].noteName }}
+            </span>
+          } @else {
+            <span aria-hidden="true">{{ row[0].noteName }}</span>
+          }
+        </div>
+        @for (cell of row.slice(1); track cell.fret) {
+          <div class="fret-cell">
+            @if (cell.interval) {
+              <span
+                class="fret-dot"
+                [class.is-root]="cell.isRoot"
+                [style.background-color]="cell.color"
+                [style.color]="textColorOn(cell.color)"
+                [title]="cell.noteName + ' (' + cell.interval.label + ')'">
+                {{ cell.noteName }}
+              </span>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>
