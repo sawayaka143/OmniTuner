@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal, DestroyRef } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RootNotePicker } from '../components/root-note-picker/root-note-picker';
 import { ScalePicker } from '../components/scale-picker/scale-picker';
 import { CustomTuning } from '../components/custom-tuning/custom-tuning';
@@ -28,8 +28,6 @@ const FRET_COUNT = 15;
   styleUrl: './scales.scss',
 })
 export class Scales {
-  private readonly destroyRef = inject(DestroyRef);
-
   protected readonly rootNotes = ROOT_NOTES;
   protected readonly scales = SCALES;
   protected readonly fretCount = FRET_COUNT;

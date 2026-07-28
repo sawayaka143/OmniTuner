@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { IntervalEntry } from '../../models/scale.model';
 import { colorForLabel, textColorOn } from '../../data/interval-colors';
 
