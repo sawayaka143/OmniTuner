@@ -5,16 +5,23 @@ export interface NoteInfo {
   noteName: string;
   octave: number;
   cents: number;
+  semitone: number;
 }
 
-export function noteFromFrequency(frequency: number): NoteInfo | null {
+export function noteFromFrequency(
+  frequency: number,
+  previousSemitone?: number,
+): NoteInfo | null {
   if (frequency <= 0) return null;
   const semitones = 12 * Math.log2(frequency / 440);
-  const rounded = Math.round(semitones);
+  const nearestSemitone = Math.round(semitones);
+  const rounded = previousSemitone !== undefined && Math.abs(semitones - previousSemitone) < 0.6
+    ? previousSemitone
+    : nearestSemitone;
   const cents = Math.round((semitones - rounded) * 100);
   const idx = ((rounded % 12) + 12) % 12;
   const octave = 4 + Math.floor((rounded + 9) / 12);
-  return { noteName: NOTE_NAMES[idx], octave, cents };
+  return { noteName: NOTE_NAMES[idx], octave, cents, semitone: rounded };
 }
 
 export function hzDisplay(frequency: number | null): string {

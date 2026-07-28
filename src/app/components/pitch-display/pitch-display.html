@@ -9,4 +9,7 @@
   <div class="pitch-cents" [class.in-tune-text]="isTuned()">
     {{ centsOffset() }}
   </div>
+  <p class="pitch-status" [class.locked]="isLocked()" aria-live="polite">
+    {{ statusMessage() }}
+  </p>
 </div>

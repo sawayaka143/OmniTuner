@@ -3,34 +3,39 @@
 interface AnalyseRequest {
   buffer: Float32Array;
   sampleRate: number;
+  sessionId: number;
 }
 
-interface AnalyseResponse {
+interface PitchEstimate {
   frequency: number | null;
   confidence: number;
 }
 
+interface AnalyseResponse extends PitchEstimate {
+  sessionId: number;
+}
+
 const SILENCE_RMS = 0.005;
-const MIN_FREQUENCY = 30;    // ~B0 note
+const MIN_FREQUENCY = 60;    // Below a detuned guitar's lowest string, above common fan rumble
 const MAX_FREQUENCY = 1200; // ~D6 note
 const YIN_THRESHOLD = 0.1;  // absolute threshold for the CMNDF dip search (paper suggests 0.10-0.15)
-const MIN_CONFIDENCE = 0.3; // final quality gate
+const MIN_CONFIDENCE = 0.68; // Reject weakly periodic noise before it reaches the display
 
 // Reusable buffer to minimize garbage collection in real-time processing
 let yinBuffer: Float64Array | null = null;
 let yinBufferSize = 0;
 
 self.onmessage = (event: MessageEvent<AnalyseRequest>) => {
-  const { buffer, sampleRate } = event.data;
+  const { buffer, sampleRate, sessionId } = event.data;
 
   const rms = computeRMS(buffer);
   if (rms < SILENCE_RMS) {
-    self.postMessage({ frequency: null, confidence: 0 } as AnalyseResponse);
+    self.postMessage({ frequency: null, confidence: 0, sessionId } as AnalyseResponse);
     return;
   }
 
   const result = yinDetect(buffer, sampleRate);
-  self.postMessage(result as AnalyseResponse);
+  self.postMessage({ ...result, sessionId } as AnalyseResponse);
 };
 
 function computeRMS(buffer: Float32Array): number {
@@ -41,7 +46,7 @@ function computeRMS(buffer: Float32Array): number {
   return Math.sqrt(sum / buffer.length);
 }
 
-function yinDetect(buffer: Float32Array, sampleRate: number): AnalyseResponse {
+function yinDetect(buffer: Float32Array, sampleRate: number): PitchEstimate {
   const N = buffer.length;
 
   const minLag = Math.max(1, Math.floor(sampleRate / MAX_FREQUENCY));

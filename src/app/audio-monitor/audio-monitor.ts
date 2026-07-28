@@ -1,4 +1,4 @@
-import { Component, inject, computed, signal, DestroyRef, OnInit } from '@angular/core';
+import { Component, inject, computed, signal, DestroyRef, OnInit, effect, untracked } from '@angular/core';
 import { AudioCaptureService } from '../services/audio-capture-service';
 import { INSTRUMENTS } from '../data/instrument.constants';
 import { InstrumentSelector } from '../components/instrument-selector/instrument-selector';
@@ -7,6 +7,7 @@ import { PitchDisplay } from '../components/pitch-display/pitch-display';
 import { StringList } from '../components/string-list/string-list';
 import {
   noteFromFrequency,
+  NoteInfo,
   hzDisplay,
   centsOffsetDisplay,
   needlePosition,
@@ -26,6 +27,8 @@ export class AudioMonitor implements OnInit {
 
   readonly isCapturing = this.audioCapture.isCapturing;
   readonly frequency = this.audioCapture.frequency;
+  readonly trackingState = this.audioCapture.trackingState;
+  readonly captureError = this.audioCapture.captureError;
 
   readonly selectedInstrumentId = signal('guitar');
   readonly selectedTuningId = signal('standard');
@@ -54,12 +57,18 @@ export class AudioMonitor implements OnInit {
 
   readonly currentStrings = computed(() => this.currentTuning().strings);
 
-  readonly noteInfo = computed(() => {
-    const f = this.frequency();
-    return f ? noteFromFrequency(f) : null;
-  });
+  readonly noteInfo = signal<NoteInfo | null>(null);
 
   readonly currentHz = computed(() => hzDisplay(this.frequency()));
+
+  readonly isLocked = computed(() => this.trackingState() === 'locked');
+
+  readonly statusMessage = computed(() => {
+    const error = this.captureError();
+    if (error) return error;
+    if (!this.isCapturing()) return 'READY TO TUNE';
+    return this.isLocked() ? 'LOCKED ON NOTE' : 'LISTENING FOR A NOTE';
+  });
 
   readonly isTuned = computed(() => isInTune(this.noteInfo()));
 
@@ -70,6 +79,19 @@ export class AudioMonitor implements OnInit {
   readonly activeString = computed(() =>
     findClosestString(this.frequency(), this.currentStrings()),
   );
+
+  constructor() {
+    effect(() => {
+      const frequency = this.frequency();
+      if (frequency === null || this.trackingState() !== 'locked') {
+        this.noteInfo.set(null);
+        return;
+      }
+
+      const previousSemitone = untracked(() => this.noteInfo())?.semitone;
+      this.noteInfo.set(noteFromFrequency(frequency, previousSemitone));
+    });
+  }
 
   ngOnInit(): void {
     const totalTicks = 41;
