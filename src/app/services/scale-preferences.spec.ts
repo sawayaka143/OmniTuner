@@ -233,24 +233,26 @@ describe('ScalePreferences', () => {
       expect(service.state().workbenchScale).toBe(1.20);
     });
 
-    it('falls back to 1 when stored value is missing or out of range', () => {
+    it('falls back to defaults for missing/invalid stored workbenchScale and clamps out-of-range values', () => {
       storage.setItem(SCALE_PREFERENCES_STORAGE_KEY, JSON.stringify({
         version: 1,
         state: { /* no workbenchScale field */ },
       }));
       expect(createService().state().workbenchScale).toBe(1);
 
+      TestBed.resetTestingModule();
       storage.setItem(SCALE_PREFERENCES_STORAGE_KEY, JSON.stringify({
         version: 1,
         state: { workbenchScale: 'invalid' },
       }));
       expect(createService().state().workbenchScale).toBe(1);
 
+      TestBed.resetTestingModule();
       storage.setItem(SCALE_PREFERENCES_STORAGE_KEY, JSON.stringify({
         version: 1,
         state: { workbenchScale: 5 },
       }));
-      expect(createService().state().workbenchScale).toBe(1);
+      expect(createService().state().workbenchScale).toBe(1.30);
     });
 
     it('resetWorkbenchScale returns to 1', () => {

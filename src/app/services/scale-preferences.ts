@@ -41,6 +41,9 @@ const HEX_COLOR = /^#[0-9a-f]{6}$/i;
 const WORKBENCH_SCALE_MIN = 0.75;
 const WORKBENCH_SCALE_MAX = 1.30;
 const WORKBENCH_SCALE_STEP = 0.05;
+const WORKBENCH_SCALE_STEPS_PER_UNIT = 1 / WORKBENCH_SCALE_STEP;
+const clampWorkbenchScale = (v: number): number =>
+  Math.min(Math.max(v, WORKBENCH_SCALE_MIN), WORKBENCH_SCALE_MAX);
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null;
@@ -135,7 +138,7 @@ const parseState = (value: unknown): ScalePreferencesState | null => {
       : DEFAULT_SCALE_PREFERENCES.noteColor,
     workbenchScale:
       typeof state['workbenchScale'] === 'number' && isFinite(state['workbenchScale'])
-        ? Math.min(Math.max(state['workbenchScale'], WORKBENCH_SCALE_MIN), WORKBENCH_SCALE_MAX)
+        ? clampWorkbenchScale(state['workbenchScale'])
         : DEFAULT_SCALE_PREFERENCES.workbenchScale,
   };
 };
@@ -197,8 +200,8 @@ export class ScalePreferences {
   }
 
   setWorkbenchScale(scale: number): void {
-    if (!isFinite(scale) || scale < WORKBENCH_SCALE_MIN || scale > WORKBENCH_SCALE_MAX) return;
-    const snapped = Math.round(scale / WORKBENCH_SCALE_STEP) * WORKBENCH_SCALE_STEP;
+    if (!isFinite(scale)) return;
+    const snapped = Math.round(clampWorkbenchScale(scale) * WORKBENCH_SCALE_STEPS_PER_UNIT) / WORKBENCH_SCALE_STEPS_PER_UNIT;
     this.update({ workbenchScale: snapped });
   }
 
