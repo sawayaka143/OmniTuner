@@ -22,17 +22,6 @@ export const ROOT_NOTES: readonly string[] = [
 ];
 
 /**
- * Standard guitar tuning open-string pitch classes, **high-string-first**
- * (index 0 = 1st string = highest pitch = top of the visual fretboard).
- * E2 A2 D3 G3 B3 E4 ordered low→high becomes E4 B3 G3 D3 A2 E2 → pitch classes
- * E=4, B=11, G=7, D=2, A=9, E=4.
- */
-export const STANDARD_TUNING_PCS: readonly number[] = [4, 11, 7, 2, 9, 4];
-
-/** Same notes as user-facing strings (for the custom-tuning default values). */
-export const STANDARD_TUNING_NOTES_HIGH_FIRST: readonly string[] = ['E', 'B', 'G', 'D', 'A', 'E'];
-
-/**
  * Scale / mode catalog. Each interval uses scale-degree notation relative to the
  * tonic, including Unicode accidentals where needed. To add a scale, append an
  * entry here — no other code changes required.
