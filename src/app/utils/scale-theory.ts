@@ -106,6 +106,7 @@ export const computeFretboard = (
   fretCount: number,
   intervals: readonly IntervalEntry[],
   preferFlats: boolean,
+  openMidiNotes?: readonly number[],
 ): FretCell[][] => {
   const intervalMap = intervalByPitchClass(intervals);
 
@@ -120,10 +121,13 @@ export const computeFretboard = (
         stringIndex,
         fret,
         pitchClass,
+        midi: openMidiNotes?.[stringIndex] !== undefined
+          ? openMidiNotes[stringIndex] + fret
+          : null,
         interval,
         noteName: noteName(pitchClass, preferFlats),
         color: interval ? colorForLabel(interval.label) : '',
-        isRoot: interval?.label === 'R',
+        isRoot: interval?.label === 'R' || interval?.label === '1',
       });
     }
     board.push(row);

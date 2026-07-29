@@ -1,15 +1,36 @@
 <header class="app-header">
   <div class="header-inner">
     <div class="app-title">OmniTuner</div>
-    <nav class="nav-desktop">
+    <nav class="nav-desktop" aria-label="Primary navigation">
       <a class="nav-link" routerLink="/tuner" routerLinkActive="active">Tuner</a>
       <a class="nav-link" routerLink="/scales" routerLinkActive="active">Scales</a>
     </nav>
     <div class="header-actions">
-      <button class="btn ghost" type="button" aria-label="Settings">
-        <span class="material-symbols-outlined">settings</span>
+      <button
+        class="btn ghost settings-trigger"
+        type="button"
+        aria-label="Settings"
+        aria-controls="settings-dialog"
+        [class.active]="settingsOpen()"
+        [attr.aria-expanded]="settingsOpen()"
+        (click)="settingsOpen.set(true)">
+        <span class="material-symbols-outlined" aria-hidden="true">settings</span>
       </button>
     </div>
   </div>
 </header>
+
 <router-outlet />
+
+<app-settings-panel
+  [open]="settingsOpen()"
+  [accent]="preferencesState().accent"
+  [rootNoteColor]="preferencesState().rootNoteColor"
+  [noteColor]="preferencesState().noteColor"
+  [workbenchScale]="preferencesState().workbenchScale"
+  (accentChange)="setAccent($event)"
+  (rootNoteColorChange)="setRootNoteColor($event)"
+  (noteColorChange)="setNoteColor($event)"
+  (workbenchScaleChange)="setWorkbenchScale($event)"
+  (workbenchScaleReset)="resetWorkbenchScale()"
+  (dismiss)="settingsOpen.set(false)" />

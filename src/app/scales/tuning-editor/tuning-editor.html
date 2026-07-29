@@ -1,0 +1,75 @@
+<dialog
+  #dialog
+  class="tuning-dialog"
+  aria-labelledby="tuning-editor-title"
+  aria-describedby="tuning-editor-subtitle"
+  (cancel)="requestDismiss($event)"
+  (click)="onDialogClick($event)">
+  <section class="editor-card">
+    <header class="editor-header">
+      <div>
+        <h2 id="tuning-editor-title">{{ title() }}</h2>
+        <p id="tuning-editor-subtitle">{{ subtitle() }}</p>
+      </div>
+      <button class="close-button" type="button" aria-label="Close tuning editor" (click)="requestDismiss()">
+        <span class="material-symbols-outlined" aria-hidden="true">close</span>
+      </button>
+    </header>
+
+    <div class="preset-row" role="group" aria-label="Start from a tuning preset">
+      <span>Start from</span>
+      @for (preset of presets; track preset.id) {
+        <button type="button" (click)="usePreset(preset)">{{ preset.name }}</button>
+      }
+    </div>
+
+    <div class="string-list" role="group" aria-label="Custom tuning strings">
+      @for (index of stringIndexes; track index; let row = $index) {
+        <div class="string-row" (wheel)="onWheel($event, index)">
+          <span class="string-number">{{ row + 1 }}</span>
+          <span class="string-line" [style.--string-weight.px]="1.4 + index * 0.44" aria-hidden="true"></span>
+          <button
+            class="step-button"
+            type="button"
+            [attr.aria-label]="'Lower string ' + (row + 1)"
+            (click)="onKeyboardStep($event, index, -1)"
+            (pointerdown)="startRepeating($event, index, -1)"
+            (pointerup)="stopRepeating()"
+            (pointerleave)="stopRepeating()"
+            (pointercancel)="stopRepeating()">
+            −
+          </button>
+          <strong class="note-name" [class.changed]="isChangedFromStandard(index)">
+            {{ noteName(notes()[index]) }}
+          </strong>
+          <button
+            class="step-button"
+            type="button"
+            [attr.aria-label]="'Raise string ' + (row + 1)"
+            (click)="onKeyboardStep($event, index, 1)"
+            (pointerdown)="startRepeating($event, index, 1)"
+            (pointerup)="stopRepeating()"
+            (pointerleave)="stopRepeating()"
+            (pointercancel)="stopRepeating()">
+            +
+          </button>
+        </div>
+      }
+    </div>
+
+    <footer class="editor-footer">
+      <label class="name-field">
+        <span class="visually-hidden">Tuning name</span>
+        <input
+          type="text"
+          maxlength="40"
+          autocomplete="off"
+          autofocus
+          placeholder="Name this tuning…"
+          [value]="name()"
+          (input)="onNameInput($event)" />
+      </label>
+      <button class="save-button" type="button" (click)="submit()">{{ saveLabel() }}</button>
+    </footer>
+  </section>
+</dialog>

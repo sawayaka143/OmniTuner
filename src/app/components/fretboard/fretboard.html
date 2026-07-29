@@ -1,53 +1,143 @@
 <div
+  #scaleContainer
   class="fretboard-scroll"
   role="figure"
-  [attr.aria-label]="'Fretboard showing ' + scaleLabel() + ' in ' + rootLabel() + '. Highest string on top.'">
-  <div class="fretboard" [style.--fret-count]="fretCount()">
-    <div class="fret-numbers" aria-hidden="true">
-      <span class="fret-number open-label">open</span>
-      @for (n of fretNumbers().slice(1); track n) {
-        <span class="fret-number" [class.is-marker]="singleInlays.has(n) || doubleInlays.has(n)">
-          {{ n }}
-          @if (doubleInlays.has(n)) {
-            <span class="inlay-pair"><span class="inlay-mark"></span><span class="inlay-mark"></span></span>
-          } @else if (singleInlays.has(n)) {
-            <span class="inlay-mark"></span>
-          }
-        </span>
-      }
-    </div>
+  [attr.aria-label]="
+    'Fretboard showing ' + scaleLabel() + ' in ' + rootLabel() + '. Highest string on top.'
+  "
+>
+  <div #scaleFrame class="fretboard-scale-frame">
+    <div
+      #board
+      class="fretboard"
+      [style.--fret-count]="fretCount()"
+      [style.--string-count]="cells().length"
+    >
+      <span class="open-heading" aria-hidden="true">open</span>
 
-    @for (row of cells(); track $index) {
-      <div class="string-row">
-        <div class="open-note fret-cell has-nut" [attr.aria-label]="'Open string: ' + row[0].noteName">
-          @if (row[0].interval) {
-            <span
-              class="fret-dot"
-              [class.is-root]="row[0].isRoot"
-              [style.background-color]="row[0].color"
-              [style.color]="textColorOn(row[0].color)"
-              [title]="row[0].noteName + ' (' + row[0].interval.label + ')'">
-              {{ row[0].noteName }}
+      <div class="board-inlays" aria-hidden="true">
+        @for (n of fretNumbers().slice(1); track n) {
+          @if (doubleInlays.has(n)) {
+            <span class="board-inlay is-double" [style.grid-column]="n + 1">
+              <span class="inlay-mark"></span>
+              <span class="inlay-mark"></span>
             </span>
-          } @else {
-            <span aria-hidden="true">{{ row[0].noteName }}</span>
+          } @else if (singleInlays.has(n)) {
+            <span class="board-inlay" [style.grid-column]="n + 1">
+              <span class="inlay-mark"></span>
+            </span>
           }
-        </div>
-        @for (cell of row.slice(1); track cell.fret) {
-          <div class="fret-cell">
-            @if (cell.interval) {
-              <span
-                class="fret-dot"
-                [class.is-root]="cell.isRoot"
-                [style.background-color]="cell.color"
-                [style.color]="textColorOn(cell.color)"
-                [title]="cell.noteName + ' (' + cell.interval.label + ')'">
-                {{ cell.noteName }}
-              </span>
-            }
-          </div>
         }
       </div>
-    }
+
+      @for (row of cells(); track $index; let stringIndex = $index) {
+        <div class="string-row">
+          <div
+            class="open-note fret-cell has-nut"
+            [style.--string-weight.px]="0.8 + stringIndex * 0.42"
+            [attr.aria-label]="'Open string: ' + row[0].noteName"
+          >
+            @if (row[0].interval) {
+              <button
+                type="button"
+                class="fret-dot"
+                [class.is-root]="row[0].isRoot"
+                [class.sounding]="activeCell() === row[0]"
+                [style.background-color]="row[0].color"
+                [style.color]="textColorOn(row[0].color)"
+                [attr.aria-label]="'Play ' + row[0].noteName + ', open string ' + (stringIndex + 1)"
+                (mouseenter)="inspect.emit(row[0])"
+                (mouseleave)="inspect.emit(null)"
+                (focus)="inspect.emit(row[0])"
+                (blur)="inspect.emit(null)"
+                (click)="play.emit(row[0])"
+              >
+                {{ labelMode() === 'scale-degrees' ? row[0].interval.label : row[0].noteName }}
+              </button>
+            } @else if (showOutsideScale()) {
+              <button
+                type="button"
+                class="fret-dot is-ghost"
+                [class.sounding]="activeCell() === row[0]"
+                [attr.aria-label]="
+                  'Play ' +
+                  row[0].noteName +
+                  ', open string ' +
+                  (stringIndex + 1) +
+                  ', outside scale'
+                "
+                (mouseenter)="inspect.emit(row[0])"
+                (mouseleave)="inspect.emit(null)"
+                (focus)="inspect.emit(row[0])"
+                (blur)="inspect.emit(null)"
+                (click)="play.emit(row[0])"
+              >
+                {{ labelMode() === 'scale-degrees' ? '' : row[0].noteName }}
+              </button>
+            } @else {
+              <span class="open-string-name" aria-hidden="true">{{ row[0].noteName }}</span>
+            }
+          </div>
+          @for (cell of row.slice(1); track cell.fret) {
+            <div class="fret-cell" [style.--string-weight.px]="0.8 + stringIndex * 0.42">
+              @if (cell.interval) {
+                <button
+                  type="button"
+                  class="fret-dot"
+                  [class.is-root]="cell.isRoot"
+                  [class.sounding]="activeCell() === cell"
+                  [style.background-color]="cell.color"
+                  [style.color]="textColorOn(cell.color)"
+                  [attr.aria-label]="
+                    'Play ' +
+                    cell.noteName +
+                    ', string ' +
+                    (stringIndex + 1) +
+                    ', fret ' +
+                    cell.fret
+                  "
+                  (mouseenter)="inspect.emit(cell)"
+                  (mouseleave)="inspect.emit(null)"
+                  (focus)="inspect.emit(cell)"
+                  (blur)="inspect.emit(null)"
+                  (click)="play.emit(cell)"
+                >
+                  {{ labelMode() === 'scale-degrees' ? cell.interval.label : cell.noteName }}
+                </button>
+              } @else if (showOutsideScale()) {
+                <button
+                  type="button"
+                  class="fret-dot is-ghost"
+                  [class.sounding]="activeCell() === cell"
+                  [attr.aria-label]="
+                    'Play ' +
+                    cell.noteName +
+                    ', string ' +
+                    (stringIndex + 1) +
+                    ', fret ' +
+                    cell.fret +
+                    ', outside scale'
+                  "
+                  (mouseenter)="inspect.emit(cell)"
+                  (mouseleave)="inspect.emit(null)"
+                  (focus)="inspect.emit(cell)"
+                  (blur)="inspect.emit(null)"
+                  (click)="play.emit(cell)"
+                >
+                  {{ labelMode() === 'scale-degrees' ? '' : cell.noteName }}
+                </button>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <div class="fret-numbers" aria-hidden="true">
+        <span class="fret-number open-label">0</span>
+        @for (n of fretNumbers().slice(1); track n) {
+          <span class="fret-number">{{ n }}</span>
+        }
+      </div>
+    </div>
   </div>
 </div>

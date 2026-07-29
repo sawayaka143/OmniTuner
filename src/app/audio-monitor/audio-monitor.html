@@ -10,15 +10,26 @@
     [dropdownOpen]="dropdownOpen()"
     (selectInstrument)="selectInstrument($event)"
     (selectTuning)="selectTuning($event)"
+    (newCustomTuning)="openCreateTuning()"
+    (editCustomTuning)="openEditTuning($event)"
+    (deleteCustomTuning)="deleteCustomTuning($event)"
     (toggleDropdown)="toggleDropdown()"
-    (closeDropdown)="closeDropdown()" />
+    (closeDropdown)="closeDropdown()"
+  />
+
+  <app-custom-tuning
+    [open]="tuningEditorOpen()"
+    [editing]="editingTuningId() !== null"
+    [instrumentLabel]="currentInstrumentLabel()"
+    [initialName]="editorInitialName()"
+    [initialNotes]="editorInitialNotes()"
+    (save)="saveCustomTuning($event)"
+    (dismiss)="dismissTuningEditor()"
+  />
 
   <div class="tuner-stage">
     <div class="meter-area">
-      <app-pitch-meter
-        [ticks]="ticks"
-        [needleLeft]="needleLeft()"
-        [isTuned]="isTuned()" />
+      <app-pitch-meter [ticks]="ticks" [needleLeft]="needleLeft()" [isTuned]="isTuned()" />
 
       <app-pitch-display
         [noteName]="noteInfo()?.noteName ?? null"
@@ -27,15 +38,20 @@
         [centsOffset]="centsOffset()"
         [statusMessage]="statusMessage()"
         [isLocked]="isLocked()"
-        [isTuned]="isTuned()" />
+        [isTuned]="isTuned()"
+      />
     </div>
 
-    <app-string-list
-      [strings]="currentStrings()"
-      [activeString]="activeString()" />
+    <app-string-list [strings]="currentStrings()" [activeString]="activeString()" />
   </div>
 
-  <button (click)="toggleCapture()" class="btn primary capture-btn" [class.active]="isCapturing()" type="button" style="min-width: 140px">
+  <button
+    (click)="toggleCapture()"
+    class="btn primary capture-btn"
+    [class.active]="isCapturing()"
+    type="button"
+    style="min-width: 140px"
+  >
     {{ isCapturing() ? 'Stop' : 'Start' }}
   </button>
 </main>

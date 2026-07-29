@@ -8,16 +8,30 @@ export interface NoteInfo {
   semitone: number;
 }
 
-export function noteFromFrequency(
-  frequency: number,
-  previousSemitone?: number,
-): NoteInfo | null {
+export function midiNoteToFrequency(midiNote: number): number {
+  return 440 * 2 ** ((midiNote - 69) / 12);
+}
+
+export function frequencyToMidiNote(frequency: number): number | null {
+  if (!Number.isFinite(frequency) || frequency <= 0) return null;
+  return Math.round(69 + 12 * Math.log2(frequency / 440));
+}
+
+export function midiNoteLabel(midiNote: number): string {
+  const semitoneFromA = midiNote - 69;
+  const noteIndex = ((semitoneFromA % 12) + 12) % 12;
+  const octave = Math.floor(midiNote / 12) - 1;
+  return `${NOTE_NAMES[noteIndex]}${octave}`;
+}
+
+export function noteFromFrequency(frequency: number, previousSemitone?: number): NoteInfo | null {
   if (frequency <= 0) return null;
   const semitones = 12 * Math.log2(frequency / 440);
   const nearestSemitone = Math.round(semitones);
-  const rounded = previousSemitone !== undefined && Math.abs(semitones - previousSemitone) < 0.6
-    ? previousSemitone
-    : nearestSemitone;
+  const rounded =
+    previousSemitone !== undefined && Math.abs(semitones - previousSemitone) < 0.6
+      ? previousSemitone
+      : nearestSemitone;
   const cents = Math.round((semitones - rounded) * 100);
   const idx = ((rounded % 12) + 12) % 12;
   const octave = 4 + Math.floor((rounded + 9) / 12);

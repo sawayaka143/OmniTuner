@@ -1,13 +1,28 @@
 <div class="selectors" (click)="closeDropdown.emit()">
-  <div class="seg" role="radiogroup" aria-label="Instrument selection" [style.--seg-count]="instruments().length">
-    <div class="seg-indicator"
-         [style.transform]="'translateX(' + (selectedInstrumentIndex() * 100) + '%)' + (isDeforming() ? ' scaleX(1.18) scaleY(0.82)' : '')"></div>
+  <div
+    class="seg"
+    role="radiogroup"
+    aria-label="Instrument selection"
+    [style.--seg-count]="instruments().length"
+  >
+    <div
+      class="seg-indicator"
+      [style.transform]="
+        'translateX(' +
+        selectedInstrumentIndex() * 100 +
+        '%)' +
+        (isDeforming() ? ' scaleX(1.18) scaleY(0.82)' : '')
+      "
+      aria-hidden="true"
+    ></div>
     @for (inst of instruments(); track inst.id) {
       <button
+        type="button"
         role="radio"
         [attr.aria-checked]="selectedInstrumentId() === inst.id"
         [class.active]="selectedInstrumentId() === inst.id"
-        (click)="selectInstrument.emit(inst.id); $event.stopPropagation()">
+        (click)="selectInstrument.emit(inst.id); $event.stopPropagation()"
+      >
         {{ inst.label }}
       </button>
     }
@@ -15,28 +30,99 @@
 
   <div class="dropdown-wrapper">
     <button
-      class="btn"
+      class="btn tuning-trigger"
+      type="button"
       [attr.aria-expanded]="dropdownOpen()"
       aria-haspopup="listbox"
-      (click)="toggleDropdown.emit(); $event.stopPropagation()">
+      aria-controls="tuning-selector-menu"
+      (click)="toggleDropdown.emit(); $event.stopPropagation()"
+    >
       <span class="dropdown-label">{{ currentTuning().label }}</span>
-      <span class="material-symbols-outlined dropdown-icon"
-            [class.rotated]="dropdownOpen()">expand_more</span>
+      <span
+        class="material-symbols-outlined dropdown-icon"
+        [class.rotated]="dropdownOpen()"
+        aria-hidden="true"
+        >expand_more</span
+      >
     </button>
 
     @if (dropdownOpen()) {
-      <ul class="dropdown-menu card" role="listbox" aria-label="Tuning selection"
-          (click)="$event.stopPropagation()">
-        @for (tuning of availableTunings(); track tuning.id) {
-          <li role="option"
-              [attr.aria-selected]="selectedTuningId() === tuning.id"
-              class="dropdown-item"
-              [class.selected]="selectedTuningId() === tuning.id"
-              (click)="selectTuning.emit(tuning.id)">
-            {{ tuning.label }}
-          </li>
-        }
-      </ul>
+      <div id="tuning-selector-menu" class="dropdown-menu card" (click)="$event.stopPropagation()">
+        <section class="menu-section" aria-labelledby="preset-tunings-heading">
+          <h3 id="preset-tunings-heading">Presets</h3>
+          <ul class="tuning-options" role="listbox" aria-labelledby="preset-tunings-heading">
+            @for (tuning of presetTunings(); track tuning.id) {
+              <li role="none">
+                <button
+                  class="tuning-option"
+                  type="button"
+                  role="option"
+                  [attr.aria-selected]="selectedTuningId() === tuning.id"
+                  [class.selected]="selectedTuningId() === tuning.id"
+                  (click)="chooseTuning($event, tuning.id)"
+                >
+                  <span>{{ tuning.label }}</span>
+                </button>
+              </li>
+            }
+          </ul>
+        </section>
+
+        <section class="menu-section custom-section" aria-labelledby="custom-tunings-heading">
+          <h3 id="custom-tunings-heading">Saved custom</h3>
+          @if (customTunings().length > 0) {
+            <div class="custom-layout">
+              <ul class="tuning-options" role="listbox" aria-labelledby="custom-tunings-heading">
+                @for (tuning of customTunings(); track tuning.id) {
+                  <li role="none">
+                    <button
+                      class="tuning-option"
+                      type="button"
+                      role="option"
+                      [attr.aria-selected]="selectedTuningId() === tuning.id"
+                      [class.selected]="selectedTuningId() === tuning.id"
+                      (click)="chooseTuning($event, tuning.id)"
+                    >
+                      <span>{{ tuning.label }}</span>
+                    </button>
+                  </li>
+                }
+              </ul>
+              <div class="custom-actions" aria-label="Custom tuning actions">
+                @for (tuning of customTunings(); track tuning.id) {
+                  <div class="action-row">
+                    <button
+                      class="icon-action"
+                      type="button"
+                      [attr.aria-label]="'Edit ' + tuning.label"
+                      [title]="'Edit ' + tuning.label"
+                      (click)="requestEdit($event, tuning.id)"
+                    >
+                      <span class="material-symbols-outlined" aria-hidden="true">edit</span>
+                    </button>
+                    <button
+                      class="icon-action delete-action"
+                      type="button"
+                      [attr.aria-label]="'Delete ' + tuning.label"
+                      [title]="'Delete ' + tuning.label"
+                      (click)="requestDelete($event, tuning.id)"
+                    >
+                      <span class="material-symbols-outlined" aria-hidden="true">delete</span>
+                    </button>
+                  </div>
+                }
+              </div>
+            </div>
+          } @else {
+            <p class="empty-message">No custom tunings saved.</p>
+          }
+        </section>
+
+        <button class="new-tuning-button" type="button" (click)="requestNewCustomTuning($event)">
+          <span class="material-symbols-outlined" aria-hidden="true">add</span>
+          New custom tuning…
+        </button>
+      </div>
     }
   </div>
 </div>

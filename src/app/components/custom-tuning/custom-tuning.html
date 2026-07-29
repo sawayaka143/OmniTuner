@@ -1,30 +1,93 @@
-<div class="tuning-editor" role="group" aria-label="Custom tuning editor">
-  <div class="tuning-header">
-    <span>String 1 (highest)</span>
-    <span>String 6 (lowest)</span>
-  </div>
-  <div class="tuning-fields">
-    @for (value of values(); track $index) {
-      <div class="field" [class.invalid]="errors()[$index]">
-        <label class="field-label" [for]="'string-' + $index">String {{ $index + 1 }}</label>
-        <input
-          class="tuning-input"
-          [id]="'string-' + $index"
-          type="text"
-          maxlength="3"
-          inputmode="text"
-          autocomplete="off"
-          spellcheck="false"
-          [value]="value"
-          [attr.aria-invalid]="errors()[$index]"
-          [attr.aria-describedby]="errors()[$index] ? 'string-' + $index + '-err' : null"
-          placeholder="â€”"
-          (input)="onInput($event, $index)" />
+<dialog
+  #dialog
+  class="tuning-dialog"
+  aria-labelledby="custom-tuning-title"
+  aria-describedby="custom-tuning-description"
+  (cancel)="requestDismiss($event)"
+  (click)="onDialogClick($event)"
+>
+  <form class="editor-card" (submit)="submit($event)">
+    <header class="editor-header">
+      <div>
+        <span class="editor-kicker">{{ instrumentLabel() }}</span>
+        <h2 id="custom-tuning-title">
+          {{ editing() ? 'Edit custom tuning' : 'New custom tuning' }}
+        </h2>
+        <p id="custom-tuning-description">Set each string one semitone at a time.</p>
       </div>
-      @if (errors()[$index]) {
-        <span class="visually-hidden" [id]="'string-' + $index + '-err'">Invalid note</span>
+      <button
+        class="icon-button close-button"
+        type="button"
+        aria-label="Close custom tuning editor"
+        (click)="requestDismiss()"
+      >
+        <span class="material-symbols-outlined" aria-hidden="true">close</span>
+      </button>
+    </header>
+
+    <div class="editor-content">
+      <label class="name-field" for="custom-tuning-name">Tuning name</label>
+      <input
+        id="custom-tuning-name"
+        class="name-input"
+        type="text"
+        required
+        autofocus
+        autocomplete="off"
+        [attr.maxlength]="maxNameLength"
+        [value]="name()"
+        [attr.aria-invalid]="nameInvalid()"
+        [attr.aria-describedby]="nameInvalid() ? 'custom-tuning-name-error' : null"
+        (input)="onNameInput($event)"
+      />
+      @if (nameInvalid()) {
+        <p id="custom-tuning-name-error" class="field-error">Enter a name to save this tuning.</p>
       }
-    }
-  </div>
-  <p class="tuning-hint">Enter any note name (e.g. E, Bb, F#, D#). Octaves are ignored.</p>
-</div>
+
+      <div class="string-list" role="group" aria-label="String pitches">
+        @for (note of notes(); track $index) {
+          <div class="string-row">
+            <span class="string-number">String {{ $index + 1 }}</span>
+            <span class="string-line" aria-hidden="true"></span>
+            <div class="note-controls">
+              <button
+                class="step-button"
+                type="button"
+                [disabled]="note <= minMidiNote"
+                [attr.aria-label]="
+                  'Lower string ' + ($index + 1) + ' from ' + noteLabel(note) + ' by one semitone'
+                "
+                (click)="step($index, -1)"
+              >
+                <span aria-hidden="true">−</span>
+              </button>
+              <output
+                [attr.aria-label]="'String ' + ($index + 1) + ' is tuned to ' + noteLabel(note)"
+              >
+                {{ noteLabel(note) }}
+              </output>
+              <button
+                class="step-button"
+                type="button"
+                [disabled]="note >= maxMidiNote"
+                [attr.aria-label]="
+                  'Raise string ' + ($index + 1) + ' from ' + noteLabel(note) + ' by one semitone'
+                "
+                (click)="step($index, 1)"
+              >
+                <span aria-hidden="true">+</span>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <footer class="editor-footer">
+      <button class="cancel-button" type="button" (click)="requestDismiss()">Cancel</button>
+      <button class="save-button" type="submit" [disabled]="nameInvalid()">
+        {{ editing() ? 'Save changes' : 'Create tuning' }}
+      </button>
+    </footer>
+  </form>
+</dialog>

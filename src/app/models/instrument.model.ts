@@ -1,16 +1,17 @@
 export interface TuningString {
-  name: string;
-  freq: number;
+  readonly name: string;
+  readonly freq: number;
 }
 
 export interface Tuning {
-  id: string;
-  label: string;
-  strings: TuningString[];
+  readonly id: string;
+  readonly label: string;
+  readonly strings: TuningString[];
+  readonly kind?: 'custom';
 }
 
 export interface Instrument {
-  id: string;
-  label: string;
-  tunings: Tuning[];
+  readonly id: string;
+  readonly label: string;
+  readonly tunings: Tuning[];
 }

@@ -1,28 +1,45 @@
-import { Component, inject, computed, signal, DestroyRef, OnInit, effect, untracked } from '@angular/core';
-import { AudioCaptureService } from '../services/audio-capture-service';
-import { INSTRUMENTS } from '../data/instrument.constants';
-import { InstrumentSelector } from '../components/instrument-selector/instrument-selector';
-import { PitchMeter, Tick } from '../components/pitch-meter/pitch-meter';
-import { PitchDisplay } from '../components/pitch-display/pitch-display';
-import { StringList } from '../components/string-list/string-list';
 import {
-  noteFromFrequency,
-  NoteInfo,
-  hzDisplay,
+  Component,
+  computed,
+  DestroyRef,
+  effect,
+  inject,
+  OnInit,
+  signal,
+  untracked,
+} from '@angular/core';
+import { CustomTuning, CustomTuningValue } from '../components/custom-tuning/custom-tuning';
+import { InstrumentSelector } from '../components/instrument-selector/instrument-selector';
+import { PitchDisplay } from '../components/pitch-display/pitch-display';
+import { PitchMeter, Tick } from '../components/pitch-meter/pitch-meter';
+import { StringList } from '../components/string-list/string-list';
+import { INSTRUMENTS } from '../data/instrument.constants';
+import { Instrument, Tuning } from '../models/instrument.model';
+import { SavedCustomTuning } from '../models/tuner-preferences.model';
+import { AudioCaptureService } from '../services/audio-capture-service';
+import { TunerPreferences } from '../services/tuner-preferences';
+import {
   centsOffsetDisplay,
-  needlePosition,
-  isInTune,
   findClosestString,
+  frequencyToMidiNote,
+  hzDisplay,
+  isInTune,
+  midiNoteLabel,
+  midiNoteToFrequency,
+  needlePosition,
+  NoteInfo,
+  noteFromFrequency,
 } from '../utils/pitch-utils';
 
 @Component({
   selector: 'app-audio-monitor',
-  imports: [InstrumentSelector, PitchMeter, PitchDisplay, StringList],
+  imports: [CustomTuning, InstrumentSelector, PitchMeter, PitchDisplay, StringList],
   templateUrl: './audio-monitor.html',
   styleUrl: './audio-monitor.scss',
 })
 export class AudioMonitor implements OnInit {
   private readonly audioCapture = inject(AudioCaptureService);
+  private readonly tunerPreferences = inject(TunerPreferences);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly isCapturing = this.audioCapture.isCapturing;
@@ -34,6 +51,10 @@ export class AudioMonitor implements OnInit {
   readonly selectedTuningId = signal('standard');
   readonly dropdownOpen = signal(false);
   readonly isDeforming = signal(false);
+  readonly tuningEditorOpen = signal(false);
+  readonly editingTuningId = signal<string | null>(null);
+  readonly editorInitialName = signal('');
+  readonly editorInitialNotes = signal<readonly number[]>([]);
 
   private deformTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -41,18 +62,27 @@ export class AudioMonitor implements OnInit {
   readonly ticks: Tick[] = [];
 
   readonly selectedInstrumentIndex = computed(() =>
-    INSTRUMENTS.findIndex((i) => i.id === this.selectedInstrumentId()),
+    INSTRUMENTS.findIndex((instrument) => instrument.id === this.selectedInstrumentId()),
   );
 
-  private readonly currentInstrument = computed(
-    () => INSTRUMENTS.find((i) => i.id === this.selectedInstrumentId()) ?? INSTRUMENTS[0],
+  private readonly currentInstrument = computed<Instrument>(
+    () =>
+      INSTRUMENTS.find((instrument) => instrument.id === this.selectedInstrumentId()) ??
+      INSTRUMENTS[0],
   );
 
-  readonly availableTunings = computed(() => this.currentInstrument().tunings);
+  readonly currentInstrumentLabel = computed(() => this.currentInstrument().label);
 
-  readonly currentTuning = computed(() => {
+  readonly availableTunings = computed<readonly Tuning[]>(() => [
+    ...this.currentInstrument().tunings,
+    ...this.tunerPreferences
+      .tuningsForInstrument(this.selectedInstrumentId())
+      .map((tuning) => this.toRuntimeTuning(tuning)),
+  ]);
+
+  readonly currentTuning = computed<Tuning>(() => {
     const tunings = this.availableTunings();
-    return tunings.find((t) => t.id === this.selectedTuningId()) ?? tunings[0];
+    return tunings.find((tuning) => tuning.id === this.selectedTuningId()) ?? tunings[0];
   });
 
   readonly currentStrings = computed(() => this.currentTuning().strings);
@@ -111,12 +141,11 @@ export class AudioMonitor implements OnInit {
   }
 
   protected selectInstrument(instrumentId: string): void {
-    if (this.selectedInstrumentId() === instrumentId) return;
+    const instrument = INSTRUMENTS.find((candidate) => candidate.id === instrumentId);
+    if (!instrument || this.selectedInstrumentId() === instrumentId) return;
+
     this.selectedInstrumentId.set(instrumentId);
-    const instrument = INSTRUMENTS.find((i) => i.id === instrumentId);
-    if (instrument) {
-      this.selectedTuningId.set(instrument.tunings[0].id);
-    }
+    this.selectedTuningId.set(instrument.tunings[0].id);
     this.dropdownOpen.set(false);
     if (this.deformTimeout !== null) clearTimeout(this.deformTimeout);
     this.isDeforming.set(true);
@@ -127,12 +156,67 @@ export class AudioMonitor implements OnInit {
   }
 
   protected selectTuning(tuningId: string): void {
+    if (!this.availableTunings().some((tuning) => tuning.id === tuningId)) return;
     this.selectedTuningId.set(tuningId);
     this.dropdownOpen.set(false);
   }
 
+  protected openCreateTuning(): void {
+    this.editingTuningId.set(null);
+    this.editorInitialName.set('');
+    this.editorInitialNotes.set(this.notesForTuning(this.currentTuning()));
+    this.dropdownOpen.set(false);
+    this.tuningEditorOpen.set(true);
+  }
+
+  protected openEditTuning(tuningId: string): void {
+    const tuning = this.tunerPreferences
+      .customTunings()
+      .find(
+        (candidate) =>
+          candidate.id === tuningId && candidate.instrumentId === this.selectedInstrumentId(),
+      );
+    if (!tuning) return;
+
+    this.editingTuningId.set(tuning.id);
+    this.editorInitialName.set(tuning.name);
+    this.editorInitialNotes.set([...tuning.notes]);
+    this.dropdownOpen.set(false);
+    this.tuningEditorOpen.set(true);
+  }
+
+  protected deleteCustomTuning(tuningId: string): void {
+    const tuning = this.tunerPreferences
+      .customTunings()
+      .find(
+        (candidate) =>
+          candidate.id === tuningId && candidate.instrumentId === this.selectedInstrumentId(),
+      );
+    if (!tuning) return;
+
+    this.tunerPreferences.deleteTuning(tuningId);
+    if (this.selectedTuningId() === tuningId) {
+      this.selectedTuningId.set(this.currentInstrument().tunings[0].id);
+    }
+  }
+
+  protected saveCustomTuning(value: CustomTuningValue): void {
+    const editingId = this.editingTuningId();
+    const tuning = editingId
+      ? this.tunerPreferences.updateTuning(editingId, value.name, value.notes)
+      : this.tunerPreferences.createTuning(this.selectedInstrumentId(), value.name, value.notes);
+
+    this.selectedTuningId.set(tuning.id);
+    this.dismissTuningEditor();
+  }
+
+  protected dismissTuningEditor(): void {
+    this.tuningEditorOpen.set(false);
+    this.editingTuningId.set(null);
+  }
+
   protected toggleDropdown(): void {
-    this.dropdownOpen.update((v) => !v);
+    this.dropdownOpen.update((open) => !open);
   }
 
   protected closeDropdown(): void {
@@ -145,5 +229,21 @@ export class AudioMonitor implements OnInit {
     } else {
       this.audioCapture.startCapture();
     }
+  }
+
+  private toRuntimeTuning(tuning: SavedCustomTuning): Tuning {
+    return {
+      id: tuning.id,
+      label: tuning.name,
+      kind: 'custom',
+      strings: tuning.notes.map((note) => ({
+        name: midiNoteLabel(note),
+        freq: midiNoteToFrequency(note),
+      })),
+    };
+  }
+
+  private notesForTuning(tuning: Tuning): readonly number[] {
+    return tuning.strings.map((string) => frequencyToMidiNote(string.freq) ?? 69);
   }
 }

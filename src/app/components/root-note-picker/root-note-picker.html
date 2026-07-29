@@ -5,23 +5,31 @@
     [attr.aria-expanded]="open()"
     aria-haspopup="listbox"
     (click)="toggle.emit(); $event.stopPropagation()">
-    <span class="dropdown-label">Root: {{ selected() }}</span>
-    <span class="material-symbols-outlined dropdown-icon" [class.rotated]="open()">expand_more</span>
+    <span class="button-copy">
+      <span class="button-kicker">Root note</span>
+      <strong>{{ selected() }}</strong>
+    </span>
+    <span class="material-symbols-outlined dropdown-icon" [class.rotated]="open()" aria-hidden="true">
+      expand_more
+    </span>
   </button>
 
   @if (open()) {
-    <ul class="dropdown-menu card" role="listbox" aria-label="Root note selection"
-        (click)="$event.stopPropagation()">
+    <div class="dropdown-menu card" role="listbox" aria-label="Root note selection" (click)="$event.stopPropagation()">
       @for (note of notes(); track note) {
-        <li
+        <button
+          type="button"
           role="option"
           [attr.aria-selected]="selected() === note"
           class="dropdown-item"
           [class.selected]="selected() === note"
           (click)="select.emit(note)">
-          {{ note }}
-        </li>
+          <span>{{ note }}</span>
+          @if (alternative(note); as alt) {
+            <span class="item-alt">{{ alt }}</span>
+          }
+        </button>
       }
-    </ul>
+    </div>
   }
 </div>

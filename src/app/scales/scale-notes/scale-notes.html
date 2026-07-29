@@ -1,0 +1,16 @@
+<div class="scale-notes" aria-label="Notes in the selected scale">
+  @for (tone of tones(); track tone.pitchClass) {
+    <button
+      type="button"
+      class="tone"
+      [class.root]="tone.isRoot"
+      [class.sounding]="activePitchClass() === tone.pitchClass"
+      [style.--tone-color]="tone.color"
+      [style.--tone-ink]="textColorOn(tone.color)"
+      [attr.aria-label]="'Play ' + tone.noteName + ', scale degree ' + tone.interval.label"
+      (click)="play.emit(tone)">
+      <strong>{{ tone.noteName }}</strong>
+      <span>{{ tone.interval.label }}</span>
+    </button>
+  }
+</div>

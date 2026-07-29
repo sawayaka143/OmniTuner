@@ -1,65 +1,121 @@
-<main class="app-main" (click)="closePickers()">
-  <div class="scales-controls">
-    <app-root-note-picker
-      [notes]="rootNotes"
-      [selected]="rootNote()"
-      [open]="rootPickerOpen()"
-      (select)="selectRoot($event)"
-      (toggle)="toggleRootPicker()"
-      (close)="closePickers()" />
+<main
+  class="app-main"
+  [style.--scale-accent]="preferencesState().accent"
+  [style.--scale-accent-ink]="accentInk()"
+  [style.--workbench-scale]="preferencesState().workbenchScale"
+  (click)="closePickers()">
+  <section class="studio-intro" aria-label="Scale selection">
+    <div class="scales-controls">
+      <app-root-note-picker
+        [notes]="rootNotes()"
+        [selected]="rootNote()"
+        [open]="rootPickerOpen()"
+        (select)="selectRoot($event)"
+        (toggle)="toggleRootPicker()"
+        (close)="closePickers()" />
 
-    <app-scale-picker
-      [scales]="scales"
-      [selectedId]="scaleId()"
-      [open]="scalePickerOpen()"
-      (select)="selectScale($event)"
-      (toggle)="toggleScalePicker()"
-      (close)="closePickers()" />
+      <app-scale-picker
+        [scales]="scales"
+        [selectedId]="scaleId()"
+        [open]="scalePickerOpen()"
+        (select)="selectScale($event)"
+        (toggle)="toggleScalePicker()"
+        (close)="closePickers()" />
 
-    <div class="seg" role="radiogroup" aria-label="Tuning mode" [style.--seg-count]="2">
-      <div
-        class="seg-indicator"
-        [style.transform]="tuningMode() === 'standard' ? 'translateX(0%)' : 'translateX(100%)'"></div>
-      <button
-        type="button"
-        role="radio"
-        [attr.aria-checked]="tuningMode() === 'standard'"
-        [class.active]="tuningMode() === 'standard'"
-        (click)="setTuningMode('standard'); $event.stopPropagation()">
-        Standard
-      </button>
-      <button
-        type="button"
-        role="radio"
-        [attr.aria-checked]="tuningMode() === 'custom'"
-        [class.active]="tuningMode() === 'custom'"
-        (click)="setTuningMode('custom'); $event.stopPropagation()">
-        Custom
-      </button>
+      <app-tuning-selector
+        [presets]="tuningPresets"
+        [savedTunings]="preferencesState().savedTunings"
+        [selected]="activeTuningSelection()"
+        [selectedName]="activeTuning().name"
+        [accidental]="preferencesState().accidental"
+        [open]="tuningPickerOpen()"
+        (select)="selectTuning($event)"
+        (delete)="deleteTuning($event)"
+        (edit)="openTuningEditor($event)"
+        (create)="openTuningEditor()"
+        (toggle)="toggleTuningPicker()" />
     </div>
-  </div>
+  </section>
 
-  @if (tuningMode() === 'custom') {
-    <div class="tuning-panel card" (click)="$event.stopPropagation()">
-      <app-custom-tuning
-        [values]="customNotes()"
-        [errors]="customErrors()"
-        (change)="onCustomChange($event.index, $event.value)" />
-      @if (hasCustomError()) {
-        <p class="tuning-warning" role="status">
-          Enter a valid note for every string. The standard tuning board remains visible until then.
-        </p>
-      }
+  <section class="workbench" aria-labelledby="current-scale-title">
+    <header class="workbench-header">
+      <div class="current-scale">
+        <span class="section-label">Current map</span>
+        <h2 id="current-scale-title">{{ rootNote() }} {{ currentScale().label }}</h2>
+        <p>{{ activeTuning().name }} · {{ tuningNotesLabel() }} · {{ fretCount() }} frets</p>
+      </div>
+
+      <div class="playback-actions">
+        <button
+          class="play-tuning"
+          type="button"
+          [attr.aria-label]="playbackSource() === 'tuning' ? 'Stop tuning playback' : 'Play open strings of current tuning'"
+          [title]="playbackSource() === 'tuning' ? 'Stop tuning playback' : 'Play open strings of current tuning'"
+          (click)="playTuning()">
+          <span class="material-symbols-outlined" aria-hidden="true">
+            {{ playbackSource() === 'tuning' ? 'graphic_eq' : 'play_arrow' }}
+          </span>
+          <span>{{ playbackSource() === 'tuning' ? 'Playing' : 'Play tuning' }}</span>
+        </button>
+
+        <button
+          class="play-scale"
+          type="button"
+          [attr.aria-label]="playbackSource() === 'scale' ? 'Stop scale playback' : 'Play ' + rootNote() + ' ' + currentScale().label + ' scale'"
+          [title]="playbackSource() === 'scale' ? 'Stop scale playback' : ''"
+          (click)="playScale()">
+          <span class="material-symbols-outlined" aria-hidden="true">
+            {{ playbackSource() === 'scale' ? 'graphic_eq' : 'play_arrow' }}
+          </span>
+          <span>{{ playbackSource() === 'scale' ? 'Playing' : 'Play scale' }}</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="control-rail" (click)="$event.stopPropagation()">
+      <app-scale-options
+        [accidental]="preferencesState().accidental"
+        [fretCount]="preferencesState().fretCount"
+        [labelMode]="preferencesState().labelMode"
+        [showOutsideScale]="preferencesState().showOutsideScale"
+        (accidentalChange)="setAccidental($event)"
+        (fretCountChange)="setFretCount($event)"
+        (labelModeChange)="setLabelMode($event)"
+        (showOutsideScaleChange)="setShowOutsideScale($event)" />
     </div>
-  }
 
-  <div class="fretboard-stage">
-    <app-fretboard
-      [cells]="cells()"
-      [fretCount]="fretCount"
-      [scaleLabel]="currentScale().label"
-      [rootLabel]="rootNote()" />
-  </div>
+    <div class="fretboard-stage">
+      <app-fretboard
+        [cells]="cells()"
+        [fretCount]="fretCount()"
+        [scaleLabel]="currentScale().label"
+        [rootLabel]="rootNote()"
+        [labelMode]="preferencesState().labelMode"
+        [showOutsideScale]="preferencesState().showOutsideScale"
+        [activeCell]="activeCell()"
+        (play)="playCell($event)"
+        (inspect)="inspectCell($event)" />
+    </div>
 
-  <app-interval-legend [intervals]="legendIntervals()" />
+    <footer class="workbench-footer">
+      <div class="readout">
+        <span class="section-label">Position</span>
+        <p>{{ readout() }}</p>
+      </div>
+      <app-scale-notes
+        [tones]="scaleTones()"
+        [activePitchClass]="activePitchClass()"
+        (play)="playTone($event)" />
+    </footer>
+  </section>
+
+  <app-tuning-editor
+    [open]="tuningEditorOpen()"
+    [mode]="editorMode()"
+    [initialName]="editorInitialName()"
+    [initialNotes]="editorInitialNotes()"
+    [accidental]="preferencesState().accidental"
+    (preview)="previewCustomTuning($event)"
+    (save)="saveCustomTuning($event)"
+    (dismiss)="dismissTuningEditor()" />
 </main>

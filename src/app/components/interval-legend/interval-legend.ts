@@ -22,6 +22,6 @@ export class IntervalLegend {
 
   /** Whether an interval is the root. */
   protected isRoot(interval: IntervalEntry): boolean {
-    return interval.label === 'R';
+    return interval.label === 'R' || interval.label === '1';
   }
 }

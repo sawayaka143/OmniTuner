@@ -7,44 +7,49 @@
  * for future features (e.g. a chord builder) without further edits.
  *
  * The exact mapping requested by the product:
- *   Root                       -> #779900
- *   3 / m3 / sus2 / sus4       -> #ff9900
- *   5th / b5 / #5              -> #227799
- *   b6 / 6 / dim7 / 7th / maj7 -> #ee6600
- *   9th / 11th / 13th          -> #ee0000
- *   b9 / #9 / #11 / b13        -> #bb3366
+ * Scale-degree labels use the existing interval color families so changing the
+ * notation does not change the established appearance.
  */
 export const INTERVAL_COLORS: Readonly<Record<string, string>> = {
   // Root
   R: '#779900',
+  '1': '#779900',
 
   // 3rd family
   '3': '#ff9900',
   m3: '#ff9900',
+  '♭3': '#ff9900',
   sus2: '#ff9900',
   sus4: '#ff9900',
 
   // 5th family
   '5': '#227799',
   b5: '#227799',
+  '♭5': '#227799',
   '#5': '#227799',
 
   // 6th / 7th family
   b6: '#ee6600',
+  '♭6': '#ee6600',
   '6': '#ee6600',
   dim7: '#ee6600',
   '7': '#ee6600',
+  '♭7': '#ee6600',
   maj7: '#ee6600',
 
   // Natural extensions
+  '2': '#ee0000',
+  '4': '#ee0000',
   '9': '#ee0000',
   '11': '#ee0000',
   '13': '#ee0000',
 
   // Altered extensions
   b9: '#bb3366',
+  '♭2': '#bb3366',
   '#9': '#bb3366',
   '#11': '#bb3366',
+  '♯4': '#bb3366',
   b13: '#bb3366',
 };
 

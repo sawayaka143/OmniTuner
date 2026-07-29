@@ -5,23 +5,34 @@
     [attr.aria-expanded]="open()"
     aria-haspopup="listbox"
     (click)="toggle.emit(); $event.stopPropagation()">
-    <span class="dropdown-label">Scale: {{ selectedLabel() }}</span>
-    <span class="material-symbols-outlined dropdown-icon" [class.rotated]="open()">expand_more</span>
+    <span class="button-copy">
+      <span class="button-kicker">Scale</span>
+      <strong>{{ selectedLabel() }}</strong>
+    </span>
+    <span class="material-symbols-outlined dropdown-icon" [class.rotated]="open()" aria-hidden="true">
+      expand_more
+    </span>
   </button>
 
   @if (open()) {
-    <ul class="dropdown-menu card" role="listbox" aria-label="Scale selection"
-        (click)="$event.stopPropagation()">
-      @for (scale of scales(); track scale.id) {
-        <li
-          role="option"
-          [attr.aria-selected]="selectedId() === scale.id"
-          class="dropdown-item"
-          [class.selected]="selectedId() === scale.id"
-          (click)="select.emit(scale.id)">
-          {{ scale.label }}
-        </li>
+    <div class="dropdown-menu card" role="listbox" aria-label="Scale selection" (click)="$event.stopPropagation()">
+      @for (group of groupedScales(); track group.label) {
+        <div class="dropdown-group">{{ group.label }}</div>
+        @for (scale of group.scales; track scale.id) {
+          <button
+            type="button"
+            role="option"
+            [attr.aria-selected]="selectedId() === scale.id"
+            class="dropdown-item"
+            [class.selected]="selectedId() === scale.id"
+            (click)="select.emit(scale.id)">
+            <span>{{ scale.label }}</span>
+            @if (scale.aka) {
+              <span class="item-alt">{{ scale.aka }}</span>
+            }
+          </button>
+        }
       }
-    </ul>
+    </div>
   }
 </div>

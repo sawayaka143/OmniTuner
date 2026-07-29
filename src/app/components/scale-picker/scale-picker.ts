@@ -1,6 +1,11 @@
 import { Component, computed, input, output } from '@angular/core';
 import { Scale } from '../../models/scale.model';
 
+interface ScaleGroup {
+  readonly label: string;
+  readonly scales: readonly Scale[];
+}
+
 /**
  * Presentational dropdown for selecting a scale or mode. Mirrors the
  * `.dropdown-wrapper` pattern used by the instrument selector.
@@ -26,4 +31,13 @@ export class ScalePicker {
   protected readonly selectedLabel = computed(
     () => this.scales().find((s) => s.id === this.selectedId())?.label ?? '',
   );
+
+  protected readonly groupedScales = computed<readonly ScaleGroup[]>(() => {
+    const groups = new Map<string, Scale[]>();
+    for (const scale of this.scales()) {
+      const label = scale.group ?? 'Scales';
+      groups.set(label, [...(groups.get(label) ?? []), scale]);
+    }
+    return [...groups].map(([label, scales]) => ({ label, scales }));
+  });
 }

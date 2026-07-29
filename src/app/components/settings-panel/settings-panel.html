@@ -1,0 +1,121 @@
+<dialog
+  #dialog
+  id="settings-dialog"
+  class="settings-dialog"
+  aria-labelledby="settings-title"
+  (cancel)="requestDismiss($event)"
+  (click)="onDialogClick($event)">
+  <section class="settings-sheet">
+    <header class="settings-header">
+      <div>
+        <span class="settings-kicker">OmniTuner</span>
+        <h2 id="settings-title">Settings</h2>
+      </div>
+      <button class="close-button" type="button" aria-label="Close settings" (click)="requestDismiss()">
+        <span class="material-symbols-outlined" aria-hidden="true">close</span>
+      </button>
+    </header>
+
+    <div class="settings-content">
+      <section class="tweaks" aria-labelledby="tweaks-title">
+        <div class="section-heading">
+          <div>
+            <span class="settings-kicker">Appearance</span>
+            <h3 id="tweaks-title">Tweaks</h3>
+          </div>
+          <span class="current-accent">{{ accent() }}</span>
+        </div>
+
+        <p>Choose the accent used for selected controls and active states.</p>
+
+        <div class="swatches" role="radiogroup" aria-label="Accent color">
+          @for (option of accentOptions; track option.value) {
+            <button
+              class="swatch"
+              type="button"
+              role="radio"
+              [class.selected]="accent().toLowerCase() === option.value"
+              [attr.aria-checked]="accent().toLowerCase() === option.value"
+              [attr.aria-label]="option.name"
+              [title]="option.name"
+              [style.--swatch-color]="option.value"
+              (click)="chooseAccent(option.value)">
+              <span aria-hidden="true"></span>
+            </button>
+          }
+        </div>
+
+        <label class="custom-accent">
+          <span class="color-preview" [style.background-color]="accent()" aria-hidden="true"></span>
+          <span class="custom-copy">
+            <strong>Custom accent</strong>
+            <span>Use any six-digit color</span>
+          </span>
+          <input
+            type="color"
+            [value]="accent()"
+            aria-label="Choose a custom accent color"
+            (input)="onCustomAccent($event)" />
+        </label>
+
+        <section class="note-colors" aria-labelledby="note-colors-title">
+          <h4 id="note-colors-title">Scale notes</h4>
+          <p>Set the root and other-note colors used on the fretboard and note controls.</p>
+
+          <label class="custom-accent">
+            <span class="color-preview" [style.background-color]="rootNoteColor()" aria-hidden="true"></span>
+            <span class="custom-copy">
+              <strong>Root note</strong>
+              <span>{{ rootNoteColor() }}</span>
+            </span>
+            <input
+              type="color"
+              [value]="rootNoteColor()"
+              aria-label="Choose the root note color"
+              (input)="onRootNoteColor($event)" />
+          </label>
+
+          <label class="custom-accent">
+            <span class="color-preview" [style.background-color]="noteColor()" aria-hidden="true"></span>
+            <span class="custom-copy">
+              <strong>Other notes</strong>
+              <span>{{ noteColor() }}</span>
+            </span>
+            <input
+              type="color"
+              [value]="noteColor()"
+              aria-label="Choose the color for other scale notes"
+              (input)="onNoteColor($event)" />
+          </label>
+        </section>
+
+        <section class="workbench-size" aria-labelledby="workbench-size-title">
+          <h4 id="workbench-size-title">Workbench</h4>
+          <p>Scale the workbench card to fit your screen.</p>
+
+          <label class="workbench-size-control">
+            <span class="custom-copy">
+              <strong>Workbench size</strong>
+              <span>{{ (workbenchScale() * 100).toFixed(0) }}%</span>
+            </span>
+            <input
+              type="range"
+              min="0.75"
+              max="1.30"
+              step="0.05"
+              [value]="workbenchScale()"
+              aria-label="Workbench size"
+              (input)="onWorkbenchScale($event)" />
+            <button
+              class="reset-btn"
+              type="button"
+              aria-label="Reset workbench size"
+              (click)="workbenchScaleReset.emit()">
+              <span class="material-symbols-outlined" aria-hidden="true">restart_alt</span>
+            </button>
+          </label>
+        </section>
+      </section>
+    </div>
+  </section>
+</dialog>

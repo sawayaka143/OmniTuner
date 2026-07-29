@@ -1,0 +1,78 @@
+<div class="tuning-selector">
+  <button
+    class="selector-button"
+    type="button"
+    aria-haspopup="dialog"
+    aria-controls="tuning-selector-menu"
+    [attr.aria-expanded]="open()"
+    (click)="toggle.emit(); $event.stopPropagation()">
+    <span class="selector-copy">
+      <span class="selector-kicker">Tuning</span>
+      <strong>{{ selectedName() }}</strong>
+    </span>
+    <span class="material-symbols-outlined selector-icon" [class.rotated]="open()" aria-hidden="true">
+      expand_more
+    </span>
+  </button>
+
+  @if (open()) {
+    <div
+      id="tuning-selector-menu"
+      class="selector-menu"
+      role="dialog"
+      aria-label="Choose or manage guitar tuning"
+      (click)="$event.stopPropagation()">
+      <div class="selector-group">Presets</div>
+      @for (preset of presets(); track preset.id) {
+        <button
+          class="selector-option"
+          type="button"
+          [class.selected]="isSelected('preset', preset.id)"
+          [attr.aria-pressed]="isSelected('preset', preset.id)"
+          (click)="select.emit({ kind: 'preset', id: preset.id })">
+          <span>{{ preset.name }}</span>
+          <span class="note-summary">{{ notesLabel(preset.notes) }}</span>
+        </button>
+      }
+
+      @if (savedTunings().length) {
+        <div class="selector-group">Saved</div>
+        @for (tuning of savedTunings(); track tuning.id) {
+          <div class="saved-option" [class.selected]="isSelected('custom', tuning.id)">
+            <button
+              class="selector-option saved-main"
+              type="button"
+              [attr.aria-pressed]="isSelected('custom', tuning.id)"
+              (click)="select.emit({ kind: 'custom', id: tuning.id })">
+              <span>{{ tuning.name }}</span>
+              <span class="note-summary">{{ notesLabel(tuning.notes) }}</span>
+            </button>
+            <button
+              class="saved-action edit-button"
+              type="button"
+              [attr.aria-label]="'Edit ' + tuning.name + ' tuning'"
+              (click)="edit.emit(tuning.id); $event.stopPropagation()">
+              <span class="material-symbols-outlined" aria-hidden="true">edit</span>
+            </button>
+            <button
+              class="saved-action delete-button"
+              type="button"
+              [attr.aria-label]="'Delete ' + tuning.name + ' tuning'"
+              (click)="delete.emit(tuning.id); $event.stopPropagation()">
+              <span class="material-symbols-outlined" aria-hidden="true">close</span>
+            </button>
+          </div>
+        }
+      }
+
+      <div class="selector-group">Custom</div>
+      <button
+        class="selector-option create-option"
+        type="button"
+        (click)="create.emit(); $event.stopPropagation()">
+        <span>New custom tuning…</span>
+        <span class="note-summary">Start from current</span>
+      </button>
+    </div>
+  }
+</div>

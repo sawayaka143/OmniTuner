@@ -3,165 +3,246 @@
   width: 100%;
 }
 
-.fretboard-scroll {
-  width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding: 4px 2px 8px;
-  box-sizing: border-box;
+@keyframes note-strike {
+  0% {
+    transform: scale(0.88);
+    filter: brightness(1.35);
+  }
+  55% {
+    transform: scale(1.16);
+    filter: brightness(1.12);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
 
-  /* Thin, on-theme scrollbar */
-  &::-webkit-scrollbar {
-    height: 8px;
-  }
-  &::-webkit-scrollbar-track {
-    background: var(--surface-container-low);
-    border-radius: var(--r-pill);
-  }
-  &::-webkit-scrollbar-thumb {
-    background: var(--surface-container-high);
-    border-radius: var(--r-pill);
-  }
+.fretboard-scroll {
+  box-sizing: border-box;
+  width: 100%;
+  overflow: hidden;
+  padding: 18px 4px 8px;
+}
+
+.fretboard-scale-frame {
+  position: relative;
+  width: max-content;
+  margin: 0 auto;
+  transition:
+    width 250ms ease,
+    height 250ms ease;
 }
 
 .fretboard {
-  /* Geometry tokens. 15 frets * 48px ≈ 880px before the open column. */
-  --open-w: 48px;
-  --fret-w: 48px;
-  --row-h: 44px;
+  --open-w: 62px;
+  --fret-w: 58px;
+  --row-h: 50px;
 
+  position: relative;
   display: inline-grid;
+  transform-origin: 0 0;
+  transition: transform 250ms ease;
   min-width: calc(var(--open-w) + var(--fret-w) * var(--fret-count));
   grid-template-columns: var(--open-w) repeat(var(--fret-count), var(--fret-w));
+  grid-template-rows: repeat(var(--string-count), var(--row-h)) 18px;
   align-items: center;
-  background-color: var(--surface-container-low);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--r-md);
-  box-shadow: var(--shadow-flat);
-}
 
-/* ---- Fret number header ---- */
-.fret-numbers {
-  display: contents;
-}
-
-.fret-number {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 4px;
-  height: 28px;
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--text-dim);
-  font-variant-numeric: tabular-nums;
-  padding-bottom: 4px;
-  border-bottom: 1px solid var(--border-subtle);
-
-  &.open-label {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-
-  &.is-marker {
-    color: var(--text-muted);
+  &::before {
+    content: '';
+    position: absolute;
+    z-index: 0;
+    top: 0;
+    bottom: 18px;
+    left: 0;
+    width: var(--open-w);
+    border-radius: var(--r-md) 0 0 var(--r-md);
+    background: #161615;
+    box-shadow: 8px 0 18px rgba(0, 0, 0, 0.2);
+    pointer-events: none;
   }
 }
 
-.inlay-mark {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background-color: var(--border-medium);
-}
-
-.inlay-pair {
-  display: flex;
-  gap: 4px;
-}
-
-/* ---- String rows ---- */
+.fret-numbers,
 .string-row {
   display: contents;
 }
 
-.open-note {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: var(--row-h);
+.open-heading {
+  position: absolute;
+  top: -14px;
+  left: 0;
+  width: var(--open-w);
+  color: var(--text-dim);
   font-family: var(--mono);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-muted);
-  border-right: 1px solid var(--border-medium); /* nut edge */
-  border-bottom: 1px solid var(--border-subtle);
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  text-align: center;
+  text-transform: uppercase;
 }
 
-.fret-cell {
-  position: relative;
+.fret-number {
+  height: 18px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 1px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+}
+
+.board-inlays {
+  position: absolute;
+  z-index: 1;
+  inset: 0 0 18px;
+  display: grid;
+  grid-template-columns: var(--open-w) repeat(var(--fret-count), var(--fret-w));
+  pointer-events: none;
+}
+
+.board-inlay {
+  grid-row: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: var(--row-h);
-  border-bottom: 1px solid var(--border-subtle);
-  border-right: 1px solid var(--border-subtle); /* fret wire */
 
-  /* The nut: a heavier line between the open note and fret 1. */
-  &.has-nut {
-    border-right: 2px solid var(--border-active);
+  &.is-double {
+    flex-direction: column;
+    justify-content: space-evenly;
   }
+}
 
-  /* Faint string line running through the row, on top of cells. */
+.inlay-mark {
+  width: 8px;
+  height: 8px;
+  background: rgba(235, 235, 228, 0.12);
+  transform: rotate(45deg);
+}
+
+.open-note,
+.fret-cell {
+  position: relative;
+  height: var(--row-h);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid rgba(255, 255, 255, 0.11);
+  background: #1b1b19;
+
   &::before {
     content: '';
     position: absolute;
-    left: 0;
+    z-index: 0;
     right: 0;
+    left: 0;
     top: 50%;
-    height: 1px;
-    background-color: var(--border-medium);
+    height: var(--string-weight, 1px);
+    background: rgba(235, 235, 228, 0.48);
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.55);
     transform: translateY(-50%);
     pointer-events: none;
   }
 }
 
-/* Remove trailing bottom border on the last string row visually — keep grid clean */
-.string-row:last-of-type .fret-cell,
-.string-row:last-of-type .open-note {
-  border-bottom: 0;
+.open-note {
+  z-index: 1;
+  border-right: 3px solid rgba(245, 245, 243, 0.62);
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
 }
 
-/* ---- Dots ---- */
-.fret-dot {
+.open-string-name {
   position: relative;
   z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
+  padding: 2px 5px;
+  background: #161615;
+}
+
+.fret-dot {
+  position: relative;
+  z-index: 2;
+  width: 27px;
+  height: 27px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
   border-radius: 50%;
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-  transition: transform 0.1s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.48);
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    filter 150ms ease,
+    box-shadow 150ms ease,
+    opacity 150ms ease;
+
+  &:hover {
+    filter: brightness(1.13);
+    transform: scale(1.1);
+  }
+
+  &:active {
+    transform: scale(0.92);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--text);
+    outline-offset: 3px;
+  }
+
+  &.is-ghost {
+    width: 23px;
+    height: 23px;
+    border: 1px solid var(--border-medium);
+    background: #242422;
+    color: var(--text-dim);
+    font-size: 9px;
+    font-weight: 500;
+    opacity: 0.66;
+    box-shadow: none;
+
+    &:hover,
+    &:focus-visible {
+      opacity: 1;
+    }
+  }
 
   &.is-root {
-    width: 32px;
-    height: 32px;
-    font-size: 12px;
-    font-weight: 800;
-    /* Halo ring to distinguish the root from other scale tones. */
+    width: 33px;
+    height: 33px;
+    font-size: 11px;
     box-shadow:
-      0 0 0 2px var(--surface-container-low),
-      0 0 0 4px rgba(255, 255, 255, 0.5),
-      0 1px 4px rgba(0, 0, 0, 0.5);
+      0 0 0 2px #1b1b19,
+      0 0 0 3px rgba(245, 245, 243, 0.56),
+      0 3px 7px rgba(0, 0, 0, 0.55);
+  }
+
+  &.sounding {
+    animation: note-strike 240ms cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow:
+      0 0 0 3px #1b1b19,
+      0 0 0 5px currentColor,
+      0 8px 20px rgba(0, 0, 0, 0.5);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fretboard-scale-frame,
+  .fretboard {
+    transition: none;
+  }
+
+  .fret-dot.sounding {
+    animation: none;
   }
 }
