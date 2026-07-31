@@ -115,6 +115,11 @@
     [initialName]="editorInitialName()"
     [initialNotes]="editorInitialNotes()"
     [accidental]="preferencesState().accidental"
+    [presets]="editorPresets"
+    [referenceNotes]="referenceNotes"
+    [minMidiNote]="minTuningMidiNote"
+    [maxMidiNote]="maxTuningMidiNote"
+    [maxNameLength]="maxTuningNameLength"
     (preview)="previewCustomTuning($event)"
     (save)="saveCustomTuning($event)"
     (dismiss)="dismissTuningEditor()" />

@@ -8,14 +8,19 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import { CustomTuning, CustomTuningValue } from '../components/custom-tuning/custom-tuning';
 import { InstrumentSelector } from '../components/instrument-selector/instrument-selector';
+import { TuningEditor, TuningEditorValue } from '../components/tunings-editor/tunings-editor';
 import { PitchDisplay } from '../components/pitch-display/pitch-display';
 import { PitchMeter, Tick } from '../components/pitch-meter/pitch-meter';
 import { StringList } from '../components/string-list/string-list';
 import { INSTRUMENTS } from '../data/instrument.constants';
 import { Instrument, Tuning } from '../models/instrument.model';
-import { SavedCustomTuning } from '../models/tuner-preferences.model';
+import {
+  MAX_CUSTOM_TUNING_NAME_LENGTH,
+  MAX_TUNER_MIDI_NOTE,
+  MIN_TUNER_MIDI_NOTE,
+  SavedCustomTuning,
+} from '../models/tuner-preferences.model';
 import { AudioCaptureService } from '../services/audio-capture-service';
 import { TunerPreferences } from '../services/tuner-preferences';
 import {
@@ -33,7 +38,7 @@ import {
 
 @Component({
   selector: 'app-audio-monitor',
-  imports: [CustomTuning, InstrumentSelector, PitchMeter, PitchDisplay, StringList],
+  imports: [TuningEditor, InstrumentSelector, PitchMeter, PitchDisplay, StringList],
   templateUrl: './audio-monitor.html',
   styleUrl: './audio-monitor.scss',
 })
@@ -86,6 +91,22 @@ export class AudioMonitor implements OnInit {
   });
 
   readonly currentStrings = computed(() => this.currentTuning().strings);
+
+  protected readonly minTunerMidiNote = MIN_TUNER_MIDI_NOTE;
+  protected readonly maxTunerMidiNote = MAX_TUNER_MIDI_NOTE;
+  protected readonly maxCustomTuningNameLength = MAX_CUSTOM_TUNING_NAME_LENGTH;
+
+  // Built-in tunings for the current instrument become the "Start from" presets.
+  readonly editorPresets = computed(() =>
+    this.currentInstrument().tunings.map((tuning) => ({
+      id: tuning.id,
+      name: tuning.label,
+      notes: tuning.strings.map((string) => frequencyToMidiNote(string.freq) ?? 69),
+    })),
+  );
+
+  // Highlight strings that differ from the instrument's default tuning.
+  readonly referenceNotes = computed(() => this.editorPresets()[0]?.notes ?? null);
 
   readonly noteInfo = signal<NoteInfo | null>(null);
 
@@ -200,7 +221,7 @@ export class AudioMonitor implements OnInit {
     }
   }
 
-  protected saveCustomTuning(value: CustomTuningValue): void {
+  protected saveCustomTuning(value: TuningEditorValue): void {
     const editingId = this.editingTuningId();
     const tuning = editingId
       ? this.tunerPreferences.updateTuning(editingId, value.name, value.notes)

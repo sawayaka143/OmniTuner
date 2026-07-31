@@ -3,7 +3,7 @@
 }
 
 .tuning-dialog {
-  width: min(500px, calc(100vw - 32px));
+  width: min(520px, calc(100vw - 32px));
   max-height: calc(100dvh - 32px);
   padding: 0;
   overflow: auto;
@@ -13,8 +13,8 @@
   color: var(--text);
 
   &::backdrop {
-    background: rgba(0, 0, 0, 0.72);
-    backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
   }
 }
 
@@ -54,7 +54,8 @@
 
 .editor-kicker,
 .name-field,
-.string-number {
+.string-number,
+.preset-row > span {
   color: var(--text-muted);
   font-size: 10px;
   font-weight: 500;
@@ -65,7 +66,8 @@
 .icon-button,
 .step-button,
 .cancel-button,
-.save-button {
+.save-button,
+.preset-row button {
   font-family: var(--mono);
   cursor: pointer;
   transition:
@@ -86,7 +88,8 @@
 
 .icon-button,
 .step-button,
-.cancel-button {
+.cancel-button,
+.preset-row button {
   border: 1px solid var(--border-subtle);
   background: var(--surface-container);
   color: var(--text-muted);
@@ -154,14 +157,31 @@
   font-size: 11px;
 }
 
+.preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  margin: 4px 0 10px;
+
+  > span {
+    margin-right: 3px;
+  }
+
+  button {
+    padding: 6px 11px;
+    border-radius: var(--r-pill);
+    font-size: 10px;
+  }
+}
+
 .string-list {
-  margin-top: 8px;
   border-top: 1px solid var(--border-subtle);
 }
 
 .string-row {
   display: grid;
-  grid-template-columns: 72px minmax(40px, 1fr) auto;
+  grid-template-columns: 22px minmax(40px, 1fr) auto;
   align-items: center;
   gap: 12px;
   min-height: 54px;
@@ -172,23 +192,33 @@
   }
 }
 
+.string-number {
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
 .string-line {
-  height: 1px;
+  height: var(--string-weight, 1.4px);
+  border-radius: 999px;
   background: var(--border-active);
 }
 
 .note-controls {
   display: grid;
-  grid-template-columns: 36px 66px 36px;
+  grid-template-columns: 36px 64px 36px;
   align-items: center;
   gap: 7px;
+}
 
-  output {
-    color: var(--text);
-    font-size: 16px;
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-    text-align: center;
+.note-name {
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+
+  &.changed {
+    color: var(--tuning-editor-accent, var(--scale-accent, #c8a24a));
   }
 }
 
@@ -197,6 +227,8 @@
   height: 34px;
   border-radius: var(--r-sm);
   font-size: 17px;
+  touch-action: none;
+  user-select: none;
 
   &:disabled {
     cursor: not-allowed;
@@ -219,12 +251,12 @@
 }
 
 .save-button {
-  border: 1px solid var(--text);
-  background: var(--text);
-  color: var(--canvas);
+  border: 1px solid var(--tuning-editor-accent, var(--text));
+  background: var(--tuning-editor-accent, var(--text));
+  color: var(--tuning-editor-accent-ink, var(--canvas));
 
   &:hover:not(:disabled) {
-    background: #ffffff;
+    filter: brightness(1.08);
   }
 
   &:disabled {
@@ -232,6 +264,7 @@
     border-color: var(--border-subtle);
     background: var(--surface-container-high);
     color: var(--text-muted);
+    filter: none;
   }
 }
 
@@ -243,12 +276,12 @@
   }
 
   .string-row {
-    grid-template-columns: 64px minmax(20px, 1fr) auto;
+    grid-template-columns: 18px minmax(20px, 1fr) auto;
     gap: 8px;
   }
 
   .note-controls {
-    grid-template-columns: 34px 58px 34px;
+    grid-template-columns: 34px 56px 34px;
     gap: 5px;
   }
 

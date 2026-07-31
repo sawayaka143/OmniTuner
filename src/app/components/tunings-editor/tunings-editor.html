@@ -1,0 +1,126 @@
+<dialog
+  #dialog
+  class="tuning-dialog"
+  aria-labelledby="tuning-editor-title"
+  aria-describedby="tuning-editor-subtitle"
+  (cancel)="requestDismiss($event)"
+  (click)="onDialogClick($event)"
+>
+  <form class="editor-card" (submit)="submit($event)">
+    <header class="editor-header">
+      <div>
+        @if (instrumentLabel()) {
+          <span class="editor-kicker">{{ instrumentLabel() }}</span>
+        }
+        <h2 id="tuning-editor-title">{{ title() }}</h2>
+        <p id="tuning-editor-subtitle">{{ subtitle() }}</p>
+      </div>
+      <button
+        class="icon-button close-button"
+        type="button"
+        aria-label="Close tuning editor"
+        (click)="requestDismiss()"
+      >
+        <span class="material-symbols-outlined" aria-hidden="true">close</span>
+      </button>
+    </header>
+
+    <div class="editor-content">
+      <label class="name-field" for="tuning-editor-name">Tuning name</label>
+      <input
+        id="tuning-editor-name"
+        class="name-input"
+        type="text"
+        required
+        autofocus
+        autocomplete="off"
+        [attr.maxlength]="maxNameLength()"
+        [value]="name()"
+        [attr.aria-invalid]="nameInvalid()"
+        [attr.aria-describedby]="nameInvalid() ? 'tuning-editor-name-error' : null"
+        (input)="onNameInput($event)"
+      />
+      @if (nameInvalid()) {
+        <p id="tuning-editor-name-error" class="field-error">Enter a name to save this tuning.</p>
+      }
+
+      @if (presets().length) {
+        <div class="preset-row" role="group" aria-label="Start from a tuning preset">
+          <span>Start from</span>
+          @for (preset of presets(); track $index) {
+            <button type="button" (click)="usePreset(preset)">{{ preset.name }}</button>
+          }
+        </div>
+      }
+
+      <div class="string-list" role="group" aria-label="String pitches">
+        @for (r of displayRows(); track r.noteIndex) {
+          <div class="string-row" (wheel)="onWheel($event, r.noteIndex)">
+            <span class="string-number">{{ r.stringNumber }}</span>
+            <span
+              class="string-line"
+              [style.--string-weight.px]="r.weight"
+              aria-hidden="true"
+            ></span>
+            <div class="note-controls">
+              <button
+                class="step-button"
+                type="button"
+                [disabled]="notes()[r.noteIndex] <= minMidiNote()"
+                [attr.aria-label]="
+                  'Lower string ' +
+                  r.stringNumber +
+                  ' from ' +
+                  noteName(notes()[r.noteIndex]) +
+                  ' by one semitone'
+                "
+                (click)="onKeyboardStep($event, r.noteIndex, -1)"
+                (pointerdown)="startRepeating($event, r.noteIndex, -1)"
+                (pointerup)="stopRepeating()"
+                (pointerleave)="stopRepeating()"
+                (pointercancel)="stopRepeating()"
+              >
+                <span aria-hidden="true">−</span>
+              </button>
+              <output
+                class="note-name"
+                [class.changed]="isChanged(r.noteIndex)"
+                [attr.aria-label]="
+                  'String ' + r.stringNumber + ' is tuned to ' + noteName(notes()[r.noteIndex])
+                "
+              >
+                {{ noteName(notes()[r.noteIndex]) }}
+              </output>
+              <button
+                class="step-button"
+                type="button"
+                [disabled]="notes()[r.noteIndex] >= maxMidiNote()"
+                [attr.aria-label]="
+                  'Raise string ' +
+                  r.stringNumber +
+                  ' from ' +
+                  noteName(notes()[r.noteIndex]) +
+                  ' by one semitone'
+                "
+                (click)="onKeyboardStep($event, r.noteIndex, 1)"
+                (pointerdown)="startRepeating($event, r.noteIndex, 1)"
+                (pointerup)="stopRepeating()"
+                (pointerleave)="stopRepeating()"
+                (pointercancel)="stopRepeating()"
+              >
+                <span aria-hidden="true">+</span>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <footer class="editor-footer">
+      <button class="cancel-button" type="button" (click)="requestDismiss()">Cancel</button>
+      <button class="save-button" type="submit" [disabled]="nameInvalid()">
+        {{ saveLabel() }}
+      </button>
+    </footer>
+  </form>
+</dialog>

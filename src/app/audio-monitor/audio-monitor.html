@@ -17,12 +17,17 @@
     (closeDropdown)="closeDropdown()"
   />
 
-  <app-custom-tuning
+  <app-tuning-editor
     [open]="tuningEditorOpen()"
-    [editing]="editingTuningId() !== null"
+    [mode]="editingTuningId() !== null ? 'edit' : 'create'"
     [instrumentLabel]="currentInstrumentLabel()"
     [initialName]="editorInitialName()"
     [initialNotes]="editorInitialNotes()"
+    [presets]="editorPresets()"
+    [referenceNotes]="referenceNotes()"
+    [minMidiNote]="minTunerMidiNote"
+    [maxMidiNote]="maxTunerMidiNote"
+    [maxNameLength]="maxCustomTuningNameLength"
     (save)="saveCustomTuning($event)"
     (dismiss)="dismissTuningEditor()"
   />

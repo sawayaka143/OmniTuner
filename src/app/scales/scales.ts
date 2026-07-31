@@ -11,13 +11,21 @@ import {
   TuningSelection,
 } from '../models/scale-preferences.model';
 import { FLAT_NAMES, SCALES, SHARP_NAMES } from '../data/scale.constants';
-import { SCALE_TUNING_PRESETS } from '../data/scale-tuning.constants';
+import {
+  MAX_TUNING_MIDI_NOTE,
+  MIN_TUNING_MIDI_NOTE,
+  SCALE_TUNING_PRESETS,
+} from '../data/scale-tuning.constants';
 import { textColorOn } from '../data/interval-colors';
 import { computeFretboard, noteName, parseNote } from '../utils/scale-theory';
 import { ScalePreferences } from '../services/scale-preferences';
 import { ScalePlayback } from '../services/scale-playback';
 import { TuningSelector } from './tuning-selector/tuning-selector';
-import { TuningEditor } from './tuning-editor/tuning-editor';
+import {
+  TuningEditor,
+  TuningEditorValue,
+  TuningPresetOption,
+} from '../components/tunings-editor/tunings-editor';
 import { ScaleOptions } from './scale-options/scale-options';
 import { ScaleNotes } from './scale-notes/scale-notes';
 
@@ -67,6 +75,13 @@ export class Scales {
   private readonly previewTuning = signal<PreviewTuning | null>(null);
   protected readonly editorInitialName = signal('');
   protected readonly editorInitialNotes = signal<SixStringMidiNotes>(SCALE_TUNING_PRESETS[0].notes);
+  protected readonly editorPresets: TuningPresetOption[] = SCALE_TUNING_PRESETS.filter(
+    (_, index) => [0, 1, 3, 4].includes(index),
+  ).map((preset) => ({ id: preset.id, name: preset.name, notes: preset.notes }));
+  protected readonly referenceNotes = SCALE_TUNING_PRESETS[0].notes;
+  protected readonly minTuningMidiNote = MIN_TUNING_MIDI_NOTE;
+  protected readonly maxTuningMidiNote = MAX_TUNING_MIDI_NOTE;
+  protected readonly maxTuningNameLength = 40;
   protected readonly editorMode = computed<'create' | 'edit'>(() =>
     this.editingTuningId() === null ? 'create' : 'edit',
   );
@@ -366,17 +381,18 @@ export class Scales {
     this.tuningEditorOpen.set(true);
   }
 
-  protected previewCustomTuning(notes: SixStringMidiNotes): void {
+  protected previewCustomTuning(notes: readonly number[]): void {
     const name = this.editingTuningId() === null ? 'Custom' : this.editorInitialName();
-    this.previewTuning.set({ name, notes });
+    this.previewTuning.set({ name, notes: notes as SixStringMidiNotes });
   }
 
-  protected saveCustomTuning(event: { name: string; notes: SixStringMidiNotes }): void {
+  protected saveCustomTuning(event: TuningEditorValue): void {
     const editingId = this.editingTuningId();
+    const notes = event.notes as SixStringMidiNotes;
     if (editingId === null) {
-      this.preferences.saveTuning(event.name, event.notes);
+      this.preferences.saveTuning(event.name, notes);
     } else {
-      this.preferences.updateTuning(editingId, event.name, event.notes);
+      this.preferences.updateTuning(editingId, event.name, notes);
     }
     this.closeTuningEditor();
   }
