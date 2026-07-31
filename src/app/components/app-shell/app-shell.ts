@@ -2,11 +2,12 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { textColorOn } from '../../data/interval-colors';
 import { ScalePreferences } from '../../services/scale-preferences';
+import { Brand } from '../brand/brand';
 import { SettingsPanel } from '../settings-panel/settings-panel';
 
 @Component({
   selector: 'app-app-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, SettingsPanel],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, SettingsPanel, Brand],
   templateUrl: './app-shell.html',
   styleUrl: './app-shell.scss',
   host: {

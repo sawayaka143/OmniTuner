@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500;6..72,600&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap');
 
 :root {
   /* --- Core Studio Monochrome Palette --- */
@@ -12,6 +13,8 @@
   --text: #f5f5f3;
   --text-muted: #888882;
   --text-dim: #62625d;
+  --acc: #7ecba8;
+  --muted: #888882;
 
   /* --- Borders & Surfaces --- */
   --border-subtle: rgba(255, 255, 255, 0.08);
