@@ -49,8 +49,8 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null;
 
 const isMidiNote = (value: unknown): value is number =>
-  Number.isInteger(value) &&
   typeof value === 'number' &&
+  Number.isInteger(value) &&
   value >= MIN_TUNING_MIDI_NOTE &&
   value <= MAX_TUNING_MIDI_NOTE;
 
@@ -137,7 +137,7 @@ const parseState = (value: unknown): ScalePreferencesState | null => {
       ? noteColor.toLowerCase()
       : DEFAULT_SCALE_PREFERENCES.noteColor,
     workbenchScale:
-      typeof state['workbenchScale'] === 'number' && isFinite(state['workbenchScale'])
+      typeof state['workbenchScale'] === 'number' && Number.isFinite(state['workbenchScale'])
         ? clampWorkbenchScale(state['workbenchScale'])
         : DEFAULT_SCALE_PREFERENCES.workbenchScale,
   };
@@ -216,7 +216,7 @@ export class ScalePreferences {
     if (exists) this.update({ selectedTuning: selection });
   }
 
-  saveTuning(name: string, notes: SixStringMidiNotes): SavedTuning {
+  saveTuning(name: string, notes: readonly number[]): SavedTuning {
     const state = this.stateSignal();
     const tuning: SavedTuning = {
       id: this.createTuningId(),
@@ -229,7 +229,7 @@ export class ScalePreferences {
     return tuning;
   }
 
-  updateTuning(id: string, name: string, notes: SixStringMidiNotes): SavedTuning | null {
+  updateTuning(id: string, name: string, notes: readonly number[]): SavedTuning | null {
     const state = this.stateSignal();
     const index = state.savedTunings.findIndex((tuning) => tuning.id === id);
     if (index === -1) return null;
@@ -286,7 +286,7 @@ export class ScalePreferences {
 
   private validateTuning(
     name: string,
-    notes: SixStringMidiNotes,
+    notes: readonly number[],
     fallbackNumber: number,
   ): Pick<SavedTuning, 'name' | 'notes'> {
     const validatedNotes = toSixStringNotes(notes);

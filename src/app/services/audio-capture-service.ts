@@ -74,6 +74,7 @@ export class AudioCaptureService {
   private worker: Worker | null = null;
   private analysisInFlight = false;
   private captureSession = 0;
+  private startInFlight = false;
 
   // ── Smoothing / tracking state ─────────────────────────────────
   private recentFrequencies: number[] = [];
@@ -107,15 +108,16 @@ export class AudioCaptureService {
   // ── Public API (unchanged) ──────────────────────────────────────
 
   async startCapture(): Promise<void> {
-    if (this.isCapturing()) return;
+    if (this.isCapturing() || this.startInFlight) return;
 
+    this.startInFlight = true;
     this.captureError.set(null);
 
     try {
       this.stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: false,
-          noiseSuppression: false,   // ← was true; browser NS distorts pitch
+          noiseSuppression: false,   // browser NS distorts pitch
           autoGainControl: false,
         },
       });
@@ -138,7 +140,7 @@ export class AudioCaptureService {
       lowpass.Q.value = 0.7;
 
       const analyser = ctx.createAnalyser();
-      analyser.fftSize = 8192;            // ← was 4096; doubles low-freq resolution
+      analyser.fftSize = 8192;            // large window for low-freq resolution
       analyser.smoothingTimeConstant = 0; // we do our own smoothing
 
       source.connect(highpass);
@@ -162,6 +164,8 @@ export class AudioCaptureService {
         'Microphone access is unavailable. Check browser permissions and try again.',
       );
       this.trackingState.set('idle');
+    } finally {
+      this.startInFlight = false;
     }
   }
 

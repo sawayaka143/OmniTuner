@@ -155,6 +155,10 @@ export class AudioMonitor implements OnInit {
     }
 
     this.destroyRef.onDestroy(() => {
+      if (this.deformTimeout !== null) {
+        clearTimeout(this.deformTimeout);
+        this.deformTimeout = null;
+      }
       if (this.isCapturing()) {
         this.audioCapture.stopCapture();
       }

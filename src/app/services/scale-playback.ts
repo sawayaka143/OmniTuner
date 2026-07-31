@@ -1,4 +1,5 @@
 import { DestroyRef, inject, InjectionToken, Service } from '@angular/core';
+import { midiNoteToFrequency } from '../utils/pitch-utils';
 
 export type AudioContextFactory = () => AudioContext | null;
 
@@ -15,7 +16,9 @@ export const SCALE_AUDIO_CONTEXT_FACTORY = new InjectionToken<AudioContextFactor
   },
 );
 
-export const midiToFrequency = (midi: number): number => 440 * 2 ** ((midi - 69) / 12);
+/** Single source of truth for MIDI → Hz lives in `pitch-utils`; re-exported here
+ *  to preserve the existing public API of this module. */
+export const midiToFrequency = midiNoteToFrequency;
 
 @Service()
 export class ScalePlayback {

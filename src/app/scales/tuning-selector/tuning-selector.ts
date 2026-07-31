@@ -6,9 +6,10 @@ import {
   TuningPreset,
   TuningSelection,
 } from '../../models/scale-preferences.model';
+import { FLAT_DISPLAY_NAMES, SHARP_DISPLAY_NAMES } from '../../data/note-display-names';
 
-const SHARP_NAMES = ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'] as const;
-const FLAT_NAMES = ['C', 'D♭', 'D', 'E♭', 'E', 'F', 'G♭', 'G', 'A♭', 'A', 'B♭', 'B'] as const;
+const SHARP_NAMES = SHARP_DISPLAY_NAMES;
+const FLAT_NAMES = FLAT_DISPLAY_NAMES;
 
 @Component({
   selector: 'app-tuning-selector',

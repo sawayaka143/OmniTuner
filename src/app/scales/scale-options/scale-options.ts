@@ -1,10 +1,13 @@
-import { Component, ElementRef, HostListener, inject, input, output, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, inject, input, output, signal, viewChild } from '@angular/core';
 import { AccidentalPreference, LabelMode, ScaleFretCount } from '../../models/scale-preferences.model';
 
 @Component({
   selector: 'app-scale-options',
   templateUrl: './scale-options.html',
   styleUrl: './scale-options.scss',
+  host: {
+    '(document:mousedown)': 'onDocumentMouseDown($event)',
+  },
 })
 export class ScaleOptions {
   private readonly elementRef = inject(ElementRef);
@@ -73,7 +76,6 @@ export class ScaleOptions {
     }
   }
 
-  @HostListener('document:mousedown', ['$event'])
   protected onDocumentMouseDown(event: MouseEvent): void {
     if (this.labelOpen() && !this.elementRef.nativeElement.contains(event.target as Node)) {
       this.labelOpen.set(false);

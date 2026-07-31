@@ -17,17 +17,17 @@ interface AnalyseResponse extends PitchEstimate {
 }
 
 // ── Tuning constants ────────────────────────────────────────────────
-// Lowered from 60 → 50 to catch detuned low strings (C2 ≈ 65 Hz,
-// B1 ≈ 62 Hz). The main-thread highpass at 38 Hz handles rumble.
+// Lower bound set low enough to catch detuned low strings (C2 ≈ 65 Hz,
+// B1 ≈ 62 Hz); the main-thread highpass at 38 Hz handles rumble.
 const MIN_FREQUENCY = 50;
 const MAX_FREQUENCY = 1200;
 
-// Compromise between your 0.10 and File-1's 0.14.
-// 0.12 still catches real notes but rejects more noise.
+// YIN dip threshold. Kept low so only clear periodic dips qualify, but not so
+// low that softer or harmonically rich notes are rejected outright.
 const YIN_THRESHOLD = 0.12;
 
-// Raised from 0.68 → 0.72.  Your old value let too much garbage
-// through, which then confused the main-thread smoothing.
+// Confidence gate. Anything below this is reported as "no pitch" rather than
+// feeding a noisy estimate into the main-thread smoothing.
 const MIN_CONFIDENCE = 0.72;
 
 const SILENCE_RMS = 0.004;
@@ -144,10 +144,9 @@ function yinDetect(buffer: Float32Array, sampleRate: number): PitchEstimate {
     return { frequency: null, confidence: 0, inputLevel: 0 };
   }
 
-  // ── NEW: guitar fundamental preference ──────────────────────────
-  // YIN frequently locks onto the 2nd harmonic (one octave up) on
-  // guitar, especially the low E and A strings.  If the sub-octave
-  // lag (tau * 2) has a clearly better CMNDF value, prefer it.
+  // Guitar fundamental preference: YIN frequently locks onto the 2nd harmonic
+  // (one octave up) on guitar, especially the low E and A strings. If the
+  // sub-octave lag (tau * 2) has a clearly better CMNDF value, prefer it.
   tau = preferLowerFundamental(tau, yin, maxLag, sampleRate);
 
   // Step 4: parabolic interpolation for sub-sample accuracy.

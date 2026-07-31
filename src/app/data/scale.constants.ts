@@ -14,14 +14,6 @@ export const FLAT_NAMES: readonly string[] = [
 ];
 
 /**
- * Root-note picker options, using the conventional mixed spelling (flats for
- * Bb/Eb/Ab, sharps for C#/F#). The pitch class of each is derived by the parser.
- */
-export const ROOT_NOTES: readonly string[] = [
-  'C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B',
-];
-
-/**
  * Scale / mode catalog. Each interval uses scale-degree notation relative to the
  * tonic, including Unicode accidentals where needed. To add a scale, append an
  * entry here — no other code changes required.
