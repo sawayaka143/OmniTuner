@@ -18,6 +18,21 @@
     font-weight: 300;
     color: var(--text);
     padding-bottom: 4px;
+    transition: color 0.25s ease, text-shadow 0.25s ease;
+
+    &.in-tune {
+      color: var(--in-tune-color);
+      animation: note-in-tune-glow 2.4s ease-in-out infinite alternate;
+    }
+  }
+
+  @keyframes note-in-tune-glow {
+    from {
+      text-shadow: 0 0 16px color-mix(in srgb, var(--in-tune-color) 30%, transparent);
+    }
+    to {
+      text-shadow: 0 0 34px color-mix(in srgb, var(--in-tune-color) 55%, transparent);
+    }
   }
 
   .pitch-octave {
@@ -27,6 +42,11 @@
     font-weight: 400;
     color: var(--text-muted);
     margin-bottom: 12px;
+    transition: color 0.25s ease;
+
+    &.in-tune {
+      color: var(--in-tune-color);
+    }
   }
 
   .pitch-hz {
@@ -52,7 +72,7 @@
     font-variant-numeric: tabular-nums;
 
     &.in-tune-text {
-      color: #ffffff;
+      color: var(--in-tune-color);
       font-weight: 600;
     }
   }
@@ -72,5 +92,17 @@
     &.locked {
       color: var(--text);
     }
+
+    &.in-tune {
+      color: var(--in-tune-color);
+      font-weight: 600;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pitch-note.in-tune {
+    animation: none;
+    text-shadow: 0 0 24px color-mix(in srgb, var(--in-tune-color) 45%, transparent);
   }
 }

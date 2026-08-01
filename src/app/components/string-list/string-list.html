@@ -1,7 +1,17 @@
 <div class="strings-grid"
+     role="radiogroup"
+     aria-label="Strings"
      [style.grid-template-columns]="'repeat(' + strings().length + ', 1fr)'">
   @for (str of strings(); track str.name) {
-    <button class="string-btn" [class.active]="activeString() === str.name" type="button">
+    <button
+      class="string-btn"
+      [class.active]="activeString() === str.name"
+      [class.in-tune]="inTune() && activeString() === str.name"
+      type="button"
+      role="radio"
+      [attr.aria-checked]="activeString() === str.name"
+      [title]="'Target ' + str.name"
+      (click)="select.emit($index)">
       <span class="string-note">{{ str.name }}</span>
     </button>
   }

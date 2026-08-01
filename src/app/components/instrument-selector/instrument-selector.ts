@@ -1,5 +1,11 @@
 import { Component, computed, input, output } from '@angular/core';
 import { Instrument, Tuning } from '../../models/instrument.model';
+import { TunerMode } from '../../models/tuner-preferences.model';
+
+interface ModeOption {
+  readonly value: TunerMode;
+  readonly label: string;
+}
 
 @Component({
   selector: 'app-instrument-selector',
@@ -15,6 +21,7 @@ export class InstrumentSelector {
   readonly currentTuning = input.required<Tuning>();
   readonly isDeforming = input(false);
   readonly dropdownOpen = input(false);
+  readonly mode = input<TunerMode>('auto');
 
   readonly selectInstrument = output<string>();
   readonly selectTuning = output<string>();
@@ -23,6 +30,12 @@ export class InstrumentSelector {
   readonly deleteCustomTuning = output<string>();
   readonly toggleDropdown = output<void>();
   readonly closeDropdown = output<void>();
+  readonly modeChange = output<TunerMode>();
+
+  protected readonly modeOptions: readonly ModeOption[] = [
+    { value: 'auto', label: 'Auto' },
+    { value: 'manual', label: 'Manual' },
+  ];
 
   protected readonly presetTunings = computed(() =>
     this.availableTunings().filter((tuning) => tuning.kind !== 'custom'),

@@ -28,6 +28,30 @@
     }
   </div>
 
+  <div
+    class="seg mode-seg"
+    role="radiogroup"
+    aria-label="Tuner mode"
+    [style.--seg-count]="2"
+  >
+    <div
+      class="seg-indicator"
+      [style.transform]="'translateX(' + (mode() === 'manual' ? 100 : 0) + '%)'"
+      aria-hidden="true"
+    ></div>
+    @for (option of modeOptions; track option.value) {
+      <button
+        type="button"
+        role="radio"
+        [attr.aria-checked]="mode() === option.value"
+        [class.active]="mode() === option.value"
+        (click)="modeChange.emit(option.value); $event.stopPropagation()"
+      >
+        {{ option.label }}
+      </button>
+    }
+  </div>
+
   <div class="dropdown-wrapper">
     <button
       class="btn tuning-trigger"

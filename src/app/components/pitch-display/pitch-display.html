@@ -1,15 +1,15 @@
 <div class="pitch-display">
   <div class="pitch-row">
-    <span class="pitch-note">{{ noteName() || '\u2014' }}</span>
+    <span class="pitch-note" [class.in-tune]="isTuned()">{{ noteName() || '\u2014' }}</span>
     @if (octave(); as o) {
-      <span class="pitch-octave">{{ o }}</span>
+      <span class="pitch-octave" [class.in-tune]="isTuned()">{{ o }}</span>
     }
   </div>
   <div class="pitch-hz">{{ hz() }}</div>
   <div class="pitch-cents" [class.in-tune-text]="isTuned()">
     {{ centsOffset() }}
   </div>
-  <p class="pitch-status" [class.locked]="isLocked()" aria-live="polite">
+  <p class="pitch-status" [class.locked]="isLocked()" [class.in-tune]="isTuned()" aria-live="polite">
     {{ statusMessage() }}
   </p>
 </div>

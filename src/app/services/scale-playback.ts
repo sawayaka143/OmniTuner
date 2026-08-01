@@ -71,6 +71,41 @@ export class ScalePlayback {
     oscillator.stop(startAt + duration + 0.05);
   }
 
+  /**
+   * Soft confirmation chime for the in-tune lock: a low-register perfect
+   * fifth (A4 + E5) with a gentle envelope, so it reads as a confirmation
+   * blip rather than a stray high note.
+   */
+  playChime(): void {
+    const context = this.getContext();
+    if (!context) return;
+    if (context.state === 'suspended') void context.resume();
+
+    const startAt = context.currentTime;
+    this.playTone(context, midiToFrequency(69), startAt, 0.12, 0.65);
+    this.playTone(context, midiToFrequency(76), startAt + 0.06, 0.08, 0.7);
+  }
+
+  private playTone(
+    context: AudioContext,
+    frequency: number,
+    startAt: number,
+    peakGain: number,
+    duration: number,
+  ): void {
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    oscillator.type = 'triangle';
+    oscillator.frequency.setValueAtTime(frequency, startAt);
+    gain.gain.setValueAtTime(0.0001, startAt);
+    gain.gain.linearRampToValueAtTime(peakGain, startAt + 0.014);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+    oscillator.connect(gain);
+    gain.connect(context.destination);
+    oscillator.start(startAt);
+    oscillator.stop(startAt + duration + 0.05);
+  }
+
   private getContext(): AudioContext | null {
     this.context ??= this.createAudioContext();
     return this.context;

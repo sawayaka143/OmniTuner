@@ -1,4 +1,4 @@
-import { Injectable, signal, DestroyRef, inject } from '@angular/core';
+import { Injectable, signal, computed, DestroyRef, inject } from '@angular/core';
 
 export type PitchTrackingState = 'idle' | 'listening' | 'locked';
 
@@ -50,6 +50,12 @@ const MAX_DROPOUT_HOLD_FRAMES = 3;
  */
 const RELEASE_FRAME_COUNT = 8;
 
+/**
+ * Safety-net timeout (ms).  If the worker hasn't replied within this
+ * window we assume the message was lost and unblock the analysis loop.
+ */
+const ANALYSIS_TIMEOUT_MS = 500;
+
 const MIN_FREQUENCY = 50;
 const MAX_FREQUENCY = 900;
 
@@ -57,13 +63,20 @@ const MAX_FREQUENCY = 900;
 export class AudioCaptureService {
   private readonly destroyRef = inject(DestroyRef);
 
-  // ── Public signals (unchanged API) ──────────────────────────────
+  // ── Public signals ────────────────────────────────────────────
   readonly frequency = signal<number | null>(null);
   readonly isCapturing = signal(false);
   readonly trackingState = signal<PitchTrackingState>('idle');
   readonly captureError = signal<string | null>(null);
+  readonly inputLevel = signal(0);                          // #10
+  readonly debugInfo = computed(() => {
+    const state = this.trackingState();
+    const freq = this.frequency();
+    const level = this.inputLevel();
+    return `state: ${state} | freq: ${freq !== null ? `${freq.toFixed(1)} Hz` : 'null'} | level: ${level.toFixed(4)}`;
+  });
 
-  // ── Audio graph ─────────────────────────────────────────────────
+  // ── Audio graph ───────────────────────────────────────────────
   private audioContext: AudioContext | null = null;
   private analyser: AnalyserNode | null = null;
   private source: MediaStreamAudioSourceNode | null = null;
@@ -76,7 +89,14 @@ export class AudioCaptureService {
   private captureSession = 0;
   private startInFlight = false;
 
-  // ── Smoothing / tracking state ─────────────────────────────────
+  // #7 – watchdog that unblocks the loop if the worker never replies.
+  private analysisTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  // #2 – bound listener references so we can remove them on teardown.
+  private onVisibilityChange: (() => void) | null = null;
+  private onContextStateChange: (() => void) | null = null;
+
+  // ── Smoothing / tracking state ────────────────────────────────
   private recentFrequencies: number[] = [];
   private smoothedFrequency: number | null = null;
   private missedFrames = 0;
@@ -85,17 +105,28 @@ export class AudioCaptureService {
     this.worker = new Worker(
       new URL('./pitch-detector.worker', import.meta.url),
     );
+
     this.worker.onmessage = (event: MessageEvent<PitchAnalysisResponse>) => {
-      const { frequency, confidence, sessionId } = event.data;
+      const { frequency, confidence, inputLevel, sessionId } = event.data;
       if (!this.isCapturing() || sessionId !== this.captureSession) return;
 
       this.analysisInFlight = false;
+      this.clearAnalysisTimeout();                          // #7
+      this.inputLevel.set(inputLevel);                      // #10
 
       if (frequency === null || confidence <= 0) {
         this.handleDropout();
       } else {
         this.handleDetection(frequency);
       }
+    };
+
+    // #6 – if the worker throws an unhandled error, unblock the loop
+    // so the rAF tick can retry on the next frame.
+    this.worker.onerror = (err: ErrorEvent) => {
+      console.error('[AudioCaptureService] worker error:', err.message);
+      this.analysisInFlight = false;
+      this.clearAnalysisTimeout();                          // #7
     };
 
     this.destroyRef.onDestroy(() => {
@@ -105,7 +136,7 @@ export class AudioCaptureService {
     });
   }
 
-  // ── Public API (unchanged) ──────────────────────────────────────
+  // ── Public API ────────────────────────────────────────────────
 
   async startCapture(): Promise<void> {
     if (this.isCapturing() || this.startInFlight) return;
@@ -117,23 +148,55 @@ export class AudioCaptureService {
       this.stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: false,
-          noiseSuppression: false,   // browser NS distorts pitch
+          noiseSuppression: false,
           autoGainControl: false,
+          channelCount: 1,
         },
       });
 
-      const ctx = new AudioContext();
+      // #11 – hint the browser to pick a small hardware buffer.
+      const ctx = new AudioContext({ latencyHint: 'interactive' });
+
+      if (ctx.state === 'suspended') {
+        await ctx.resume();
+      }
+
+      // #3 – always register unlock listeners; remove them once the
+      // context actually reaches 'running'.  Covers iOS Safari where
+      // the context can still be suspended after getUserMedia resolves.
+      const unlock = (): void => {
+        void ctx.resume();
+      };
+      document.addEventListener('touchend', unlock, { once: true });
+      document.addEventListener('click', unlock, { once: true });
+      ctx.addEventListener(
+        'statechange',
+        () => {
+          if (ctx.state === 'running') {
+            document.removeEventListener('touchend', unlock);
+            document.removeEventListener('click', unlock);
+          }
+        },
+        { once: true },
+      );
+
       const source = ctx.createMediaStreamSource(this.stream);
 
-      // Highpass: kill rumble / handling noise below the guitar range.
+      // #4 – warn in dev if the OS ignored the channelCount hint.
+      const trackSettings = this.stream.getAudioTracks()[0]?.getSettings();
+      if (trackSettings && (trackSettings.channelCount ?? 1) > 1) {
+        console.warn(
+          '[AudioCaptureService] mic delivered multi-channel; forcing mono downmix.',
+        );
+      }
+
       const highpass = ctx.createBiquadFilter();
       highpass.type = 'highpass';
       highpass.frequency.value = 38;
       highpass.Q.value = 0.7;
+      highpass.channelCount = 1;                            // #4
+      highpass.channelCountMode = 'explicit';               // #4
 
-      // Lowpass: remove high-frequency noise and upper harmonics that
-      // confuse YIN.  1250 Hz keeps all guitar fundamentals and enough
-      // harmonic content for reliable detection.
       const lowpass = ctx.createBiquadFilter();
       lowpass.type = 'lowpass';
       lowpass.frequency.value = 1250;
@@ -158,6 +221,23 @@ export class AudioCaptureService {
       this.isCapturing.set(true);
       this.trackingState.set('listening');
       this.scheduleAnalysis();
+
+      // #2 – auto-resume the context when the OS suspends it
+      // (incoming call, notification shade, etc.).
+      this.onContextStateChange = () => {
+        if (ctx.state === 'suspended' && this.isCapturing()) {
+          void ctx.resume();
+        }
+      };
+      ctx.addEventListener('statechange', this.onContextStateChange);
+
+      // #2 – auto-resume when the user returns to the tab.
+      this.onVisibilityChange = () => {
+        if (document.visibilityState === 'visible' && this.isCapturing()) {
+          void this.audioContext?.resume();
+        }
+      };
+      document.addEventListener('visibilitychange', this.onVisibilityChange);
     } catch {
       this.releaseAudioResources();
       this.captureError.set(
@@ -174,18 +254,31 @@ export class AudioCaptureService {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
     }
+    this.clearAnalysisTimeout();                            // #7
     this.captureSession += 1;
     this.analysisInFlight = false;
     this.releaseAudioResources();
     this.frequency.set(null);
+    this.inputLevel.set(0);                                 // #10
     this.isCapturing.set(false);
     this.trackingState.set('idle');
     this.resetTracking();
   }
 
-  // ── Audio lifecycle ─────────────────────────────────────────────
+  // ── Audio lifecycle ───────────────────────────────────────────
 
   private releaseAudioResources(): void {
+    // #2 – tear down recovery listeners before the context is closed.
+    if (this.onContextStateChange && this.audioContext) {
+      this.audioContext.removeEventListener('statechange', this.onContextStateChange);
+    }
+    this.onContextStateChange = null;
+
+    if (this.onVisibilityChange) {
+      document.removeEventListener('visibilitychange', this.onVisibilityChange);
+    }
+    this.onVisibilityChange = null;
+
     this.source?.disconnect();
     this.highpass?.disconnect();
     this.lowpass?.disconnect();
@@ -206,7 +299,7 @@ export class AudioCaptureService {
     this.missedFrames = 0;
   }
 
-  // ── Analysis loop ───────────────────────────────────────────────
+  // ── Analysis loop ─────────────────────────────────────────────
 
   private scheduleAnalysis(): void {
     const buffer = new Float32Array(this.analyser!.fftSize);
@@ -228,6 +321,14 @@ export class AudioCaptureService {
           sampleRate: this.audioContext.sampleRate,
           sessionId: this.captureSession,
         });
+
+        // #7 – watchdog: if the worker never replies, unblock the
+        // loop so we can retry on the next eligible frame.
+        this.clearAnalysisTimeout();
+        this.analysisTimeout = setTimeout(() => {
+          this.analysisInFlight = false;
+          this.analysisTimeout = null;
+        }, ANALYSIS_TIMEOUT_MS);
       }
 
       this.animationFrameId = requestAnimationFrame(tick);
@@ -236,7 +337,15 @@ export class AudioCaptureService {
     this.animationFrameId = requestAnimationFrame(tick);
   }
 
-  // ── Frame handling ──────────────────────────────────────────────
+  // #7 – small helper so we don't repeat the null-check + clearTimeout.
+  private clearAnalysisTimeout(): void {
+    if (this.analysisTimeout !== null) {
+      clearTimeout(this.analysisTimeout);
+      this.analysisTimeout = null;
+    }
+  }
+
+  // ── Frame handling ────────────────────────────────────────────
 
   private handleDetection(rawFrequency: number): void {
     this.missedFrames = 0;
@@ -249,9 +358,15 @@ export class AudioCaptureService {
     // 2. Median smoothing with a large-jump reset.
     const smoothed = this.smoothFrequency(corrected);
 
-    this.smoothedFrequency = smoothed;
-    this.frequency.set(smoothed);
-    this.trackingState.set('locked');
+    if (this.recentFrequencies.length >= 3) {
+      this.smoothedFrequency = smoothed;
+      this.frequency.set(smoothed);
+      this.trackingState.set('locked');
+    } else {
+      this.smoothedFrequency = null;
+      this.frequency.set(null);
+      this.trackingState.set('listening');
+    }
   }
 
   private handleDropout(): void {
@@ -262,6 +377,12 @@ export class AudioCaptureService {
     if (this.smoothedFrequency !== null && this.missedFrames <= MAX_DROPOUT_HOLD_FRAMES) {
       // Keep displaying the last pitch; don't update the signal.
       return;
+    }
+
+    // #8 – clear stale smoothing history during extended silence so
+    // a new note after a pause isn't octave-corrected toward the old one.
+    if (this.missedFrames === 5) {
+      this.recentFrequencies = [];
     }
 
     // Sustained silence → release.
@@ -280,7 +401,7 @@ export class AudioCaptureService {
     }
   }
 
-  // ── Octave correction ───────────────────────────────────────────
+  // ── Octave correction ─────────────────────────────────────────
 
   private correctOctaveJump(frequency: number): number {
     if (this.recentFrequencies.length === 0) return frequency;
@@ -308,13 +429,12 @@ export class AudioCaptureService {
       : frequency;
   }
 
-  // ── Median smoothing ────────────────────────────────────────────
+  // ── Median smoothing ──────────────────────────────────────────
 
   private smoothFrequency(frequency: number): number {
     if (this.recentFrequencies.length > 0) {
       const med = this.median(this.recentFrequencies);
       const jump = Math.abs(this.cents(frequency, med));
-
 
       if (jump > MAX_SMOOTHING_JUMP_CENTS) {
         this.recentFrequencies = [frequency];
@@ -330,7 +450,7 @@ export class AudioCaptureService {
     return this.median(this.recentFrequencies);
   }
 
-  // ── Math helpers ────────────────────────────────────────────────
+  // ── Math helpers ──────────────────────────────────────────────
 
   private median(values: readonly number[]): number {
     const sorted = [...values].sort((a, b) => a - b);
@@ -340,7 +460,10 @@ export class AudioCaptureService {
       : sorted[mid];
   }
 
+  // #9 – guard against non-positive inputs that would produce
+  // NaN / ±Infinity and poison the median.
   private cents(a: number, b: number): number {
+    if (a <= 0 || b <= 0) return 0;
     return 1200 * Math.log2(a / b);
   }
 }

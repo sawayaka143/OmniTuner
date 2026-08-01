@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { DEFAULT_TUNER_SETTINGS } from '../models/tuner-preferences.model';
 import {
   TUNER_PREFERENCES_STORAGE,
   TUNER_PREFERENCES_STORAGE_KEY,
@@ -172,5 +173,109 @@ describe('TunerPreferences', () => {
     const saved = service.createTuning('guitar', 'Standard copy', GUITAR_NOTES);
 
     expect(service.customTunings()).toEqual([saved]);
+  });
+
+  it('migrates v1 saves: tunings are kept, tuner settings fall back to defaults', () => {
+    storage.setItem(
+      TUNER_PREFERENCES_STORAGE_KEY,
+      JSON.stringify({
+        version: 1,
+        tunings: [
+          {
+            id: 'custom-legacy',
+            instrumentId: 'guitar',
+            name: 'Legacy',
+            notes: GUITAR_NOTES,
+          },
+        ],
+      }),
+    );
+
+    const service = createService();
+
+    expect(service.customTunings().map((tuning) => tuning.id)).toEqual(['custom-legacy']);
+    expect(service.tunerSettings()).toEqual(DEFAULT_TUNER_SETTINGS);
+  });
+
+  it('restores tuner settings and clamps out-of-range values on load', () => {
+    storage.setItem(
+      TUNER_PREFERENCES_STORAGE_KEY,
+      JSON.stringify({
+        version: 2,
+        tunings: [],
+        tuner: {
+          mode: 'manual',
+          startupMode: 'auto',
+          inTune: {
+            enabled: false,
+            sound: false,
+            glow: true,
+            color: '#EE6600',
+            tolerance: 900,
+            holdMs: -42,
+          },
+        },
+      }),
+    );
+
+    expect(createService().tunerSettings()).toEqual({
+      mode: 'manual',
+      startupMode: 'auto',
+      inTune: {
+        enabled: false,
+        sound: false,
+        glow: true,
+        color: '#ee6600',
+        tolerance: 15,
+        holdMs: 0,
+      },
+    });
+  });
+
+  it('persists tuner settings round-trip with the existing storage key', () => {
+    const service = createService();
+    service.setMode('manual');
+    service.setStartupMode('remember');
+    service.setInTuneEnabled(false);
+    service.setInTuneSound(false);
+    service.setInTuneGlow(true);
+    service.setInTuneColor('#ff9900');
+    service.setInTuneTolerance(12);
+    service.setInTuneHoldMs(800);
+
+    TestBed.resetTestingModule();
+    const restored = createService();
+
+    expect(restored.tunerSettings()).toEqual({
+      mode: 'manual',
+      startupMode: 'remember',
+      inTune: {
+        enabled: false,
+        sound: false,
+        glow: true,
+        color: '#ff9900',
+        tolerance: 12,
+        holdMs: 800,
+      },
+    });
+  });
+
+  it('validates setter inputs: invalid colors and modes are ignored, ranges clamp', () => {
+    const service = createService();
+
+    service.setInTuneColor('not-a-color');
+    expect(service.tunerSettings().inTune.color).toBe(DEFAULT_TUNER_SETTINGS.inTune.color);
+
+    service.setMode('magic' as never);
+    expect(service.tunerSettings().mode).toBe('auto');
+
+    service.setInTuneTolerance(99);
+    expect(service.tunerSettings().inTune.tolerance).toBe(15);
+
+    service.setInTuneTolerance(0.2);
+    expect(service.tunerSettings().inTune.tolerance).toBe(1);
+
+    service.setInTuneHoldMs(10_000);
+    expect(service.tunerSettings().inTune.holdMs).toBe(1500);
   });
 });

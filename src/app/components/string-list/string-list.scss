@@ -43,6 +43,16 @@
       opacity: 1;
     }
 
+    &.active.in-tune {
+      background-color: color-mix(
+        in srgb,
+        var(--in-tune-color) 12%,
+        var(--surface-container-high)
+      );
+      border-color: color-mix(in srgb, var(--in-tune-color) 65%, transparent);
+      box-shadow: 0 0 12px color-mix(in srgb, var(--in-tune-color) 28%, transparent);
+    }
+
     &:focus-visible {
       outline: 2px solid var(--border-active);
       outline-offset: 2px;
@@ -56,10 +66,21 @@
     line-height: 1.4;
     color: var(--text-muted);
     white-space: nowrap;
+    transition: color 0.15s ease;
 
     .string-btn.active & {
       color: #ffffff;
       font-weight: 600;
     }
+
+    .string-btn.active.in-tune & {
+      color: var(--in-tune-color);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .string-btn {
+    transition-duration: 0.01ms;
   }
 }

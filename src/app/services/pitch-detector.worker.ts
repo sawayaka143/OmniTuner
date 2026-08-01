@@ -41,25 +41,38 @@ let yinBufferSize = 0;
 self.onmessage = (event: MessageEvent<AnalyseRequest>) => {
   const { buffer, sampleRate, sessionId } = event.data;
 
-  const inputLevel = computeRMS(buffer);
-  if (inputLevel < SILENCE_RMS) {
+  // #6 – safety net: if anything inside the analysis throws, reply
+  // with a graceful "no pitch" instead of dying silently and leaving
+  // the main thread waiting forever.
+  try {
+    const inputLevel = computeRMS(buffer);
+    if (inputLevel < SILENCE_RMS) {
+      self.postMessage({
+        frequency: null,
+        confidence: 0,
+        inputLevel,
+        sessionId,
+      } satisfies AnalyseResponse);
+      return;
+    }
+
+    removeDCOffset(buffer);
+    const result = yinDetect(buffer, sampleRate);
+
     self.postMessage({
-      frequency: null,
-      confidence: 0,
+      ...result,
       inputLevel,
       sessionId,
     } satisfies AnalyseResponse);
-    return;
+  } catch (err) {
+    console.error('[PitchDetectorWorker] analysis failed:', err);
+    self.postMessage({
+      frequency: null,
+      confidence: 0,
+      inputLevel: 0,
+      sessionId,
+    } satisfies AnalyseResponse);
   }
-
-  removeDCOffset(buffer);
-  const result = yinDetect(buffer, sampleRate);
-
-  self.postMessage({
-    ...result,
-    inputLevel,
-    sessionId,
-  } satisfies AnalyseResponse);
 };
 
 // ── DSP helpers ─────────────────────────────────────────────────────

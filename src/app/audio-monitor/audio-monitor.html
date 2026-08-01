@@ -8,6 +8,7 @@
     [currentTuning]="currentTuning()"
     [isDeforming]="isDeforming()"
     [dropdownOpen]="dropdownOpen()"
+    [mode]="mode()"
     (selectInstrument)="selectInstrument($event)"
     (selectTuning)="selectTuning($event)"
     (newCustomTuning)="openCreateTuning()"
@@ -15,6 +16,7 @@
     (deleteCustomTuning)="deleteCustomTuning($event)"
     (toggleDropdown)="toggleDropdown()"
     (closeDropdown)="closeDropdown()"
+    (modeChange)="selectMode($event)"
   />
 
   <app-tuning-editor
@@ -36,9 +38,15 @@
     <div class="meter-area">
       <app-pitch-meter [ticks]="ticks" [needleLeft]="needleLeft()" [isTuned]="isTuned()" />
 
+      <div class="pulse-layer" aria-hidden="true">
+        @if (pulseActive()) {
+          <span class="lock-pulse"></span>
+        }
+      </div>
+
       <app-pitch-display
-        [noteName]="noteInfo()?.noteName ?? null"
-        [octave]="noteInfo()?.octave ?? null"
+        [noteName]="displayNoteName()"
+        [octave]="displayOctave()"
         [hz]="currentHz()"
         [centsOffset]="centsOffset()"
         [statusMessage]="statusMessage()"
@@ -47,7 +55,12 @@
       />
     </div>
 
-    <app-string-list [strings]="currentStrings()" [activeString]="activeString()" />
+    <app-string-list
+      [strings]="currentStrings()"
+      [activeString]="activeString()"
+      [inTune]="showTuned()"
+      (select)="selectString($event)"
+    />
   </div>
 
   <button
@@ -59,4 +72,17 @@
   >
     {{ isCapturing() ? 'Stop' : 'Start' }}
   </button>
+
+  @if (showDebug) {
+    <pre
+      class="debug-hud"
+      aria-hidden="true"
+      style="position:fixed;left:8px;bottom:8px;z-index:9999;margin:0;max-width:92vw;white-space:pre-wrap;font:11px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#aeb4ba;background:rgba(10,12,14,.62);border:1px solid rgba(255,255,255,.10);border-radius:8px;padding:7px 9px;pointer-events:none;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);box-shadow:0 4px 18px rgba(0,0,0,.35)"
+    ><span
+        style="display:inline-block;width:7px;height:7px;border-radius:50%;vertical-align:middle;margin-right:5px;background:{{ isCapturing() ? '#5fd38a' : '#555' }}"
+      ></span><span style="color:#6b7280;letter-spacing:.14em">DEBUG · temporary</span>
+lvl {{ inputLevel().toFixed(3) }}
+{{ debugInfo() }}
+mode: {{ mode() }} | tuned: {{ showTuned() ? 'yes' : 'no' }} | cents: {{ debugCents() }}</pre>
+  }
 </main>

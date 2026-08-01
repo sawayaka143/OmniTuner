@@ -35,6 +35,43 @@
   position: relative;
 }
 
+.pulse-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.lock-pulse {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 150px;
+  height: 150px;
+  border: 1.5px solid var(--in-tune-color);
+  border-radius: 50%;
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  animation: lock-pulse 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes lock-pulse {
+  0% {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(0.35);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.4);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lock-pulse {
+    display: none;
+  }
+}
+
 .btn.capture-btn {
   font-size: 15px;
   font-weight: 600;

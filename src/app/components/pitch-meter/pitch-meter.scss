@@ -70,6 +70,7 @@
     &.in-tune {
       background: var(--in-tune-color);
       width: 5px;
+      box-shadow: 0 0 14px color-mix(in srgb, var(--in-tune-color) 50%, transparent);
     }
   }
 

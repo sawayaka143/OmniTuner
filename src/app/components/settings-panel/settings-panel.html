@@ -116,6 +116,170 @@
           </label>
         </section>
       </section>
+
+      <section class="tuner-settings" aria-labelledby="tuner-settings-title">
+        <div class="section-heading">
+          <div>
+            <span class="settings-kicker">Tuner</span>
+            <h3 id="tuner-settings-title">In-tune feedback</h3>
+          </div>
+        </div>
+
+        <p>
+          When a played pitch holds inside the tolerance window, the tuner confirms it with a
+          tinted glow, a soft chime, and a one-shot pulse.
+        </p>
+
+        <div class="startup-mode">
+          <h4 id="startup-mode-title">Mode on startup</h4>
+          <div
+            class="seg"
+            role="radiogroup"
+            aria-label="Tuner mode on startup"
+            [style.--seg-count]="3">
+            <div
+              class="seg-indicator"
+              [style.transform]="startupIndicatorTransform()"
+              aria-hidden="true"></div>
+            @for (option of startupModeOptions; track option.value) {
+              <button
+                type="button"
+                role="radio"
+                [attr.aria-checked]="tunerSettings().startupMode === option.value"
+                [class.active]="tunerSettings().startupMode === option.value"
+                (click)="chooseStartupMode(option.value)">
+                {{ option.label }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="toggle-rows">
+          <div class="toggle-row">
+            <div class="custom-copy">
+              <strong>Highlight when in tune</strong>
+              <span>Master switch — turns off every confirmation cue</span>
+            </div>
+            <button
+              class="toggle-button"
+              type="button"
+              role="switch"
+              [attr.aria-checked]="tunerSettings().inTune.enabled"
+              [class.active]="tunerSettings().inTune.enabled"
+              aria-label="Highlight when in tune"
+              (click)="toggleInTuneEnabled()">
+              <span class="toggle-lamp" aria-hidden="true"></span>
+            </button>
+          </div>
+
+          <div class="toggle-row">
+            <div class="custom-copy">
+              <strong>Confirmation sound</strong>
+              <span>Play a soft chime when the note locks</span>
+            </div>
+            <button
+              class="toggle-button"
+              type="button"
+              role="switch"
+              [attr.aria-checked]="tunerSettings().inTune.sound"
+              [class.active]="tunerSettings().inTune.sound"
+              aria-label="Confirmation sound"
+              (click)="toggleInTuneSound()">
+              <span class="toggle-lamp" aria-hidden="true"></span>
+            </button>
+          </div>
+
+          <div class="toggle-row">
+            <div class="custom-copy">
+              <strong>Ambient glow</strong>
+              <span>Pulse ring when the note locks</span>
+            </div>
+            <button
+              class="toggle-button"
+              type="button"
+              role="switch"
+              [attr.aria-checked]="tunerSettings().inTune.glow"
+              [class.active]="tunerSettings().inTune.glow"
+              aria-label="Ambient glow"
+              (click)="toggleInTuneGlow()">
+              <span class="toggle-lamp" aria-hidden="true"></span>
+            </button>
+          </div>
+        </div>
+
+        <section class="in-tune-color" aria-labelledby="in-tune-color-title">
+          <h4 id="in-tune-color-title">In-tune color</h4>
+          <p>One color drives every cue — the note, the needle, the status, the string, and the glow.</p>
+
+          <div class="swatches" role="radiogroup" aria-label="In-tune color">
+            @for (option of inTuneColorOptions; track option.value) {
+              <button
+                class="swatch"
+                type="button"
+                role="radio"
+                [class.selected]="tunerSettings().inTune.color === option.value"
+                [attr.aria-checked]="tunerSettings().inTune.color === option.value"
+                [attr.aria-label]="option.name"
+                [title]="option.name"
+                [style.--swatch-color]="option.value"
+                (click)="chooseInTuneColor(option.value)">
+                <span aria-hidden="true"></span>
+              </button>
+            }
+          </div>
+
+          <label class="custom-accent">
+            <span
+              class="color-preview"
+              [style.background-color]="tunerSettings().inTune.color"
+              aria-hidden="true"></span>
+            <span class="custom-copy">
+              <strong>Custom in-tune color</strong>
+              <span>Use any six-digit color</span>
+            </span>
+            <input
+              type="color"
+              [value]="tunerSettings().inTune.color"
+              aria-label="Choose a custom in-tune color"
+              (input)="onCustomInTuneColor($event)" />
+          </label>
+        </section>
+
+        <section class="in-tune-ranges" aria-labelledby="in-tune-ranges-title">
+          <h4 id="in-tune-ranges-title">Confirmation window</h4>
+          <p>Tune how strict the lock is and how long a pitch must hold before it confirms.</p>
+
+          <label class="workbench-size-control">
+            <span class="custom-copy">
+              <strong>Tolerance</strong>
+              <span>±{{ tunerSettings().inTune.tolerance }}¢</span>
+            </span>
+            <input
+              type="range"
+              [min]="toleranceMin"
+              [max]="toleranceMax"
+              step="1"
+              [value]="tunerSettings().inTune.tolerance"
+              aria-label="In-tune tolerance in cents"
+              (input)="onTolerance($event)" />
+          </label>
+
+          <label class="workbench-size-control">
+            <span class="custom-copy">
+              <strong>Hold time</strong>
+              <span>{{ tunerSettings().inTune.holdMs }} ms</span>
+            </span>
+            <input
+              type="range"
+              [min]="holdMin"
+              [max]="holdMax"
+              [step]="holdStep"
+              [value]="tunerSettings().inTune.holdMs"
+              aria-label="In-tune hold time in milliseconds"
+              (input)="onHoldMs($event)" />
+          </label>
+        </section>
+      </section>
     </div>
   </section>
 </dialog>

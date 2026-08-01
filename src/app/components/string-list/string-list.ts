@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { TuningString } from '../../models/instrument.model';
 
 @Component({
@@ -9,4 +9,6 @@ import { TuningString } from '../../models/instrument.model';
 export class StringList {
   readonly strings = input.required<TuningString[]>();
   readonly activeString = input<string | null>(null);
+  readonly inTune = input(false);
+  readonly select = output<number>();
 }
