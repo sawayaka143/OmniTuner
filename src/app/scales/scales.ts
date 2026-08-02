@@ -332,6 +332,7 @@ export class Scales {
     this.muteGain = muteGain;
 
     this.playbackSource.set(source);
+    this.playback.isPlaying.set(true);
 
     entries.forEach((entry, index) => {
       const delaySeconds = index * 0.16;
@@ -344,6 +345,7 @@ export class Scales {
 
     this.queueTimer(() => {
       this.playbackSource.set(null);
+      this.playback.isPlaying.set(false);
       this.activeMidi.set(null);
       this.activeCell.set(null);
       this.cleanupMuteGain();
@@ -484,6 +486,7 @@ export class Scales {
     this.activeMidi.set(null);
     this.activeCell.set(null);
     this.playbackSource.set(null);
+    this.playback.isPlaying.set(false);
     this.cleanupMuteGain();
   }
 

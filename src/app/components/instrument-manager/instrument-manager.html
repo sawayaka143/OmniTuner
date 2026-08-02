@@ -68,7 +68,7 @@
           </button>
         }
 
-        @default {
+        @case ('create') {
           <form class="editor-form" (submit)="submit($event)">
             <label class="field-label" for="instrument-name">Instrument name</label>
             <input
@@ -172,6 +172,116 @@
               </button>
             </footer>
           </form>
+        }
+
+        @case ('edit') {
+          <form class="editor-form" (submit)="submit($event)">
+            <label class="field-label" for="instrument-name">Instrument name</label>
+            <input
+              id="instrument-name"
+              class="name-input"
+              type="text"
+              required
+              autofocus
+              autocomplete="off"
+              [attr.maxlength]="maxNameLength"
+              [value]="name()"
+              [attr.aria-invalid]="nameInvalid()"
+              (input)="onNameInput($event)"
+            />
+            @if (nameError()) {
+              <p class="field-error">{{ nameError() }}</p>
+            }
+
+            <div class="string-count-row">
+              <span class="field-label">Strings</span>
+              <div class="count-stepper">
+                <button
+                  class="step-button"
+                  type="button"
+                  [disabled]="stringCount() <= minStringCount"
+                  aria-label="Decrease string count"
+                  (click)="setStringCount(stringCount() - 1)"
+                >
+                  <span aria-hidden="true">−</span>
+                </button>
+                <output class="count-value">{{ stringCount() }}</output>
+                <button
+                  class="step-button"
+                  type="button"
+                  [disabled]="stringCount() >= maxStringCount"
+                  aria-label="Increase string count"
+                  (click)="setStringCount(stringCount() + 1)"
+                >
+                  <span aria-hidden="true">+</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="string-list" role="group" aria-label="Default tuning notes">
+              @for (r of displayRows(); track r.noteIndex) {
+                <div class="string-row" (wheel)="onWheel($event, r.noteIndex)">
+                  <span class="string-number">{{ r.stringNumber }}</span>
+                  <span
+                    class="string-line"
+                    [style.--string-weight.px]="r.weight"
+                    aria-hidden="true"
+                  ></span>
+                  <div class="note-controls">
+                    <button
+                      class="step-button"
+                      type="button"
+                      [disabled]="notes()[r.noteIndex] <= minMidiNote"
+                      [attr.aria-label]="
+                        'Lower string ' + r.stringNumber + ' by one semitone'
+                      "
+                      (click)="onKeyboardStep($event, r.noteIndex, -1)"
+                      (pointerdown)="startRepeating($event, r.noteIndex, -1)"
+                      (pointerup)="stopRepeating()"
+                      (pointerleave)="stopRepeating()"
+                      (pointercancel)="stopRepeating()"
+                    >
+                      <span aria-hidden="true">−</span>
+                    </button>
+                    <output
+                      class="note-name"
+                      [attr.aria-label]="
+                        'String ' + r.stringNumber + ' is tuned to ' + noteName(notes()[r.noteIndex])
+                      "
+                    >
+                      {{ noteName(notes()[r.noteIndex]) }}
+                    </output>
+                    <button
+                      class="step-button"
+                      type="button"
+                      [disabled]="notes()[r.noteIndex] >= maxMidiNote"
+                      [attr.aria-label]="
+                        'Raise string ' + r.stringNumber + ' by one semitone'
+                      "
+                      (click)="onKeyboardStep($event, r.noteIndex, 1)"
+                      (pointerdown)="startRepeating($event, r.noteIndex, 1)"
+                      (pointerup)="stopRepeating()"
+                      (pointerleave)="stopRepeating()"
+                      (pointercancel)="stopRepeating()"
+                    >
+                      <span aria-hidden="true">+</span>
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+
+            <footer class="editor-footer">
+              <button class="cancel-button" type="button" (click)="backToList()">Back</button>
+              <button class="save-button" type="submit" [disabled]="nameInvalid()">
+                {{ saveLabel() }}
+              </button>
+            </footer>
+          </form>
+        }
+
+        @default {
+          <p class="field-error">Unknown mode</p>
         }
       }
     </div>

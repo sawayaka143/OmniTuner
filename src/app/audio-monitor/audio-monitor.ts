@@ -237,6 +237,10 @@ export class AudioMonitor implements OnInit {
 
   constructor() {
     effect(() => {
+      this.scalePlayback.isPlaying.set(this.isCapturing());
+    });
+
+    effect(() => {
       const frequency = this.frequency();
       if (frequency === null || this.trackingState() !== 'locked') {
         this.noteInfo.set(null);

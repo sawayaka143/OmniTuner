@@ -1,4 +1,4 @@
-import { DestroyRef, inject, InjectionToken, Service } from '@angular/core';
+import { DestroyRef, inject, InjectionToken, Service, signal } from '@angular/core';
 import { midiNoteToFrequency } from '../utils/pitch-utils';
 
 export type AudioContextFactory = () => AudioContext | null;
@@ -25,6 +25,9 @@ export class ScalePlayback {
   private readonly createAudioContext = inject(SCALE_AUDIO_CONTEXT_FACTORY);
   private readonly destroyRef = inject(DestroyRef);
   private context: AudioContext | null = null;
+
+  /** True while a scale/tuning sequence is being played (drives the brand wobble). */
+  readonly isPlaying = signal(false);
 
   constructor() {
     this.destroyRef.onDestroy(() => {

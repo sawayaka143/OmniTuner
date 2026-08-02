@@ -47,7 +47,7 @@
       @if (presets().length) {
         <div class="preset-row" role="group" aria-label="Start from a tuning preset">
           <span>Start from</span>
-          @for (preset of presets(); track $index) {
+          @for (preset of presets(); track preset.id) {
             <button type="button" (click)="usePreset(preset)">{{ preset.name }}</button>
           }
         </div>

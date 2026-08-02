@@ -51,7 +51,7 @@
       height: var(--tick-height-center);
       top: calc(var(--tick-offset-top) - 10px);
       width: 2px;
-      background: #ffffff;
+      background: var(--text, #ffffff);
     }
   }
 
@@ -88,7 +88,7 @@
       font-variant-numeric: tabular-nums;
 
       &.center-label {
-        color: #ffffff;
+        color: var(--text, #ffffff);
         font-weight: 600;
       }
     }

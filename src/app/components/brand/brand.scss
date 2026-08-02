@@ -19,7 +19,7 @@
   transform: rotate(-12deg);
 }
 
-body.playing .handG {
+:host.playing .handG {
   animation: wobble 0.42s ease-in-out infinite alternate;
 }
 
@@ -59,7 +59,7 @@ body.playing .handG {
   .hand {
     animation: none;
   }
-  body.playing .handG {
+  :host.playing .handG {
     animation: none;
   }
 }

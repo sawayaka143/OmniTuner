@@ -2,11 +2,18 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { Brand } from './brand';
 
+class MockWorker {
+  onmessage: ((event: MessageEvent) => void) | null = null;
+  postMessage(): void {}
+  terminate(): void {}
+}
+
 describe('Brand', () => {
   let component: Brand;
   let fixture: ComponentFixture<Brand>;
 
   beforeEach(async () => {
+    globalThis.Worker = MockWorker as unknown as typeof Worker;
     await TestBed.configureTestingModule({
       imports: [Brand],
     }).compileComponents();

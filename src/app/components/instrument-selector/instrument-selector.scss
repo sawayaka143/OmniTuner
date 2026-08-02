@@ -138,21 +138,22 @@
   }
 }
 
-.custom-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+.custom-row {
+  display: flex;
+  align-items: center;
   gap: 3px;
+  min-width: 0;
+
+  .tuning-option {
+    flex: 1;
+    min-width: 0;
+  }
 }
 
 .custom-actions {
-  display: grid;
-  gap: 2px;
-}
-
-.action-row {
   display: flex;
   align-items: center;
-  min-height: 40px;
+  gap: 2px;
 }
 
 .icon-action {

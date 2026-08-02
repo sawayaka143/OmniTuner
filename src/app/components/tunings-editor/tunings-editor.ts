@@ -9,8 +9,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { FLAT_DISPLAY_NAMES, SHARP_DISPLAY_NAMES } from '../../data/note-display-names';
-
-export type AccidentalPreference = 'sharp' | 'flat';
+import { AccidentalPreference } from '../../models/scale-preferences.model';
 
 export interface TuningPresetOption {
   readonly id: unknown;

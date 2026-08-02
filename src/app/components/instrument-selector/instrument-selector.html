@@ -95,26 +95,20 @@
         <section class="menu-section custom-section" aria-labelledby="custom-tunings-heading">
           <h3 id="custom-tunings-heading">Saved custom</h3>
           @if (customTunings().length > 0) {
-            <div class="custom-layout">
-              <ul class="tuning-options" role="listbox" aria-labelledby="custom-tunings-heading">
-                @for (tuning of customTunings(); track tuning.id) {
-                  <li role="none">
-                    <button
-                      class="tuning-option"
-                      type="button"
-                      role="option"
-                      [attr.aria-selected]="selectedTuningId() === tuning.id"
-                      [class.selected]="selectedTuningId() === tuning.id"
-                      (click)="chooseTuning($event, tuning.id)"
-                    >
-                      <span>{{ tuning.label }}</span>
-                    </button>
-                  </li>
-                }
-              </ul>
-              <div class="custom-actions" aria-label="Custom tuning actions">
-                @for (tuning of customTunings(); track tuning.id) {
-                  <div class="action-row">
+            <ul class="tuning-options" role="listbox" aria-labelledby="custom-tunings-heading">
+              @for (tuning of customTunings(); track tuning.id) {
+                <li role="none" class="custom-row">
+                  <button
+                    class="tuning-option"
+                    type="button"
+                    role="option"
+                    [attr.aria-selected]="selectedTuningId() === tuning.id"
+                    [class.selected]="selectedTuningId() === tuning.id"
+                    (click)="chooseTuning($event, tuning.id)"
+                  >
+                    <span>{{ tuning.label }}</span>
+                  </button>
+                  <div class="custom-actions" aria-label="Custom tuning actions">
                     <button
                       class="icon-action"
                       type="button"
@@ -134,9 +128,9 @@
                       <span class="material-symbols-outlined" aria-hidden="true">delete</span>
                     </button>
                   </div>
-                }
-              </div>
-            </div>
+                </li>
+              }
+            </ul>
           } @else {
             <p class="empty-message">No custom tunings saved.</p>
           }
