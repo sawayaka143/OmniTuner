@@ -6,6 +6,7 @@ export const INSTRUMENTS: readonly Instrument[] = [
   {
     id: 'guitar',
     label: 'Guitar',
+    stringCount: 6,
     tunings: [
       {
         id: 'standard',
@@ -60,6 +61,7 @@ export const INSTRUMENTS: readonly Instrument[] = [
   {
     id: 'ukulele',
     label: 'Ukulele',
+    stringCount: 4,
     tunings: [
       {
         id: 'standard',

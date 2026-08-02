@@ -23,10 +23,10 @@
         (close)="closePickers()" />
 
       <app-tuning-selector
-        [presets]="tuningPresets"
-        [savedTunings]="preferencesState().savedTunings"
-        [selected]="activeTuningSelection()"
-        [selectedName]="activeTuning().name"
+        [presets]="tuningPresets()"
+        [savedTunings]="savedTunings()"
+        [selectedId]="selectedTuningId()"
+        [selectedName]="selectedTuningName()"
         [accidental]="preferencesState().accidental"
         [open]="tuningPickerOpen()"
         (select)="selectTuning($event)"
@@ -112,11 +112,12 @@
   <app-tuning-editor
     [open]="tuningEditorOpen()"
     [mode]="editorMode()"
+    [instrumentLabel]="instrumentLabel()"
     [initialName]="editorInitialName()"
     [initialNotes]="editorInitialNotes()"
     [accidental]="preferencesState().accidental"
-    [presets]="editorPresets"
-    [referenceNotes]="referenceNotes"
+    [presets]="editorPresets()"
+    [referenceNotes]="referenceNotes()"
     [minMidiNote]="minTuningMidiNote"
     [maxMidiNote]="maxTuningMidiNote"
     [maxNameLength]="maxTuningNameLength"

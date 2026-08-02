@@ -1,6 +1,6 @@
 <main class="app-main" (click)="closeDropdown()">
   <app-instrument-selector
-    [instruments]="instruments"
+    [instruments]="instruments()"
     [selectedInstrumentId]="selectedInstrumentId()"
     [selectedInstrumentIndex]="selectedInstrumentIndex()"
     [availableTunings]="availableTunings()"
@@ -14,9 +14,15 @@
     (newCustomTuning)="openCreateTuning()"
     (editCustomTuning)="openEditTuning($event)"
     (deleteCustomTuning)="deleteCustomTuning($event)"
+    (manageInstruments)="openInstrumentManager()"
     (toggleDropdown)="toggleDropdown()"
     (closeDropdown)="closeDropdown()"
     (modeChange)="selectMode($event)"
+  />
+
+  <app-instrument-manager
+    [open]="instrumentManagerOpen()"
+    (dismiss)="instrumentManagerOpen.set(false)"
   />
 
   <app-tuning-editor

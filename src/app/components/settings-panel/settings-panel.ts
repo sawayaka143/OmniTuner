@@ -1,6 +1,8 @@
 import { Component, computed, effect, ElementRef, input, output, viewChild } from '@angular/core';
 import {
   DEFAULT_TUNER_SETTINGS,
+  REFERENCE_PITCH_MAX,
+  REFERENCE_PITCH_MIN,
   TUNER_HOLD_MAX,
   TUNER_HOLD_MIN,
   TUNER_HOLD_STEP,
@@ -45,6 +47,7 @@ export class SettingsPanel {
   readonly inTuneColorChange = output<string>();
   readonly inTuneToleranceChange = output<number>();
   readonly inTuneHoldMsChange = output<number>();
+  readonly referencePitchChange = output<number>();
   readonly dismiss = output<void>();
 
   protected readonly toleranceMin = TUNER_TOLERANCE_MIN;
@@ -52,6 +55,8 @@ export class SettingsPanel {
   protected readonly holdMin = TUNER_HOLD_MIN;
   protected readonly holdMax = TUNER_HOLD_MAX;
   protected readonly holdStep = TUNER_HOLD_STEP;
+  protected readonly refPitchMin = REFERENCE_PITCH_MIN;
+  protected readonly refPitchMax = REFERENCE_PITCH_MAX;
 
   protected readonly accentOptions: readonly AccentOption[] = [
     { name: 'Root green', value: '#779900' },
@@ -152,6 +157,11 @@ export class SettingsPanel {
   protected onHoldMs(event: Event): void {
     const target = event.target;
     if (target instanceof HTMLInputElement) this.inTuneHoldMsChange.emit(Number(target.value));
+  }
+
+  protected onReferencePitch(event: Event): void {
+    const target = event.target;
+    if (target instanceof HTMLInputElement) this.referencePitchChange.emit(Number(target.value));
   }
 
   protected requestDismiss(event?: Event): void {

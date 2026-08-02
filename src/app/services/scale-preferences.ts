@@ -1,19 +1,11 @@
-import { computed, inject, InjectionToken, signal, Service } from '@angular/core';
+import { inject, InjectionToken, signal, Service } from '@angular/core';
 import { SCALES } from '../data/scale.constants';
-import {
-  DEFAULT_SCALE_PREFERENCES,
-  MAX_TUNING_MIDI_NOTE,
-  MIN_TUNING_MIDI_NOTE,
-  SCALE_TUNING_PRESETS,
-} from '../data/scale-tuning.constants';
+import { DEFAULT_SCALE_PREFERENCES } from '../data/scale-tuning.constants';
 import {
   AccidentalPreference,
   LabelMode,
-  SavedTuning,
   ScaleFretCount,
   ScalePreferencesState,
-  SixStringMidiNotes,
-  TuningSelection,
 } from '../models/scale-preferences.model';
 
 export const SCALE_PREFERENCES_STORAGE_KEY = 'omnituner.scales.v1';
@@ -48,52 +40,10 @@ const clampWorkbenchScale = (v: number): number =>
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null;
 
-const isMidiNote = (value: unknown): value is number =>
-  typeof value === 'number' &&
-  Number.isInteger(value) &&
-  value >= MIN_TUNING_MIDI_NOTE &&
-  value <= MAX_TUNING_MIDI_NOTE;
-
-const toSixStringNotes = (value: unknown): SixStringMidiNotes | null => {
-  if (!Array.isArray(value) || value.length !== 6 || !value.every(isMidiNote)) return null;
-  return [value[0], value[1], value[2], value[3], value[4], value[5]];
-};
-
-const readSavedTunings = (value: unknown): readonly SavedTuning[] => {
-  if (!Array.isArray(value)) return [];
-
-  return value.flatMap((entry) => {
-    if (!isRecord(entry) || typeof entry['id'] !== 'string' || typeof entry['name'] !== 'string') {
-      return [];
-    }
-    const notes = toSixStringNotes(entry['notes']);
-    const name = entry['name'].trim();
-    if (!notes || !name) return [];
-    return [{ id: entry['id'], name, notes }];
-  });
-};
-
-const readSelection = (
-  value: unknown,
-  savedTunings: readonly SavedTuning[],
-): TuningSelection => {
-  if (!isRecord(value) || typeof value['id'] !== 'string') {
-    return DEFAULT_SCALE_PREFERENCES.selectedTuning;
-  }
-  if (value['kind'] === 'preset' && SCALE_TUNING_PRESETS.some((preset) => preset.id === value['id'])) {
-    return { kind: 'preset', id: value['id'] };
-  }
-  if (value['kind'] === 'custom' && savedTunings.some((tuning) => tuning.id === value['id'])) {
-    return { kind: 'custom', id: value['id'] };
-  }
-  return DEFAULT_SCALE_PREFERENCES.selectedTuning;
-};
-
 const parseState = (value: unknown): ScalePreferencesState | null => {
   if (!isRecord(value) || value['version'] !== 1 || !isRecord(value['state'])) return null;
 
   const state = value['state'];
-  const savedTunings = readSavedTunings(state['savedTunings']);
   const rootPitchClass = state['rootPitchClass'];
   const scaleId = state['scaleId'];
   const accidental = state['accidental'];
@@ -125,8 +75,6 @@ const parseState = (value: unknown): ScalePreferencesState | null => {
       typeof state['showOutsideScale'] === 'boolean'
         ? state['showOutsideScale']
         : DEFAULT_SCALE_PREFERENCES.showOutsideScale,
-    selectedTuning: readSelection(state['selectedTuning'], savedTunings),
-    savedTunings,
     accent: typeof accent === 'string' && HEX_COLOR.test(accent)
       ? accent.toLowerCase()
       : DEFAULT_SCALE_PREFERENCES.accent,
@@ -149,13 +97,6 @@ export class ScalePreferences {
   private readonly stateSignal = signal(this.load());
 
   readonly state = this.stateSignal.asReadonly();
-  readonly selectedTuning = computed(() => {
-    const state = this.stateSignal();
-    const selection = state.selectedTuning;
-    return selection.kind === 'preset'
-      ? SCALE_TUNING_PRESETS.find((preset) => preset.id === selection.id) ?? SCALE_TUNING_PRESETS[0]
-      : state.savedTunings.find((tuning) => tuning.id === selection.id) ?? SCALE_TUNING_PRESETS[0];
-  });
 
   setRootPitchClass(rootPitchClass: number): void {
     if (!Number.isInteger(rootPitchClass) || rootPitchClass < 0 || rootPitchClass > 11) return;
@@ -163,7 +104,8 @@ export class ScalePreferences {
   }
 
   setScaleId(scaleId: string): void {
-    if (!SCALES.some((scale) => scale.id === scaleId)) return;
+    // Validation deferred to parseState on reload; accept any non-empty string.
+    if (!scaleId) return;
     this.update({ scaleId });
   }
 
@@ -209,56 +151,6 @@ export class ScalePreferences {
     this.update({ workbenchScale: 1 });
   }
 
-  selectTuning(selection: TuningSelection): void {
-    const exists = selection.kind === 'preset'
-      ? SCALE_TUNING_PRESETS.some((preset) => preset.id === selection.id)
-      : this.stateSignal().savedTunings.some((tuning) => tuning.id === selection.id);
-    if (exists) this.update({ selectedTuning: selection });
-  }
-
-  saveTuning(name: string, notes: readonly number[]): SavedTuning {
-    const state = this.stateSignal();
-    const tuning: SavedTuning = {
-      id: this.createTuningId(),
-      ...this.validateTuning(name, notes, state.savedTunings.length + 1),
-    };
-    this.update({
-      savedTunings: [...state.savedTunings, tuning],
-      selectedTuning: { kind: 'custom', id: tuning.id },
-    });
-    return tuning;
-  }
-
-  updateTuning(id: string, name: string, notes: readonly number[]): SavedTuning | null {
-    const state = this.stateSignal();
-    const index = state.savedTunings.findIndex((tuning) => tuning.id === id);
-    if (index === -1) return null;
-
-    const tuning: SavedTuning = {
-      id,
-      ...this.validateTuning(name, notes, state.savedTunings.length + 1),
-    };
-    const savedTunings = [...state.savedTunings];
-    savedTunings[index] = tuning;
-    this.update({
-      savedTunings,
-      selectedTuning: { kind: 'custom', id },
-    });
-    return tuning;
-  }
-
-  deleteTuning(id: string): void {
-    const state = this.stateSignal();
-    const savedTunings = state.savedTunings.filter((tuning) => tuning.id !== id);
-    if (savedTunings.length === state.savedTunings.length) return;
-
-    const selectedTuning =
-      state.selectedTuning.kind === 'custom' && state.selectedTuning.id === id
-        ? DEFAULT_SCALE_PREFERENCES.selectedTuning
-        : state.selectedTuning;
-    this.update({ savedTunings, selectedTuning });
-  }
-
   private update(changes: Partial<ScalePreferencesState>): void {
     this.stateSignal.update((state) => ({ ...state, ...changes }));
     this.persist();
@@ -282,25 +174,5 @@ export class ScalePreferences {
     } catch {
       // Storage can be unavailable or full; current-session state remains usable.
     }
-  }
-
-  private validateTuning(
-    name: string,
-    notes: readonly number[],
-    fallbackNumber: number,
-  ): Pick<SavedTuning, 'name' | 'notes'> {
-    const validatedNotes = toSixStringNotes(notes);
-    if (!validatedNotes) {
-      throw new RangeError(`Tuning notes must be integers from ${MIN_TUNING_MIDI_NOTE} to ${MAX_TUNING_MIDI_NOTE}.`);
-    }
-    return {
-      name: name.trim() || `Custom ${fallbackNumber}`,
-      notes: validatedNotes,
-    };
-  }
-
-  private createTuningId(): string {
-    if (typeof globalThis.crypto?.randomUUID === 'function') return globalThis.crypto.randomUUID();
-    return `custom-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
   }
 }

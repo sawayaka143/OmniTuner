@@ -130,6 +130,26 @@
           tinted glow, a soft chime, and a one-shot pulse.
         </p>
 
+        <section class="reference-pitch" aria-labelledby="reference-pitch-title">
+          <h4 id="reference-pitch-title">Reference pitch (A4)</h4>
+          <p>Shift the concert reference from the default 440 Hz.</p>
+
+          <label class="workbench-size-control">
+            <span class="custom-copy">
+              <strong>A4 frequency</strong>
+              <span>{{ tunerSettings().referencePitch }} Hz</span>
+            </span>
+            <input
+              type="range"
+              [min]="refPitchMin"
+              [max]="refPitchMax"
+              step="1"
+              [value]="tunerSettings().referencePitch"
+              aria-label="Reference pitch A4 in Hz"
+              (input)="onReferencePitch($event)" />
+          </label>
+        </section>
+
         <div class="startup-mode">
           <h4 id="startup-mode-title">Mode on startup</h4>
           <div

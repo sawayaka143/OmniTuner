@@ -7,7 +7,7 @@ import { TuningString } from '../../models/instrument.model';
   styleUrl: './string-list.scss',
 })
 export class StringList {
-  readonly strings = input.required<TuningString[]>();
+  readonly strings = input.required<readonly TuningString[]>();
   readonly activeString = input<string | null>(null);
   readonly inTune = input(false);
   readonly select = output<number>();

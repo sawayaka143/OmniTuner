@@ -47,6 +47,34 @@ describe('MIDI note helpers', () => {
   });
 });
 
+describe('A4 calibration (ref parameter)', () => {
+  it('midiNoteToFrequency shifts with the reference pitch', () => {
+    expect(midiNoteToFrequency(69, 442)).toBe(442);
+    expect(midiNoteToFrequency(69, 415)).toBe(415);
+    expect(midiNoteToFrequency(69, 466)).toBe(466);
+    // Default remains 440.
+    expect(midiNoteToFrequency(69)).toBe(440);
+  });
+
+  it('frequencyToMidiNote respects the reference pitch', () => {
+    // 442 Hz is exactly A4 when ref=442.
+    expect(frequencyToMidiNote(442, 442)).toBe(69);
+    // 440 Hz is slightly flat of A4 when ref=442.
+    expect(frequencyToMidiNote(440, 442)).toBe(69); // still rounds to 69
+  });
+
+  it('frequencyToMidiFloat respects the reference pitch', () => {
+    expect(frequencyToMidiFloat(442, 442)).toBe(69);
+    expect(frequencyToMidiFloat(440, 442)).toBeCloseTo(68.92, 1);
+  });
+
+  it('noteFromFrequency passes ref through to cents calculation', () => {
+    // 442 Hz with ref=442 should be perfectly in tune (0 cents).
+    const note = noteFromFrequency(442, undefined, 442);
+    expect(note).toMatchObject({ noteName: 'A', octave: 4, cents: 0, semitone: 0 });
+  });
+});
+
 describe('manual-mode cents helpers', () => {
   it('measures unclamped cents against a target MIDI note', () => {
     expect(centsFromMidiFloat(69, 69)).toBe(0);

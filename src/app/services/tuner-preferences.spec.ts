@@ -34,9 +34,6 @@ class MemoryStorage implements Storage {
   }
 }
 
-const GUITAR_NOTES = [40, 45, 50, 55, 59, 64] as const;
-const UKULELE_NOTES = [67, 60, 64, 69] as const;
-
 describe('TunerPreferences', () => {
   let storage: Storage;
 
@@ -55,157 +52,25 @@ describe('TunerPreferences', () => {
     TestBed.resetTestingModule();
   });
 
-  it('saves and restores instrument-scoped custom tunings', () => {
-    const service = createService();
-    const saved = service.createTuning('guitar', '  Open G  ', [38, 43, 50, 55, 59, 62]);
-
-    expect(saved.name).toBe('Open G');
-    expect(service.tuningsForInstrument('guitar')).toEqual([saved]);
-
-    TestBed.resetTestingModule();
-    const restored = createService();
-    expect(restored.customTunings()).toEqual([saved]);
-  });
-
-  it('updates a tuning in place while preserving its id and scope', () => {
-    const service = createService();
-    const first = service.createTuning('guitar', 'Open G', [38, 43, 50, 55, 59, 62]);
-    const second = service.createTuning('guitar', 'Drop D', [38, 45, 50, 55, 59, 64]);
-
-    const updated = service.updateTuning(first.id, '  Open D  ', [38, 45, 50, 54, 57, 62]);
-
-    expect(updated).toMatchObject({
-      id: first.id,
-      instrumentId: 'guitar',
-      name: 'Open D',
-    });
-    expect(service.customTunings().map((tuning) => tuning.id)).toEqual([first.id, second.id]);
-    expect(service.customTunings()[0].notes).toEqual([38, 45, 50, 54, 57, 62]);
-  });
-
-  it('scopes tunings by instrument and validates ids, string counts, and note ranges', () => {
-    const service = createService();
-    const guitar = service.createTuning('guitar', 'Standard copy', GUITAR_NOTES);
-    const ukulele = service.createTuning('ukulele', 'Re-entrant', UKULELE_NOTES);
-
-    expect(service.tuningsForInstrument('guitar')).toEqual([guitar]);
-    expect(service.tuningsForInstrument('ukulele')).toEqual([ukulele]);
-    expect(service.tuningsForInstrument('mandolin')).toEqual([]);
-    expect(() => service.createTuning('mandolin', 'Fifths', [55, 62, 69, 76])).toThrow(RangeError);
-    expect(() => service.createTuning('guitar', 'Too few', UKULELE_NOTES)).toThrow(RangeError);
-    expect(() => service.createTuning('ukulele', 'Too low', [34, 60, 64, 69])).toThrow(RangeError);
-    expect(() => service.createTuning('ukulele', 'Too high', [67, 60, 64, 87])).toThrow(RangeError);
-  });
-
-  it('deletes only the requested tuning', () => {
-    const service = createService();
-    const guitar = service.createTuning('guitar', 'Open G', [38, 43, 50, 55, 59, 62]);
-    const ukulele = service.createTuning('ukulele', 'Low G', [55, 60, 64, 69]);
-
-    service.deleteTuning(guitar.id);
-
-    expect(service.customTunings()).toEqual([ukulele]);
+  it('starts with default settings', () => {
+    expect(createService().tunerSettings()).toEqual(DEFAULT_TUNER_SETTINGS);
   });
 
   it('falls back safely when storage contains malformed JSON', () => {
     storage.setItem(TUNER_PREFERENCES_STORAGE_KEY, '{not-json');
 
-    expect(createService().customTunings()).toEqual([]);
-  });
-
-  it('restores valid entries while discarding malformed persisted tunings', () => {
-    storage.setItem(
-      TUNER_PREFERENCES_STORAGE_KEY,
-      JSON.stringify({
-        version: 1,
-        tunings: [
-          {
-            id: 'custom-valid',
-            instrumentId: 'guitar',
-            name: '  Valid  ',
-            notes: GUITAR_NOTES,
-          },
-          {
-            id: 'standard',
-            instrumentId: 'guitar',
-            name: 'Preset collision',
-            notes: GUITAR_NOTES,
-          },
-          {
-            id: 'custom-wrong-count',
-            instrumentId: 'ukulele',
-            name: 'Wrong count',
-            notes: GUITAR_NOTES,
-          },
-          {
-            id: 'custom-bad-note',
-            instrumentId: 'guitar',
-            name: 'Bad note',
-            notes: [34, 45, 50, 55, 59, 64],
-          },
-        ],
-      }),
-    );
-
-    expect(createService().customTunings()).toEqual([
-      {
-        id: 'custom-valid',
-        instrumentId: 'guitar',
-        name: 'Valid',
-        notes: GUITAR_NOTES,
-      },
-    ]);
-  });
-
-  it('keeps current-session changes when storage is full', () => {
-    storage = {
-      length: 0,
-      clear: () => undefined,
-      getItem: () => null,
-      key: () => null,
-      removeItem: () => undefined,
-      setItem: () => {
-        throw new DOMException('Storage full', 'QuotaExceededError');
-      },
-    };
-    const service = createService();
-
-    const saved = service.createTuning('guitar', 'Standard copy', GUITAR_NOTES);
-
-    expect(service.customTunings()).toEqual([saved]);
-  });
-
-  it('migrates v1 saves: tunings are kept, tuner settings fall back to defaults', () => {
-    storage.setItem(
-      TUNER_PREFERENCES_STORAGE_KEY,
-      JSON.stringify({
-        version: 1,
-        tunings: [
-          {
-            id: 'custom-legacy',
-            instrumentId: 'guitar',
-            name: 'Legacy',
-            notes: GUITAR_NOTES,
-          },
-        ],
-      }),
-    );
-
-    const service = createService();
-
-    expect(service.customTunings().map((tuning) => tuning.id)).toEqual(['custom-legacy']);
-    expect(service.tunerSettings()).toEqual(DEFAULT_TUNER_SETTINGS);
+    expect(createService().tunerSettings()).toEqual(DEFAULT_TUNER_SETTINGS);
   });
 
   it('restores tuner settings and clamps out-of-range values on load', () => {
     storage.setItem(
       TUNER_PREFERENCES_STORAGE_KEY,
       JSON.stringify({
-        version: 2,
-        tunings: [],
+        version: 3,
         tuner: {
           mode: 'manual',
           startupMode: 'auto',
+          referencePitch: 500,
           inTune: {
             enabled: false,
             sound: false,
@@ -221,6 +86,7 @@ describe('TunerPreferences', () => {
     expect(createService().tunerSettings()).toEqual({
       mode: 'manual',
       startupMode: 'auto',
+      referencePitch: 466,
       inTune: {
         enabled: false,
         sound: false,
@@ -242,6 +108,7 @@ describe('TunerPreferences', () => {
     service.setInTuneColor('#ff9900');
     service.setInTuneTolerance(12);
     service.setInTuneHoldMs(800);
+    service.setReferencePitch(442);
 
     TestBed.resetTestingModule();
     const restored = createService();
@@ -249,6 +116,7 @@ describe('TunerPreferences', () => {
     expect(restored.tunerSettings()).toEqual({
       mode: 'manual',
       startupMode: 'remember',
+      referencePitch: 442,
       inTune: {
         enabled: false,
         sound: false,
@@ -277,5 +145,65 @@ describe('TunerPreferences', () => {
 
     service.setInTuneHoldMs(10_000);
     expect(service.tunerSettings().inTune.holdMs).toBe(1500);
+  });
+
+  describe('referencePitch', () => {
+    it('defaults to 440', () => {
+      expect(createService().tunerSettings().referencePitch).toBe(440);
+    });
+
+    it('sets and persists a valid reference pitch', () => {
+      const service = createService();
+      service.setReferencePitch(432);
+      expect(service.tunerSettings().referencePitch).toBe(432);
+
+      TestBed.resetTestingModule();
+      expect(createService().tunerSettings().referencePitch).toBe(432);
+    });
+
+    it('clamps values below the minimum (415)', () => {
+      const service = createService();
+      service.setReferencePitch(300);
+      expect(service.tunerSettings().referencePitch).toBe(415);
+    });
+
+    it('clamps values above the maximum (466)', () => {
+      const service = createService();
+      service.setReferencePitch(500);
+      expect(service.tunerSettings().referencePitch).toBe(466);
+    });
+
+    it('ignores non-finite values', () => {
+      const service = createService();
+      service.setReferencePitch(NaN);
+      expect(service.tunerSettings().referencePitch).toBe(440);
+
+      service.setReferencePitch(Infinity);
+      expect(service.tunerSettings().referencePitch).toBe(440);
+    });
+
+    it('rounds fractional values', () => {
+      const service = createService();
+      service.setReferencePitch(442.7);
+      expect(service.tunerSettings().referencePitch).toBe(443);
+    });
+  });
+
+  it('keeps current-session changes when storage is full', () => {
+    storage = {
+      length: 0,
+      clear: () => undefined,
+      getItem: () => null,
+      key: () => null,
+      removeItem: () => undefined,
+      setItem: () => {
+        throw new DOMException('Storage full', 'QuotaExceededError');
+      },
+    };
+    const service = createService();
+
+    service.setReferencePitch(432);
+
+    expect(service.tunerSettings().referencePitch).toBe(432);
   });
 });

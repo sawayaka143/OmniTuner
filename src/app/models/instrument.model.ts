@@ -6,12 +6,14 @@ export interface TuningString {
 export interface Tuning {
   readonly id: string;
   readonly label: string;
-  readonly strings: TuningString[];
+  readonly strings: readonly TuningString[];
   readonly kind?: 'custom';
 }
 
 export interface Instrument {
   readonly id: string;
   readonly label: string;
-  readonly tunings: Tuning[];
+  readonly stringCount: number;
+  readonly tunings: readonly Tuning[];
+  readonly kind?: 'custom';
 }

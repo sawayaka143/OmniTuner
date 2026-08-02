@@ -28,6 +28,7 @@ export class InstrumentSelector {
   readonly newCustomTuning = output<void>();
   readonly editCustomTuning = output<string>();
   readonly deleteCustomTuning = output<string>();
+  readonly manageInstruments = output<void>();
   readonly toggleDropdown = output<void>();
   readonly closeDropdown = output<void>();
   readonly modeChange = output<TunerMode>();
@@ -62,5 +63,10 @@ export class InstrumentSelector {
   protected requestDelete(event: MouseEvent, tuningId: string): void {
     event.stopPropagation();
     this.deleteCustomTuning.emit(tuningId);
+  }
+
+  protected requestManageInstruments(event: MouseEvent): void {
+    event.stopPropagation();
+    this.manageInstruments.emit();
   }
 }

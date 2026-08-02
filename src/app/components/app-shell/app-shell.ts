@@ -86,4 +86,8 @@ export class AppShell {
   protected setInTuneHoldMs(holdMs: number): void {
     this.tunerPreferences.setInTuneHoldMs(holdMs);
   }
+
+  protected setReferencePitch(referencePitch: number): void {
+    this.tunerPreferences.setReferencePitch(referencePitch);
+  }
 }

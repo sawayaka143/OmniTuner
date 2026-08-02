@@ -114,6 +114,7 @@
 }
 
 .new-tuning-button,
+.manage-instruments-button,
 .icon-action {
   border: 0;
   background: transparent;
@@ -177,7 +178,8 @@
   font-size: 11px;
 }
 
-.new-tuning-button {
+.new-tuning-button,
+.manage-instruments-button {
   display: flex;
   width: 100%;
   min-height: 40px;

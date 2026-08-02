@@ -7,19 +7,19 @@ export interface NoteInfo {
   semitone: number;
 }
 
-export function midiNoteToFrequency(midiNote: number): number {
-  return 440 * 2 ** ((midiNote - 69) / 12);
+export function midiNoteToFrequency(midiNote: number, ref = 440): number {
+  return ref * 2 ** ((midiNote - 69) / 12);
 }
 
-export function frequencyToMidiNote(frequency: number): number | null {
+export function frequencyToMidiNote(frequency: number, ref = 440): number | null {
   if (!Number.isFinite(frequency) || frequency <= 0) return null;
-  return Math.round(69 + 12 * Math.log2(frequency / 440));
+  return Math.round(69 + 12 * Math.log2(frequency / ref));
 }
 
 /** Unrounded MIDI value of a frequency, e.g. 440 Hz → 69, 441 Hz → ~69.0392. */
-export function frequencyToMidiFloat(frequency: number): number | null {
+export function frequencyToMidiFloat(frequency: number, ref = 440): number | null {
   if (!Number.isFinite(frequency) || frequency <= 0) return null;
-  return 69 + 12 * Math.log2(frequency / 440);
+  return 69 + 12 * Math.log2(frequency / ref);
 }
 
 /** Cents offset between a (possibly fractional) played MIDI value and a target MIDI note. Unclamped. */
@@ -56,9 +56,9 @@ export function midiNoteLabel(midiNote: number): string {
   return `${NOTE_NAMES[noteIndex]}${octave}`;
 }
 
-export function noteFromFrequency(frequency: number, previousSemitone?: number): NoteInfo | null {
+export function noteFromFrequency(frequency: number, previousSemitone?: number, ref = 440): NoteInfo | null {
   if (frequency <= 0) return null;
-  const semitones = 12 * Math.log2(frequency / 440);
+  const semitones = 12 * Math.log2(frequency / ref);
   const nearestSemitone = Math.round(semitones);
   const rounded =
     previousSemitone !== undefined && Math.abs(semitones - previousSemitone) < 0.6

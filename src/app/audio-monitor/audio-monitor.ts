@@ -10,20 +10,20 @@ import {
   untracked,
 } from '@angular/core';
 import { InstrumentSelector } from '../components/instrument-selector/instrument-selector';
+import { InstrumentManager } from '../components/instrument-manager/instrument-manager';
 import { TuningEditor, TuningEditorValue } from '../components/tunings-editor/tunings-editor';
 import { PitchDisplay } from '../components/pitch-display/pitch-display';
 import { PitchMeter, Tick } from '../components/pitch-meter/pitch-meter';
 import { StringList } from '../components/string-list/string-list';
-import { INSTRUMENTS } from '../data/instrument.constants';
-import { Instrument, Tuning } from '../models/instrument.model';
+import { Tuning } from '../models/instrument.model';
 import {
   MAX_CUSTOM_TUNING_NAME_LENGTH,
   MAX_TUNER_MIDI_NOTE,
   MIN_TUNER_MIDI_NOTE,
-  SavedCustomTuning,
   TunerMode,
 } from '../models/tuner-preferences.model';
 import { AudioCaptureService } from '../services/audio-capture-service';
+import { InstrumentRegistry } from '../services/instrument-registry';
 import { ScalePlayback } from '../services/scale-playback';
 import { TunerPreferences } from '../services/tuner-preferences';
 import {
@@ -46,12 +46,13 @@ const LOCK_PULSE_DURATION_MS = 900;
 
 @Component({
   selector: 'app-audio-monitor',
-  imports: [TuningEditor, InstrumentSelector, PitchMeter, PitchDisplay, StringList],
+  imports: [TuningEditor, InstrumentSelector, InstrumentManager, PitchMeter, PitchDisplay, StringList],
   templateUrl: './audio-monitor.html',
   styleUrl: './audio-monitor.scss',
 })
 export class AudioMonitor implements OnInit {
   private readonly audioCapture = inject(AudioCaptureService);
+  private readonly registry = inject(InstrumentRegistry);
   private readonly tunerPreferences = inject(TunerPreferences);
   private readonly scalePlayback = inject(ScalePlayback);
   private readonly destroyRef = inject(DestroyRef);
@@ -64,11 +65,15 @@ export class AudioMonitor implements OnInit {
   readonly debugInfo = this.audioCapture.debugInfo;       // [debug]
   readonly showDebug = isDevMode();
 
-  readonly selectedInstrumentId = signal('guitar');
-  readonly selectedTuningId = signal('standard');
+  // Instrument/tuning selection now lives in the shared registry.
+  readonly instruments = this.registry.instruments;
+  readonly selectedInstrumentId = this.registry.selectedInstrumentId;
+  readonly selectedTuningId = this.registry.selectedTuningId;
+
   readonly dropdownOpen = signal(false);
   readonly isDeforming = signal(false);
   readonly tuningEditorOpen = signal(false);
+  readonly instrumentManagerOpen = signal(false);
   readonly editingTuningId = signal<string | null>(null);
   readonly editorInitialName = signal('');
   readonly editorInitialNotes = signal<readonly number[]>([]);
@@ -85,32 +90,19 @@ export class AudioMonitor implements OnInit {
   private pulseTimeout: ReturnType<typeof setTimeout> | null = null;
   private deformTimeout: ReturnType<typeof setTimeout> | null = null;
 
-  readonly instruments = INSTRUMENTS;
   readonly ticks: Tick[] = [];
 
   readonly selectedInstrumentIndex = computed(() =>
-    INSTRUMENTS.findIndex((instrument) => instrument.id === this.selectedInstrumentId()),
+    this.instruments().findIndex((instrument) => instrument.id === this.selectedInstrumentId()),
   );
 
-  private readonly currentInstrument = computed<Instrument>(
-    () =>
-      INSTRUMENTS.find((instrument) => instrument.id === this.selectedInstrumentId()) ??
-      INSTRUMENTS[0],
-  );
+  private readonly currentInstrument = this.registry.selectedInstrument;
 
   readonly currentInstrumentLabel = computed(() => this.currentInstrument().label);
 
-  readonly availableTunings = computed<readonly Tuning[]>(() => [
-    ...this.currentInstrument().tunings,
-    ...this.tunerPreferences
-      .tuningsForInstrument(this.selectedInstrumentId())
-      .map((tuning) => this.toRuntimeTuning(tuning)),
-  ]);
+  readonly availableTunings = this.registry.availableTunings;
 
-  readonly currentTuning = computed<Tuning>(() => {
-    const tunings = this.availableTunings();
-    return tunings.find((tuning) => tuning.id === this.selectedTuningId()) ?? tunings[0];
-  });
+  readonly currentTuning = this.registry.selectedTuning;
 
   readonly currentStrings = computed(() => this.currentTuning().strings);
 
@@ -123,7 +115,7 @@ export class AudioMonitor implements OnInit {
     this.currentInstrument().tunings.map((tuning) => ({
       id: tuning.id,
       name: tuning.label,
-      notes: tuning.strings.map((string) => frequencyToMidiNote(string.freq) ?? 69),
+      notes: tuning.strings.map((string) => frequencyToMidiNote(string.freq, this.refPitch()) ?? 69),
     })),
   );
 
@@ -153,7 +145,7 @@ export class AudioMonitor implements OnInit {
   readonly manualTargetInfo = computed<NoteInfo | null>(() => {
     const target = this.manualTarget();
     if (!target) return null;
-    const targetMidi = frequencyToMidiNote(target.freq);
+    const targetMidi = frequencyToMidiNote(target.freq, this.refPitch());
     if (targetMidi === null) return null;
     const label = midiNoteLabel(targetMidi);
     return {
@@ -176,7 +168,7 @@ export class AudioMonitor implements OnInit {
     if (!valid) return null;
     const target = this.manualTarget();
     if (!target) return null;
-    return centsFromMidiFloat(frequencyToMidiFloat(this.frequency()!), this.targetMidi(target));
+    return centsFromMidiFloat(frequencyToMidiFloat(this.frequency()!, this.refPitch()), this.targetMidi(target));
   });
 
   /** True only while a locked pitch sits inside the tolerance window. */
@@ -252,7 +244,7 @@ export class AudioMonitor implements OnInit {
       }
 
       const previousSemitone = untracked(() => this.noteInfo())?.semitone;
-      this.noteInfo.set(noteFromFrequency(frequency, previousSemitone));
+      this.noteInfo.set(noteFromFrequency(frequency, previousSemitone, this.refPitch()));
     });
 
     effect(() => {
@@ -333,11 +325,9 @@ export class AudioMonitor implements OnInit {
   }
 
   protected selectInstrument(instrumentId: string): void {
-    const instrument = INSTRUMENTS.find((candidate) => candidate.id === instrumentId);
-    if (!instrument || this.selectedInstrumentId() === instrumentId) return;
+    if (this.selectedInstrumentId() === instrumentId) return;
 
-    this.selectedInstrumentId.set(instrumentId);
-    this.selectedTuningId.set(instrument.tunings[0].id);
+    this.registry.selectInstrument(instrumentId);
     this.dropdownOpen.set(false);
     if (this.deformTimeout !== null) clearTimeout(this.deformTimeout);
     this.isDeforming.set(true);
@@ -348,8 +338,7 @@ export class AudioMonitor implements OnInit {
   }
 
   protected selectTuning(tuningId: string): void {
-    if (!this.availableTunings().some((tuning) => tuning.id === tuningId)) return;
-    this.selectedTuningId.set(tuningId);
+    this.registry.selectTuning(tuningId);
     this.dropdownOpen.set(false);
   }
 
@@ -362,7 +351,7 @@ export class AudioMonitor implements OnInit {
   }
 
   protected openEditTuning(tuningId: string): void {
-    const tuning = this.tunerPreferences
+    const tuning = this.registry
       .customTunings()
       .find(
         (candidate) =>
@@ -378,27 +367,16 @@ export class AudioMonitor implements OnInit {
   }
 
   protected deleteCustomTuning(tuningId: string): void {
-    const tuning = this.tunerPreferences
-      .customTunings()
-      .find(
-        (candidate) =>
-          candidate.id === tuningId && candidate.instrumentId === this.selectedInstrumentId(),
-      );
-    if (!tuning) return;
-
-    this.tunerPreferences.deleteTuning(tuningId);
-    if (this.selectedTuningId() === tuningId) {
-      this.selectedTuningId.set(this.currentInstrument().tunings[0].id);
-    }
+    this.registry.deleteTuning(tuningId);
   }
 
   protected saveCustomTuning(value: TuningEditorValue): void {
     const editingId = this.editingTuningId();
     const tuning = editingId
-      ? this.tunerPreferences.updateTuning(editingId, value.name, value.notes)
-      : this.tunerPreferences.createTuning(this.selectedInstrumentId(), value.name, value.notes);
+      ? this.registry.updateTuning(editingId, value.name, value.notes)
+      : this.registry.createTuning(this.selectedInstrumentId(), value.name, value.notes);
 
-    this.selectedTuningId.set(tuning.id);
+    this.registry.selectTuning(tuning.id);
     this.dismissTuningEditor();
   }
 
@@ -415,6 +393,11 @@ export class AudioMonitor implements OnInit {
     this.dropdownOpen.set(false);
   }
 
+  protected openInstrumentManager(): void {
+    this.closeDropdown();
+    this.instrumentManagerOpen.set(true);
+  }
+
   protected toggleCapture(): void {
     if (this.isCapturing()) {
       this.audioCapture.stopCapture();
@@ -423,23 +406,13 @@ export class AudioMonitor implements OnInit {
     }
   }
 
-  private toRuntimeTuning(tuning: SavedCustomTuning): Tuning {
-    return {
-      id: tuning.id,
-      label: tuning.name,
-      kind: 'custom',
-      strings: tuning.notes.map((note) => ({
-        name: midiNoteLabel(note),
-        freq: midiNoteToFrequency(note),
-      })),
-    };
-  }
-
   private notesForTuning(tuning: Tuning): readonly number[] {
-    return tuning.strings.map((string) => frequencyToMidiNote(string.freq) ?? 69);
+    return tuning.strings.map((string) => frequencyToMidiNote(string.freq, this.refPitch()) ?? 69);
   }
 
   private readonly tunerSettings = this.tunerPreferences.tunerSettings;
+
+  private readonly refPitch = computed(() => this.tunerSettings().referencePitch);
 
   private readonly tolerance = computed(() => this.tunerSettings().inTune.tolerance);
 
@@ -449,7 +422,7 @@ export class AudioMonitor implements OnInit {
   }
 
   private targetMidi(target: { readonly freq: number }): number {
-    return frequencyToMidiNote(target.freq) ?? 69;
+    return frequencyToMidiNote(target.freq, this.refPitch()) ?? 69;
   }
 
   private confirmLock(): void {

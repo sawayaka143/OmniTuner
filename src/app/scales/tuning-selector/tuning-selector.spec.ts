@@ -1,13 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { SCALE_TUNING_PRESETS } from '../../data/scale-tuning.constants';
-import { SavedTuning, TuningSelection } from '../../models/scale-preferences.model';
-import { TuningSelector } from './tuning-selector';
+import { TuningSelector, TuningOption } from './tuning-selector';
 
-const SAVED_TUNING: SavedTuning = {
+const PRESETS: readonly TuningOption[] = [
+  { id: 'standard', name: 'Standard', notes: [40, 45, 50, 55, 59, 64], kind: 'preset' },
+  { id: 'drop-d', name: 'Drop D', notes: [38, 45, 50, 55, 59, 64], kind: 'preset' },
+];
+
+const SAVED_TUNING: TuningOption = {
   id: 'custom-open-e',
   name: 'Open E',
   notes: [40, 47, 52, 56, 59, 64],
+  kind: 'custom',
 };
 
 describe('TuningSelector', () => {
@@ -21,8 +25,9 @@ describe('TuningSelector', () => {
 
     fixture = TestBed.createComponent(TuningSelector);
     component = fixture.componentInstance;
-    fixture.componentRef.setInput('presets', SCALE_TUNING_PRESETS);
+    fixture.componentRef.setInput('presets', PRESETS);
     fixture.componentRef.setInput('savedTunings', []);
+    fixture.componentRef.setInput('selectedId', 'standard');
     fixture.componentRef.setInput('selectedName', 'Standard');
     await fixture.whenStable();
   });
@@ -31,11 +36,24 @@ describe('TuningSelector', () => {
     expect(component).toBeTruthy();
   });
 
+  it('emits the tuning ID on select', async () => {
+    fixture.componentRef.setInput('open', true);
+    await fixture.whenStable();
+    let selectedId: string | null = null;
+    component.select.subscribe((value) => { selectedId = value; });
+
+    const options = fixture.nativeElement.querySelectorAll('.selector-option');
+    // Second preset option (Drop D).
+    (options[1] as HTMLButtonElement).click();
+
+    expect(selectedId).toBe('drop-d');
+  });
+
   it('emits the saved tuning ID for edit without selecting it', async () => {
     fixture.componentRef.setInput('savedTunings', [SAVED_TUNING]);
     fixture.componentRef.setInput('open', true);
     await fixture.whenStable();
-    let selection: TuningSelection | null = null;
+    let selection: string | null = null;
     let editedId: string | null = null;
     component.select.subscribe((value) => { selection = value; });
     component.edit.subscribe((value) => { editedId = value; });
@@ -52,7 +70,7 @@ describe('TuningSelector', () => {
     fixture.componentRef.setInput('savedTunings', [SAVED_TUNING]);
     fixture.componentRef.setInput('open', true);
     await fixture.whenStable();
-    let selection: TuningSelection | null = null;
+    let selection: string | null = null;
     let deletedId: string | null = null;
     component.select.subscribe((value) => { selection = value; });
     component.delete.subscribe((value) => { deletedId = value; });

@@ -7,19 +7,19 @@ import {
   AccidentalPreference,
   LabelMode,
   ScaleFretCount,
-  TuningSelection,
 } from '../models/scale-preferences.model';
 import { FLAT_NAMES, SCALES, SHARP_NAMES } from '../data/scale.constants';
 import {
   MAX_TUNING_MIDI_NOTE,
   MIN_TUNING_MIDI_NOTE,
-  SCALE_TUNING_PRESETS,
 } from '../data/scale-tuning.constants';
 import { textColorOn } from '../data/interval-colors';
 import { computeFretboard, noteName, parseNote } from '../utils/scale-theory';
+import { frequencyToMidiNote } from '../utils/pitch-utils';
+import { InstrumentRegistry } from '../services/instrument-registry';
 import { ScalePreferences } from '../services/scale-preferences';
 import { ScalePlayback } from '../services/scale-playback';
-import { TuningSelector } from './tuning-selector/tuning-selector';
+import { TuningSelector, TuningOption } from './tuning-selector/tuning-selector';
 import {
   TuningEditor,
   TuningEditorValue,
@@ -32,13 +32,6 @@ interface PreviewTuning {
   readonly name: string;
   readonly notes: readonly number[];
 }
-
-/**
- * Tuning presets offered as "Start from" entries in the editor. Selected by id
- * (not array index) so reordering `SCALE_TUNING_PRESETS` can't silently change
- * which presets appear here.
- */
-const EDITOR_PRESET_IDS = ['standard', 'drop-d', 'dadgad', 'open-g'];
 
 @Component({
   selector: 'app-scales',
@@ -56,11 +49,11 @@ const EDITOR_PRESET_IDS = ['standard', 'drop-d', 'dadgad', 'open-g'];
 })
 export class Scales {
   private readonly preferences = inject(ScalePreferences);
+  private readonly registry = inject(InstrumentRegistry);
   private readonly playback = inject(ScalePlayback);
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly scales = SCALES;
-  protected readonly tuningPresets = SCALE_TUNING_PRESETS;
   protected readonly preferencesState = this.preferences.state;
 
   readonly rootPickerOpen = signal(false);
@@ -80,11 +73,7 @@ export class Scales {
 
   private readonly previewTuning = signal<PreviewTuning | null>(null);
   protected readonly editorInitialName = signal('');
-  protected readonly editorInitialNotes = signal<readonly number[]>(SCALE_TUNING_PRESETS[0].notes);
-  protected readonly editorPresets: TuningPresetOption[] = SCALE_TUNING_PRESETS.filter(
-    (preset) => EDITOR_PRESET_IDS.includes(preset.id),
-  ).map((preset) => ({ id: preset.id, name: preset.name, notes: preset.notes }));
-  protected readonly referenceNotes = SCALE_TUNING_PRESETS[0].notes;
+  protected readonly editorInitialNotes = signal<readonly number[]>([]);
   protected readonly minTuningMidiNote = MIN_TUNING_MIDI_NOTE;
   protected readonly maxTuningMidiNote = MAX_TUNING_MIDI_NOTE;
   protected readonly maxTuningNameLength = 40;
@@ -94,6 +83,46 @@ export class Scales {
   private muteGain: GainNode | null = null;
   private pulseTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly sequenceTimers = new Set<ReturnType<typeof setTimeout>>();
+
+  // ── Tuning data from the shared registry ─────────────────────────
+
+  /** Preset tunings derived from the selected instrument's built-in tunings. */
+  protected readonly tuningPresets = computed<readonly TuningOption[]>(() =>
+    this.registry.selectedInstrument().tunings.map((tuning) => ({
+      id: tuning.id,
+      name: tuning.label,
+      notes: tuning.strings.map((s) => frequencyToMidiNote(s.freq) ?? 69),
+      kind: 'preset' as const,
+    })),
+  );
+
+  /** Custom tunings for the selected instrument from the registry. */
+  protected readonly savedTunings = computed<readonly TuningOption[]>(() =>
+    this.registry.tuningsForInstrument(this.registry.selectedInstrumentId()).map((t) => ({
+      id: t.id,
+      name: t.name,
+      notes: t.notes,
+      kind: 'custom' as const,
+    })),
+  );
+
+  protected readonly selectedTuningId = this.registry.selectedTuningId;
+  protected readonly selectedTuningName = computed(() => this.registry.selectedTuning().label);
+
+  /** Editor presets: the built-in tunings of the current instrument. */
+  protected readonly editorPresets = computed<readonly TuningPresetOption[]>(() =>
+    this.tuningPresets().map((p) => ({ id: p.id, name: p.name, notes: p.notes })),
+  );
+
+  /** Reference notes for highlighting changes in the editor. */
+  protected readonly referenceNotes = computed<readonly number[] | null>(() =>
+    this.tuningPresets()[0]?.notes ?? null,
+  );
+
+  /** The instrument label shown in the editor subtitle. */
+  protected readonly instrumentLabel = computed(() => this.registry.selectedInstrument().label);
+
+  // ── Scale / display state ────────────────────────────────────────
 
   protected readonly rootNotes = computed(() =>
     this.preferencesState().accidental === 'flat' ? FLAT_NAMES : SHARP_NAMES,
@@ -117,12 +146,12 @@ export class Scales {
   protected readonly activeTuning = computed<PreviewTuning>(() => {
     const preview = this.previewTuning();
     if (preview) return preview;
-    const selected = this.preferences.selectedTuning();
-    return { name: selected.name, notes: selected.notes };
+    const selected = this.registry.selectedTuning();
+    return {
+      name: selected.label,
+      notes: selected.strings.map((s) => frequencyToMidiNote(s.freq) ?? 69),
+    };
   });
-  protected readonly activeTuningSelection = computed<TuningSelection | null>(() =>
-    this.previewTuning() ? null : this.preferencesState().selectedTuning,
-  );
 
   /** Translate root-relative scale degrees for the generic, absolute-pitch engine. */
   private readonly fretboardIntervals = computed<IntervalEntry[]>(() => {
@@ -229,15 +258,15 @@ export class Scales {
     this.preferences.setShowOutsideScale(showOutsideScale);
   }
 
-  protected selectTuning(selection: TuningSelection): void {
+  protected selectTuning(tuningId: string): void {
     this.previewTuning.set(null);
-    this.preferences.selectTuning(selection);
+    this.registry.selectTuning(tuningId);
     this.tuningPickerOpen.set(false);
   }
 
   protected deleteTuning(id: string): void {
     this.previewTuning.set(null);
-    this.preferences.deleteTuning(id);
+    this.registry.deleteTuning(id);
     this.closePickers();
   }
 
@@ -283,10 +312,6 @@ export class Scales {
     const rows = this.cells(); // high-string-first: rows[0] = 1st string
     const entries = notes.map((midi, index) => ({
       midi,
-      // notes[] is low-string-first, so the string is the mirror of the
-      // index. Highlight THIS string's open cell by position, never by
-      // pitch lookup: open strings may repeat, and a pitch search then
-      // collapses duplicate strings onto the same row.
       highlight:
         rows[rows.length - 1 - index]?.find((cell) => cell.fret === 0) ??
         null,
@@ -311,10 +336,6 @@ export class Scales {
     entries.forEach((entry, index) => {
       const delaySeconds = index * 0.16;
       this.playback.playNote(entry.midi, delaySeconds, 0.6, muteGain);
-      // Always schedule the highlight (so Play scale's +12 octave note
-      // pulses its chip even when off the visible fretboard). The third
-      // arg tells pulse() whether to also light the scale-note chips:
-      // only for scale playback, never for tuning playback.
       this.queueTimer(
         () => this.pulse(entry.midi, entry.highlight, source === 'scale'),
         index * 160,
@@ -372,9 +393,19 @@ export class Scales {
     this.closePickers();
     this.previewTuning.set(null);
 
-    const tuning = id === null
-      ? this.preferences.selectedTuning()
-      : this.preferencesState().savedTunings.find((savedTuning) => savedTuning.id === id);
+    if (id === null) {
+      // Create mode: start from the current tuning's notes.
+      this.editingTuningId.set(null);
+      this.editorInitialName.set('');
+      this.editorInitialNotes.set([...this.activeTuning().notes]);
+      this.tuningEditorOpen.set(true);
+      return;
+    }
+
+    // Edit mode: find the custom tuning in the registry.
+    const tuning = this.registry
+      .tuningsForInstrument(this.registry.selectedInstrumentId())
+      .find((t) => t.id === id);
     if (!tuning) {
       this.editingTuningId.set(null);
       this.tuningEditorOpen.set(false);
@@ -382,7 +413,7 @@ export class Scales {
     }
 
     this.editingTuningId.set(id);
-    this.editorInitialName.set(id === null ? '' : tuning.name);
+    this.editorInitialName.set(tuning.name);
     this.editorInitialNotes.set([...tuning.notes]);
     this.tuningEditorOpen.set(true);
   }
@@ -394,10 +425,12 @@ export class Scales {
 
   protected saveCustomTuning(event: TuningEditorValue): void {
     const editingId = this.editingTuningId();
+    const instrumentId = this.registry.selectedInstrumentId();
     if (editingId === null) {
-      this.preferences.saveTuning(event.name, event.notes);
+      const tuning = this.registry.createTuning(instrumentId, event.name, event.notes);
+      this.registry.selectTuning(tuning.id);
     } else {
-      this.preferences.updateTuning(editingId, event.name, event.notes);
+      this.registry.updateTuning(editingId, event.name, event.notes);
     }
     this.closeTuningEditor();
   }
@@ -418,9 +451,6 @@ export class Scales {
     lightScaleNote = true,
   ): void {
     if (this.pulseTimer) clearTimeout(this.pulseTimer);
-    // activeMidi drives the bottom scale-note chips via activePitchClass.
-    // Only light them for scale playback / direct clicks; tuning playback
-    // must highlight the fretboard (activeCell) without touching the chips.
     if (lightScaleNote) this.activeMidi.set(midi);
     this.activeCell.set(cell);
     this.pulseTimer = setTimeout(() => {

@@ -53,10 +53,7 @@ describe('ScalePreferences', () => {
   });
 
   it('starts with the reference defaults', () => {
-    const service = createService();
-
-    expect(service.state()).toEqual(DEFAULT_SCALE_PREFERENCES);
-    expect(service.selectedTuning().id).toBe('standard');
+    expect(createService().state()).toEqual(DEFAULT_SCALE_PREFERENCES);
   });
 
   it('persists display and theory choices', () => {
@@ -103,8 +100,6 @@ describe('ScalePreferences', () => {
         fretCount: 18,
         labelMode: 'invalid',
         showOutsideScale: null,
-        selectedTuning: { kind: 'preset', id: 'missing' },
-        savedTunings: [{ id: 'broken', name: '', notes: [1, 2] }],
         accent: 'red',
         rootNoteColor: 'white',
         noteColor: '#12345',
@@ -112,84 +107,6 @@ describe('ScalePreferences', () => {
     }));
 
     expect(createService().state()).toEqual(DEFAULT_SCALE_PREFERENCES);
-  });
-
-  it('saves and restores octave-aware custom tunings', () => {
-    const service = createService();
-    const tuning = service.saveTuning('  Open E  ', [40, 47, 52, 56, 59, 64]);
-
-    expect(tuning.name).toBe('Open E');
-    expect(service.state().selectedTuning).toEqual({ kind: 'custom', id: tuning.id });
-    expect(service.selectedTuning().notes).toEqual([40, 47, 52, 56, 59, 64]);
-
-    TestBed.resetTestingModule();
-    const restored = createService();
-    expect(restored.selectedTuning()).toEqual(tuning);
-  });
-
-  it('assigns a fallback name to unnamed custom tunings', () => {
-    const service = createService();
-
-    expect(service.saveTuning('   ', [40, 45, 50, 55, 59, 64]).name).toBe('Custom 1');
-  });
-
-  it('rejects custom notes outside the editor range', () => {
-    const service = createService();
-
-    expect(() => service.saveTuning('Invalid', [23, 45, 50, 55, 59, 64])).toThrow(RangeError);
-  });
-
-  it('updates a saved tuning in place, selects it, and persists the changes', () => {
-    const service = createService();
-    const first = service.saveTuning('First', [40, 45, 50, 55, 59, 64]);
-    const second = service.saveTuning('Second', [38, 45, 50, 55, 59, 62]);
-    service.selectTuning({ kind: 'preset', id: 'standard' });
-
-    const updated = service.updateTuning(first.id, '  Open E  ', [40, 47, 52, 56, 59, 64]);
-
-    expect(updated).toEqual({
-      id: first.id,
-      name: 'Open E',
-      notes: [40, 47, 52, 56, 59, 64],
-    });
-    expect(service.state().savedTunings).toEqual([updated, second]);
-    expect(service.state().selectedTuning).toEqual({ kind: 'custom', id: first.id });
-
-    TestBed.resetTestingModule();
-    const restored = createService();
-    expect(restored.selectedTuning()).toEqual(updated);
-    expect(restored.state().savedTunings).toEqual([updated, second]);
-  });
-
-  it('returns null without changing state when the tuning ID is missing', () => {
-    const service = createService();
-    service.saveTuning('Open G', [38, 43, 50, 55, 59, 62]);
-    const stateBeforeUpdate = service.state();
-    const persistedBeforeUpdate = storage.getItem(SCALE_PREFERENCES_STORAGE_KEY);
-
-    expect(service.updateTuning('missing', 'Other', [40, 45, 50, 55, 59, 64])).toBeNull();
-    expect(service.state()).toBe(stateBeforeUpdate);
-    expect(storage.getItem(SCALE_PREFERENCES_STORAGE_KEY)).toBe(persistedBeforeUpdate);
-  });
-
-  it('rejects invalid notes when updating a saved tuning', () => {
-    const service = createService();
-    const tuning = service.saveTuning('Open G', [38, 43, 50, 55, 59, 62]);
-    const stateBeforeUpdate = service.state();
-
-    expect(() => service.updateTuning(tuning.id, 'Invalid', [23, 43, 50, 55, 59, 62]))
-      .toThrow(RangeError);
-    expect(service.state()).toBe(stateBeforeUpdate);
-  });
-
-  it('returns to Standard when the selected custom tuning is deleted', () => {
-    const service = createService();
-    const tuning = service.saveTuning('Open G', [38, 43, 50, 55, 59, 62]);
-
-    service.deleteTuning(tuning.id);
-
-    expect(service.state().savedTunings).toEqual([]);
-    expect(service.state().selectedTuning).toEqual({ kind: 'preset', id: 'standard' });
   });
 
   describe('workbenchScale', () => {

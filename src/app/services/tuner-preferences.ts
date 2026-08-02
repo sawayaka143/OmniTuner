@@ -2,23 +2,19 @@ import { inject, InjectionToken, Service, signal } from '@angular/core';
 import {
   DEFAULT_TUNER_SETTINGS,
   InTunePreferences,
-  MAX_CUSTOM_TUNING_NAME_LENGTH,
-  MAX_TUNER_MIDI_NOTE,
-  MIN_TUNER_MIDI_NOTE,
-  SavedCustomTuning,
+  REFERENCE_PITCH_MAX,
+  REFERENCE_PITCH_MIN,
   TUNER_HOLD_MAX,
   TUNER_HOLD_MIN,
-  TUNER_STRING_COUNTS,
   TUNER_TOLERANCE_MAX,
   TUNER_TOLERANCE_MIN,
-  TunerInstrumentId,
   TunerMode,
   TunerSettings,
   TunerStartupMode,
 } from '../models/tuner-preferences.model';
 
 export const TUNER_PREFERENCES_STORAGE_KEY = 'omnituner.tuner-preferences.v1';
-export const TUNER_PREFERENCES_VERSION = 2;
+export const TUNER_PREFERENCES_VERSION = 3;
 
 export const TUNER_PREFERENCES_STORAGE = new InjectionToken<Storage | null>(
   'Tuner preferences storage',
@@ -35,13 +31,10 @@ export const TUNER_PREFERENCES_STORAGE = new InjectionToken<Storage | null>(
 
 interface PersistedTunerPreferences {
   readonly version: number;
-  readonly tunings: readonly SavedCustomTuning[];
   readonly tuner?: TunerSettings;
 }
 
 const HEX_COLOR = /^#[0-9a-f]{6}$/i;
-
-const isSupportedVersion = (value: unknown): boolean => value === 1 || value === 2;
 
 const isTunerMode = (value: unknown): value is TunerMode => value === 'auto' || value === 'manual';
 
@@ -54,76 +47,14 @@ const clampTolerance = (value: number): number =>
 const clampHoldMs = (value: number): number =>
   Math.min(TUNER_HOLD_MAX, Math.max(TUNER_HOLD_MIN, Math.round(value)));
 
-const CUSTOM_TUNING_ID = /^custom-[a-z0-9-]+$/i;
+const clampReferencePitch = (value: number): number =>
+  Math.min(REFERENCE_PITCH_MAX, Math.max(REFERENCE_PITCH_MIN, Math.round(value)));
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null;
 
-const isInstrumentId = (value: unknown): value is TunerInstrumentId =>
-  value === 'guitar' || value === 'ukulele';
-
-const isMidiNote = (value: unknown): value is number =>
-  typeof value === 'number' &&
-  Number.isInteger(value) &&
-  value >= MIN_TUNER_MIDI_NOTE &&
-  value <= MAX_TUNER_MIDI_NOTE;
-
-const toMidiNotes = (value: unknown, instrumentId: TunerInstrumentId): readonly number[] | null => {
-  if (
-    !Array.isArray(value) ||
-    value.length !== TUNER_STRING_COUNTS[instrumentId] ||
-    !value.every(isMidiNote)
-  ) {
-    return null;
-  }
-
-  return [...value];
-};
-
-const readTunings = (value: unknown): readonly SavedCustomTuning[] => {
-  if (!Array.isArray(value)) return [];
-
-  const seenIds = new Set<string>();
-  const tunings: SavedCustomTuning[] = [];
-
-  for (const entry of value) {
-    if (
-      !isRecord(entry) ||
-      typeof entry['id'] !== 'string' ||
-      !CUSTOM_TUNING_ID.test(entry['id']) ||
-      seenIds.has(entry['id']) ||
-      !isInstrumentId(entry['instrumentId']) ||
-      typeof entry['name'] !== 'string'
-    ) {
-      continue;
-    }
-
-    const name = entry['name'].trim();
-    const notes = toMidiNotes(entry['notes'], entry['instrumentId']);
-    if (!name || name.length > MAX_CUSTOM_TUNING_NAME_LENGTH || !notes) continue;
-
-    seenIds.add(entry['id']);
-    tunings.push({
-      id: entry['id'],
-      instrumentId: entry['instrumentId'],
-      name,
-      notes,
-    });
-  }
-
-  return tunings;
-};
-
-const parseTunings = (value: unknown): readonly SavedCustomTuning[] => {
-  if (!isRecord(value) || !isSupportedVersion(value['version']) || !('tunings' in value)) {
-    return [];
-  }
-
-  return readTunings(value['tunings']);
-};
-
 const readTunerSettings = (value: unknown): TunerSettings => {
-  if (!isRecord(value) || value['version'] !== 2 || !isRecord(value['tuner'])) {
+  if (!isRecord(value) || !isRecord(value['tuner'])) {
     return DEFAULT_TUNER_SETTINGS;
   }
 
@@ -143,6 +74,10 @@ const readTunerSettings = (value: unknown): TunerSettings => {
     typeof rawInTune['holdMs'] === 'number' && Number.isFinite(rawInTune['holdMs'])
       ? clampHoldMs(rawInTune['holdMs'])
       : defaults.inTune.holdMs;
+  const referencePitch =
+    typeof tuner['referencePitch'] === 'number' && Number.isFinite(tuner['referencePitch'])
+      ? clampReferencePitch(tuner['referencePitch'])
+      : defaults.referencePitch;
 
   return {
     mode: isTunerMode(tuner['mode']) ? tuner['mode'] : defaults.mode,
@@ -156,134 +91,16 @@ const readTunerSettings = (value: unknown): TunerSettings => {
       tolerance,
       holdMs,
     },
+    referencePitch,
   };
-};
-
-interface LoadedTunerPreferences {
-  readonly tunings: readonly SavedCustomTuning[];
-  readonly tuner: TunerSettings;
-}
-
-const DEFAULT_LOADED: LoadedTunerPreferences = {
-  tunings: [],
-  tuner: DEFAULT_TUNER_SETTINGS,
 };
 
 @Service()
 export class TunerPreferences {
   private readonly storage = inject(TUNER_PREFERENCES_STORAGE);
-  private readonly persisted = this.load();
-  private readonly customTuningsSignal = signal<readonly SavedCustomTuning[]>(this.persisted.tunings);
-  private readonly tunerSettingsSignal = signal<TunerSettings>(this.persisted.tuner);
+  private readonly tunerSettingsSignal = signal<TunerSettings>(this.load());
 
-  readonly customTunings = this.customTuningsSignal.asReadonly();
   readonly tunerSettings = this.tunerSettingsSignal.asReadonly();
-
-  tuningsForInstrument(instrumentId: string): readonly SavedCustomTuning[] {
-    if (!isInstrumentId(instrumentId)) return [];
-    return this.customTuningsSignal().filter((tuning) => tuning.instrumentId === instrumentId);
-  }
-
-  createTuning(instrumentId: string, name: string, notes: readonly number[]): SavedCustomTuning {
-    const validInstrumentId = this.requireInstrumentId(instrumentId);
-    const tuning: SavedCustomTuning = {
-      id: this.createTuningId(),
-      instrumentId: validInstrumentId,
-      name: this.requireName(name),
-      notes: this.requireNotes(notes, validInstrumentId),
-    };
-
-    this.commit([...this.customTuningsSignal(), tuning]);
-    return tuning;
-  }
-
-  updateTuning(id: string, name: string, notes: readonly number[]): SavedCustomTuning {
-    const tunings = this.customTuningsSignal();
-    const index = tunings.findIndex((tuning) => tuning.id === id);
-    if (index === -1) throw new RangeError('Custom tuning does not exist.');
-
-    const existing = tunings[index];
-    const updated: SavedCustomTuning = {
-      ...existing,
-      name: this.requireName(name),
-      notes: this.requireNotes(notes, existing.instrumentId),
-    };
-    const next = [...tunings];
-    next[index] = updated;
-    this.commit(next);
-    return updated;
-  }
-
-  deleteTuning(id: string): void {
-    const tunings = this.customTuningsSignal();
-    const next = tunings.filter((tuning) => tuning.id !== id);
-    if (next.length !== tunings.length) this.commit(next);
-  }
-
-  private requireInstrumentId(instrumentId: string): TunerInstrumentId {
-    if (!isInstrumentId(instrumentId)) {
-      throw new RangeError('Custom tunings are only supported for guitar and ukulele.');
-    }
-    return instrumentId;
-  }
-
-  private requireName(name: string): string {
-    const normalized = name.trim();
-    if (!normalized) throw new RangeError('A custom tuning name is required.');
-    if (normalized.length > MAX_CUSTOM_TUNING_NAME_LENGTH) {
-      throw new RangeError(
-        `Custom tuning names must be ${MAX_CUSTOM_TUNING_NAME_LENGTH} characters or fewer.`,
-      );
-    }
-    return normalized;
-  }
-
-  private requireNotes(
-    notes: readonly number[],
-    instrumentId: TunerInstrumentId,
-  ): readonly number[] {
-    const validNotes = toMidiNotes(notes, instrumentId);
-    if (!validNotes) {
-      throw new RangeError(
-        `${instrumentId} tunings require ${TUNER_STRING_COUNTS[instrumentId]} MIDI notes from ${MIN_TUNER_MIDI_NOTE} to ${MAX_TUNER_MIDI_NOTE}.`,
-      );
-    }
-    return validNotes;
-  }
-
-  private commit(tunings: readonly SavedCustomTuning[]): void {
-    this.customTuningsSignal.set(tunings);
-    this.persist();
-  }
-
-  private load(): LoadedTunerPreferences {
-    if (!this.storage) return DEFAULT_LOADED;
-    try {
-      const raw = this.storage.getItem(TUNER_PREFERENCES_STORAGE_KEY);
-      if (!raw) return DEFAULT_LOADED;
-      const parsed = JSON.parse(raw) as unknown;
-      return {
-        tunings: parseTunings(parsed),
-        tuner: readTunerSettings(parsed),
-      };
-    } catch {
-      return DEFAULT_LOADED;
-    }
-  }
-
-  private persist(): void {
-    if (!this.storage) return;
-    const value: PersistedTunerPreferences = {
-      version: TUNER_PREFERENCES_VERSION,
-      tunings: this.customTuningsSignal(),
-      tuner: this.tunerSettingsSignal(),
-    };
-    try {
-      this.storage.setItem(TUNER_PREFERENCES_STORAGE_KEY, JSON.stringify(value));
-    } catch {
-      // Storage can be unavailable or full; current-session state remains usable.
-    }
-  }
 
   setMode(mode: TunerMode): void {
     if (!isTunerMode(mode)) return;
@@ -293,6 +110,11 @@ export class TunerPreferences {
   setStartupMode(startupMode: TunerStartupMode): void {
     if (!isStartupMode(startupMode)) return;
     this.updateTuner({ startupMode });
+  }
+
+  setReferencePitch(referencePitch: number): void {
+    if (!Number.isFinite(referencePitch)) return;
+    this.updateTuner({ referencePitch: clampReferencePitch(referencePitch) });
   }
 
   setInTuneEnabled(enabled: boolean): void {
@@ -335,10 +157,27 @@ export class TunerPreferences {
     this.persist();
   }
 
-  private createTuningId(): string {
-    if (typeof globalThis.crypto?.randomUUID === 'function') {
-      return `custom-${globalThis.crypto.randomUUID()}`;
+  private load(): TunerSettings {
+    if (!this.storage) return DEFAULT_TUNER_SETTINGS;
+    try {
+      const raw = this.storage.getItem(TUNER_PREFERENCES_STORAGE_KEY);
+      if (!raw) return DEFAULT_TUNER_SETTINGS;
+      return readTunerSettings(JSON.parse(raw) as unknown);
+    } catch {
+      return DEFAULT_TUNER_SETTINGS;
     }
-    return `custom-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+  }
+
+  private persist(): void {
+    if (!this.storage) return;
+    const value: PersistedTunerPreferences = {
+      version: TUNER_PREFERENCES_VERSION,
+      tuner: this.tunerSettingsSignal(),
+    };
+    try {
+      this.storage.setItem(TUNER_PREFERENCES_STORAGE_KEY, JSON.stringify(value));
+    } catch {
+      // Storage can be unavailable or full; current-session state remains usable.
+    }
   }
 }
