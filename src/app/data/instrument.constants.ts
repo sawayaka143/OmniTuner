@@ -2,7 +2,7 @@ import { Instrument } from '../models/instrument.model';
 
 export const NOTE_NAMES = ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#'];
 
-export const INSTRUMENTS: Instrument[] = [
+export const INSTRUMENTS: readonly Instrument[] = [
   {
     id: 'guitar',
     label: 'Guitar',

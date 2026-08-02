@@ -91,11 +91,3 @@ export function manualCentsOffset(cents: number | null): string {
     ? `${Math.abs(rounded)}\u00a2 FLAT`
     : `${rounded}\u00a2 SHARP`;
 }
-
-export function needlePosition(noteInfo: NoteInfo | null): string {
-  return needlePercentFromCents(noteInfo ? noteInfo.cents : null);
-}
-
-export function isInTune(noteInfo: NoteInfo | null): boolean {
-  return noteInfo !== null && Math.abs(noteInfo.cents) < 5;
-}

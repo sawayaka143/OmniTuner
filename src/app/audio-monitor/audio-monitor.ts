@@ -4,6 +4,7 @@ import {
   DestroyRef,
   effect,
   inject,
+  isDevMode,
   OnInit,
   signal,
   untracked,
@@ -61,11 +62,7 @@ export class AudioMonitor implements OnInit {
   readonly captureError = this.audioCapture.captureError;
   readonly inputLevel = this.audioCapture.inputLevel;     // [debug]
   readonly debugInfo = this.audioCapture.debugInfo;       // [debug]
-  // [debug] Temporary on-screen telemetry for tuning pitch-tracking on
-  // devices without a console (iOS Safari).  Flip to false — or delete
-  // these lines and the <pre class="debug-hud"> block in the template —
-  // once the tuner is verified.
-  readonly showDebug = true;
+  readonly showDebug = isDevMode();
 
   readonly selectedInstrumentId = signal('guitar');
   readonly selectedTuningId = signal('standard');
@@ -422,7 +419,7 @@ export class AudioMonitor implements OnInit {
     if (this.isCapturing()) {
       this.audioCapture.stopCapture();
     } else {
-      this.audioCapture.startCapture();
+      void this.audioCapture.startCapture();
     }
   }
 

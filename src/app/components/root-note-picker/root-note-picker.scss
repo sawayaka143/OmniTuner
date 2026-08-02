@@ -1,13 +1,4 @@
-@keyframes dropdown-appear {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+@use '../../styles' as *;
 
 .dropdown-wrapper {
   position: relative;
@@ -16,34 +7,7 @@
 }
 
 .btn {
-  width: 100%;
-  min-height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 7px 12px 7px 15px;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--r-pill);
-  background: var(--surface-container-low);
-  color: var(--text);
-  font-family: var(--mono);
-  cursor: pointer;
-  transition: background-color 150ms ease, border-color 150ms ease, transform 100ms ease;
-
-  &:hover {
-    border-color: var(--border-medium);
-    background: var(--surface-container);
-  }
-
-  &:active {
-    transform: scale(0.985);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--border-active);
-    outline-offset: 2px;
-  }
+  @include dropdown-trigger();
 }
 
 .button-copy {
@@ -85,51 +49,15 @@
 }
 
 .dropdown-menu {
-  position: absolute;
-  z-index: 100;
-  top: calc(100% + 7px);
+  @include dropdown-menu();
   left: 0;
   width: 100%;
   max-height: min(470px, calc(100dvh - 150px));
-  overflow-y: auto;
-  padding: 6px;
-  border-color: var(--border-medium);
-  animation: dropdown-appear 150ms ease-out;
 }
 
 .dropdown-item {
-  width: 100%;
-  display: flex;
-  align-items: center;
+  @include dropdown-item();
   justify-content: space-between;
-  gap: 12px;
-  padding: 9px 10px;
-  border: 0;
-  border-radius: var(--r-sm);
-  background: transparent;
-  color: var(--text-muted);
-  font-family: var(--mono);
-  font-size: 12px;
-  text-align: left;
-  cursor: pointer;
-  transition: background-color 140ms ease, color 140ms ease;
-
-  &:hover,
-  &:focus-visible,
-  &.selected {
-    background: var(--surface-container);
-    color: var(--text);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--border-active);
-    outline-offset: -2px;
-  }
-
-  &.selected {
-    color: var(--scale-accent);
-    font-weight: 600;
-  }
 }
 
 .item-alt {

@@ -1,3 +1,5 @@
+@use '../styles' as *;
+
 :host {
   display: contents;
 }
@@ -89,44 +91,16 @@ app-tuning-editor {
 .play-tuning,
 .play-scale {
   min-width: 126px;
-  min-height: 40px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 0 17px;
-  border-radius: var(--r-pill);
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: filter 150ms ease, transform 100ms ease, opacity 150ms ease;
 
   .material-symbols-outlined { font-size: 19px; }
-
-  &:hover {
-    filter: brightness(1.1);
-    transform: translateY(-1px);
-  }
-
-  &:active { transform: translateY(0) scale(0.97); }
-
-  &:focus-visible {
-    outline: 2px solid var(--text);
-    outline-offset: 3px;
-  }
 }
 
 .play-tuning {
-  border: 1px solid var(--border-subtle);
-  background: transparent;
-  color: var(--text-muted);
+  @include pill-action('ghost');
 }
 
 .play-scale {
-  border: 1px solid var(--scale-accent);
-  background: var(--scale-accent);
-  color: var(--scale-accent-ink);
+  @include pill-action('primary');
 }
 
 .playback-actions {

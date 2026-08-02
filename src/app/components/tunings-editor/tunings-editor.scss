@@ -1,3 +1,5 @@
+@use '../../styles' as *;
+
 :host {
   display: contents;
 }
@@ -63,8 +65,26 @@
   text-transform: uppercase;
 }
 
-.icon-button,
-.step-button,
+.icon-button {
+  @include icon-button();
+  border-radius: var(--r-sm);
+}
+
+.step-button {
+  @include icon-button();
+  width: 36px;
+  height: 34px;
+  border-radius: var(--r-sm);
+  font-size: 17px;
+  touch-action: none;
+  user-select: none;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.35;
+  }
+}
+
 .cancel-button,
 .save-button,
 .preset-row button {
@@ -86,8 +106,6 @@
   }
 }
 
-.icon-button,
-.step-button,
 .cancel-button,
 .preset-row button {
   border: 1px solid var(--border-subtle);
@@ -98,19 +116,6 @@
     border-color: var(--border-medium);
     background: var(--surface-container-high);
     color: var(--text);
-  }
-}
-
-.icon-button {
-  display: grid;
-  width: 36px;
-  height: 36px;
-  flex-shrink: 0;
-  place-items: center;
-  border-radius: var(--r-sm);
-
-  .material-symbols-outlined {
-    font-size: 19px;
   }
 }
 
@@ -219,20 +224,6 @@
 
   &.changed {
     color: var(--tuning-editor-accent, var(--scale-accent, #c8a24a));
-  }
-}
-
-.step-button {
-  width: 36px;
-  height: 34px;
-  border-radius: var(--r-sm);
-  font-size: 17px;
-  touch-action: none;
-  user-select: none;
-
-  &:disabled {
-    cursor: not-allowed;
-    opacity: 0.35;
   }
 }
 

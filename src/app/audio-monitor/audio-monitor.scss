@@ -1,3 +1,5 @@
+@use '../styles' as *;
+
 :host {
   display: contents;
 }
@@ -73,10 +75,9 @@
 }
 
 .btn.capture-btn {
+  @include pill-action('primary');
   font-size: 15px;
-  font-weight: 600;
   padding: 14px 44px;
-  border-radius: var(--r-pill);
   margin-top: 16px;
   min-width: 150px;
   letter-spacing: 0.02em;
@@ -85,5 +86,56 @@
     background: var(--surface-container-high);
     color: #ffffff;
     border-color: var(--border-active);
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.debug-hud {
+  position: fixed;
+  left: 8px;
+  bottom: 8px;
+  z-index: 9999;
+  margin: 0;
+  max-width: 92vw;
+  white-space: pre-wrap;
+  font: 11px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: #aeb4ba;
+  background: rgba(10, 12, 14, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 7px 9px;
+  pointer-events: none;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+
+  &__dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    vertical-align: middle;
+    margin-right: 5px;
+    background: #555;
+
+    &.active {
+      background: #5fd38a;
+    }
+  }
+
+  &__label {
+    color: #6b7280;
+    letter-spacing: 0.14em;
   }
 }

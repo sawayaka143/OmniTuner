@@ -10,4 +10,5 @@ export const routes: Routes = [
     path: 'scales',
     loadComponent: () => import('./scales/scales').then((c) => c.Scales),
   },
+  { path: '**', redirectTo: 'tuner' },
 ];

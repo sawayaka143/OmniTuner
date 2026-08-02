@@ -1,3 +1,5 @@
+@use '../../styles' as *;
+
 :host {
   display: contents;
 }
@@ -60,28 +62,7 @@
 }
 
 .close-button {
-  width: 38px;
-  height: 38px;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--r-md);
-  background: var(--surface-container);
-  color: var(--text-muted);
-  cursor: pointer;
-
-  .material-symbols-outlined { font-size: 19px; }
-
-  &:hover {
-    border-color: var(--border-medium);
-    background: var(--surface-container-high);
-    color: var(--text);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--border-active);
-    outline-offset: 2px;
-  }
+  @include icon-button(38px);
 }
 
 .settings-content {
@@ -275,28 +256,9 @@ input[type='color'] {
 }
 
 .reset-btn {
-  width: 34px;
-  height: 34px;
-  display: grid;
-  place-items: center;
-  padding: 0;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--r-md);
-  background: var(--surface-container-high);
-  color: var(--text-muted);
-  cursor: pointer;
+  @include icon-button(34px);
 
   .material-symbols-outlined { font-size: 18px; }
-
-  &:hover {
-    border-color: var(--border-medium);
-    color: var(--text);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--border-active);
-    outline-offset: 2px;
-  }
 }
 
 .tuner-settings {
@@ -326,59 +288,8 @@ input[type='color'] {
 }
 
 .seg {
-  position: relative;
-  display: inline-flex;
-  padding: 3px;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--r-pill);
-  background: var(--surface-container-low);
-  overflow: hidden;
-  white-space: nowrap;
-
-  .seg-indicator {
-    position: absolute;
-    top: 3px;
-    bottom: 3px;
-    left: 3px;
-    width: calc((100% - 6px) / var(--seg-count, 1));
-    background-color: var(--surface-container-high);
-    border-radius: var(--r-pill);
-    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    z-index: 0;
-  }
-
-  button {
-    position: relative;
-    z-index: 1;
-    flex: 0 0 auto;
-    min-width: 84px;
-    padding: 7px 16px;
-    border: 0;
-    background: transparent;
-    color: var(--text-muted);
-    font-family: var(--mono);
-    font-size: 11px;
-    font-weight: 500;
-    text-align: center;
-    white-space: nowrap;
-    cursor: pointer;
-    transition: color 0.15s ease;
-
-    &:hover {
-      color: var(--text);
-    }
-
-    &.active {
-      color: var(--text);
-      font-weight: 600;
-    }
-
-    &:focus-visible {
-      outline: 2px solid var(--border-active);
-      outline-offset: -2px;
-      border-radius: var(--r-pill);
-    }
-  }
+  @include seg-control('plain');
+  justify-self: start;
 }
 
 .toggle-rows {

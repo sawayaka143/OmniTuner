@@ -1,4 +1,4 @@
-import { Injectable, signal, computed, DestroyRef, inject } from '@angular/core';
+import { Service, signal, computed, DestroyRef, inject } from '@angular/core';
 
 export type PitchTrackingState = 'idle' | 'listening' | 'locked';
 
@@ -57,9 +57,9 @@ const RELEASE_FRAME_COUNT = 8;
 const ANALYSIS_TIMEOUT_MS = 500;
 
 const MIN_FREQUENCY = 50;
-const MAX_FREQUENCY = 900;
+const MAX_FREQUENCY = 1200;
 
-@Injectable({ providedIn: 'root' })
+@Service()
 export class AudioCaptureService {
   private readonly destroyRef = inject(DestroyRef);
 
