@@ -45,7 +45,9 @@ lerna-debug.log*
 /.nyc_output/
 /testem.log
 /__screenshots__/
+/screenshots/
 *.lcov
+serve-dist.cjs*
 
 # ------------------------------------------------------------------------------
 # 5. IDEs & Code Editors
