@@ -204,3 +204,45 @@ h3 {
   border-radius: var(--r-md);
   box-shadow: var(--shadow-flat);
 }
+
+/* --- Mobile & touch base --- */
+
+/* iOS Safari zooms the viewport when focusing form fields below 16px. */
+@media (max-width: 639px) {
+  input,
+  select,
+  textarea {
+    font-size: 1rem;
+  }
+}
+
+/* Buttons, icon actions, and step controls get a comfortable touch floor
+   without inflating the visible chrome: expand the hit area outward. */
+.icon-button,
+.icon-action,
+.step-button,
+.swatch,
+.reset-btn {
+  position: relative;
+}
+
+.icon-button::before,
+.icon-action::before,
+.step-button::before,
+.swatch::before,
+.reset-btn::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: inherit;
+}
+
+/* Sticky header must clear the notch / status bar on devices with safe areas. */
+.app-header {
+  padding-top: env(safe-area-inset-top);
+}
+
+.app-header .header-inner {
+  padding-left: max(24px, env(safe-area-inset-left));
+  padding-right: max(24px, env(safe-area-inset-right));
+}

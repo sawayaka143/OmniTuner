@@ -71,7 +71,6 @@ export class AudioMonitor implements OnInit {
   readonly selectedTuningId = this.registry.selectedTuningId;
 
   readonly dropdownOpen = signal(false);
-  readonly isDeforming = signal(false);
   readonly tuningEditorOpen = signal(false);
   readonly instrumentManagerOpen = signal(false);
   readonly editingTuningId = signal<string | null>(null);
@@ -88,7 +87,6 @@ export class AudioMonitor implements OnInit {
   private holdTimer: ReturnType<typeof setTimeout> | null = null;
   private holdStartedAt = 0;
   private pulseTimeout: ReturnType<typeof setTimeout> | null = null;
-  private deformTimeout: ReturnType<typeof setTimeout> | null = null;
 
   readonly ticks: Tick[] = [];
 
@@ -294,10 +292,6 @@ export class AudioMonitor implements OnInit {
         clearTimeout(this.pulseTimeout);
         this.pulseTimeout = null;
       }
-      if (this.deformTimeout !== null) {
-        clearTimeout(this.deformTimeout);
-        this.deformTimeout = null;
-      }
       if (this.isCapturing()) {
         this.audioCapture.stopCapture();
       }
@@ -333,12 +327,6 @@ export class AudioMonitor implements OnInit {
 
     this.registry.selectInstrument(instrumentId);
     this.dropdownOpen.set(false);
-    if (this.deformTimeout !== null) clearTimeout(this.deformTimeout);
-    this.isDeforming.set(true);
-    this.deformTimeout = setTimeout(() => {
-      this.isDeforming.set(false);
-      this.deformTimeout = null;
-    }, 220);
   }
 
   protected selectTuning(tuningId: string): void {

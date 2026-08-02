@@ -17,6 +17,7 @@
 .option-group {
   display: grid;
   gap: 5px;
+  min-width: max-content;
 }
 
 .option-label {
@@ -33,7 +34,7 @@
 .segmented {
   @include seg-control('accent', 'segment-indicator');
   display: grid;
-  grid-template-columns: repeat(2, minmax(74px, 1fr));
+  grid-template-columns: repeat(2, minmax(84px, 1fr));
 
   .segment-indicator.second {
     transform: translateX(100%);
@@ -156,10 +157,12 @@
 @media (max-width: 480px) {
   .scale-options {
     align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
   }
 
   .option-group {
-    flex: 1 1 150px;
+    flex: none;
   }
 
   .segmented,
@@ -172,12 +175,12 @@
   }
 
   .toggle-button {
-    flex: 1 1 140px;
+    flex: none;
     justify-content: center;
   }
 
   .label-trigger {
-    flex: 1 1 140px;
+    flex: none;
     justify-content: center;
   }
 

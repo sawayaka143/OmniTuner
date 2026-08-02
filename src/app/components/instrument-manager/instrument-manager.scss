@@ -376,6 +376,25 @@
   }
 }
 
+/* Small screens: keep the dialog off the home indicator and let it breathe. */
+@media (max-height: 560px) and (max-width: 640px) {
+  .manager-dialog {
+    max-height: calc(100dvh - 24px);
+  }
+
+  .manager-header {
+    padding-top: calc(14px + env(safe-area-inset-top));
+  }
+
+  .manager-content {
+    padding-bottom: calc(18px + env(safe-area-inset-bottom));
+  }
+
+  .instrument-row {
+    min-height: 48px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

@@ -114,6 +114,11 @@ app-tuning-editor {
   border-top: 1px solid var(--border-subtle);
   border-bottom: 1px solid var(--border-subtle);
   background: #161615;
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: center;
 }
 
 .fretboard-stage {
@@ -195,6 +200,13 @@ app-tuning-editor {
   .control-rail { padding: 14px; }
 
   .workbench-footer { padding: 18px 20px 20px; }
+
+  /* The fretboard scales itself down via JS; give the stage room to breathe
+     and never let the scaled board clip at the rounded corners. */
+  .fretboard-stage {
+    padding: 12px;
+    overflow-x: clip;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

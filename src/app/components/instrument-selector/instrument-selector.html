@@ -7,12 +7,7 @@
   >
     <div
       class="seg-indicator"
-      [style.transform]="
-        'translateX(' +
-        selectedInstrumentIndex() * 100 +
-        '%)' +
-        (isDeforming() ? ' scaleX(1.18) scaleY(0.82)' : '')
-      "
+      [style.transform]="'translateX(' + selectedInstrumentIndex() * 100 + '%)'"
       aria-hidden="true"
     ></div>
     @for (inst of instruments(); track inst.id) {
@@ -45,7 +40,7 @@
         role="radio"
         [attr.aria-checked]="mode() === option.value"
         [class.active]="mode() === option.value"
-        (click)="modeChange.emit(option.value); $event.stopPropagation()"
+        (click)="chooseMode(option.value); $event.stopPropagation()"
       >
         {{ option.label }}
       </button>

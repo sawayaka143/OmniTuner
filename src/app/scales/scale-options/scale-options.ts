@@ -30,6 +30,16 @@ export class ScaleOptions {
   ];
   protected readonly labelOpen = signal(false);
 
+  protected chooseAccidental(value: AccidentalPreference): void {
+    if (this.accidental() === value) return;
+    this.accidentalChange.emit(value);
+  }
+
+  protected chooseFretCount(value: ScaleFretCount): void {
+    if (this.fretCount() === value) return;
+    this.fretCountChange.emit(value);
+  }
+
   protected get currentLabel(): string {
     return this.labelOptions.find((opt) => opt.value === this.labelMode())?.label ?? 'Note names';
   }

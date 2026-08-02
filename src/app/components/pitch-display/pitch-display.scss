@@ -106,3 +106,15 @@
     text-shadow: 0 0 24px color-mix(in srgb, var(--in-tune-color) 45%, transparent);
   }
 }
+
+/* Short viewports: keep the hero note present but give the Start button room. */
+@media (max-height: 700px) {
+  .pitch-note {
+    font-size: clamp(88px, 18vw, 132px);
+    line-height: 1.05;
+  }
+
+  .pitch-display {
+    margin-top: 12px;
+  }
+}

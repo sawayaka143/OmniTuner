@@ -1,14 +1,20 @@
 <div class="scale-options" aria-label="Scale display options">
   <div class="option-group">
     <span class="option-label">Accidentals</span>
-    <div class="segmented" role="radiogroup" aria-label="Note accidental spelling">
-      <span class="segment-indicator" [class.second]="accidental() === 'flat'" aria-hidden="true"></span>
+    <div
+      class="segmented"
+      role="radiogroup"
+      aria-label="Note accidental spelling">
+      <span
+        class="segment-indicator"
+        [class.second]="accidental() === 'flat'"
+        aria-hidden="true"></span>
       <button
         type="button"
         role="radio"
         [class.active]="accidental() === 'sharp'"
         [attr.aria-checked]="accidental() === 'sharp'"
-        (click)="accidentalChange.emit('sharp')">
+        (click)="chooseAccidental('sharp')">
         ♯ Sharp
       </button>
       <button
@@ -16,7 +22,7 @@
         role="radio"
         [class.active]="accidental() === 'flat'"
         [attr.aria-checked]="accidental() === 'flat'"
-        (click)="accidentalChange.emit('flat')">
+        (click)="chooseAccidental('flat')">
         ♭ Flat
       </button>
     </div>
@@ -24,7 +30,10 @@
 
   <div class="option-group">
     <span class="option-label">Frets</span>
-    <div class="segmented frets" role="radiogroup" aria-label="Number of frets">
+    <div
+      class="segmented frets"
+      role="radiogroup"
+      aria-label="Number of frets">
       <span
         class="segment-indicator"
         [style.transform]="fretCount() === 12 ? 'translateX(0%)' : fretCount() === 15 ? 'translateX(100%)' : 'translateX(200%)'"
@@ -35,7 +44,7 @@
           role="radio"
           [class.active]="fretCount() === count"
           [attr.aria-checked]="fretCount() === count"
-          (click)="fretCountChange.emit(count)">
+          (click)="chooseFretCount(count)">
           {{ count }}
         </button>
       }

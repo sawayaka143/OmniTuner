@@ -95,3 +95,24 @@
     color: var(--scale-accent);
   }
 }
+
+@media (max-width: 640px) {
+  .header-inner {
+    grid-template-columns: 1fr auto;
+    padding: 10px 16px;
+    height: 56px;
+  }
+
+  .nav-desktop {
+    grid-column: 3;
+    gap: 16px;
+  }
+
+  .app-title {
+    font-size: var(--text-base);
+  }
+
+  .nav-link {
+    font-size: var(--text-xs);
+  }
+}

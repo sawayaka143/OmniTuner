@@ -84,3 +84,15 @@
     transition-duration: 0.01ms;
   }
 }
+
+/* Short viewports: compact the string chips. */
+@media (max-height: 700px) {
+  .strings-grid {
+    gap: 7px;
+    margin-top: 8px;
+
+    .string-btn {
+      padding: 10px 0;
+    }
+  }
+}

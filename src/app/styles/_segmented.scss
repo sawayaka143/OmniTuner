@@ -1,5 +1,5 @@
 /// Segmented control pattern (pill container with sliding indicator).
-/// @param {String} $indicator - 'plain' (neutral bg) or 'accent' (accent-tinted bg).
+/// @param {String} $indicator - legacy param kept for call-site compatibility.
 /// @param {String} $indicator-class - class name of the sliding indicator element.
 @mixin seg-control($indicator: 'plain', $indicator-class: 'seg-indicator') {
   position: relative;
@@ -10,6 +10,7 @@
   background: var(--surface-container-low);
   overflow: hidden;
   white-space: nowrap;
+  transition: transform 250ms cubic-bezier(0.16, 1, 0.3, 1);
 
   .#{$indicator-class} {
     position: absolute;
@@ -21,12 +22,10 @@
     transition: transform 250ms cubic-bezier(0.16, 1, 0.3, 1);
     z-index: 0;
 
-    @if $indicator == 'accent' {
-      background: color-mix(in srgb, var(--scale-accent) 14%, var(--surface-container-high));
-      box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--scale-accent) 32%, transparent);
-    } @else {
-      background-color: var(--surface-container-high);
-    }
+    // Accent-tinted indicator: lighter than the plain surface so the
+    // selected slot reads clearly against the dark control.
+    background: color-mix(in srgb, var(--scale-accent) 14%, var(--surface-container-high));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--scale-accent) 32%, transparent);
   }
 
   button {
@@ -53,10 +52,6 @@
     &.active {
       color: var(--text);
       font-weight: 600;
-    }
-
-    &:active {
-      transform: scale(0.96);
     }
 
     &:focus-visible {

@@ -8,6 +8,11 @@
   font-weight: 500;
 }
 
+:host {
+  display: block;
+  width: 100%;
+}
+
 .selectors {
   width: 100%;
   display: flex;
@@ -15,6 +20,15 @@
   align-items: center;
   gap: 10px;
   z-index: 10;
+  padding-top: 22px;
+}
+
+/* Desktop: controls hug the navbar. The freed space flows into the
+   tuner stage's auto margin, which pushes the meter group down. */
+@media (min-width: 641px) {
+  .selectors {
+    padding-top: 0;
+  }
 }
 
 .seg {
@@ -204,5 +218,49 @@
   .dropdown-icon {
     animation-duration: 0.01ms;
     transition-duration: 0.01ms;
+  }
+}
+
+@media (max-width: 640px) {
+  .selectors {
+    /* Same centered, content-sized look as desktop — just smaller. */
+    gap: 8px;
+    padding-top: 12px;
+  }
+
+  .seg button {
+    min-width: 64px;
+    padding: 5px 12px;
+    line-height: 1.2;
+  }
+
+  .dropdown-wrapper {
+    /* Nested to match the specificity of the desktop trigger rules. */
+    .tuning-trigger {
+      min-width: 132px;
+      min-height: 34px;
+      padding: 5px 12px;
+      justify-content: center;
+
+      .dropdown-icon {
+        font-size: 16px;
+      }
+    }
+  }
+
+  .menu-section h3,
+  .empty-message {
+    text-align: center;
+  }
+
+  .tuning-option {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .dropdown-menu {
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(320px, calc(100vw - 24px));
   }
 }

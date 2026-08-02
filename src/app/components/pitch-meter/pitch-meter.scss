@@ -94,3 +94,15 @@
     }
   }
 }
+
+/* Short viewports: tighten the meter's vertical chrome. */
+@media (max-height: 700px) {
+  :host {
+    --meter-padding-top: 36px;
+    --meter-padding-bottom: 28px;
+  }
+
+  .meter-labels {
+    margin-top: 22px;
+  }
+}
