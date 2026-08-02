@@ -45,9 +45,9 @@
   h2 {
     margin-top: 4px;
     font-family: var(--serif);
-    font-size: 28px;
+    font-size: var(--text-3xl);
     font-weight: 400;
-    letter-spacing: -0.025em;
+    letter-spacing: var(--tracking-tight);
     line-height: 1;
   }
 }
@@ -56,7 +56,7 @@
   color: var(--text-dim);
   font-size: 9px;
   font-weight: 600;
-  letter-spacing: 0.1em;
+  letter-spacing: var(--tracking-label);
   line-height: 1;
   text-transform: uppercase;
 }
@@ -78,7 +78,7 @@
     max-width: 46ch;
     margin: 0;
     color: var(--text-muted);
-    font-size: 11px;
+    font-size: var(--text-xs);
     line-height: 1.65;
   }
 }
@@ -92,9 +92,9 @@
   h3 {
     margin-top: 5px;
     font-family: var(--serif);
-    font-size: 24px;
+    font-size: var(--text-xl);
     font-weight: 400;
-    letter-spacing: -0.02em;
+    letter-spacing: var(--tracking-tight);
   }
 }
 
@@ -151,7 +151,7 @@
 
   h4 {
     margin: 0;
-    font-size: 12px;
+    font-size: var(--text-sm);
     font-weight: 600;
   }
 
@@ -216,7 +216,7 @@ input[type='color'] {
 
   h4 {
     margin: 0;
-    font-size: 12px;
+    font-size: var(--text-sm);
     font-weight: 600;
   }
 
@@ -278,7 +278,7 @@ input[type='color'] {
 
   h4 {
     margin: 0;
-    font-size: 12px;
+    font-size: var(--text-sm);
     font-weight: 600;
   }
 
@@ -378,7 +378,7 @@ input[type='color'] {
 
   h4 {
     margin: 0;
-    font-size: 12px;
+    font-size: var(--text-sm);
     font-weight: 600;
   }
 

@@ -76,7 +76,7 @@
 
 .btn.capture-btn {
   @include pill-action('primary');
-  font-size: 15px;
+  font-size: var(--text-base);
   padding: 14px 44px;
   margin-top: 16px;
   min-width: 150px;
