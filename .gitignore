@@ -84,6 +84,7 @@ lerna-debug.log*
 .gemini/
 .zcode/
 skills-lock.json
+.commandcode/
 
 # Impeccable Local State & Caches
 .impeccable/config.local.json
@@ -127,4 +128,4 @@ $RECYCLE.BIN/
 # ------------------------------------------------------------------------------
 # 8. Generat!ed Test Files
 # ------------------------------------------------------------------------------
-test/
+test/
