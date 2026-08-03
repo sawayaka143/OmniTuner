@@ -10,5 +10,9 @@ export const routes: Routes = [
     path: 'scales',
     loadComponent: () => import('./scales/scales').then((c) => c.Scales),
   },
+  {
+    path: 'chords',
+    loadComponent: () => import('./chord-finder/chord-finder').then((c) => c.ChordFinder),
+  },
   { path: '**', redirectTo: 'tuner' },
 ];

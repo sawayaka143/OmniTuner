@@ -1,0 +1,98 @@
+<svg
+  class="neck"
+  role="img"
+  [attr.aria-label]="ariaLabel()"
+  [attr.width]="layout().width"
+  [attr.height]="layout().height">
+  <rect
+    x="0.5"
+    y="0.5"
+    [attr.width]="layout().width - 1"
+    [attr.height]="layout().height - 1"
+    rx="6" />
+
+  <!-- diagram header: chord symbol + fingering rank -->
+  <text class="head-symbol" x="10" y="15">
+    {{ symbol() }}<tspan class="head-rank" dx="7">#{{ index() + 1 }}</tspan>
+  </text>
+
+  <!-- inlay markers -->
+  @for (dot of inlays(); track $index) {
+    <circle class="inlay" [attr.cx]="dot.cx" [attr.cy]="dot.cy" r="4.5" />
+  }
+
+  <!-- fret wires -->
+  @for (wire of wires(); track $index) {
+    @switch (wire.kind) {
+      @case ('nut') {
+        <line
+          class="wire-nut"
+          [attr.x1]="wire.x"
+          [attr.y1]="layout().yTop - 2"
+          [attr.x2]="wire.x"
+          [attr.y2]="layout().yBot + 2" />
+      }
+      @default {
+        <line
+          [class.wire-edge]="wire.kind === 'edge'"
+          class="wire"
+          [attr.x1]="wire.x"
+          [attr.y1]="layout().yTop - 2"
+          [attr.x2]="wire.x"
+          [attr.y2]="layout().yBot + 2" />
+      }
+    }
+  }
+
+  <!-- strings -->
+  @for (string of strings(); track $index) {
+    <line
+      class="string"
+      [attr.x1]="layout().gridL - 26"
+      [attr.y1]="string.y"
+      [attr.x2]="layout().gridR"
+      [attr.y2]="string.y" />
+  }
+
+  <!-- open-string note labels -->
+  @for (label of stringLabels(); track $index) {
+    <text
+      class="string-label"
+      [class.muted]="label.muted"
+      [attr.x]="layout().gridL - 30"
+      [attr.y]="label.y">{{ label.text }}</text>
+  }
+
+  <!-- fret number axis -->
+  @for (label of axisLabels(); track $index) {
+    <text class="axis-label" [attr.x]="label.x" [attr.y]="label.y">{{ label.text }}</text>
+  }
+
+  <!-- muted strings -->
+  @for (marker of markers().muted; track $index) {
+    <text class="mute-mark" [attr.x]="marker.x" [attr.y]="marker.y">x</text>
+  }
+
+  <!-- sounding notes -->
+  @for (dot of markers().dots; track $index) {
+    @if (view() === 'dots') {
+      <circle
+        class="note-dot"
+        [class.root]="dot.isRoot"
+        [attr.cx]="dot.x"
+        [attr.cy]="dot.y"
+        [style.fill]="dot.color" />
+      <text class="dot-text" [attr.x]="dot.x" [attr.y]="dot.y">{{ dot.inner }}</text>
+    } @else {
+      <circle
+        class="note-ring"
+        [attr.cx]="dot.x"
+        [attr.cy]="dot.y"
+        [style.stroke]="dot.color" />
+      <text class="ring-text" [attr.x]="dot.x" [attr.y]="dot.y">{{ dot.inner }}</text>
+    }
+    <text class="edge-label" [attr.x]="layout().gridR + 30" [attr.y]="dot.y" [style.fill]="dot.color">
+      {{ dot.edge }}
+    </text>
+  }
+</svg>

@@ -1,0 +1,138 @@
+:host {
+  display: block;
+
+  /* Function colours for chord-tone markers. */
+  --neck-root: var(--scale-accent, #779900);
+  --neck-third: var(--acc);
+  --neck-fifth: var(--text-muted);
+  --neck-alt: #c07a5e;
+  --neck-other: #9a8fb8;
+}
+
+.neck {
+  display: block;
+  transition: filter 150ms ease;
+
+  &:hover {
+    filter: brightness(1.07);
+  }
+}
+
+rect {
+  fill: var(--surface-container-low);
+  stroke: var(--border-subtle);
+}
+
+.head-symbol {
+  fill: var(--neck-root);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.head-rank {
+  fill: var(--text-dim);
+  font-size: 8px;
+  font-weight: 400;
+}
+
+.inlay {
+  fill: rgba(255, 255, 255, 0.06);
+}
+
+.wire {
+  stroke: var(--border-subtle);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+
+.wire-edge {
+  stroke: var(--border-medium);
+}
+
+.wire-nut {
+  stroke: var(--text-muted);
+  stroke-width: 4;
+  shape-rendering: crispEdges;
+}
+
+.string {
+  stroke: var(--border-medium);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+
+.string-label {
+  fill: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 8px;
+  text-anchor: end;
+  dominant-baseline: central;
+}
+
+.string-label.muted {
+  fill: var(--text-dim);
+}
+
+.axis-label {
+  fill: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 8px;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.mute-mark {
+  fill: var(--neck-alt);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.note-dot {
+  r: 9;
+
+  &.root {
+    stroke: var(--text);
+    stroke-width: 2;
+  }
+}
+
+.dot-text {
+  fill: var(--scale-accent-ink, #121211);
+  font-family: var(--mono);
+  font-size: 8px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.note-ring {
+  r: 9;
+  fill: var(--surface-container);
+  stroke-width: 2;
+}
+
+.ring-text {
+  fill: var(--text);
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.edge-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  text-anchor: end;
+  dominant-baseline: central;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .neck {
+    transition-duration: 0.01ms;
+  }
+}
