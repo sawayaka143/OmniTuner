@@ -8,7 +8,9 @@
     (click)="toggle.emit(); $event.stopPropagation()">
     <span class="selector-copy">
       <span class="selector-kicker">Tuning</span>
-      <strong>{{ selectedName() }}</strong>
+      <span class="value-wrap">
+        <strong>{{ selectedName() }}</strong>
+      </span>
     </span>
     <span class="material-symbols-outlined selector-icon" [class.rotated]="open()" aria-hidden="true">
       expand_more

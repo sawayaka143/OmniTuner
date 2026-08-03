@@ -33,6 +33,7 @@
 
 .segmented {
   @include seg-control('accent', 'segment-indicator');
+  --seg-count: 2;
   display: grid;
   grid-template-columns: repeat(2, minmax(84px, 1fr));
 
@@ -41,11 +42,8 @@
   }
 
   &.frets {
+    --seg-count: 3;
     grid-template-columns: repeat(3, 48px);
-
-    .segment-indicator {
-      width: calc((100% - 6px) / 3);
-    }
   }
 
   button {

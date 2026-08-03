@@ -7,7 +7,9 @@
     (click)="toggle.emit(); $event.stopPropagation()">
     <span class="button-copy">
       <span class="button-kicker">Scale</span>
-      <strong>{{ selectedLabel() }}</strong>
+      <span class="value-wrap">
+        <strong>{{ selectedLabel() }}</strong>
+      </span>
     </span>
     <span class="material-symbols-outlined dropdown-icon" [class.rotated]="open()" aria-hidden="true">
       expand_more

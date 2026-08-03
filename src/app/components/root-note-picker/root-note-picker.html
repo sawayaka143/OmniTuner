@@ -7,7 +7,9 @@
     (click)="toggle.emit(); $event.stopPropagation()">
     <span class="button-copy">
       <span class="button-kicker">Root note</span>
-      <strong>{{ selected() }}</strong>
+      <span class="value-wrap">
+        <strong>{{ selected() }}</strong>
+      </span>
     </span>
     <span class="material-symbols-outlined dropdown-icon" [class.rotated]="open()" aria-hidden="true">
       expand_more

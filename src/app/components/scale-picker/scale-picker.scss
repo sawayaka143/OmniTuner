@@ -12,10 +12,19 @@
 
 .button-copy {
   min-width: 0;
+  flex: 1 1 auto;
   display: flex;
   align-items: baseline;
   gap: 8px;
   text-align: left;
+
+  .value-wrap {
+    min-width: 0;
+    flex: 1 1 auto;
+    display: inline-flex;
+    justify-content: center;
+    text-align: center;
+  }
 
   strong {
     overflow: hidden;
