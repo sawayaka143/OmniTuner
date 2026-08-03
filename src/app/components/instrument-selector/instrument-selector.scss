@@ -48,6 +48,14 @@
   }
 }
 
+.value-wrap {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: inline-flex;
+  justify-content: center;
+  text-align: center;
+}
+
 .dropdown-label {
   @extend %dropdown-typography;
   max-width: 180px;

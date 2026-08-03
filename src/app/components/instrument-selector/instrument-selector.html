@@ -56,7 +56,9 @@
       aria-controls="tuning-selector-menu"
       (click)="toggleDropdown.emit(); $event.stopPropagation()"
     >
-      <span class="dropdown-label">{{ currentTuning().label }}</span>
+      <span class="value-wrap">
+        <span class="dropdown-label">{{ currentTuning().label }}</span>
+      </span>
       <span
         class="material-symbols-outlined dropdown-icon"
         [class.rotated]="dropdownOpen()"
