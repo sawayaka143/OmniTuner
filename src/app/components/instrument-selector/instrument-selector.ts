@@ -1,4 +1,4 @@
-import { Component, computed, input, output, signal } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { Instrument, Tuning } from '../../models/instrument.model';
 import { TunerMode } from '../../models/tuner-preferences.model';
 
@@ -21,10 +21,13 @@ export class InstrumentSelector {
   readonly currentTuning = input.required<Tuning>();
   readonly dropdownOpen = input(false);
   readonly mode = input<TunerMode>('auto');
+  /** True while the "+" (new instrument) segment holds the active indicator. */
+  readonly plusActive = input(false);
 
   readonly selectInstrument = output<string>();
   readonly selectTuning = output<string>();
   readonly newCustomTuning = output<void>();
+  readonly newInstrument = output<void>();
   readonly editCustomTuning = output<string>();
   readonly deleteCustomTuning = output<string>();
   readonly manageInstruments = output<void>();
@@ -57,6 +60,11 @@ export class InstrumentSelector {
   protected requestNewCustomTuning(event: MouseEvent): void {
     event.stopPropagation();
     this.newCustomTuning.emit();
+  }
+
+  protected requestNewInstrument(event: MouseEvent): void {
+    event.stopPropagation();
+    this.newInstrument.emit();
   }
 
   protected requestEdit(event: MouseEvent, tuningId: string): void {

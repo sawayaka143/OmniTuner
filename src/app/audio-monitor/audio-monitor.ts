@@ -71,8 +71,10 @@ export class AudioMonitor implements OnInit {
   readonly selectedTuningId = this.registry.selectedTuningId;
 
   readonly dropdownOpen = signal(false);
+  readonly plusActive = signal(false);
   readonly tuningEditorOpen = signal(false);
   readonly instrumentManagerOpen = signal(false);
+  readonly instrumentManagerCreateMode = signal(false);
   readonly editingTuningId = signal<string | null>(null);
   readonly editorInitialName = signal('');
   readonly editorInitialNotes = signal<readonly number[]>([]);
@@ -387,7 +389,21 @@ export class AudioMonitor implements OnInit {
 
   protected openInstrumentManager(): void {
     this.closeDropdown();
+    this.instrumentManagerCreateMode.set(false);
     this.instrumentManagerOpen.set(true);
+  }
+
+  protected openCreateInstrument(): void {
+    this.closeDropdown();
+    this.plusActive.set(true);
+    this.instrumentManagerCreateMode.set(true);
+    this.instrumentManagerOpen.set(true);
+  }
+
+  protected dismissInstrumentManager(): void {
+    this.plusActive.set(false);
+    this.instrumentManagerCreateMode.set(false);
+    this.instrumentManagerOpen.set(false);
   }
 
   protected toggleCapture(): void {

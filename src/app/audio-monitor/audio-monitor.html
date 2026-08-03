@@ -8,9 +8,11 @@
     [currentTuning]="currentTuning()"
     [dropdownOpen]="dropdownOpen()"
     [mode]="mode()"
+    [plusActive]="plusActive()"
     (selectInstrument)="selectInstrument($event)"
     (selectTuning)="selectTuning($event)"
     (newCustomTuning)="openCreateTuning()"
+    (newInstrument)="openCreateInstrument()"
     (editCustomTuning)="openEditTuning($event)"
     (deleteCustomTuning)="deleteCustomTuning($event)"
     (manageInstruments)="openInstrumentManager()"
@@ -21,7 +23,8 @@
 
   <app-instrument-manager
     [open]="instrumentManagerOpen()"
-    (dismiss)="instrumentManagerOpen.set(false)"
+    [openInCreateMode]="instrumentManagerCreateMode()"
+    (dismiss)="dismissInstrumentManager()"
   />
 
   <app-tuning-editor

@@ -1,12 +1,13 @@
 <div class="selectors" (click)="closeDropdown.emit()">
   <div
-    class="seg"
+    class="seg instrument-seg"
     role="radiogroup"
     aria-label="Instrument selection"
     [style.--seg-count]="instruments().length"
   >
     <div
       class="seg-indicator"
+      [class.hidden]="plusActive()"
       [style.transform]="'translateX(' + selectedInstrumentIndex() * 100 + '%)'"
       aria-hidden="true"
     ></div>
@@ -21,6 +22,16 @@
         {{ inst.label }}
       </button>
     }
+    <button
+      class="add-instrument-segment"
+      [class.active]="plusActive()"
+      type="button"
+      aria-label="New instrument"
+      [title]="'New instrument'"
+      (click)="requestNewInstrument($event)"
+    >
+      <span class="material-symbols-outlined" aria-hidden="true">add</span>
+    </button>
   </div>
 
   <div

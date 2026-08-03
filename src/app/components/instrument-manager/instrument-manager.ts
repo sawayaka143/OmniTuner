@@ -38,6 +38,7 @@ export class InstrumentManager {
   private readonly registry = inject(InstrumentRegistry);
 
   readonly open = input(false);
+  readonly openInCreateMode = input(false);
   readonly dismiss = output<void>();
 
   protected readonly instruments = this.registry.instruments;
@@ -105,6 +106,11 @@ export class InstrumentManager {
 
       if (this.open()) {
         if (!dialog.open) dialog.showModal();
+        // Jump straight into the create form when requested (e.g. via the
+        // tuner's "+" button). Reset so a later list-mode open isn't affected.
+        if (this.openInCreateMode()) {
+          this.startCreate();
+        }
       } else if (dialog.open) {
         dialog.close();
       }
