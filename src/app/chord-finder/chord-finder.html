@@ -6,42 +6,9 @@
   <section class="workbench" aria-labelledby="chord-finder-title">
     <header class="workbench-header">
       <div class="finder-title">
-        <span class="section-label">Chord voicings</span>
         <h2 id="chord-finder-title">Chord finder</h2>
         <p>progression voicings &amp; tab · custom / re-entrant tunings</p>
       </div>
-
-      <svg
-        class="contour"
-        width="300"
-        height="92"
-        role="img"
-        aria-label="Tuning contour, low string to high string">
-        <rect x="0.5" y="0.5" width="299" height="91" rx="4" />
-        @for (gy of [34, 52, 70]; track gy) {
-          <line class="contour-grid" x1="8" [attr.y1]="gy" x2="292" [attr.y2]="gy" />
-        }
-        <text class="contour-caption" x="150" y="88">TUNING CONTOUR (low → high string)</text>
-        @if (contour().ok) {
-          @if (contour().points.length > 1) {
-            <polyline class="contour-line" [attr.points]="contour().polyline" />
-          }
-          @for (point of contour().points; track $index) {
-            <circle class="contour-point" [attr.cx]="point.x" [attr.cy]="point.y" [style.fill]="point.color">
-              <title>{{ point.label }}</title>
-            </circle>
-            <text
-              class="contour-note"
-              [attr.x]="point.x"
-              [attr.y]="point.y > 26 ? point.y - 7 : point.y + 12">
-              {{ point.label }}
-            </text>
-          }
-        } @else {
-          <line class="contour-error" x1="14" y1="70" x2="286" y2="16" />
-          <text class="contour-error-text" x="150" y="46">✕ check tuning input</text>
-        }
-      </svg>
     </header>
 
     <div class="finder-columns">
@@ -148,25 +115,31 @@
           <p class="rule-description">{{ openModeDescription() }}</p>
 
           <div class="toggle-row">
+            <span class="toggle-label">allow inversions</span>
             <button
-              class="toggle-chip"
+              class="toggle-button"
               type="button"
+              role="switch"
+              [attr.aria-checked]="allowInversions()"
               [class.active]="allowInversions()"
-              [attr.aria-pressed]="allowInversions()"
+              aria-label="allow inversions"
               title="search rule — press Generate to apply"
               (click)="allowInversions.set(!allowInversions())">
               <span class="toggle-lamp" aria-hidden="true"></span>
-              allow inversions
             </button>
+          </div>
+          <div class="toggle-row">
+            <span class="toggle-label">allow muted string gaps</span>
             <button
-              class="toggle-chip"
+              class="toggle-button"
               type="button"
+              role="switch"
+              [attr.aria-checked]="allowGaps()"
               [class.active]="allowGaps()"
-              [attr.aria-pressed]="allowGaps()"
+              aria-label="allow muted string gaps"
               title="search rule — press Generate to apply"
               (click)="allowGaps.set(!allowGaps())">
               <span class="toggle-lamp" aria-hidden="true"></span>
-              allow muted string gaps
             </button>
           </div>
           <p class="rule-description">

@@ -68,25 +68,7 @@ export interface TabLine {
   readonly kind: 'mute' | 'open' | 'fret';
 }
 
-interface ContourPoint {
-  readonly x: number;
-  readonly y: number;
-  readonly label: string;
-  readonly color: string;
-}
-
 const mod12 = (value: number): number => ((value % 12) + 12) % 12;
-
-/** Interpolates olive → soft green → muted sage for the tuning contour. */
-function pitchColor(t: number): string {
-  const olive = [119, 153, 0];
-  const green = [126, 203, 168];
-  const sage = [136, 136, 130];
-  const mix = (a: number[], b: number[], u: number): number[] =>
-    a.map((v, i) => Math.round(v + (b[i] - v) * u));
-  const c = t < 0.5 ? mix(olive, green, t * 2) : mix(green, sage, (t - 0.5) * 2);
-  return `rgb(${c[0]},${c[1]},${c[2]})`;
-}
 
 @Component({
   selector: 'app-chord-finder',
@@ -189,36 +171,6 @@ export class ChordFinder {
   protected readonly openModeDescription = computed(
     () => OPEN_MODE_DESCRIPTIONS[this.openMode()],
   );
-
-  /** Tuning contour sparkline shown in the workbench header. */
-  protected readonly contour = computed(() => {
-    const parsed = this.parsedTuning();
-    if (!parsed.ok) {
-      return { ok: false as const, points: [] as ContourPoint[], polyline: '' };
-    }
-    const midi = parsed.tuning.midi;
-    const min = Math.min(...midi);
-    const max = Math.max(...midi);
-    const x0 = 18;
-    const x1 = 300 - 18;
-    const yTop = 14;
-    const yBot = 72;
-    const points: ContourPoint[] = midi.map((m, i) => {
-      const x = midi.length > 1 ? x0 + (i * (x1 - x0)) / (midi.length - 1) : (x0 + x1) / 2;
-      const norm = max > min ? (m - min) / (max - min) : 0.5;
-      return {
-        x,
-        y: yBot - norm * (yBot - yTop),
-        label: midiName(m, parsed.tuning.flats),
-        color: pitchColor(norm),
-      };
-    });
-    return {
-      ok: true as const,
-      points,
-      polyline: points.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' '),
-    };
-  });
 
   // ── Actions ──────────────────────────────────────────────────────
 

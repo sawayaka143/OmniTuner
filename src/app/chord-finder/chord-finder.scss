@@ -36,15 +36,6 @@
 
 /* ════════════════ Header ════════════════ */
 
-.workbench-header {
-  min-height: 112px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  padding: 24px 28px 22px;
-}
-
 .finder-title {
   min-width: 0;
 
@@ -63,55 +54,6 @@
     font-size: var(--text-xs);
     letter-spacing: 0.02em;
   }
-}
-
-.contour {
-  flex: 0 0 auto;
-
-  rect {
-    fill: var(--surface-container);
-    stroke: var(--border-subtle);
-  }
-}
-
-.contour-grid {
-  stroke: var(--border-subtle);
-  stroke-width: 1;
-  opacity: 0.7;
-}
-
-.contour-caption {
-  fill: var(--text-dim);
-  font-family: var(--mono);
-  font-size: 8px;
-  text-anchor: middle;
-}
-
-.contour-line {
-  fill: none;
-  stroke: var(--border-medium);
-  stroke-width: 1.5;
-}
-
-.contour-note {
-  fill: var(--text-muted);
-  font-family: var(--mono);
-  font-size: 8px;
-  text-anchor: middle;
-}
-
-.contour-error {
-  stroke: #c07a5e;
-  stroke-width: 1.5;
-  stroke-dasharray: 4 3;
-}
-
-.contour-error-text {
-  fill: #c07a5e;
-  font-family: var(--mono);
-  font-size: 9px;
-  font-weight: 700;
-  text-anchor: middle;
 }
 
 /* ════════════════ Columns ════════════════ */
@@ -268,13 +210,24 @@ select.field {
 
 .toggle-row {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 8px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 12px;
+  margin-top: 6px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-md);
+  background: var(--surface-container);
 }
 
-.toggle-chip {
-  @include toggle-chip();
+.toggle-label {
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+}
+
+.toggle-button {
+  @include toggle-switch();
 }
 
 .tiny-note {
@@ -601,11 +554,6 @@ select.field {
     align-items: flex-start;
     padding: 20px;
   }
-
-  .contour {
-    width: 100%;
-    max-width: 300px;
-  }
 }
 
 @media (max-width: 520px) {
@@ -634,5 +582,10 @@ select.field {
 @media (prefers-reduced-motion: reduce) {
   .chord-block {
     animation-duration: 0.01ms;
+  }
+
+  .toggle-button,
+  .toggle-lamp {
+    transition-duration: 0.01ms;
   }
 }

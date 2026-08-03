@@ -64,7 +64,7 @@
 }
 
 .toggle-button {
-  @include toggle-chip();
+  @include toggle-switch($with-label: true);
 }
 
 .label-select {

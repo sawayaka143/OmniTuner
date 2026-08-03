@@ -1,3 +1,67 @@
+/// Shared switch look (reference: Tweaks panel toggles).
+/// Icon-only pill (40x24) by default; pass $with-label: true to render text + lamp.
+/// Active state lights the lamp dot with the accent color + soft glow.
+/// @param {Boolean} $with-label - render a text label alongside the lamp.
+@mixin toggle-switch($with-label: false) {
+  flex-shrink: 0;
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-pill);
+  background: var(--surface-container-low);
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
+
+  @if $with-label {
+    padding: 0 13px;
+  } @else {
+    width: 40px;
+    height: 24px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+  }
+
+  .toggle-lamp {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    box-shadow: 0 0 0 3px transparent;
+    transition: background-color 140ms ease, box-shadow 140ms ease;
+  }
+
+  &:hover {
+    border-color: var(--border-medium);
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
+
+  &.active {
+    border-color: var(--border-medium);
+    background: var(--surface-container-high);
+    color: var(--text);
+
+    .toggle-lamp {
+      background: var(--scale-accent, #779900);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--scale-accent, #779900) 18%, transparent);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--border-active);
+    outline-offset: 2px;
+  }
+}
+
 /// Pill-shaped toggle chip with lamp indicator dot.
 @mixin toggle-chip() {
   min-height: 38px;
@@ -38,7 +102,7 @@
     box-shadow: 0 0 0 3px transparent;
     transition: background-color 140ms ease, box-shadow 140ms ease;
 
-    .active & {
+    &.active {
       background: var(--scale-accent, #779900);
       box-shadow: 0 0 0 3px color-mix(in srgb, var(--scale-accent, #779900) 18%, transparent);
     }
