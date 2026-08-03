@@ -1,5 +1,6 @@
 import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { ScalePreferences } from '../services/scale-preferences';
+import { InstrumentRegistry } from '../services/instrument-registry';
 import { textColorOn } from '../data/interval-colors';
 import {
   ChordParseResult,
@@ -28,21 +29,12 @@ import {
 } from '../utils/chord-voicing';
 import { DiagramLabelMode, DiagramView, NeckDiagram } from './neck-diagram/neck-diagram';
 
-interface TuningPreset {
+interface TuningOption {
   readonly id: string;
   readonly label: string;
-  readonly notes: string;
+  /** Whitespace-separated note tokens, low string first. */
+  readonly text: string;
 }
-
-const TUNING_PRESETS: readonly TuningPreset[] = [
-  { id: 'ethereal', label: 'Ethereal', notes: 'F2 G2 C3 D#3 A#2 C4' },
-  { id: 'standard', label: 'Standard', notes: 'E2 A2 D3 G3 B3 E4' },
-  { id: 'drop-d', label: 'Drop D', notes: 'D2 A2 D3 G3 B3 E4' },
-  { id: 'dadgad', label: 'DADGAD', notes: 'D2 A2 D3 G3 A3 D4' },
-  { id: 'open-g', label: 'Open G', notes: 'D2 G2 D3 G3 B3 D4' },
-  { id: 'nashville', label: 'Nashville (re-entrant)', notes: 'E3 A3 D4 G4 B3 E4' },
-  { id: 'baritone', label: 'Baritone', notes: 'B1 E2 A2 D3 F#3 B3' },
-];
 
 const OPEN_MODES: readonly OpenStringMode[] = ['allow', 'require', 'mostly', 'exclude'];
 
@@ -108,12 +100,25 @@ function pitchColor(t: number): string {
 })
 export class ChordFinder {
   private readonly preferences = inject(ScalePreferences);
+  private readonly registry = inject(InstrumentRegistry);
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly preferencesState = this.preferences.state;
   protected readonly accentInk = computed(() => textColorOn(this.preferencesState().accent));
 
-  protected readonly tuningPresets = TUNING_PRESETS;
+  // ── Tunings from the shared registry (Tuner + Scales + Chords) ───
+
+  /** Built-in + custom tunings of the currently selected instrument. */
+  protected readonly tuningOptions = computed<readonly TuningOption[]>(() =>
+    this.registry.availableTunings().map((tuning) => ({
+      id: tuning.id,
+      label: tuning.label,
+      text: tuning.strings.map((s) => s.name).join(' '),
+    })),
+  );
+
+  protected readonly instrumentLabel = computed(() => this.registry.selectedInstrument().label);
+
   protected readonly modeNames = MODE_NAMES;
   protected readonly openModes = OPEN_MODES;
   protected readonly openModeShortLabels = OPEN_MODE_SHORT_LABELS;
@@ -121,7 +126,10 @@ export class ChordFinder {
   protected readonly maxFret = MAX_FRET;
 
   // ── Control state ────────────────────────────────────────────────
-  protected readonly tuningText = signal('F2 G2 C3 D#3 A#2 C4');
+  /** Starts from the registry's selected tuning so all sections share one memory. */
+  protected readonly tuningText = signal(
+    this.registry.selectedTuning().strings.map((s) => s.name).join(' '),
+  );
   protected readonly scaleRootText = signal('');
   protected readonly modeName = signal<ModeName>('Aeolian');
   protected readonly progressionText = signal('Cm, Gmaj, Bb7, Fm');
@@ -214,8 +222,12 @@ export class ChordFinder {
 
   // ── Actions ──────────────────────────────────────────────────────
 
-  protected applyPreset(preset: TuningPreset): void {
-    this.tuningText.set(preset.notes);
+  protected applyTuning(tuningId: string): void {
+    const option = this.tuningOptions().find((o) => o.id === tuningId);
+    if (!option) return;
+    this.tuningText.set(option.text);
+    // Keep the shared selection in sync with Tuner and Scales.
+    this.registry.selectTuning(tuningId);
   }
 
   protected setOpenMode(mode: OpenStringMode): void {

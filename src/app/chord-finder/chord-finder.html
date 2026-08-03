@@ -53,9 +53,9 @@
           <select
             id="cf-preset"
             class="field"
-            (change)="applyPreset(tuningPresets[$any($event.target).selectedIndex])">
-            @for (preset of tuningPresets; track preset.id; let i = $index) {
-              <option [value]="i">{{ preset.label }} · {{ preset.notes }}</option>
+            (change)="applyTuning($any($event.target).value)">
+            @for (option of tuningOptions(); track option.id) {
+              <option [value]="option.id">{{ option.label }} · {{ option.text }}</option>
             }
           </select>
           <label class="field-label" for="cf-tuning">custom (bottom → top, e.g. F2 G2 C3 D#3 A#2 C4)</label>
