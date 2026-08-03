@@ -78,14 +78,12 @@
   stroke: var(--border-subtle);
   stroke-width: 1;
   opacity: 0.7;
-  shape-rendering: crispEdges;
 }
 
 .contour-caption {
   fill: var(--text-dim);
   font-family: var(--mono);
   font-size: 8px;
-  letter-spacing: 0.5px;
   text-anchor: middle;
 }
 
@@ -93,14 +91,6 @@
   fill: none;
   stroke: var(--border-medium);
   stroke-width: 1.5;
-}
-
-.contour-point {
-  transition: r 150ms ease;
-
-  &:hover {
-    r: 5.5;
-  }
 }
 
 .contour-note {
@@ -135,12 +125,7 @@
   background: var(--canvas);
 }
 
-.pane {
-  background: var(--surface-container-low);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--r-md);
-  box-shadow: var(--shadow-flat);
-}
+/* Pane surfaces come from the global `.pane` class (styles.scss). */
 
 /* ════════════════ Controls pane ════════════════ */
 
@@ -194,7 +179,6 @@
   font-size: var(--text-sm);
   padding: 8px 10px;
   outline: none;
-  transition: border-color 0.15s ease;
 
   &:focus {
     border-color: var(--border-active);
@@ -240,7 +224,6 @@ select.field {
   font-family: var(--mono);
   font-size: 10px;
   letter-spacing: 0.02em;
-  transition: color 0.15s ease;
 
   &.good {
     color: var(--acc);
@@ -395,6 +378,11 @@ select.field {
   font-family: var(--mono);
   font-size: 12px;
   color: var(--text);
+
+  &:focus-visible {
+    outline: 2px solid var(--border-active);
+    outline-offset: 2px;
+  }
 }
 
 .line {
@@ -442,7 +430,6 @@ select.field {
 
 .line.dim {
   color: var(--text-dim);
-  opacity: 0.6;
 }
 
 .line.error {
@@ -467,10 +454,6 @@ select.field {
   &.bad {
     color: #c07a5e;
   }
-}
-
-.line.spacer {
-  min-height: 12px;
 }
 
 .fingering {
@@ -593,7 +576,6 @@ select.field {
   font-family: var(--mono);
   font-size: 10px;
   letter-spacing: 0.02em;
-  white-space: nowrap;
 }
 
 /* ════════════════ Responsive ════════════════ */
@@ -650,11 +632,7 @@ select.field {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .chord-block,
-  .contour-point,
-  .field,
-  .hint {
+  .chord-block {
     animation-duration: 0.01ms;
-    transition-duration: 0.01ms;
   }
 }

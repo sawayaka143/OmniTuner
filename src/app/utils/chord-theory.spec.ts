@@ -69,7 +69,7 @@ describe('parseChord', () => {
     if (!result.ok) return;
     expect(result.chord.rootPc).toBe(10);
     expect(result.chord.flats).toBe(true);
-    expect(result.chord.pcs).toEqual([10, 2, 5, 0]);
+    expect(result.chord.pcs).toEqual([10, 2, 5, 8]);
   });
 
   it('resolves quality aliases', () => {

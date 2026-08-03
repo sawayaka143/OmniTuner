@@ -93,10 +93,9 @@
               <select
                 id="cf-mode"
                 class="field"
-                [value]="modeName()"
                 (change)="modeName.set($any($event.target).value)">
                 @for (mode of modeNames; track mode) {
-                  <option [value]="mode">{{ mode }}</option>
+                  <option [value]="mode" [selected]="mode === modeName()">{{ mode }}</option>
                 }
               </select>
             </div>
@@ -265,7 +264,7 @@
           </div>
         </div>
 
-        <div class="output-scroll" aria-live="polite">
+        <div class="output-scroll" tabindex="0" role="region" aria-label="Generated voicing output" aria-live="polite">
           @if (!results()) {
             <div class="line head">Chord finder ready.</div>
             <div class="line info">
