@@ -4,7 +4,7 @@
 /// @param {Boolean} $with-label - render a text label alongside the lamp.
 @mixin toggle-switch($with-label: false) {
   flex-shrink: 0;
-  min-height: 24px;
+  min-height: var(--ctrl-h-lg);
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -21,8 +21,8 @@
   @if $with-label {
     padding: 0 13px;
   } @else {
-    width: 40px;
-    height: 24px;
+    width: var(--ctrl-switch-w);
+    height: var(--ctrl-switch-h);
     display: grid;
     place-items: center;
     padding: 0;
@@ -59,52 +59,5 @@
   &:focus-visible {
     outline: 2px solid var(--border-active);
     outline-offset: 2px;
-  }
-}
-
-/// Pill-shaped toggle chip with lamp indicator dot.
-@mixin toggle-chip() {
-  min-height: 38px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 13px;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--r-pill);
-  background: var(--surface-container-low);
-  color: var(--text-muted);
-  font-family: var(--mono);
-  font-size: var(--text-xs);
-  cursor: pointer;
-  transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease, transform 100ms ease;
-
-  &:hover,
-  &.active {
-    border-color: var(--border-medium);
-    background: var(--surface-container);
-    color: var(--text);
-  }
-
-  &:active {
-    transform: scale(0.97);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--border-active);
-    outline-offset: 2px;
-  }
-
-  .toggle-lamp {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--text-dim);
-    box-shadow: 0 0 0 3px transparent;
-    transition: background-color 140ms ease, box-shadow 140ms ease;
-
-    &.active {
-      background: var(--scale-accent, #779900);
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--scale-accent, #779900) 18%, transparent);
-    }
   }
 }

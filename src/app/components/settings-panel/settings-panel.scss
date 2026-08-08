@@ -62,7 +62,7 @@
 }
 
 .close-button {
-  @include icon-button(38px);
+  @include icon-button();
 }
 
 .settings-content {
@@ -256,7 +256,7 @@ input[type='color'] {
 }
 
 .reset-btn {
-  @include icon-button(34px);
+  @include icon-button();
 
   .material-symbols-outlined { font-size: 18px; }
 }

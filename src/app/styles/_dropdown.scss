@@ -12,7 +12,7 @@
 /// Pill-shaped dropdown trigger button.
 @mixin dropdown-trigger() {
   width: 100%;
-  min-height: 40px;
+  min-height: var(--ctrl-h-lg);
   display: flex;
   align-items: center;
   justify-content: space-between;

@@ -257,8 +257,8 @@
 
 .icon-action {
   display: grid;
-  width: 32px;
-  height: 32px;
+  width: var(--ctrl-h-sm);
+  height: var(--ctrl-h-sm);
   place-items: center;
   border-radius: var(--r-sm);
 
@@ -330,7 +330,7 @@
     /* Nested to match the specificity of the desktop trigger rules. */
     .tuning-trigger {
       min-width: 132px;
-      min-height: 34px;
+      min-height: var(--ctrl-h-sm);
       padding: 5px 12px;
       justify-content: center;
 

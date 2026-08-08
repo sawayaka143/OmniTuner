@@ -174,7 +174,7 @@
 
 .name-input {
   width: 100%;
-  min-height: 42px;
+  min-height: var(--ctrl-h-xl);
   padding: 9px 11px;
   border: 1px solid var(--border-medium);
   border-radius: var(--r-md);
@@ -234,8 +234,8 @@
 
 .step-button {
   @include icon-button();
-  width: 36px;
-  height: 34px;
+  width: var(--ctrl-h-md);
+  height: var(--ctrl-h-md);
   border-radius: var(--r-sm);
   font-size: 17px;
   touch-action: none;
@@ -302,11 +302,11 @@
 
 .cancel-button,
 .save-button {
-  min-height: 38px;
+  min-height: var(--ctrl-h-lg);
   padding: 0 16px;
   border-radius: var(--r-md);
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: var(--text-xs);
   font-weight: 600;
   cursor: pointer;
   transition:
@@ -367,12 +367,8 @@
   }
 
   .note-controls {
-    grid-template-columns: 34px 56px 34px;
+    grid-template-columns: 36px 56px 36px;
     gap: 5px;
-  }
-
-  .step-button {
-    width: 34px;
   }
 }
 

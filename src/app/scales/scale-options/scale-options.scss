@@ -48,7 +48,6 @@
 
   button {
     min-width: unset;
-    min-height: 32px;
     padding: 0 10px;
     font-size: var(--text-xs);
     border-radius: var(--r-pill);
@@ -56,9 +55,9 @@
 }
 
 .divider {
-  align-self: center;
+  align-self: flex-end;
   width: 1px;
-  height: 28px;
+  height: var(--ctrl-h-lg);
   margin: 0 2px;
   background: var(--border-subtle);
 }
@@ -73,8 +72,7 @@
 
 .label-trigger {
   @include dropdown-trigger();
-  width: auto;
-  min-height: 38px;
+  width: 150px;
   gap: 4px;
   padding: 0 12px 0 13px;
   font-size: var(--text-xs);
@@ -113,7 +111,7 @@
     background: transparent;
     color: var(--text-muted);
     font-family: var(--mono);
-    font-size: 10px;
+    font-size: var(--text-2xs);
     cursor: pointer;
     text-align: left;
     white-space: nowrap;

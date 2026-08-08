@@ -36,6 +36,15 @@
 
 /* ════════════════ Header ════════════════ */
 
+.workbench-header {
+  min-height: 112px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px 28px 22px;
+}
+
 .finder-title {
   min-width: 0;
 
@@ -113,6 +122,7 @@
 
 .field {
   width: 100%;
+  min-height: var(--ctrl-h-xl);
   background: var(--surface-container);
   border: 1px solid var(--border-subtle);
   border-radius: var(--r-sm);
@@ -181,7 +191,6 @@ select.field {
 
   button {
     min-width: unset;
-    min-height: 32px;
     padding: 0 10px;
     font-size: var(--text-xs);
     border-radius: var(--r-pill);
@@ -314,6 +323,7 @@ select.field {
 }
 
 .btn.small {
+  min-height: var(--ctrl-h-sm);
   padding: 5px 12px;
   font-size: var(--text-xs);
 }

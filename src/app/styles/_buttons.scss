@@ -1,7 +1,7 @@
 /// Pill-shaped action button (Play, Capture, etc.).
 /// @param {String} $variant - 'ghost' (transparent) or 'primary' (accent-filled).
 @mixin pill-action($variant: 'ghost') {
-  min-height: 40px;
+  min-height: var(--ctrl-h-lg);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -42,7 +42,7 @@
 
 /// Small square icon button (close, reset, edit, delete).
 /// @param {Number} $size - width and height of the button.
-@mixin icon-button($size: 36px) {
+@mixin icon-button($size: var(--ctrl-h-md)) {
   width: $size;
   height: $size;
   display: grid;
