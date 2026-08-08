@@ -57,7 +57,7 @@ export function midiNoteLabel(midiNote: number): string {
 }
 
 export function noteFromFrequency(frequency: number, previousSemitone?: number, ref = 440): NoteInfo | null {
-  if (frequency <= 0) return null;
+  if (!Number.isFinite(frequency) || frequency <= 0) return null;
   const semitones = 12 * Math.log2(frequency / ref);
   const nearestSemitone = Math.round(semitones);
   const rounded =

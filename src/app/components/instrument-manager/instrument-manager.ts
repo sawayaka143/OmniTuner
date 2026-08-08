@@ -9,7 +9,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { SHARP_DISPLAY_NAMES } from '../../data/note-display-names';
+import { midiDisplayName } from '../../data/note-display-names';
 import { Instrument } from '../../models/instrument.model';
 import {
   MAX_CUSTOM_INSTRUMENT_NAME_LENGTH,
@@ -249,7 +249,7 @@ export class InstrumentManager {
   }
 
   protected noteName(midi: number): string {
-    return `${SHARP_DISPLAY_NAMES[((midi % 12) + 12) % 12]}${Math.floor(midi / 12) - 1}`;
+    return midiDisplayName(midi);
   }
 
   private step(noteIndex: number, direction: -1 | 1): void {

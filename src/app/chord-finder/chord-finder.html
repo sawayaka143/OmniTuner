@@ -20,7 +20,7 @@
           <select
             id="cf-preset"
             class="field"
-            (change)="applyTuning($any($event.target).value)">
+            (change)="onTuningPresetChange($event)">
             @for (option of tuningOptions(); track option.id) {
               <option [value]="option.id">{{ option.label }} · {{ option.text }}</option>
             }
@@ -33,7 +33,7 @@
             spellcheck="false"
             autocomplete="off"
             [value]="tuningText()"
-            (input)="tuningText.set($any($event.target).value)"
+            (input)="onTuningInput($event)"
             (keydown.enter)="generate()" />
           <p class="hint" [class.good]="tuningHint().kind === 'good'" [class.bad]="tuningHint().kind === 'bad'">
             {{ tuningHint().text }}
@@ -53,14 +53,14 @@
                 spellcheck="false"
                 autocomplete="off"
                 [value]="scaleRootText()"
-                (input)="scaleRootText.set($any($event.target).value)" />
+                (input)="onScaleRootInput($event)" />
             </div>
             <div>
               <label class="field-label" for="cf-mode">mode</label>
               <select
                 id="cf-mode"
                 class="field"
-                (change)="modeName.set($any($event.target).value)">
+                (change)="onModeChange($event)">
                 @for (mode of modeNames; track mode) {
                   <option [value]="mode" [selected]="mode === modeName()">{{ mode }}</option>
                 }
@@ -79,7 +79,7 @@
             spellcheck="false"
             autocomplete="off"
             [value]="progressionText()"
-            (input)="progressionText.set($any($event.target).value)"
+            (input)="onProgressionInput($event)"
             (keydown.enter)="generate()" />
           <p
             class="hint"
@@ -157,7 +157,7 @@
                 min="1"
                 max="6"
                 [value]="maxStretchText()"
-                (input)="maxStretchText.set($any($event.target).value)" />
+                (input)="onMaxStretchInput($event)" />
             </div>
             <div>
               <label class="field-label" for="cf-min-notes">min notes</label>
@@ -168,7 +168,7 @@
                 min="2"
                 max="6"
                 [value]="minNotesText()"
-                (input)="minNotesText.set($any($event.target).value)" />
+                (input)="onMinNotesInput($event)" />
             </div>
           </div>
           <p class="tiny-note">stretch ignores open strings · search window: frets 0-{{ maxFret }}</p>

@@ -4,9 +4,7 @@ import { IntervalEntry } from '../models/scale.model';
 import {
   parseNote,
   noteName,
-  preferFlatsFor,
   intervalByPitchClass,
-  tuningToPitchClasses,
   computeFretboard,
 } from './scale-theory';
 
@@ -65,23 +63,6 @@ describe('noteName', () => {
   });
 });
 
-describe('preferFlatsFor', () => {
-  it('prefers flats for flat roots', () => {
-    expect(preferFlatsFor('Eb')).toBe(true);
-    expect(preferFlatsFor('Bb')).toBe(true);
-    expect(preferFlatsFor('Ab')).toBe(true);
-    expect(preferFlatsFor('Db')).toBe(true);
-    expect(preferFlatsFor('Gb')).toBe(true);
-  });
-
-  it('prefers sharps for natural and sharp roots', () => {
-    expect(preferFlatsFor('C')).toBe(false);
-    expect(preferFlatsFor('E')).toBe(false);
-    expect(preferFlatsFor('A')).toBe(false);
-    expect(preferFlatsFor('F#')).toBe(false);
-  });
-});
-
 describe('intervalByPitchClass', () => {
   it('maps each interval to its pitch class', () => {
     const intervals: IntervalEntry[] = [
@@ -108,16 +89,6 @@ describe('intervalByPitchClass', () => {
     const intervals: IntervalEntry[] = [{ semitones: 14, label: '9' }];
     const map = intervalByPitchClass(intervals);
     expect(map.get(2)?.label).toBe('9');
-  });
-});
-
-describe('tuningToPitchClasses', () => {
-  it('parses each string independently', () => {
-    expect(tuningToPitchClasses(['E', 'B', 'G', 'D', 'A', 'E'])).toEqual([4, 11, 7, 2, 9, 4]);
-  });
-
-  it('keeps valid notes and flags invalid ones as null', () => {
-    expect(tuningToPitchClasses(['E', 'X', 'G'])).toEqual([4, null, 7]);
   });
 });
 

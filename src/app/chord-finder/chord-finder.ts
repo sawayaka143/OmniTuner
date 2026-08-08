@@ -174,6 +174,43 @@ export class ChordFinder {
 
   // ── Actions ──────────────────────────────────────────────────────
 
+  protected onTuningPresetChange(event: Event): void {
+    const target = event.target;
+    if (target instanceof HTMLSelectElement) this.applyTuning(target.value);
+  }
+
+  protected onTuningInput(event: Event): void {
+    const target = event.target;
+    if (target instanceof HTMLInputElement) this.tuningText.set(target.value);
+  }
+
+  protected onScaleRootInput(event: Event): void {
+    const target = event.target;
+    if (target instanceof HTMLInputElement) this.scaleRootText.set(target.value);
+  }
+
+  protected onModeChange(event: Event): void {
+    const target = event.target;
+    if (!(target instanceof HTMLSelectElement)) return;
+    const mode = MODE_NAMES.find((name) => name === target.value);
+    if (mode) this.modeName.set(mode);
+  }
+
+  protected onProgressionInput(event: Event): void {
+    const target = event.target;
+    if (target instanceof HTMLInputElement) this.progressionText.set(target.value);
+  }
+
+  protected onMaxStretchInput(event: Event): void {
+    const target = event.target;
+    if (target instanceof HTMLInputElement) this.maxStretchText.set(target.value);
+  }
+
+  protected onMinNotesInput(event: Event): void {
+    const target = event.target;
+    if (target instanceof HTMLInputElement) this.minNotesText.set(target.value);
+  }
+
   protected applyTuning(tuningId: string): void {
     const option = this.tuningOptions().find((o) => o.id === tuningId);
     if (!option) return;

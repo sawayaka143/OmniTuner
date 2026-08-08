@@ -52,18 +52,6 @@ export const noteName = (pitchClass: number, preferFlats: boolean): string => {
 };
 
 /**
- * Decide whether notes under this root should be spelled with flats. A root
- * spelled with a flat (Db, Eb, Gb, Ab, Bb) uses flat spelling for the whole
- * scale; everything else (naturals and sharps like F#) uses sharps. The check is
- * on the *spelling* of the input, not just its pitch class, so 'F#' and 'Gb'
- * resolve differently despite being enharmonic.
- */
-export const preferFlatsFor = (rootName: string): boolean => {
-  const normalized = normalizeNote(rootName);
-  return normalized.endsWith('b');
-};
-
-/**
  * Map each pitch class to the interval that produces it. When two intervals land
  * on the same pitch class (e.g. a b5 and a #11 are enharmonic), the **later**
  * interval in the array wins — callers control precedence by ordering.
@@ -78,15 +66,6 @@ export const intervalByPitchClass = (
   }
   return map;
 };
-
-/**
- * Parse a list of custom-tuning note inputs (one per string) into pitch classes.
- * Each input maps independently to a `number` (valid) or `null` (invalid/empty),
- * so a single bad value never invalidates the whole tuning.
- */
-export const tuningToPitchClasses = (
-  noteInputs: readonly string[],
-): (number | null)[] => noteInputs.map((input) => parseNote(input));
 
 /**
  * The core, UI-agnostic fretboard engine.

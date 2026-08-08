@@ -1,4 +1,10 @@
-<div class="horizontal-meter" role="meter" aria-label="Pitch deviation in cents, from minus 50 to plus 50">
+<div
+  class="horizontal-meter"
+  role="meter"
+  aria-label="Pitch deviation in cents, from minus 50 to plus 50"
+  [attr.aria-valuemin]="-50"
+  [attr.aria-valuemax]="50"
+  [attr.aria-valuenow]="ariaNow()">
   <div class="meter-track"></div>
   <div class="needle meter-needle" [class.in-tune]="isTuned()" [style.left]="needleLeft()"></div>
   <div class="ticks-container">

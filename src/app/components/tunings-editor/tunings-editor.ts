@@ -8,7 +8,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { FLAT_DISPLAY_NAMES, SHARP_DISPLAY_NAMES } from '../../data/note-display-names';
+import { midiDisplayName } from '../../data/note-display-names';
 import { AccidentalPreference } from '../../models/scale-preferences.model';
 
 export interface TuningPresetOption {
@@ -21,9 +21,6 @@ export interface TuningEditorValue {
   readonly name: string;
   readonly notes: readonly number[];
 }
-
-const SHARP_NAMES = SHARP_DISPLAY_NAMES;
-const FLAT_NAMES = FLAT_DISPLAY_NAMES;
 
 interface DisplayRow {
   readonly row: number; // 0 = top of the list
@@ -107,8 +104,7 @@ export class TuningEditor {
   }
 
   protected noteName(midi: number): string {
-    const names = this.accidental() === 'flat' ? FLAT_NAMES : SHARP_NAMES;
-    return `${names[((midi % 12) + 12) % 12]}${Math.floor(midi / 12) - 1}`;
+    return midiDisplayName(midi, this.accidental());
   }
 
   protected isChanged(noteIndex: number): boolean {

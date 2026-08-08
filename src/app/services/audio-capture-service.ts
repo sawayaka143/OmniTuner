@@ -95,6 +95,10 @@ export class AudioCaptureService {
   // #2 – bound listener references so we can remove them on teardown.
   private onVisibilityChange: (() => void) | null = null;
   private onContextStateChange: (() => void) | null = null;
+  // #2 – context-unlock listeners ({once:true}) must also be removable in case
+  // the context never reaches 'running' before capture is stopped.
+  private onUnlockTouch: (() => void) | null = null;
+  private onUnlockClick: (() => void) | null = null;
 
   // ── Smoothing / tracking state ────────────────────────────────
   private recentFrequencies: number[] = [];
@@ -167,14 +171,15 @@ export class AudioCaptureService {
       const unlock = (): void => {
         void ctx.resume();
       };
-      document.addEventListener('touchend', unlock, { once: true });
-      document.addEventListener('click', unlock, { once: true });
+      this.onUnlockTouch = unlock;
+      this.onUnlockClick = unlock;
+      document.addEventListener('touchend', this.onUnlockTouch, { once: true });
+      document.addEventListener('click', this.onUnlockClick, { once: true });
       ctx.addEventListener(
         'statechange',
         () => {
           if (ctx.state === 'running') {
-            document.removeEventListener('touchend', unlock);
-            document.removeEventListener('click', unlock);
+            this.removeUnlockListeners();
           }
         },
         { once: true },
@@ -257,6 +262,7 @@ export class AudioCaptureService {
     this.clearAnalysisTimeout();                            // #7
     this.captureSession += 1;
     this.analysisInFlight = false;
+    this.startInFlight = false;
     this.releaseAudioResources();
     this.frequency.set(null);
     this.inputLevel.set(0);                                 // #10
@@ -279,6 +285,8 @@ export class AudioCaptureService {
     }
     this.onVisibilityChange = null;
 
+    this.removeUnlockListeners();
+
     this.source?.disconnect();
     this.highpass?.disconnect();
     this.lowpass?.disconnect();
@@ -291,6 +299,17 @@ export class AudioCaptureService {
     this.highpass = null;
     this.lowpass = null;
     this.stream = null;
+  }
+
+  private removeUnlockListeners(): void {
+    if (this.onUnlockTouch) {
+      document.removeEventListener('touchend', this.onUnlockTouch);
+      this.onUnlockTouch = null;
+    }
+    if (this.onUnlockClick) {
+      document.removeEventListener('click', this.onUnlockClick);
+      this.onUnlockClick = null;
+    }
   }
 
   private resetTracking(): void {

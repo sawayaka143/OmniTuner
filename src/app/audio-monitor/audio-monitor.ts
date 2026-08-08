@@ -236,9 +236,10 @@ export class AudioMonitor implements OnInit {
   });
 
   constructor() {
-    effect(() => {
-      this.scalePlayback.isPlaying.set(this.isCapturing());
-    });
+    // `scalePlayback.isPlaying` is owned by the Scales playback sequences only;
+    // the brand derives its "playing" state from `isCapturing() || isPlaying()`
+    // so capture state must NOT be copied into the service signal here (it
+    // would stay stuck `true` after navigating away mid-capture).
 
     effect(() => {
       const frequency = this.frequency();

@@ -1,9 +1,6 @@
 import { Component, input, output } from '@angular/core';
 import { AccidentalPreference } from '../../models/scale-preferences.model';
-import { FLAT_DISPLAY_NAMES, SHARP_DISPLAY_NAMES } from '../../data/note-display-names';
-
-const SHARP_NAMES = SHARP_DISPLAY_NAMES;
-const FLAT_NAMES = FLAT_DISPLAY_NAMES;
+import { midiDisplayName } from '../../data/note-display-names';
 
 export interface TuningOption {
   readonly id: string;
@@ -36,7 +33,6 @@ export class TuningSelector {
   }
 
   protected notesLabel(notes: readonly number[]): string {
-    const names = this.accidental() === 'flat' ? FLAT_NAMES : SHARP_NAMES;
-    return notes.map((midi) => `${names[midi % 12]}${Math.floor(midi / 12) - 1}`).join(' ');
+    return notes.map((midi) => midiDisplayName(midi, this.accidental())).join(' ');
   }
 }

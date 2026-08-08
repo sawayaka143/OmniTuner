@@ -159,8 +159,4 @@ export class Fretboard {
     frame.style.height = `${naturalHeight * scale}px`;
     board.style.transform = `scale(${scale})`;
   }
-
-  protected trackByFret(index: number): number {
-    return index;
-  }
 }

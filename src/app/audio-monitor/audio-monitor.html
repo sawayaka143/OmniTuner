@@ -44,7 +44,7 @@
 
   <div class="tuner-stage">
     <div class="meter-area">
-      <app-pitch-meter [ticks]="ticks" [needleLeft]="needleLeft()" [isTuned]="isTuned()" />
+      <app-pitch-meter [ticks]="ticks" [needleLeft]="needleLeft()" [cents]="frameCents()" [isTuned]="isTuned()" />
 
       <div class="pulse-layer" aria-hidden="true">
         @if (pulseActive()) {

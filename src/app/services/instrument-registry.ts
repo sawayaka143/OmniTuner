@@ -437,18 +437,45 @@ export class InstrumentRegistry {
       const parsed = JSON.parse(raw) as unknown;
       if (!isRecord(parsed) || parsed['version'] !== 1) return fallback;
 
+      const customInstruments = readCustomInstruments(parsed['customInstruments']);
+      const customTunings = readCustomTunings(parsed['customTunings']);
+
+      // Validate persisted selection ids against the actual universe so a
+      // stale id (deleted instrument/tuning, old version) falls back to a
+      // real one instead of being re-persisted forever.
+      const rawInstrumentId =
+        typeof parsed['selectedInstrumentId'] === 'string'
+          ? parsed['selectedInstrumentId']
+          : 'guitar';
+      const selectedInstrumentId =
+        INSTRUMENTS.some((inst) => inst.id === rawInstrumentId) ||
+        customInstruments.some((inst) => inst.id === rawInstrumentId)
+          ? rawInstrumentId
+          : 'guitar';
+
+      const builtInTunings =
+        INSTRUMENTS.find((inst) => inst.id === selectedInstrumentId)?.tunings ?? [];
+      const validTuningIds = new Set<string>([
+        ...builtInTunings.map((tuning) => tuning.id),
+        ...customInstruments
+          .filter((inst) => inst.id === selectedInstrumentId)
+          .map((inst) => `${inst.id}-default`),
+        ...customTunings
+          .filter((tuning) => tuning.instrumentId === selectedInstrumentId)
+          .map((tuning) => tuning.id),
+      ]);
+      const rawTuningId =
+        typeof parsed['selectedTuningId'] === 'string' ? parsed['selectedTuningId'] : 'standard';
+      const selectedTuningId = validTuningIds.has(rawTuningId)
+        ? rawTuningId
+        : (builtInTunings[0]?.id ?? 'standard');
+
       return {
         version: 1,
-        customInstruments: readCustomInstruments(parsed['customInstruments']),
-        customTunings: readCustomTunings(parsed['customTunings']),
-        selectedInstrumentId:
-          typeof parsed['selectedInstrumentId'] === 'string'
-            ? parsed['selectedInstrumentId']
-            : 'guitar',
-        selectedTuningId:
-          typeof parsed['selectedTuningId'] === 'string'
-            ? parsed['selectedTuningId']
-            : 'standard',
+        customInstruments,
+        customTunings,
+        selectedInstrumentId,
+        selectedTuningId,
       };
     } catch {
       return fallback;
