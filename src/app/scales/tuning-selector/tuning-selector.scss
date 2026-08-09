@@ -11,54 +11,7 @@
 
 .selector-button {
   @include dropdown-trigger();
-}
-
-.selector-copy {
-  min-width: 0;
-  flex: 1 1 auto;
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  text-align: left;
-
-  .value-wrap {
-    min-width: 0;
-    flex: 1 1 auto;
-    display: inline-flex;
-    justify-content: center;
-    text-align: center;
-  }
-
-  strong {
-    overflow: hidden;
-    font-size: var(--text-xs);
-    font-weight: 600;
-    line-height: 1.2;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-}
-
-.selector-kicker,
-.selector-group,
-.note-summary {
-  color: var(--text-dim);
-  font-size: var(--text-xs);
-  font-weight: 500;
-  letter-spacing: var(--tracking-label);
-  line-height: 1.25;
-  text-transform: uppercase;
-}
-
-.selector-icon {
-  flex-shrink: 0;
-  color: var(--text-muted);
-  font-size: 17px;
-  transition: transform 180ms ease;
-
-  &.rotated {
-    transform: rotate(180deg);
-  }
+  @include dropdown-trigger-content('.selector-copy', '.selector-kicker', '.selector-icon');
 }
 
 .selector-menu {
@@ -69,13 +22,14 @@
 }
 
 .selector-group {
-  padding: 10px 10px 6px;
+  @include micro-label();
+  padding: var(--space-2) var(--space-2) var(--space-1);
 }
 
 .selector-option {
   @include dropdown-item();
   justify-content: space-between;
-  gap: 14px;
+  gap: var(--space-3);
 
   &:active {
     transform: scale(0.985);
@@ -88,8 +42,10 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 9px;
-  letter-spacing: 0.02em;
+  color: var(--text-dim);
+  font-size: var(--text-3xs);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--tracking-narrow);
 }
 
 .saved-option {
@@ -108,18 +64,16 @@
 }
 
 .saved-action {
-  min-width: 36px;
-  display: grid;
-  place-items: center;
+  @include icon-button(var(--ctrl-h-sm));
+  width: auto;
+  height: auto;
+  min-width: var(--ctrl-h-md);
   border: 0;
   border-radius: var(--r-sm);
   background: transparent;
-  color: var(--text-dim);
-  cursor: pointer;
-  transition: background-color 140ms ease, color 140ms ease, transform 100ms ease;
 
   .material-symbols-outlined {
-    font-size: 16px;
+    font-size: var(--text-md);
   }
 
   &:hover,
