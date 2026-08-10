@@ -36,10 +36,12 @@ describe('searchChord', () => {
     }
   });
 
-  it('keeps the chord root in the bass when inversions are off', () => {
-    for (const shape of searchChord(tuning, chord('G7'), baseOptions)) {
-      expect(shape.bassIsRoot).toBe(true);
-    }
+  it('prefers root in the bass when inversions are off (soft preference)', () => {
+    // The first shape for G7 should have the root in the bass, since
+    // non-root-bass shapes are now allowed but penalized.
+    const shapes = searchChord(tuning, chord('G7'), baseOptions);
+    expect(shapes.length).toBeGreaterThan(0);
+    expect(shapes[0].bassIsRoot).toBe(true);
   });
 
   it('respects the max stretch rule', () => {
@@ -85,5 +87,108 @@ describe('searchChord', () => {
       maxStretch: 1,
     });
     expect(shapes).toEqual([]);
+  });
+
+  it('prefers the open-position C shape over a high barre C', () => {
+    const shapes = searchChord(tuning, chord('C'), baseOptions);
+    expect(shapes.length).toBeGreaterThan(0);
+    // The open C (frets 0/3/2/0/1/0) should outrank an 8th-fret barre C.
+    const first = shapes[0];
+    expect(first.position).toBeLessThan(3);
+    expect(first.openCount).toBeGreaterThan(0);
+  });
+
+  it('allows non-root bass (doubled root) when inversions are off', () => {
+    const shapes = searchChord(tuning, chord('C'), { ...baseOptions, openMode: 'exclude' });
+    // With opens excluded, some shapes will have the 5th or 3rd in the bass
+    // (root doubling across strings) — those must not be filtered out.
+    const nonRootBass = shapes.find((s) => !s.bassIsRoot);
+    expect(nonRootBass).toBeTruthy();
+  });
+
+  it('ranks a root-bass shape among the top results', () => {
+    const shapes = searchChord(tuning, chord('C'), baseOptions);
+    // The ergonomics model may legitimately rank a compact non-root voicing
+    // (e.g. 0320, span 2) above a wider root voicing (e.g. 32010, span 3).
+    // But a root-in-bass shape must appear in the top 5.
+    const hasRoot = shapes.some((s) => s.bassIsRoot);
+    expect(hasRoot).toBe(true);
+    // And the cheapest shape should be very compact (span ≤ 2).
+    expect(shapes[0].span).toBeLessThanOrEqual(2);
+  });
+
+  it('ranks the open F shape before a 6-string barre F at the same position', () => {
+    // Open F: 1/3/3/2/1/1 — a barre but low position. Compare to a
+    // high-position barre F (8/10/10/10/8/8) which is harder.
+    const openF = searchChord(tuning, chord('F'), baseOptions);
+    expect(openF.length).toBeGreaterThan(0);
+    const first = openF[0];
+    expect(first.position).toBeLessThan(4);
+  });
+});
+
+describe('searchChord hard constraints', () => {
+  it('respects the maxStretch span limit', () => {
+    const tight = searchChord(tuning, chord('C'), { ...baseOptions, maxStretch: 2 });
+    const wide = searchChord(tuning, chord('C'), { ...baseOptions, maxStretch: 5 });
+    for (const shape of tight) {
+      expect(shape.span).toBeLessThanOrEqual(2);
+    }
+    // A wider limit may surface shapes the tight limit rejected.
+    expect(wide.length).toBeGreaterThanOrEqual(tight.length);
+  });
+
+  it('rejects shapes that need five independent fingers', () => {
+    // Cmaj7 has 4 distinct pcs; with unlimited span a 5-finger shape could
+    // theoretically appear — the finger-count rule still blocks it.
+    const shapes = searchChord(tuning, chord('Cmaj7'), { ...baseOptions, maxStretch: 0 });
+    for (const shape of shapes) {
+      // Runs of equal frets may share a finger (barre).
+      let runs = 0;
+      let prevFret: number | null = null;
+      for (const fret of shape.frets) {
+        if (fret === null || fret === 0) {
+          prevFret = null;
+          continue;
+        }
+        if (fret !== prevFret) runs++;
+        prevFret = fret;
+      }
+      expect(runs).toBeLessThanOrEqual(4);
+    }
+  });
+
+  it('rejects unbarrable skip-fret shapes when rejectUnbarrable is set', () => {
+    const withBarreCheck = searchChord(tuning, chord('C'), {
+      ...baseOptions,
+      rejectUnbarrable: true,
+    });
+    const withoutBarreCheck = searchChord(tuning, chord('C'), {
+      ...baseOptions,
+      rejectUnbarrable: false,
+    });
+    for (const shape of withBarreCheck) {
+      // Same fret on non-adjacent fretted strings with a different fret between.
+      for (let a = 0; a < shape.frets.length; a++) {
+        for (let b = a + 2; b < shape.frets.length; b++) {
+          if (shape.frets[a] === null || shape.frets[a] === 0) continue;
+          if (shape.frets[a] === shape.frets[b]) {
+            for (let m = a + 1; m < b; m++) {
+              expect(shape.frets[m]).not.toBe(shape.frets[a]);
+            }
+          }
+        }
+      }
+    }
+    // The check should never *add* shapes.
+    expect(withBarreCheck.length).toBeLessThanOrEqual(withoutBarreCheck.length);
+  });
+
+  it('maxStretch 0 means no span limit', () => {
+    const shapes = searchChord(tuning, chord('C'), { ...baseOptions, maxStretch: 0 });
+    expect(shapes.length).toBeGreaterThan(0);
+    for (const shape of shapes) {
+      expect(shape.span).toBeLessThanOrEqual(11);
+    }
   });
 });

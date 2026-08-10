@@ -94,6 +94,8 @@
   --shadow-flat: 0 2px 8px rgba(0, 0, 0, 0.4);
   --shadow-lift: 0 22px 62px rgba(0, 0, 0, 0.28);
   --shadow-dialog: 0 24px 70px rgba(0, 0, 0, 0.6);
+  /* Machined recessed-panel depth cue (faceplate well/stage). */
+  --shadow-inset-panel: inset 0 2px 6px rgba(0, 0, 0, 0.5);
 
   /* --- Stacking --- */
   --z-float: 10;
@@ -108,6 +110,10 @@
   --scrollbar-track: var(--surface-container-low);
   --scrollbar-thumb: #4a4a45;
   --scrollbar-thumb-hover: #62625d;
+
+  /* --- Component-scoped tokens (Chords stage) --- */
+  --workbench-inset: var(--surface-container); /* raised inner stage base */
+  --chord-stage-glow: 0 0 34px color-mix(in srgb, var(--scale-accent) 22%, transparent);
 
   /* --- Control sizing (single source of truth for control heights) --- */
   --ctrl-h-sm: 32px; /* segmented slots, compact icon actions */

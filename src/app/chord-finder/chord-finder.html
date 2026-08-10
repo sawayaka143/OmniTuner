@@ -2,7 +2,8 @@
   class="app-main"
   [style.--scale-accent]="preferencesState().accent"
   [style.--scale-accent-ink]="accentInk()"
-  [style.--workbench-scale]="preferencesState().workbenchScale">
+  [style.--workbench-scale]="preferencesState().workbenchScale"
+>
   <section class="workbench" aria-labelledby="chord-finder-title">
     <header class="workbench-header">
       <div class="finder-title">
@@ -12,106 +13,87 @@
     </header>
 
     <div class="finder-columns">
-      <!-- ══════════ CONTROLS ══════════ -->
-      <section class="controls-pane pane" aria-label="Voicing controls">
+      <!-- ══════════ CONTROLS (right rail) ══════════ -->
+      <aside class="controls-panel" aria-label="Voicing controls">
         <div class="control-section">
           <span class="section-label">01 · Tuning</span>
-          <label class="field-label" for="cf-preset">preset</label>
-          <select
-            id="cf-preset"
-            class="field"
-            (change)="onTuningPresetChange($event)">
-            @for (option of tuningOptions(); track option.id) {
-              <option [value]="option.id">{{ option.label }} · {{ option.text }}</option>
-            }
-          </select>
-          <label class="field-label" for="cf-tuning">custom (bottom → top, e.g. F2 G2 C3 D#3 A#2 C4)</label>
-          <input
-            id="cf-tuning"
-            class="field"
-            type="text"
-            spellcheck="false"
-            autocomplete="off"
+
+          <app-listbox
+            [options]="tuningOptions()"
+            [value]="selectedTuningOption()!"
+            ariaLabel="Tuning preset"
+            triggerLabel="Standard"
+            triggerKicker="preset"
+            [optionLabel]="tuningLabelFn"
+            [optionAlt]="tuningAltFn"
+            [trackByFn]="tuningTrackFn"
+            [open]="tuningListOpen()"
+            (toggle)="toggleTuningList()"
+            (select)="onTuningSelect($event)"
+          />
+
+          <app-text-field
+            label="custom (bottom → top, e.g. F2 G2 C3 D#3 A#2 C4)"
             [value]="tuningText()"
-            (input)="onTuningInput($event)"
-            (keydown.enter)="generate()" />
-          <p class="hint" [class.good]="tuningHint().kind === 'good'" [class.bad]="tuningHint().kind === 'bad'">
-            {{ tuningHint().text }}
-          </p>
+            [hint]="tuningHint().text"
+            [hintTone]="tuningHintTone()"
+            (valueChange)="tuningText.set($event)"
+            (enter)="generate()"
+          />
         </div>
 
         <div class="control-section">
-          <span class="section-label">02 · Key context <span class="label-sub">(tracking / labelling)</span></span>
+          <span class="section-label"
+            >02 · Key context <span class="label-sub">(tracking / labelling)</span></span
+          >
           <div class="row-2">
-            <div>
-              <label class="field-label" for="cf-scale-root">scale root</label>
-              <input
-                id="cf-scale-root"
-                class="field"
-                type="text"
-                placeholder="C"
-                spellcheck="false"
-                autocomplete="off"
-                [value]="scaleRootText()"
-                (input)="onScaleRootInput($event)" />
-            </div>
-            <div>
-              <label class="field-label" for="cf-mode">mode</label>
-              <select
-                id="cf-mode"
-                class="field"
-                (change)="onModeChange($event)">
-                @for (mode of modeNames; track mode) {
-                  <option [value]="mode" [selected]="mode === modeName()">{{ mode }}</option>
-                }
-              </select>
-            </div>
+            <app-text-field
+              label="scale root"
+              [value]="scaleRootText()"
+              placeholder="C"
+              (valueChange)="scaleRootText.set($event)"
+            />
+            <app-listbox
+              [options]="modeNames"
+              [value]="modeName()"
+              ariaLabel="Mode"
+              triggerLabel="Aeolian"
+              triggerKicker="mode"
+              [optionLabel]="identityFn"
+              [trackByFn]="identityFn"
+              [open]="modeListOpen()"
+              (toggle)="toggleModeList()"
+              (select)="modeName.set($event)"
+            />
           </div>
         </div>
 
         <div class="control-section">
           <span class="section-label">03 · Progression</span>
-          <label class="field-label" for="cf-progression">chords, comma-separated</label>
-          <input
-            id="cf-progression"
-            class="field"
-            type="text"
-            spellcheck="false"
-            autocomplete="off"
+          <app-text-field
+            label="chords, comma-separated"
             [value]="progressionText()"
-            (input)="onProgressionInput($event)"
-            (keydown.enter)="generate()" />
-          <p
-            class="hint"
-            [class.good]="progressionHint().kind === 'good'"
-            [class.bad]="progressionHint().kind === 'bad'">
-            {{ progressionHint().text }}
-          </p>
+            [hint]="progressionHint().text"
+            [hintTone]="progressionHintTone()"
+            (valueChange)="progressionText.set($event)"
+            (enter)="generate()"
+          />
         </div>
 
         <div class="control-section">
           <span class="section-label">04 · Voicing rules</span>
 
           <span class="field-label">open string character (fret 0)</span>
-          <div
-            class="segmented open-mode"
-            role="radiogroup"
-            aria-label="Open string character">
-            <span
-              class="segment-indicator"
-              [style.transform]="'translateX(' + openModeIndex(openMode()) * 100 + '%)'"
-              aria-hidden="true"></span>
-            @for (mode of openModes; track mode) {
-              <button
-                type="button"
-                role="radio"
-                [class.active]="openMode() === mode"
-                [attr.aria-checked]="openMode() === mode"
-                (click)="setOpenMode(mode)">
-                {{ openModeShortLabels[mode] }}
-              </button>
-            }
-          </div>
+          <app-segmented
+            [options]="openModes"
+            [value]="openMode()"
+            ariaLabel="Open string character"
+            indicator="accent"
+            [gridColumns]="'repeat(4, minmax(0, 1fr))'"
+            [optionLabel]="openModeLabelFn"
+            [trackByFn]="identityFn"
+            (select)="setOpenMode($event)"
+          />
           <p class="rule-description">{{ openModeDescription() }}</p>
 
           <div class="toggle-row">
@@ -132,94 +114,78 @@
               (change)="allowGaps.set($event)"
             />
           </div>
+          <div class="toggle-row">
+            <span class="toggle-label">smooth transitions</span>
+            <app-toggle
+              [checked]="smoothTransitions()"
+              label="smooth transitions"
+              title="prefer voicings that connect to the next chord with minimal hand movement"
+              (change)="smoothTransitions.set($event)"
+            />
+          </div>
           <p class="rule-description">
             inversions off → the lowest sounding note must be the chord root · gaps off → sounding
-            strings must be contiguous
+            strings must be contiguous · smooth → voicings ranked toward the next chord
           </p>
 
           <div class="row-2">
-            <div>
-              <label class="field-label" for="cf-stretch">max stretch</label>
-              <input
-                id="cf-stretch"
-                class="field"
-                type="number"
-                min="1"
-                max="6"
-                [value]="maxStretchText()"
-                (input)="onMaxStretchInput($event)" />
-            </div>
-            <div>
-              <label class="field-label" for="cf-min-notes">min notes</label>
-              <input
-                id="cf-min-notes"
-                class="field"
-                type="number"
-                min="2"
-                max="6"
-                [value]="minNotesText()"
-                (input)="onMinNotesInput($event)" />
-            </div>
+            <app-text-field
+              label="max stretch"
+              type="number"
+              [value]="maxStretchText()"
+              [min]="1"
+              [max]="6"
+              (valueChange)="maxStretchText.set($event)"
+            />
+            <app-text-field
+              label="min notes"
+              type="number"
+              [value]="minNotesText()"
+              [min]="2"
+              [max]="6"
+              (valueChange)="minNotesText.set($event)"
+            />
           </div>
-          <p class="tiny-note">stretch ignores open strings · search window: frets 0-{{ maxFret }}</p>
+          <p class="tiny-note">
+            stretch ignores open strings · search window: frets 0-{{ maxFret }}
+          </p>
         </div>
 
         <button class="btn primary generate" type="button" (click)="generate()">
           GENERATE VOICINGS
         </button>
         <p class="keynote">shortcut: Ctrl+Enter</p>
-      </section>
+      </aside>
 
-      <!-- ══════════ OUTPUT ══════════ -->
-      <section class="output-pane pane" aria-label="Generated voicings">
+      <!-- ══════════ OUTPUT / STAGE (hero) ══════════ -->
+      <section class="stage" aria-label="Generated voicings">
         <div class="control-rail">
           <span class="rail-caption">TAB OUTPUT</span>
           <div class="rail-group">
             <span class="rail-label">view:</span>
-            <div class="segmented view" role="radiogroup" aria-label="Voicing display mode">
-              <span
-                class="segment-indicator"
-                [style.transform]="
-                  viewMode() === 'tab'
-                    ? 'translateX(0%)'
-                    : viewMode() === 'dots'
-                      ? 'translateX(100%)'
-                      : 'translateX(200%)'"
-                aria-hidden="true"></span>
-              @for (view of viewChoices; track view) {
-                <button
-                  type="button"
-                  role="radio"
-                  [class.active]="viewMode() === view"
-                  [attr.aria-checked]="viewMode() === view"
-                  (click)="viewMode.set(view)">
-                  {{ view }}
-                </button>
-              }
-            </div>
+            <app-segmented
+              [options]="viewChoices"
+              [value]="viewMode()"
+              ariaLabel="Voicing display mode"
+              indicator="accent"
+              [gridColumns]="'repeat(3, 56px)'"
+              [optionLabel]="viewLabelFn"
+              [trackByFn]="identityFn"
+              (select)="viewMode.set($event)"
+            />
+
             <span class="rail-label">label:</span>
-            <div class="segmented label" role="radiogroup" aria-label="Marker label mode">
-              <span
-                class="segment-indicator"
-                [class.second]="labelMode() === 'func'"
-                aria-hidden="true"></span>
-              <button
-                type="button"
-                role="radio"
-                [class.active]="labelMode() === 'notes'"
-                [attr.aria-checked]="labelMode() === 'notes'"
-                (click)="labelMode.set('notes')">
-                notes
-              </button>
-              <button
-                type="button"
-                role="radio"
-                [class.active]="labelMode() === 'func'"
-                [attr.aria-checked]="labelMode() === 'func'"
-                (click)="labelMode.set('func')">
-                R b3
-              </button>
-            </div>
+            <app-segmented
+              [options]="labelChoices"
+              [value]="labelMode()"
+              ariaLabel="Marker label mode"
+              indicator="accent"
+              [gridColumns]="'repeat(2, 56px)'"
+              [optionLabel]="labelChoiceLabelFn"
+              [trackByFn]="identityFn"
+              (select)="onLabelModeSelect($event)"
+            />
+
             <button class="btn small" type="button" (click)="copyTab()">
               {{ copied() ? 'copied ✓' : 'copy tab' }}
             </button>
@@ -227,93 +193,147 @@
           </div>
         </div>
 
-        <div class="output-scroll" tabindex="0" role="region" aria-label="Generated voicing output" aria-live="polite">
+        <div
+          class="stage-well"
+          tabindex="0"
+          role="region"
+          aria-label="Generated voicing output"
+          aria-live="polite"
+        >
           @if (!results()) {
-            <div class="line head">Chord finder ready.</div>
-            <div class="line info">
-              &#160;&#160;1. set your tuning (or pick a preset)&#160;&#160;&#160;2. name the key context
+            <div class="welcome">
+              <span class="welcome-mark" aria-hidden="true"></span>
+              <p>Chord finder ready.</p>
+              <p>
+                1. set your tuning (or pick a preset) · 2. name the key context · 3. type a
+                progression, e.g. <strong>Cm, Gmaj, Bb7, Fm</strong> · 4. press Generate
+              </p>
+              <p class="dim">
+                view: [ tab | dots | lines ] swaps the drawing per fingering · bench rules: frets
+                0-{{ maxFret }} · stretch ≤ 4 (opens ignored) · ≥ 3 sounding notes
+              </p>
             </div>
-            <div class="line info">
-              &#160;&#160;3. type a progression, e.g.&#160;&#160;Cm, Gmaj, Bb7, Fm&#160;&#160;&#160;4. press Generate
-            </div>
-            <div class="line dim">&#160;&#160;view: [ tab | dots | lines ] swaps the drawing per fingering</div>
-            <div class="line dim">&#160;&#160;bench rules: frets 0-{{ maxFret }} · stretch ≤ 4 (opens ignored) · ≥ 3 sounding notes</div>
           } @else {
-            <div class="line head">PROGRESSION — {{ results()!.chords.length }} chord(s)</div>
-            <div class="line context">
-              tuning&#160;&#160;{{ results()!.tuning.labels.join(' · ') }}&#160;&#160;&#160;·&#160;&#160;&#160;key&#160;&#160;{{
-                results()!.keyRoot || '—'
-              }}
-              {{ results()!.modeName }}
+            <div class="stage-head">
+              <span class="section-label"
+                >PROGRESSION — {{ results()!.chords.length }} chord(s)</span
+              >
+              <span class="stage-context">
+                tuning {{ results()!.tuning.labels.join(' · ') }} · key
+                {{ results()!.keyRoot || '—' }} {{ results()!.modeName }} ·
+                {{ rulesSummary(results()!) }}
+              </span>
             </div>
-            <div class="line info">{{ rulesSummary(results()!) }}</div>
-            <div class="line spacer">&#160;</div>
 
             @for (entry of results()!.chords; track $index; let chordIndex = $index) {
-              <div class="chord-block" [style.animation-delay]="chordIndex * 75 + 'ms'">
+              <article
+                class="chord-card"
+                [style.--card-in-index]="chordIndex"
+                aria-labelledby="chord-head-{{ chordIndex }}"
+              >
                 @if (!entry.parse.ok) {
-                  <div class="line head">▚ {{ chordIndex + 1 }}. {{ entry.token }}</div>
-                  <div class="line error">!! {{ entry.parse.error }}</div>
+                  <header class="card-head">
+                    <h3 id="chord-head-{{ chordIndex }}">
+                      ▚ {{ chordIndex + 1 }}. {{ entry.token }}
+                    </h3>
+                  </header>
+                  <p class="card-note error">!! {{ entry.parse.error }}</p>
                 } @else {
-                  <div class="line head">
-                    ▚ {{ chordIndex + 1 }}. {{ entry.parse.chord.symbol }}&#160;&#160;&#160;<span class="context">{{
+                  <header class="card-head">
+                    <h3 id="chord-head-{{ chordIndex }}">
+                      {{ chordIndex + 1 }}. {{ entry.parse.chord.symbol }}
+                    </h3>
+                    <span class="card-subhead">{{
                       chordTonesLabel(entry.parse.chord, flatsFor(results()!, entry.parse.chord))
                     }}</span>
-                  </div>
+                  </header>
                   @if (entry.badge) {
-                    <div
-                      class="line badge"
+                    <p
+                      class="card-note"
                       [class.good]="entry.badge.kind === 'good'"
                       [class.warn]="entry.badge.kind === 'warn'"
-                      [class.bad]="entry.badge.kind === 'bad'">
-                      &#160;&#160;&#160;{{ entry.badge.text }}
-                    </div>
+                      [class.bad]="entry.badge.kind === 'bad'"
+                    >
+                      {{ entry.badge.text }}
+                    </p>
                   }
                   @if (!entry.shapes.length) {
-                    <div class="line warn">
+                    <p class="card-note warn">
                       no voicings satisfy these rules — try: {{ relaxHints(results()!.options) }}
-                    </div>
+                    </p>
                   } @else {
-                    @for (shape of entry.shapes; track $index) {
-                      <div class="fingering">
-                        <div class="line subhead">
-                          === {{ entry.parse.chord.symbol }} - Fingering {{ $index + 1 }} ===
-                        </div>
-                        @if (viewMode() === 'tab') {
-                          <div class="tab-block">
-                            @for (row of tabLines(shape, results()!.tuning); track $index) {
-                              <div class="tab-line">
-                                <span class="tab-label">{{ row.label }}</span>
-                                <span class="tab-rail">|{{ '-'.repeat(row.padLeft) }}</span>
-                                <span
-                                  class="tab-symbol"
-                                  [class.mute]="row.kind === 'mute'"
-                                  [class.open]="row.kind === 'open'">{{ row.symbol }}</span>
-                                <span class="tab-rail">{{ '-'.repeat(row.padRight) }}|</span>
-                              </div>
+                    <div class="card-shapes">
+                      @for (shape of entry.shapes; track $index) {
+                        <div class="card-shape">
+                          <span class="card-rank">FINGERING {{ $index + 1 }}</span>
+                          @if (viewMode() === 'tab') {
+                            <div class="tab-block">
+                              @for (row of tabLines(shape, results()!.tuning); track $index) {
+                                <div class="tab-line">
+                                  <span class="tab-label">{{ row.label }}</span>
+                                  <span class="tab-rail">|{{ '-'.repeat(row.padLeft) }}</span>
+                                  <span
+                                    class="tab-symbol"
+                                    [class.mute]="row.kind === 'mute'"
+                                    [class.open]="row.kind === 'open'"
+                                    >{{ row.symbol }}</span
+                                  >
+                                  <span class="tab-rail">{{ '-'.repeat(row.padRight) }}|</span>
+                                </div>
+                              }
+                            </div>
+                          } @else {
+                            <app-neck-diagram
+                              [frets]="shape.frets"
+                              [tuningMidi]="results()!.tuning.midi"
+                              [tuningLabels]="results()!.tuning.labels"
+                              [symbol]="entry.parse.chord.symbol"
+                              [rootPc]="entry.parse.chord.rootPc"
+                              [index]="$index"
+                              [view]="diagramView()"
+                              [labelMode]="labelMode()"
+                              [flats]="flatsFor(results()!, entry.parse.chord)"
+                            />
+                          }
+                          <p class="card-meta">
+                            {{
+                              shapeInfo(
+                                shape,
+                                entry.parse.chord,
+                                flatsFor(results()!, entry.parse.chord)
+                              )
+                            }}
+                          </p>
+                          <p class="card-reason">
+                            <span class="reason-label">why</span>
+                            {{ ergonomicsHint(shape, entry.parse.chord, results()!.tuning) }}
+                            @if (isBestTransition(chordIndex, $index)) {
+                              <span class="transition-badge">→ easiest next</span>
                             }
+                          </p>
+                          <div class="shape-actions" aria-label="Voicing actions">
+                            <button
+                              class="shape-action"
+                              type="button"
+                              [class.active]="isPinned(chordIndex, $index)"
+                              [attr.aria-pressed]="isPinned(chordIndex, $index)"
+                              [attr.aria-label]="
+                                isPinned(chordIndex, $index)
+                                  ? 'Unpin this fingering'
+                                  : 'Pin this fingering'
+                              "
+                              title="Pin — keep this fingering at the top on regenerate"
+                              (click)="ratePin(chordIndex, $index)"
+                            >
+                              📌
+                            </button>
                           </div>
-                        } @else {
-                          <app-neck-diagram
-                            [frets]="shape.frets"
-                            [tuningMidi]="results()!.tuning.midi"
-                            [tuningLabels]="results()!.tuning.labels"
-                            [symbol]="entry.parse.chord.symbol"
-                            [rootPc]="entry.parse.chord.rootPc"
-                            [index]="$index"
-                            [view]="diagramView()"
-                            [labelMode]="labelMode()"
-                            [flats]="flatsFor(results()!, entry.parse.chord)" />
-                        }
-                        <div class="line info">
-                          {{ shapeInfo(shape, entry.parse.chord, flatsFor(results()!, entry.parse.chord)) }}
                         </div>
-                      </div>
-                    }
+                      }
+                    </div>
                   }
                 }
-                <div class="rule-line" aria-hidden="true"></div>
-              </div>
+              </article>
             }
           }
         </div>
@@ -325,7 +345,9 @@
           <span class="legend-item fifth">● 5th</span>
           <span class="legend-item alt">● 7th/alt</span>
           <span class="legend-item other">● other</span>
-          <span class="legend-ghost">· number on the line = fret to press · right edge = note or function</span>
+          <span class="legend-ghost"
+            >· number on the line = fret to press · right edge = note or function</span
+          >
         </div>
       </section>
     </div>
