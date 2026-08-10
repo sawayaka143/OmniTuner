@@ -69,14 +69,6 @@
 .tweaks {
   display: grid;
   gap: var(--space-5);
-
-  p {
-    max-width: 46ch;
-    margin: 0;
-    color: var(--text-muted);
-    font-size: var(--text-xs);
-    line-height: var(--leading-relaxed);
-  }
 }
 
 .section-heading {
@@ -94,56 +86,6 @@
   }
 }
 
-.current-accent {
-  color: var(--text-muted);
-  font-size: var(--text-2xs);
-  font-variant-numeric: tabular-nums;
-  text-transform: uppercase;
-}
-
-.swatches {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: var(--space-2);
-}
-
-.swatch {
-  --swatch-shadow: 0 2px 7px rgba(0, 0, 0, 0.35);
-
-  aspect-ratio: 1;
-  display: grid;
-  place-items: center;
-  padding: 0;
-  border: 1px solid transparent;
-  border-radius: var(--r-md);
-  background: transparent;
-  cursor: pointer;
-  transition: border-color var(--dur-med) ease, transform var(--dur-fast) ease,
-    background-color var(--dur-med) ease;
-
-  span {
-    width: var(--space-6);
-    height: var(--space-6);
-    border-radius: 50%;
-    background: var(--swatch-color);
-    box-shadow: var(--swatch-shadow);
-  }
-
-  &:hover {
-    transform: translateY(-1px);
-  }
-
-  &.selected {
-    border-color: var(--swatch-color);
-    background: color-mix(in srgb, var(--swatch-color) 10%, transparent);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--swatch-color);
-    outline-offset: 2px;
-  }
-}
-
 .note-colors {
   display: grid;
   gap: var(--space-2);
@@ -154,10 +96,6 @@
     margin: 0;
     font-size: var(--text-sm);
     font-weight: var(--fw-semibold);
-  }
-
-  > p {
-    margin-bottom: var(--space-1);
   }
 }
 
@@ -220,10 +158,6 @@ input[type='color'] {
     font-size: var(--text-sm);
     font-weight: var(--fw-semibold);
   }
-
-  > p {
-    margin-bottom: var(--space-1);
-  }
 }
 
 .workbench-size-control {
@@ -261,10 +195,6 @@ input[type='color'] {
   gap: var(--space-5);
   padding-top: var(--space-6);
   border-top: 1px solid var(--border-subtle);
-
-  > p {
-    margin-bottom: var(--space-1);
-  }
 }
 
 .startup-mode {
@@ -327,10 +257,6 @@ input[type='color'] {
     margin: 0;
     font-size: var(--text-sm);
     font-weight: var(--fw-semibold);
-  }
-
-  > p {
-    margin-bottom: var(--space-1);
   }
 }
 

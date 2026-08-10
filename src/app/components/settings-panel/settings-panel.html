@@ -25,26 +25,6 @@
             <span class="settings-kicker">Appearance</span>
             <h3 id="tweaks-title">Tweaks</h3>
           </div>
-          <span class="current-accent">{{ accent() }}</span>
-        </div>
-
-        <p>Choose the accent used for selected controls and active states.</p>
-
-        <div class="swatches" role="radiogroup" aria-label="Accent color">
-          @for (option of accentOptions; track option.value) {
-            <button
-              class="swatch"
-              type="button"
-              role="radio"
-              [class.selected]="accent().toLowerCase() === option.value"
-              [attr.aria-checked]="accent().toLowerCase() === option.value"
-              [attr.aria-label]="option.name"
-              [title]="option.name"
-              [style.--swatch-color]="option.value"
-              (click)="chooseAccent(option.value)">
-              <span aria-hidden="true"></span>
-            </button>
-          }
         </div>
 
         <label class="custom-accent">
@@ -62,7 +42,6 @@
 
         <section class="note-colors" aria-labelledby="note-colors-title">
           <h4 id="note-colors-title">Scale notes</h4>
-          <p>Set the root and other-note colors used on the fretboard and note controls.</p>
 
           <label class="custom-accent">
             <span class="color-preview" [style.background-color]="rootNoteColor()" aria-hidden="true"></span>
@@ -93,7 +72,6 @@
 
         <section class="workbench-size" aria-labelledby="workbench-size-title">
           <h4 id="workbench-size-title">Workbench</h4>
-          <p>Scale the workbench card to fit your screen.</p>
 
           <label class="workbench-size-control">
             <span class="custom-copy">
@@ -125,14 +103,8 @@
           </div>
         </div>
 
-        <p>
-          When a played pitch holds inside the tolerance window, the tuner confirms it with a
-          tinted glow, a soft chime, and a one-shot pulse.
-        </p>
-
         <section class="reference-pitch" aria-labelledby="reference-pitch-title">
           <h4 id="reference-pitch-title">Reference pitch (A4)</h4>
-          <p>Shift the concert reference from the default 440 Hz.</p>
 
           <label class="workbench-size-control">
             <span class="custom-copy">
@@ -214,24 +186,6 @@
 
         <section class="in-tune-color" aria-labelledby="in-tune-color-title">
           <h4 id="in-tune-color-title">In-tune color</h4>
-          <p>One color drives every cue — the note, the needle, the status, the string, and the glow.</p>
-
-          <div class="swatches" role="radiogroup" aria-label="In-tune color">
-            @for (option of inTuneColorOptions; track option.value) {
-              <button
-                class="swatch"
-                type="button"
-                role="radio"
-                [class.selected]="tunerSettings().inTune.color === option.value"
-                [attr.aria-checked]="tunerSettings().inTune.color === option.value"
-                [attr.aria-label]="option.name"
-                [title]="option.name"
-                [style.--swatch-color]="option.value"
-                (click)="chooseInTuneColor(option.value)">
-                <span aria-hidden="true"></span>
-              </button>
-            }
-          </div>
 
           <label class="custom-accent">
             <span
@@ -252,7 +206,6 @@
 
         <section class="in-tune-ranges" aria-labelledby="in-tune-ranges-title">
           <h4 id="in-tune-ranges-title">Confirmation window</h4>
-          <p>Tune how strict the lock is and how long a pitch must hold before it confirms.</p>
 
           <label class="workbench-size-control">
             <span class="custom-copy">

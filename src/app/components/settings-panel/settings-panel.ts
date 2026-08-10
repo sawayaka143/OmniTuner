@@ -23,11 +23,6 @@ import {
 import { Toggle } from '../../ui/toggle/toggle';
 import { IconButton } from '../../ui/icon-button/icon-button';
 
-interface AccentOption {
-  readonly name: string;
-  readonly value: string;
-}
-
 interface StartupModeOption {
   readonly value: TunerStartupMode;
   readonly label: string;
@@ -69,24 +64,6 @@ export class SettingsPanel {
   protected readonly holdStep = TUNER_HOLD_STEP;
   protected readonly refPitchMin = REFERENCE_PITCH_MIN;
   protected readonly refPitchMax = REFERENCE_PITCH_MAX;
-
-  protected readonly accentOptions: readonly AccentOption[] = [
-    { name: 'Root green', value: '#779900' },
-    { name: 'Third amber', value: '#ff9900' },
-    { name: 'Fifth blue', value: '#227799' },
-    { name: 'Seventh orange', value: '#ee6600' },
-    { name: 'Extension red', value: '#ee0000' },
-    { name: 'Altered magenta', value: '#bb3366' },
-  ];
-
-  protected readonly inTuneColorOptions: readonly AccentOption[] = [
-    { name: 'Mint', value: '#7ecba8' },
-    { name: 'Root green', value: '#779900' },
-    { name: 'Third amber', value: '#ff9900' },
-    { name: 'Fifth blue', value: '#227799' },
-    { name: 'Seventh orange', value: '#ee6600' },
-    { name: 'Altered magenta', value: '#bb3366' },
-  ];
 
   protected readonly startupModeOptions: readonly StartupModeOption[] = [
     { value: 'remember', label: 'Remember last' },
