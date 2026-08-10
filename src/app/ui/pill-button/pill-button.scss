@@ -1,0 +1,21 @@
+@use '../../styles' as *;
+
+.pill-button {
+  @include pill-action();
+
+  &.primary {
+    @include pill-action('primary');
+  }
+
+  &.active {
+    border-color: var(--border-active);
+    background: var(--surface-container-high);
+    color: var(--text);
+    filter: none;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}

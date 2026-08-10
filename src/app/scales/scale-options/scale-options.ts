@@ -1,10 +1,12 @@
 import { Component, ElementRef, inject, input, output, signal, viewChild } from '@angular/core';
 import { AccidentalPreference, LabelMode, ScaleFretCount } from '../../models/scale-preferences.model';
+import { Toggle } from '../../ui/toggle/toggle';
 
 @Component({
   selector: 'app-scale-options',
   templateUrl: './scale-options.html',
   styleUrl: './scale-options.scss',
+  imports: [Toggle],
   host: {
     '(document:mousedown)': 'onDocumentMouseDown($event)',
   },

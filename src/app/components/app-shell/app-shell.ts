@@ -1,9 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { textColorOn } from '../../data/interval-colors';
-import {
-  TunerStartupMode,
-} from '../../models/tuner-preferences.model';
+import { TunerStartupMode } from '../../models/tuner-preferences.model';
 import { ScalePreferences } from '../../services/scale-preferences';
 import { TunerPreferences } from '../../services/tuner-preferences';
 import { Brand } from '../brand/brand';

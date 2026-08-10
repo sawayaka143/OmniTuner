@@ -13,6 +13,7 @@
   --tick-height-center: 44px;
   --needle-top: 52px;
   --needle-height: 68px;
+  --needle-glow: 0 0 14px color-mix(in srgb, var(--in-tune-color) 50%, transparent);
 
   width: 100%;
   position: relative;
@@ -51,7 +52,7 @@
       height: var(--tick-height-center);
       top: calc(var(--tick-offset-top) - 10px);
       width: 2px;
-      background: var(--text, #ffffff);
+      background: var(--text);
     }
   }
 
@@ -63,14 +64,14 @@
     height: var(--needle-height);
     background: var(--needle-color);
     transform: translate(-50%, -50%);
-    transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease;
-    z-index: 10;
-    border-radius: 2px;
+    transition: left var(--dur-slow) var(--ease-spring), background-color var(--dur-med) ease;
+    z-index: var(--z-float);
+    border-radius: var(--r-sm);
 
     &.in-tune {
       background: var(--in-tune-color);
       width: 5px;
-      box-shadow: 0 0 14px color-mix(in srgb, var(--in-tune-color) 50%, transparent);
+      box-shadow: var(--needle-glow);
     }
   }
 
@@ -78,18 +79,18 @@
     display: flex;
     justify-content: space-between;
     width: 100%;
-    margin-top: 32px;
+    margin-top: var(--space-7);
 
     span {
       font-family: var(--mono);
       font-size: var(--text-xs);
-      font-weight: 500;
+      font-weight: var(--fw-medium);
       color: var(--text-muted);
       font-variant-numeric: tabular-nums;
 
       &.center-label {
-        color: var(--text, #ffffff);
-        font-weight: 600;
+        color: var(--text);
+        font-weight: var(--fw-semibold);
       }
     }
   }
@@ -103,6 +104,6 @@
   }
 
   .meter-labels {
-    margin-top: 22px;
+    margin-top: var(--space-5);
   }
 }

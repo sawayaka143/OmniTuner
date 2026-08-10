@@ -9,23 +9,16 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { midiDisplayName } from '../../data/note-display-names';
 import { Instrument } from '../../models/instrument.model';
 import {
-  MAX_CUSTOM_INSTRUMENT_NAME_LENGTH,
   MAX_STRING_COUNT,
   MAX_TUNER_MIDI_NOTE,
   MIN_STRING_COUNT,
   MIN_TUNER_MIDI_NOTE,
 } from '../../models/tuner-preferences.model';
 import { InstrumentRegistry } from '../../services/instrument-registry';
-
-interface DisplayRow {
-  readonly row: number;
-  readonly noteIndex: number;
-  readonly stringNumber: number;
-  readonly weight: number;
-}
+import { StringEditor, StringEditorValue } from '../string-editor/string-editor';
+import { IconButton } from '../../ui/icon-button/icon-button';
 
 type ManagerMode = 'list' | 'create' | 'edit';
 
@@ -33,6 +26,7 @@ type ManagerMode = 'list' | 'create' | 'edit';
   selector: 'app-instrument-manager',
   templateUrl: './instrument-manager.html',
   styleUrl: './instrument-manager.scss',
+  imports: [StringEditor, IconButton],
 })
 export class InstrumentManager {
   private readonly registry = inject(InstrumentRegistry);
@@ -41,19 +35,34 @@ export class InstrumentManager {
   readonly openInCreateMode = input(false);
   readonly dismiss = output<void>();
 
-  protected readonly instruments = this.registry.instruments;
-  protected readonly maxNameLength = MAX_CUSTOM_INSTRUMENT_NAME_LENGTH;
   protected readonly minStringCount = MIN_STRING_COUNT;
   protected readonly maxStringCount = MAX_STRING_COUNT;
   protected readonly minMidiNote = MIN_TUNER_MIDI_NOTE;
   protected readonly maxMidiNote = MAX_TUNER_MIDI_NOTE;
 
+  protected readonly instruments = this.registry.instruments;
   protected readonly mode = signal<ManagerMode>('list');
   protected readonly editingId = signal<string | null>(null);
-  protected readonly name = signal('');
-  protected readonly stringCount = signal(6);
-  protected readonly notes = signal<number[]>([]);
-  protected readonly nameError = signal('');
+  protected readonly externalError = signal('');
+
+  // Initial values fed to the composite. startCreate/startEdit push new values
+  // here; the composite's effect re-inits its internal state from these.
+  protected readonly initialName = signal('');
+  protected readonly initialNotes = signal<readonly number[]>([]);
+  protected readonly initialStringCount = signal(MIN_STRING_COUNT);
+
+  /** Names already in use by other custom instruments (excludes the one being edited). */
+  protected readonly disallowedNames = computed<readonly string[]>(() =>
+    this.registry
+      .instruments()
+      .filter((inst) => inst.kind === 'custom' && inst.id !== this.editingId())
+      .map((inst) => inst.label),
+  );
+
+  /** `'create' | 'edit'` view of the current mode (never `'list'`), for the composite binding. */
+  protected readonly editorMode = computed<'create' | 'edit'>(() =>
+    this.mode() === 'edit' ? 'edit' : 'create',
+  );
 
   protected readonly title = computed(() => {
     switch (this.mode()) {
@@ -71,33 +80,7 @@ export class InstrumentManager {
     }
   });
 
-  protected readonly saveLabel = computed(() =>
-    this.mode() === 'edit' ? 'Save changes' : 'Create instrument',
-  );
-
-  protected readonly displayRows = computed<DisplayRow[]>(() => {
-    const len = this.notes().length;
-    const rows: DisplayRow[] = [];
-    for (let row = 0; row < len; row++) {
-      rows.push({
-        row,
-        noteIndex: len - 1 - row,
-        stringNumber: row + 1,
-        weight: 1.4 + row * 0.44,
-      });
-    }
-    return rows;
-  });
-
-  protected readonly nameInvalid = computed(() => {
-    const trimmed = this.name().trim();
-    if (!trimmed) return true;
-    return false;
-  });
-
   private readonly dialog = viewChild<ElementRef<HTMLDialogElement>>('dialog');
-  private repeatDelay: ReturnType<typeof setTimeout> | null = null;
-  private repeatInterval: ReturnType<typeof setInterval> | null = null;
 
   constructor() {
     effect(() => {
@@ -108,9 +91,7 @@ export class InstrumentManager {
         if (!dialog.open) dialog.showModal();
         // Jump straight into the create form when requested (e.g. via the
         // tuner's "+" button). Reset so a later list-mode open isn't affected.
-        if (this.openInCreateMode()) {
-          this.startCreate();
-        }
+        if (this.openInCreateMode()) this.startCreate();
       } else if (dialog.open) {
         dialog.close();
       }
@@ -124,113 +105,28 @@ export class InstrumentManager {
   protected startCreate(): void {
     this.mode.set('create');
     this.editingId.set(null);
-    this.name.set('');
-    this.nameError.set('');
-    this.stringCount.set(6);
-    this.notes.set(this.defaultNotes(6));
+    this.externalError.set('');
+    this.initialName.set('');
+    this.initialStringCount.set(6);
+    this.initialNotes.set(this.defaultNotes(6));
   }
 
   protected startEdit(instrument: Instrument): void {
     this.mode.set('edit');
     this.editingId.set(instrument.id);
-    this.name.set(instrument.label);
-    this.nameError.set('');
-    this.stringCount.set(instrument.stringCount);
-    // Derive notes from the instrument's default tuning.
+    this.externalError.set('');
+    this.initialName.set(instrument.label);
+    this.initialStringCount.set(instrument.stringCount);
     const defaultTuning = instrument.tunings[0];
-    if (defaultTuning) {
-      this.notes.set(defaultTuning.strings.map((s) => this.freqToMidi(s.freq)));
-    } else {
-      this.notes.set(this.defaultNotes(instrument.stringCount));
-    }
+    const notes = defaultTuning
+      ? defaultTuning.strings.map((s) => this.freqToMidi(s.freq))
+      : this.defaultNotes(instrument.stringCount);
+    this.initialNotes.set(notes);
   }
 
   protected backToList(): void {
-    this.stopRepeating();
     this.mode.set('list');
     this.editingId.set(null);
-  }
-
-  protected onNameInput(event: Event): void {
-    const target = event.target;
-    if (target instanceof HTMLInputElement) {
-      this.name.set(target.value);
-      this.nameError.set('');
-    }
-  }
-
-  protected setStringCount(count: number): void {
-    const clamped = Math.min(this.maxStringCount, Math.max(this.minStringCount, count));
-    if (clamped === this.stringCount()) return;
-
-    const current = this.notes();
-    const next: number[] = [];
-    for (let i = 0; i < clamped; i++) {
-      next.push(i < current.length ? current[i] : this.defaultNoteForIndex(i, clamped));
-    }
-    this.stringCount.set(clamped);
-    this.notes.set(next);
-  }
-
-  protected onKeyboardStep(event: MouseEvent, noteIndex: number, direction: -1 | 1): void {
-    if (event.detail === 0) this.step(noteIndex, direction);
-  }
-
-  protected startRepeating(event: PointerEvent, noteIndex: number, direction: -1 | 1): void {
-    event.preventDefault();
-    this.stopRepeating();
-    this.step(noteIndex, direction);
-    this.repeatDelay = setTimeout(() => {
-      this.repeatInterval = setInterval(() => this.step(noteIndex, direction), 85);
-    }, 420);
-  }
-
-  protected stopRepeating(): void {
-    if (this.repeatDelay) clearTimeout(this.repeatDelay);
-    if (this.repeatInterval) clearInterval(this.repeatInterval);
-    this.repeatDelay = null;
-    this.repeatInterval = null;
-  }
-
-  protected onWheel(event: WheelEvent, noteIndex: number): void {
-    event.preventDefault();
-    this.step(noteIndex, event.deltaY > 0 ? -1 : 1);
-  }
-
-  protected submit(event: Event): void {
-    event.preventDefault();
-    const trimmed = this.name().trim();
-    if (!trimmed) {
-      this.nameError.set('Enter a name for this instrument.');
-      return;
-    }
-
-    // Check uniqueness among custom instruments.
-    const duplicate = this.registry.instruments().some(
-      (inst) =>
-        inst.kind === 'custom' &&
-        inst.id !== this.editingId() &&
-        inst.label.toLowerCase() === trimmed.toLowerCase(),
-    );
-    if (duplicate) {
-      this.nameError.set('An instrument with this name already exists.');
-      return;
-    }
-
-    const count = this.stringCount();
-    const notes = this.notes();
-
-    try {
-      const editId = this.editingId();
-      if (this.mode() === 'edit' && editId) {
-        this.registry.updateInstrument(editId, trimmed, count, notes);
-      } else {
-        this.registry.createInstrument(trimmed, count, notes);
-      }
-      this.backToList();
-    } catch (err) {
-      this.nameError.set(err instanceof Error ? err.message : 'Something went wrong.');
-    }
   }
 
   protected deleteInstrument(instrument: Instrument): void {
@@ -239,7 +135,6 @@ export class InstrumentManager {
 
   protected requestDismiss(event?: Event): void {
     event?.preventDefault();
-    this.stopRepeating();
     this.mode.set('list');
     this.dismiss.emit();
   }
@@ -248,35 +143,34 @@ export class InstrumentManager {
     if (event.target === this.dialog()?.nativeElement) this.requestDismiss();
   }
 
-  protected noteName(midi: number): string {
-    return midiDisplayName(midi);
+  /** Composite emitted save — push to the registry, surface throws as `[externalError]`. */
+  protected saveFromComposite(value: StringEditorValue): void {
+    this.externalError.set('');
+    const editId = this.editingId();
+    try {
+      if (this.mode() === 'edit' && editId) {
+        this.registry.updateInstrument(editId, value.name, value.notes.length, value.notes);
+      } else {
+        this.registry.createInstrument(value.name, value.notes.length, value.notes);
+      }
+      this.backToList();
+    } catch (err) {
+      this.externalError.set(err instanceof Error ? err.message : 'Something went wrong.');
+    }
   }
 
-  private step(noteIndex: number, direction: -1 | 1): void {
-    const current = this.notes();
-    const nextValue = Math.min(
-      this.maxMidiNote,
-      Math.max(this.minMidiNote, current[noteIndex] + direction),
-    );
-    if (nextValue === current[noteIndex]) return;
+  // ── Helpers ──────────────────────────────────────────────────────
 
-    const next = [...current];
-    next[noteIndex] = nextValue;
-    this.notes.set(next);
-  }
-
-  /** Sensible default: standard guitar-like spacing (E-A-D-G-B-E pattern). */
+  /** Standard-guitar-like spacing: E2 + perfect fourths. Reused by the composite's init. */
   private defaultNotes(count: number): number[] {
     const result: number[] = [];
     for (let i = 0; i < count; i++) {
-      result.push(this.defaultNoteForIndex(i, count));
+      result.push(this.defaultNoteForIndex(i));
     }
     return result;
   }
 
-  private defaultNoteForIndex(index: number, total: number): number {
-    // Start from E2 (40) and space by 5 semitones (perfect fourths),
-    // similar to standard guitar tuning.
+  private defaultNoteForIndex(index: number): number {
     return Math.min(this.maxMidiNote, Math.max(this.minMidiNote, 40 + index * 5));
   }
 

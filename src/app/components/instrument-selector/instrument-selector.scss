@@ -3,9 +3,9 @@
 %dropdown-typography {
   font-family: var(--mono);
   font-size: var(--text-sm);
-  line-height: 1.2;
-  letter-spacing: 0.02em;
-  font-weight: 500;
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-narrow);
+  font-weight: var(--fw-medium);
 }
 
 :host {
@@ -18,9 +18,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  z-index: 10;
-  padding-top: 22px;
+  gap: var(--space-2);
+  z-index: var(--z-float);
+  padding-top: var(--space-5);
 }
 
 /* Desktop: controls hug the navbar. The freed space flows into the
@@ -36,11 +36,11 @@
 }
 
 .instrument-seg {
-  --plus-width: 40px;
-  /* Width of one instrument slot (excludes the 3px pill padding each side
+  --plus-width: var(--ctrl-h-lg);
+  /* Width of one instrument slot (excludes the pill padding each side
      and the fixed "+" slot). Shared by the buttons and the indicator so the
      sliding highlight always lands on the exact slot. */
-  --slot-width: calc((100% - 6px - var(--plus-width)) / var(--seg-count));
+  --slot-width: calc((100% - var(--space-2) - var(--plus-width)) / var(--seg-count));
 
   /* The "+" segment sits inside the pill; keep it fully visible instead of
      clipping at the rounded container edge. */
@@ -75,12 +75,10 @@
   place-items: center;
   color: var(--text-muted);
   cursor: pointer;
-  transition:
-    background-color 140ms ease,
-    color 140ms ease;
+  transition: background-color var(--dur-med) ease, color var(--dur-med) ease;
 
   .material-symbols-outlined {
-    font-size: 18px;
+    font-size: var(--text-md);
   }
 
   &:hover {
@@ -90,8 +88,7 @@
 
   /* Active state: a round highlight matching the sliding indicator's look,
      shown while the "+" holds focus (i.e. the create flow is open). The
-     button is a wide hit area (40x28); the highlight is a 28px circle
-     centred in it. */
+     button is a wide hit area; the highlight is a 28px circle centred in it. */
   &.active::after {
     position: absolute;
     top: 50%;
@@ -145,8 +142,8 @@
 .dropdown-icon {
   flex-shrink: 0;
   color: var(--text-muted);
-  font-size: 18px;
-  transition: transform 0.2s ease;
+  font-size: var(--text-md);
+  transition: transform var(--dur-med) ease;
 
   &.rotated {
     transform: rotate(180deg);
@@ -156,25 +153,25 @@
 .dropdown-menu {
   @include dropdown-menu();
   left: 50%;
-  width: min(300px, calc(100vw - 32px));
+  width: min(300px, calc(100vw - var(--space-7)));
   max-height: min(460px, calc(100dvh - 180px));
 }
 
 .menu-section {
   h3 {
     margin: 0;
-    padding: 7px 10px 5px;
+    padding: var(--space-2) var(--space-2) var(--space-1);
     color: var(--text-muted);
     font-family: var(--mono);
     font-size: var(--text-xs);
-    font-weight: 600;
+    font-weight: var(--fw-semibold);
     letter-spacing: var(--tracking-label);
     text-transform: uppercase;
   }
 
   & + & {
-    margin-top: 5px;
-    padding-top: 5px;
+    margin-top: var(--space-1);
+    padding-top: var(--space-1);
     border-top: 1px solid var(--border-subtle);
   }
 }
@@ -195,8 +192,8 @@
 .tuning-option {
   @include dropdown-item();
   @extend %dropdown-typography;
-  min-height: 40px;
-  padding: 0 10px;
+  min-height: var(--ctrl-h-lg);
+  padding: 0 var(--space-2);
 
   span {
     display: block;
@@ -208,32 +205,7 @@
   &.selected {
     background-color: var(--surface-container-high);
     color: var(--text);
-    font-weight: 600;
-  }
-}
-
-.new-tuning-button,
-.manage-instruments-button,
-.icon-action {
-  border: 0;
-  background: transparent;
-  color: var(--text-muted);
-  font-family: var(--mono);
-  cursor: pointer;
-  transition:
-    background-color 0.15s ease,
-    color 0.15s ease;
-
-  &:hover {
-    background-color: var(--surface-container);
-    color: var(--text);
-  }
-
-  &:focus-visible {
-    position: relative;
-    z-index: 1;
-    outline: 2px solid var(--border-active);
-    outline-offset: -2px;
+    font-weight: var(--fw-semibold);
   }
 }
 
@@ -255,46 +227,16 @@
   gap: 2px;
 }
 
-.icon-action {
-  display: grid;
-  width: var(--ctrl-h-sm);
-  height: var(--ctrl-h-sm);
-  place-items: center;
-  border-radius: var(--r-sm);
-
-  .material-symbols-outlined {
-    font-size: 17px;
-  }
-}
-
-.delete-action:hover {
-  color: #ff8aab;
-}
-
 .empty-message {
   margin: 0;
-  padding: 8px 10px 10px;
+  padding: var(--space-2);
   color: var(--text-muted);
   font-size: var(--text-xs);
 }
 
 .new-tuning-button,
 .manage-instruments-button {
-  display: flex;
-  width: 100%;
-  min-height: 40px;
-  align-items: center;
-  gap: 8px;
-  margin-top: 6px;
-  padding: 0 10px;
-  border-top: 1px solid var(--border-subtle);
-  border-radius: var(--r-sm);
-  font-size: 12px;
-  text-align: start;
-
-  .material-symbols-outlined {
-    font-size: 18px;
-  }
+  @include menu-action();
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -309,21 +251,21 @@
 @media (max-width: 640px) {
   .selectors {
     /* Same centered, content-sized look as desktop — just smaller. */
-    gap: 8px;
-    padding-top: 12px;
+    gap: var(--space-2);
+    padding-top: var(--space-3);
   }
 
   .mode-seg button {
     min-width: 64px;
-    padding: 5px 12px;
-    line-height: 1.2;
+    padding: var(--space-1) var(--space-3);
+    line-height: var(--leading-tight);
   }
 
   /* Keep instrument slots equal so the sliding indicator stays aligned. */
   .instrument-seg > button:not(.add-instrument-segment) {
     min-width: 0;
-    padding: 5px 12px;
-    line-height: 1.2;
+    padding: var(--space-1) var(--space-3);
+    line-height: var(--leading-tight);
   }
 
   .dropdown-wrapper {
@@ -331,11 +273,11 @@
     .tuning-trigger {
       min-width: 132px;
       min-height: var(--ctrl-h-sm);
-      padding: 5px 12px;
+      padding: var(--space-1) var(--space-3);
       justify-content: center;
 
       .dropdown-icon {
-        font-size: 16px;
+        font-size: var(--text-md);
       }
     }
   }
@@ -353,6 +295,6 @@
   .dropdown-menu {
     left: 50%;
     transform: translateX(-50%);
-    width: min(320px, calc(100vw - 24px));
+    width: min(320px, calc(100vw - var(--space-6)));
   }
 }

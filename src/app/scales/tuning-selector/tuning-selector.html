@@ -49,20 +49,23 @@
               <span>{{ tuning.name }}</span>
               <span class="note-summary">{{ notesLabel(tuning.notes) }}</span>
             </button>
-            <button
-              class="saved-action edit-button"
-              type="button"
-              [attr.aria-label]="'Edit ' + tuning.name + ' tuning'"
-              (click)="edit.emit(tuning.id); $event.stopPropagation()">
-              <span class="material-symbols-outlined" aria-hidden="true">edit</span>
-            </button>
-            <button
-              class="saved-action delete-button"
-              type="button"
-              [attr.aria-label]="'Delete ' + tuning.name + ' tuning'"
-              (click)="delete.emit(tuning.id); $event.stopPropagation()">
-              <span class="material-symbols-outlined" aria-hidden="true">close</span>
-            </button>
+            <app-icon-button
+              icon="edit"
+              [label]="'Edit ' + tuning.name + ' tuning'"
+              [stopClickPropagation]="true"
+              variant="ghost"
+              size="sm"
+              (activate)="edit.emit(tuning.id)"
+            />
+            <app-icon-button
+              icon="close"
+              [label]="'Delete ' + tuning.name + ' tuning'"
+              [stopClickPropagation]="true"
+              variant="ghost"
+              size="sm"
+              [danger]="true"
+              (activate)="delete.emit(tuning.id)"
+            />
           </div>
         }
       }

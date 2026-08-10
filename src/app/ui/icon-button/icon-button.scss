@@ -1,0 +1,46 @@
+@use '../../styles' as *;
+
+.icon-button {
+  @include icon-button();
+
+  &.size-sm {
+    @include icon-button(var(--ctrl-h-sm));
+
+    .material-symbols-outlined {
+      font-size: var(--text-md);
+    }
+  }
+
+  &.danger {
+    color: var(--danger);
+
+    &:hover {
+      color: var(--danger-hover);
+      border-color: var(--danger);
+    }
+
+    &:focus-visible {
+      outline-color: var(--danger);
+    }
+  }
+
+  &.ghost {
+    border: 0;
+    border-radius: var(--r-sm);
+    background: transparent;
+
+    &:hover {
+      background: var(--surface-container-high);
+      border-color: transparent;
+    }
+
+    &:focus-visible {
+      background: var(--surface-container-high);
+    }
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.35;
+  }
+}

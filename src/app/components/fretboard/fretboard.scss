@@ -22,30 +22,38 @@
   box-sizing: border-box;
   width: 100%;
   overflow: hidden;
-  padding: 18px 4px 8px;
+  padding: var(--space-4) 4px var(--space-2);
 }
 
 .fretboard-scale-frame {
   position: relative;
   width: max-content;
   margin: 0 auto;
-  transition:
-    width 250ms ease,
-    height 250ms ease;
+  transition: width var(--dur-slow) ease, height var(--dur-slow) ease;
 }
 
 .fretboard {
   --open-w: 62px;
   --fret-w: 58px;
   --row-h: 50px;
+  --rail-h: 18px;
+  --open-shadow: 8px 0 18px rgba(0, 0, 0, 0.2);
+  --inlay-color: rgba(235, 235, 228, 0.12);
+  --string-color: rgba(235, 235, 228, 0.48);
+  --nut-color: rgba(245, 245, 243, 0.62);
+  --dot-ring: rgba(245, 245, 243, 0.56);
+  --string-shadow: 0 1px 1px rgba(0, 0, 0, 0.55);
+  --dot-shadow: 0 2px 5px rgba(0, 0, 0, 0.48);
+  --root-shadow: 0 3px 7px rgba(0, 0, 0, 0.55);
+  --sounding-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
 
   position: relative;
   display: inline-grid;
   transform-origin: 0 0;
-  transition: transform 250ms ease;
+  transition: transform var(--dur-slow) ease;
   min-width: calc(var(--open-w) + var(--fret-w) * var(--fret-count));
   grid-template-columns: var(--open-w) repeat(var(--fret-count), var(--fret-w));
-  grid-template-rows: repeat(var(--string-count), var(--row-h)) 18px;
+  grid-template-rows: repeat(var(--string-count), var(--row-h)) var(--rail-h);
   align-items: center;
 
   &::before {
@@ -53,12 +61,12 @@
     position: absolute;
     z-index: 0;
     top: 0;
-    bottom: 18px;
+    bottom: var(--rail-h);
     left: 0;
     width: var(--open-w);
     border-radius: var(--r-md) 0 0 var(--r-md);
-    background: #161615;
-    box-shadow: 8px 0 18px rgba(0, 0, 0, 0.2);
+    background: var(--surface-container-low);
+    box-shadow: var(--open-shadow);
     pointer-events: none;
   }
 }
@@ -76,13 +84,13 @@
   color: var(--text-dim);
   font-family: var(--mono);
   font-size: var(--text-xs);
-  letter-spacing: 0.16em;
+  letter-spacing: var(--tracking-extra-wide);
   text-align: center;
   text-transform: uppercase;
 }
 
 .fret-number {
-  height: 18px;
+  height: var(--rail-h);
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -96,7 +104,7 @@
 .board-inlays {
   position: absolute;
   z-index: 1;
-  inset: 0 0 18px;
+  inset: 0 0 var(--rail-h);
   display: grid;
   grid-template-columns: var(--open-w) repeat(var(--fret-count), var(--fret-w));
   pointer-events: none;
@@ -115,9 +123,9 @@
 }
 
 .inlay-mark {
-  width: 8px;
-  height: 8px;
-  background: rgba(235, 235, 228, 0.12);
+  width: var(--space-2);
+  height: var(--space-2);
+  background: var(--inlay-color);
   transform: rotate(45deg);
 }
 
@@ -128,8 +136,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-right: 1px solid rgba(255, 255, 255, 0.11);
-  background: #1b1b19;
+  border-right: 1px solid var(--border-subtle);
+  background: var(--surface-container-low);
 
   &::before {
     content: '';
@@ -139,8 +147,8 @@
     left: 0;
     top: 50%;
     height: var(--string-weight, 1px);
-    background: rgba(235, 235, 228, 0.48);
-    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.55);
+    background: var(--string-color);
+    box-shadow: var(--string-shadow);
     transform: translateY(-50%);
     pointer-events: none;
   }
@@ -148,19 +156,19 @@
 
 .open-note {
   z-index: 1;
-  border-right: 3px solid rgba(245, 245, 243, 0.62);
+  border-right: 3px solid var(--nut-color);
   background: transparent;
   color: var(--text-muted);
   font-family: var(--mono);
   font-size: var(--text-xs);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
 }
 
 .open-string-name {
   position: relative;
   z-index: 1;
   padding: 2px 5px;
-  background: #161615;
+  background: var(--surface-container-low);
 }
 
 .fret-dot {
@@ -174,17 +182,14 @@
   border: 0;
   border-radius: 50%;
   font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-size: var(--text-2xs);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--tracking-tight);
   font-variant-numeric: tabular-nums;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.48);
+  box-shadow: var(--dot-shadow);
   cursor: pointer;
-  transition:
-    transform 120ms ease,
-    filter 150ms ease,
-    box-shadow 150ms ease,
-    opacity 150ms ease;
+  transition: transform var(--dur-fast) ease, filter var(--dur-med) ease,
+    box-shadow var(--dur-med) ease, opacity var(--dur-med) ease;
 
   &:hover {
     filter: brightness(1.13);
@@ -204,10 +209,10 @@
     width: 23px;
     height: 23px;
     border: 1px solid var(--border-medium);
-    background: #242422;
+    background: var(--surface-container);
     color: var(--text-dim);
-    font-size: 9px;
-    font-weight: 500;
+    font-size: var(--text-3xs);
+    font-weight: var(--fw-medium);
     opacity: 0.66;
     box-shadow: none;
 
@@ -220,25 +225,26 @@
   &.is-root {
     width: 33px;
     height: 33px;
-    font-size: 11px;
+    font-size: var(--text-xs);
     box-shadow:
-      0 0 0 2px #1b1b19,
-      0 0 0 3px rgba(245, 245, 243, 0.56),
-      0 3px 7px rgba(0, 0, 0, 0.55);
+      0 0 0 2px var(--surface-container-low),
+      0 0 0 3px var(--dot-ring),
+      var(--root-shadow);
   }
 
   &.sounding {
-    animation: note-strike 240ms cubic-bezier(0.16, 1, 0.3, 1);
+    animation: note-strike var(--dur-slow) var(--ease-spring);
     box-shadow:
-      0 0 0 3px #1b1b19,
+      0 0 0 3px var(--surface-container-low),
       0 0 0 5px currentColor,
-      0 8px 20px rgba(0, 0, 0, 0.5);
+      var(--sounding-shadow);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .fretboard-scale-frame,
-  .fretboard {
+  .fretboard,
+  .fret-dot {
     transition: none;
   }
 

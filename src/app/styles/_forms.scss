@@ -1,0 +1,63 @@
+/// Standard text form field (name input, chord-finder fields).
+/// @param {String} $radius - corner radius.
+/// @param {String} $border - resting border color.
+/// @param {String} $padding - inner padding.
+@mixin form-field(
+  $radius: var(--r-md),
+  $border: var(--border-medium),
+  $padding: var(--space-2) var(--space-3)
+) {
+  width: 100%;
+  min-height: var(--ctrl-h-xl);
+  padding: $padding;
+  border: 1px solid $border;
+  border-radius: $radius;
+  outline: 0;
+  background: var(--surface-container);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: var(--text-sm);
+
+  &:hover {
+    border-color: var(--border-active);
+  }
+
+  &:focus,
+  &:focus-visible {
+    border-color: var(--border-active);
+    outline: 2px solid var(--border-active);
+    outline-offset: 2px;
+  }
+
+  &[aria-invalid='true'] {
+    border-color: var(--danger);
+  }
+}
+
+/// Uppercase micro-label above a form field.
+/// @param {String} $color - label color.
+/// @param {String} $size - font size token.
+/// @param {String} $weight - font weight token.
+/// @param {String} $tracking - letter-spacing token.
+@mixin field-label(
+  $color: var(--text-muted),
+  $size: var(--text-2xs),
+  $weight: var(--fw-medium),
+  $tracking: var(--tracking-label)
+) {
+  display: block;
+  color: $color;
+  font-family: var(--mono);
+  font-size: $size;
+  font-weight: $weight;
+  letter-spacing: $tracking;
+  text-transform: uppercase;
+}
+
+/// Inline field validation message (reserves one line of space).
+@mixin field-error() {
+  min-height: var(--space-4);
+  margin: 6px 0 var(--space-2);
+  color: var(--danger);
+  font-size: var(--text-xs);
+}

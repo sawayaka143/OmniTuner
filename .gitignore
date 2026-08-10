@@ -87,6 +87,7 @@ serve-dist.cjs*
 .gemini/
 .zcode/
 skills-lock.json
+/skills/
 .commandcode/
 
 # Impeccable Local State & Caches

@@ -1,0 +1,30 @@
+@use '../../styles' as *;
+
+.field-label {
+  @include field-label();
+  display: block;
+  margin-bottom: var(--space-2);
+}
+
+.field {
+  @include form-field();
+}
+
+.field-error {
+  @include field-error();
+}
+
+.hint {
+  min-height: var(--space-4);
+  margin: 6px 0 var(--space-2);
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+
+  &.good {
+    color: var(--good);
+  }
+
+  &.bad {
+    color: var(--danger);
+  }
+}

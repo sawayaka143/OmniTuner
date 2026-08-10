@@ -1,0 +1,87 @@
+<form class="editor-form" (submit)="submit($event)">
+  <app-text-field
+    [label]="nameLabel()"
+    [value]="name()"
+    [errorMessage]="effectiveError()"
+    [maxlength]="maxNameLength()"
+    [required]="true"
+    [autofocus]="true"
+    [autocomplete]="'off'"
+    (valueChange)="onNameInput($event)"
+  />
+
+  @if (presets().length) {
+    <div class="preset-row" role="group" aria-label="Start from a tuning preset">
+      <span>Start from</span>
+      @for (preset of presets(); track preset.id) {
+        <app-pill-button variant="ghost" [label]="preset.name" (activate)="applyPreset(preset)" />
+      }
+    </div>
+  }
+
+  @if (allowCountChange()) {
+    <div class="string-count-row">
+      <span class="field-label">Strings</span>
+      <div class="count-stepper">
+        <app-step-button
+          [direction]="-1"
+          [value]="stringCount()"
+          [min]="minStringCount()"
+          [max]="maxStringCount()"
+          [ariaLabel]="'Decrease string count'"
+          (step)="setStringCount($event)"
+        />
+        <output class="count-value">{{ stringCount() }}</output>
+        <app-step-button
+          [direction]="1"
+          [value]="stringCount()"
+          [min]="minStringCount()"
+          [max]="maxStringCount()"
+          [ariaLabel]="'Increase string count'"
+          (step)="setStringCount($event)"
+        />
+      </div>
+    </div>
+  }
+
+  <div class="string-list" role="group" [attr.aria-label]="stringsGroupLabel()">
+    @for (r of displayRows(); track r.noteIndex) {
+      <div class="string-row" (wheel)="onWheel($event, r.noteIndex)">
+        <span class="string-number">{{ r.stringNumber }}</span>
+        <span class="string-line" [style.--string-weight.px]="r.weight" aria-hidden="true"></span>
+        <div class="note-controls">
+          <app-step-button
+            [direction]="-1"
+            [value]="notes()[r.noteIndex]"
+            [min]="minNote()"
+            [max]="maxNote()"
+            [ariaLabel]="'Lower string ' + r.stringNumber + ' by one semitone'"
+            (step)="onStep(r.noteIndex, $event)"
+          />
+          <output
+            class="note-name"
+            [class.changed]="isChanged(r.noteIndex)"
+            [attr.aria-label]="'String ' + r.stringNumber + ' is tuned to ' + noteName(notes()[r.noteIndex])"
+          >
+            {{ noteName(notes()[r.noteIndex]) }}
+          </output>
+          <app-step-button
+            [direction]="1"
+            [value]="notes()[r.noteIndex]"
+            [min]="minNote()"
+            [max]="maxNote()"
+            [ariaLabel]="'Raise string ' + r.stringNumber + ' by one semitone'"
+            (step)="onStep(r.noteIndex, $event)"
+          />
+        </div>
+      </div>
+    }
+  </div>
+
+  <footer class="editor-footer">
+    <button class="cancel-button" type="button" (click)="requestCancel()">{{ cancelLabel() }}</button>
+    <button class="save-button" type="submit" [disabled]="!!effectiveError()">
+      {{ saveLabel() }}
+    </button>
+  </footer>
+</form>

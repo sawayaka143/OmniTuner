@@ -9,26 +9,24 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
   width: 100%;
-  padding: 16px 0 48px;
-  gap: 24px;
+  padding: var(--space-8) var(--space-6) calc(var(--space-7) * 2);
+  gap: var(--space-7);
   position: relative;
-  box-sizing: border-box;
 }
 
 .tuner-stage {
+  --pulse-size: 150px;
+
   width: 100%;
   max-width: 520px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
-  padding: 0 24px;
-  box-sizing: border-box;
+  gap: var(--space-5);
   /* Fixed distance below the controls block — identical on desktop
      and mobile (added on top of .app-main's gap). */
-  margin-top: 70px;
+  margin-top: calc(var(--space-7) * 2);
 }
 
 .meter-area {
@@ -50,13 +48,13 @@
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 150px;
-  height: 150px;
+  width: var(--pulse-size);
+  height: var(--pulse-size);
   border: 1.5px solid var(--in-tune-color);
   border-radius: 50%;
   opacity: 0;
   transform: translate(-50%, -50%);
-  animation: lock-pulse 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: lock-pulse 0.9s var(--ease-spring) forwards;
 }
 
 @keyframes lock-pulse {
@@ -79,26 +77,25 @@
 .btn.capture-btn {
   @include pill-action('primary');
   font-size: var(--text-base);
-  padding: 14px 44px;
-  margin-top: 16px;
+  padding: var(--space-4) var(--space-8);
+  margin-top: var(--space-4);
   min-width: 150px;
-  letter-spacing: 0.02em;
+  letter-spacing: var(--tracking-narrow);
 
   &.active {
     background: var(--surface-container-high);
-    color: #ffffff;
+    color: var(--text);
     border-color: var(--border-active);
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 760px) {
   .app-main {
-    padding: 8px 0 12px;
+    padding: var(--space-7) var(--space-4) var(--space-8);
   }
 
   .tuner-stage {
-    gap: 16px;
-    padding: 0 16px;
+    gap: var(--space-4);
   }
 }
 
@@ -115,40 +112,44 @@
 }
 
 .debug-hud {
+  --hud-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+
   position: fixed;
-  left: 8px;
-  bottom: 8px;
-  z-index: 9999;
+  left: var(--space-2);
+  bottom: var(--space-2);
+  z-index: var(--z-debug);
   margin: 0;
   max-width: 92vw;
   white-space: pre-wrap;
-  font: 11px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  color: #aeb4ba;
-  background: rgba(10, 12, 14, 0.62);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 7px 9px;
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  line-height: var(--leading-normal);
+  color: var(--text-muted);
+  background: var(--backdrop);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-md);
+  padding: var(--space-2);
   pointer-events: none;
   backdrop-filter: blur(3px);
   -webkit-backdrop-filter: blur(3px);
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--hud-shadow);
 
   &__dot {
     display: inline-block;
-    width: 7px;
-    height: 7px;
+    width: var(--space-2);
+    height: var(--space-2);
     border-radius: 50%;
     vertical-align: middle;
-    margin-right: 5px;
-    background: #555;
+    margin-right: var(--space-1);
+    background: var(--text-dim);
 
     &.active {
-      background: #5fd38a;
+      background: var(--good);
     }
   }
 
   &__label {
-    color: #6b7280;
-    letter-spacing: 0.14em;
+    color: var(--text-dim);
+    letter-spacing: var(--tracking-extra-wide);
   }
 }

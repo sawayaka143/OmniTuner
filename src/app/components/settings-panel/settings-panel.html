@@ -11,9 +11,11 @@
         <span class="settings-kicker">OmniTuner</span>
         <h2 id="settings-title">Settings</h2>
       </div>
-      <button class="close-button" type="button" aria-label="Close settings" (click)="requestDismiss()">
-        <span class="material-symbols-outlined" aria-hidden="true">close</span>
-      </button>
+      <app-icon-button
+        icon="close"
+        label="Close settings"
+        (activate)="requestDismiss()"
+      />
     </header>
 
     <div class="settings-content">
@@ -106,13 +108,11 @@
               [value]="workbenchScale()"
               aria-label="Workbench size"
               (input)="onWorkbenchScale($event)" />
-            <button
-              class="reset-btn"
-              type="button"
-              aria-label="Reset workbench size"
-              (click)="workbenchScaleReset.emit()">
-              <span class="material-symbols-outlined" aria-hidden="true">restart_alt</span>
-            </button>
+            <app-icon-button
+              icon="restart_alt"
+              label="Reset workbench size"
+              (activate)="workbenchScaleReset.emit()"
+            />
           </label>
         </section>
       </section>
@@ -180,16 +180,11 @@
               <strong>Highlight when in tune</strong>
               <span>Master switch — turns off every confirmation cue</span>
             </div>
-            <button
-              class="toggle-button"
-              type="button"
-              role="switch"
-              [attr.aria-checked]="tunerSettings().inTune.enabled"
-              [class.active]="tunerSettings().inTune.enabled"
-              aria-label="Highlight when in tune"
-              (click)="toggleInTuneEnabled()">
-              <span class="toggle-lamp" aria-hidden="true"></span>
-            </button>
+            <app-toggle
+              [checked]="tunerSettings().inTune.enabled"
+              label="Highlight when in tune"
+              (change)="inTuneEnabledChange.emit($event)"
+            />
           </div>
 
           <div class="toggle-row">
@@ -197,16 +192,11 @@
               <strong>Confirmation sound</strong>
               <span>Play a soft chime when the note locks</span>
             </div>
-            <button
-              class="toggle-button"
-              type="button"
-              role="switch"
-              [attr.aria-checked]="tunerSettings().inTune.sound"
-              [class.active]="tunerSettings().inTune.sound"
-              aria-label="Confirmation sound"
-              (click)="toggleInTuneSound()">
-              <span class="toggle-lamp" aria-hidden="true"></span>
-            </button>
+            <app-toggle
+              [checked]="tunerSettings().inTune.sound"
+              label="Confirmation sound"
+              (change)="inTuneSoundChange.emit($event)"
+            />
           </div>
 
           <div class="toggle-row">
@@ -214,16 +204,11 @@
               <strong>Ambient glow</strong>
               <span>Pulse ring when the note locks</span>
             </div>
-            <button
-              class="toggle-button"
-              type="button"
-              role="switch"
-              [attr.aria-checked]="tunerSettings().inTune.glow"
-              [class.active]="tunerSettings().inTune.glow"
-              aria-label="Ambient glow"
-              (click)="toggleInTuneGlow()">
-              <span class="toggle-lamp" aria-hidden="true"></span>
-            </button>
+            <app-toggle
+              [checked]="tunerSettings().inTune.glow"
+              label="Ambient glow"
+              (change)="inTuneGlowChange.emit($event)"
+            />
           </div>
         </div>
 
