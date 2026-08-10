@@ -107,7 +107,7 @@ describe('InstrumentManager', () => {
   it('emits dismiss when the close button is clicked', () => {
     host.open.set(true);
     fixture.detectChanges();
-    const close = fixture.nativeElement.querySelector('.close-button') as HTMLButtonElement;
+    const close = fixture.nativeElement.querySelector('[aria-label="Close instrument manager"]') as HTMLButtonElement;
     close.click();
     fixture.detectChanges();
     expect(host.dismissCount()).toBe(1);
@@ -220,7 +220,7 @@ describe('InstrumentManager', () => {
     expect(instrumentRows().some((r) => r.textContent?.includes('To delete'))).toBe(true);
 
     const row = instrumentRows().find((r) => r.textContent?.includes('To delete'));
-    const deleteButton = row!.querySelector('.delete-button') as HTMLButtonElement;
+    const deleteButton = row!.querySelector('[aria-label="Delete To delete"]') as HTMLButtonElement;
     deleteButton.click();
     fixture.detectChanges();
 

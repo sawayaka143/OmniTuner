@@ -58,7 +58,7 @@ describe('TuningSelector', () => {
     component.select.subscribe((value) => { selection = value; });
     component.edit.subscribe((value) => { editedId = value; });
 
-    const editButton = fixture.nativeElement.querySelector('.edit-button') as HTMLButtonElement;
+    const editButton = fixture.nativeElement.querySelector('[aria-label="Edit Open E tuning"]') as HTMLButtonElement;
     editButton.click();
 
     expect(editButton.getAttribute('aria-label')).toBe('Edit Open E tuning');
@@ -75,7 +75,7 @@ describe('TuningSelector', () => {
     component.select.subscribe((value) => { selection = value; });
     component.delete.subscribe((value) => { deletedId = value; });
 
-    const deleteButton = fixture.nativeElement.querySelector('.delete-button') as HTMLButtonElement;
+    const deleteButton = fixture.nativeElement.querySelector('[aria-label="Delete Open E tuning"]') as HTMLButtonElement;
     deleteButton.click();
 
     expect(deletedId).toBe(SAVED_TUNING.id);
