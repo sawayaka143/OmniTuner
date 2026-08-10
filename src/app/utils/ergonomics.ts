@@ -328,12 +328,12 @@ export function detectFingers(frets: readonly (number | null)[]): FingerShape {
 
   // Index span: fret range of the index finger, treating a barre as one stop.
   const indexFrets = new Set<number>();
-  for (const { fret } of fretted) if (fingers[fret] === 1) indexFrets.add(fret);
+  for (const { string, fret } of fretted) if (fingers[string] === 1) indexFrets.add(fret);
   const indexSpan = indexFrets.size ? Math.max(...indexFrets) - Math.min(...indexFrets) : 0;
 
   // Stretch span: fret range of fingers 2-4 (the real stretch).
   const stretchFrets = new Set<number>();
-  for (const { fret } of fretted) if (fingers[fret] !== 1) stretchFrets.add(fret);
+  for (const { string, fret } of fretted) if (fingers[string] !== 1) stretchFrets.add(fret);
   const stretchSpan = stretchFrets.size ? Math.max(...stretchFrets) - Math.min(...stretchFrets) : 0;
 
   return { fingers, barres, indexSpan, stretchSpan, position };

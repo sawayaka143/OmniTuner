@@ -344,12 +344,14 @@ export class ChordFinder {
 
     // Viterbi pathfinding: choose the global-lowest-cost voicing path across
     // the progression (ergonomics + transition cost between adjacent chords).
+    // We must filter BOTH the chords and the shapes arrays to keep them aligned
+    // in case the user typed an invalid chord token in the middle of the progression.
+    const validEntries = chords.filter((c) => c.parse.ok && c.shapes.length > 0) as (ChordEntry & { parse: { ok: true } })[];
+
     const pathfinding = scoreProgressionVoicings(
-      chords
-        .map((c) => (c.parse.ok ? c.parse.chord : null))
-        .filter((c): c is NonNullable<typeof c> => c !== null),
+      validEntries.map((c) => c.parse.chord),
       parsed.tuning,
-      chords.map((c) => c.shapes),
+      validEntries.map((c) => c.shapes),
     );
     // Best-transition pointer per chord (except the last): which voicing of
     // this chord connects most smoothly to a voicing of the next chord. The
@@ -500,8 +502,7 @@ export class ChordFinder {
     if (factors.barreCount > 0) labels.push(WHY_HINTS['barre']);
     if (factors.position >= 7) labels.push(WHY_HINTS['position']);
     if (factors.rootDoubled) labels.push(WHY_HINTS['doubling']);
-    if (factors.hasStringSkip) labels.push(WHY_HINTS['thumb']);
-    if (factors.hasThumbFret) labels.push(WHY_HINTS['thumb']);
+    if (factors.hasStringSkip || factors.hasThumbFret) labels.push(WHY_HINTS['thumb']);
     return labels.length ? labels.join(' · ') : 'balanced';
   }
 

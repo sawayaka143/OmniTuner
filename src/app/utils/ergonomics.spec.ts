@@ -51,7 +51,9 @@ describe('detectFingers', () => {
     const f = detectFingers([0, 3, 2, 0, 1, 0]);
     expect(f.fingers).toEqual([null, 3, 2, null, 1, null]);
     expect(f.indexSpan).toBe(0);
-    expect(f.stretchSpan).toBe(2); // 3 - 1
+    // Stretch fingers (2-4) fret frets {2, 3} → range 1. (Previously computed
+    // via `fingers[fret]`, which read the open string's slot and gave 2.)
+    expect(f.stretchSpan).toBe(1);
     expect(f.position).toBe(1);
   });
 
@@ -71,6 +73,20 @@ describe('detectFingers', () => {
   it('treats open strings as non-fretted', () => {
     const f = detectFingers([0, 3, 2, 0, 1, 0]);
     expect(f.fingers.filter((x) => x !== null).length).toBe(3);
+  });
+
+  it('computes spans correctly for shapes high up the neck (fret ≥ 6)', () => {
+    // Regression: the span loops previously indexed `fingers[fret]` — with 6
+    // strings, any fret ≥ 6 read `undefined`, so high-fret shapes silently
+    // lost their index/stretch spans. The array must be indexed by *string*.
+    // Shape: barre at 7 (strings 0-1), fingers 2-4 fretting 9, 9, 10.
+    const f = detectFingers([7, 7, 9, 9, 10, 7]);
+    expect(f.position).toBe(7);
+    expect(f.fingers).toEqual([1, 1, 2, 3, 4, 1]);
+    // Index finger (1) covers fret 7 only — one stop.
+    expect(f.indexSpan).toBe(0);
+    // Stretch fingers (2-4) span frets 9 → 10.
+    expect(f.stretchSpan).toBe(1);
   });
 });
 
