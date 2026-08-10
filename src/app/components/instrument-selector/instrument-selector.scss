@@ -227,21 +227,6 @@
   gap: 2px;
 }
 
-.icon-action {
-  @include icon-button(var(--ctrl-h-sm));
-  border: 0;
-  border-radius: var(--r-sm);
-  background: transparent;
-
-  .material-symbols-outlined {
-    font-size: var(--text-md);
-  }
-}
-
-.delete-action:hover {
-  color: var(--danger);
-}
-
 .empty-message {
   margin: 0;
   padding: var(--space-2);

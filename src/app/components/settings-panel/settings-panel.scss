@@ -61,10 +61,6 @@
   text-transform: uppercase;
 }
 
-.close-button {
-  @include icon-button();
-}
-
 .settings-content {
   overflow-y: auto;
   padding: var(--space-6) var(--space-5);
@@ -260,14 +256,6 @@ input[type='color'] {
   }
 }
 
-.reset-btn {
-  @include icon-button();
-
-  .material-symbols-outlined {
-    font-size: var(--text-md);
-  }
-}
-
 .tuner-settings {
   display: grid;
   gap: var(--space-5);
@@ -326,10 +314,6 @@ input[type='color'] {
   .custom-copy {
     grid-column: auto;
   }
-}
-
-.toggle-button {
-  @include toggle-switch();
 }
 
 .in-tune-color,

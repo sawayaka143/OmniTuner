@@ -1,6 +1,7 @@
 import { Component, input, output } from '@angular/core';
 import { AccidentalPreference } from '../../models/scale-preferences.model';
 import { midiDisplayName } from '../../data/note-display-names';
+import { IconButton } from '../../ui/icon-button/icon-button';
 
 export interface TuningOption {
   readonly id: string;
@@ -13,6 +14,7 @@ export interface TuningOption {
   selector: 'app-tuning-selector',
   templateUrl: './tuning-selector.html',
   styleUrl: './tuning-selector.scss',
+  imports: [IconButton],
 })
 export class TuningSelector {
   readonly presets = input.required<readonly TuningOption[]>();

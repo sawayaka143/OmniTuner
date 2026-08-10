@@ -116,31 +116,21 @@
 
           <div class="toggle-row">
             <span class="toggle-label">allow inversions</span>
-            <button
-              class="toggle-button"
-              type="button"
-              role="switch"
-              [attr.aria-checked]="allowInversions()"
-              [class.active]="allowInversions()"
-              aria-label="allow inversions"
+            <app-toggle
+              [checked]="allowInversions()"
+              label="allow inversions"
               title="search rule — press Generate to apply"
-              (click)="allowInversions.set(!allowInversions())">
-              <span class="toggle-lamp" aria-hidden="true"></span>
-            </button>
+              (change)="allowInversions.set($event)"
+            />
           </div>
           <div class="toggle-row">
             <span class="toggle-label">allow muted string gaps</span>
-            <button
-              class="toggle-button"
-              type="button"
-              role="switch"
-              [attr.aria-checked]="allowGaps()"
-              [class.active]="allowGaps()"
-              aria-label="allow muted string gaps"
+            <app-toggle
+              [checked]="allowGaps()"
+              label="allow muted string gaps"
               title="search rule — press Generate to apply"
-              (click)="allowGaps.set(!allowGaps())">
-              <span class="toggle-lamp" aria-hidden="true"></span>
-            </button>
+              (change)="allowGaps.set($event)"
+            />
           </div>
           <p class="rule-description">
             inversions off → the lowest sounding note must be the chord root · gaps off → sounding

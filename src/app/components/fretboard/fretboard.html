@@ -30,12 +30,15 @@
         }
       </div>
 
-      @for (row of cells(); track $index; let stringIndex = $index) {
+      @for (row of cells(); track row[0].stringIndex; let stringIndex = $index) {
         <div class="string-row">
           <div
-            class="open-note fret-cell has-nut"
+            class="open-note fret-cell"
             [style.--string-weight.px]="0.8 + stringIndex * 0.42"
-            [attr.aria-label]="'Open string: ' + row[0].noteName"
+            [attr.role]="!row[0].interval && !showOutsideScale() ? 'img' : null"
+            [attr.aria-label]="
+              !row[0].interval && !showOutsideScale() ? 'Open string: ' + row[0].noteName : null
+            "
           >
             @if (row[0].interval) {
               <button

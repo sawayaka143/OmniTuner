@@ -1,0 +1,21 @@
+@use '../../styles' as *;
+
+.toggle-button {
+  @include toggle-switch();
+
+  &.inline {
+    @include toggle-switch($with-label: true);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toggle-button,
+  .toggle-lamp {
+    transition-duration: 0.01ms;
+  }
+}

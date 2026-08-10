@@ -1,6 +1,7 @@
 import { Component, computed, input, output } from '@angular/core';
 import { Instrument, Tuning } from '../../models/instrument.model';
 import { TunerMode } from '../../models/tuner-preferences.model';
+import { IconButton } from '../../ui/icon-button/icon-button';
 
 interface ModeOption {
   readonly value: TunerMode;
@@ -11,6 +12,7 @@ interface ModeOption {
   selector: 'app-instrument-selector',
   templateUrl: './instrument-selector.html',
   styleUrl: './instrument-selector.scss',
+  imports: [IconButton],
 })
 export class InstrumentSelector {
   readonly instruments = input.required<readonly Instrument[]>();
@@ -67,13 +69,11 @@ export class InstrumentSelector {
     this.newInstrument.emit();
   }
 
-  protected requestEdit(event: MouseEvent, tuningId: string): void {
-    event.stopPropagation();
+  protected requestEdit(tuningId: string): void {
     this.editCustomTuning.emit(tuningId);
   }
 
-  protected requestDelete(event: MouseEvent, tuningId: string): void {
-    event.stopPropagation();
+  protected requestDelete(tuningId: string): void {
     this.deleteCustomTuning.emit(tuningId);
   }
 

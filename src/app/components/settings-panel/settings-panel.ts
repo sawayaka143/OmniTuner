@@ -20,6 +20,8 @@ import {
   TunerSettings,
   TunerStartupMode,
 } from '../../models/tuner-preferences.model';
+import { Toggle } from '../../ui/toggle/toggle';
+import { IconButton } from '../../ui/icon-button/icon-button';
 
 interface AccentOption {
   readonly name: string;
@@ -35,6 +37,7 @@ interface StartupModeOption {
   selector: 'app-settings-panel',
   templateUrl: './settings-panel.html',
   styleUrl: './settings-panel.scss',
+  imports: [Toggle, IconButton],
 })
 export class SettingsPanel {
   readonly open = input(false);
@@ -136,18 +139,6 @@ export class SettingsPanel {
   protected chooseStartupMode(value: TunerStartupMode): void {
     if (this.tunerSettings().startupMode === value) return;
     this.startupModeChange.emit(value);
-  }
-
-  protected toggleInTuneEnabled(): void {
-    this.inTuneEnabledChange.emit(!this.tunerSettings().inTune.enabled);
-  }
-
-  protected toggleInTuneSound(): void {
-    this.inTuneSoundChange.emit(!this.tunerSettings().inTune.sound);
-  }
-
-  protected toggleInTuneGlow(): void {
-    this.inTuneGlowChange.emit(!this.tunerSettings().inTune.glow);
   }
 
   protected chooseInTuneColor(value: string): void {

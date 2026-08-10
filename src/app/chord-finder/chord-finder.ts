@@ -28,6 +28,7 @@ import {
   VoicingShape,
 } from '../utils/chord-voicing';
 import { DiagramLabelMode, DiagramView, NeckDiagram } from './neck-diagram/neck-diagram';
+import { Toggle } from '../ui/toggle/toggle';
 
 interface TuningOption {
   readonly id: string;
@@ -72,7 +73,7 @@ const mod12 = (value: number): number => ((value % 12) + 12) % 12;
 
 @Component({
   selector: 'app-chord-finder',
-  imports: [NeckDiagram],
+  imports: [NeckDiagram, Toggle],
   templateUrl: './chord-finder.html',
   styleUrl: './chord-finder.scss',
   host: {

@@ -117,24 +117,25 @@
                     <span>{{ tuning.label }}</span>
                   </button>
                   <div class="custom-actions" aria-label="Custom tuning actions">
-                    <button
-                      class="icon-action"
-                      type="button"
-                      [attr.aria-label]="'Edit ' + tuning.label"
-                      [title]="'Edit ' + tuning.label"
-                      (click)="requestEdit($event, tuning.id)"
-                    >
-                      <span class="material-symbols-outlined" aria-hidden="true">edit</span>
-                    </button>
-                    <button
-                      class="icon-action delete-action"
-                      type="button"
-                      [attr.aria-label]="'Delete ' + tuning.label"
-                      [title]="'Delete ' + tuning.label"
-                      (click)="requestDelete($event, tuning.id)"
-                    >
-                      <span class="material-symbols-outlined" aria-hidden="true">delete</span>
-                    </button>
+                    <app-icon-button
+                      icon="edit"
+                      [label]="'Edit ' + tuning.label"
+                      [showTitle]="true"
+                      [stopClickPropagation]="true"
+                      variant="ghost"
+                      size="sm"
+                      (activate)="requestEdit(tuning.id)"
+                    />
+                    <app-icon-button
+                      icon="delete"
+                      [label]="'Delete ' + tuning.label"
+                      [showTitle]="true"
+                      [stopClickPropagation]="true"
+                      variant="ghost"
+                      size="sm"
+                      [danger]="true"
+                      (activate)="requestDelete(tuning.id)"
+                    />
                   </div>
                 </li>
               }

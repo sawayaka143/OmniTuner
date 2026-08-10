@@ -88,13 +88,10 @@
     }
   </div>
 
-  <button
-    class="toggle-button"
-    type="button"
-    [class.active]="showOutsideScale()"
-    [attr.aria-pressed]="showOutsideScale()"
-    (click)="showOutsideScaleChange.emit(!showOutsideScale())">
-    <span class="toggle-lamp" aria-hidden="true"></span>
-    Outside scale
-  </button>
+  <app-toggle
+    [checked]="showOutsideScale()"
+    label="Outside scale"
+    [inline]="true"
+    (change)="showOutsideScaleChange.emit($event)"
+  />
 </div>

@@ -243,7 +243,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .fretboard-scale-frame,
-  .fretboard {
+  .fretboard,
+  .fret-dot {
     transition: none;
   }
 

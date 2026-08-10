@@ -63,35 +63,6 @@
   min-width: 0;
 }
 
-.saved-action {
-  @include icon-button(var(--ctrl-h-sm));
-  width: auto;
-  height: auto;
-  min-width: var(--ctrl-h-md);
-  border: 0;
-  border-radius: var(--r-sm);
-  background: transparent;
-
-  .material-symbols-outlined {
-    font-size: var(--text-md);
-  }
-
-  &:hover,
-  &:focus-visible {
-    background: var(--surface-container-high);
-    color: var(--text);
-  }
-
-  &:active {
-    transform: scale(0.92);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--border-active);
-    outline-offset: -2px;
-  }
-}
-
 .create-option {
   color: var(--text);
 }

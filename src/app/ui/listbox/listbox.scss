@@ -1,0 +1,23 @@
+@use '../../styles' as *;
+
+.dropdown-wrapper {
+  position: relative;
+}
+
+.btn {
+  @include dropdown-trigger();
+  @include dropdown-trigger-content();
+}
+
+.dropdown-menu {
+  @include dropdown-menu();
+}
+
+.dropdown-group {
+  @include micro-label();
+  padding: var(--space-2) var(--space-2) var(--space-1);
+}
+
+.dropdown-item {
+  @include dropdown-item();
+}

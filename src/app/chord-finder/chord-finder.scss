@@ -164,10 +164,6 @@ select.field {
   font-size: var(--text-xs);
 }
 
-.toggle-button {
-  @include toggle-switch();
-}
-
 .tiny-note {
   margin: var(--space-2) 0 0;
   color: var(--text-dim);
@@ -503,10 +499,5 @@ select.field {
 @media (prefers-reduced-motion: reduce) {
   .chord-block {
     animation-duration: 0.01ms;
-  }
-
-  .toggle-button,
-  .toggle-lamp {
-    transition-duration: 0.01ms;
   }
 }

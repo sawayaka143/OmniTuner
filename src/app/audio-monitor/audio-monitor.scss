@@ -9,12 +9,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
   width: 100%;
-  padding: var(--space-4) 0 var(--space-8);
-  gap: var(--space-6);
+  padding: var(--space-8) var(--space-6) calc(var(--space-7) * 2);
+  gap: var(--space-7);
   position: relative;
-  box-sizing: border-box;
 }
 
 .tuner-stage {
@@ -26,8 +24,6 @@
   flex-direction: column;
   align-items: center;
   gap: var(--space-5);
-  padding: 0 var(--space-6);
-  box-sizing: border-box;
   /* Fixed distance below the controls block — identical on desktop
      and mobile (added on top of .app-main's gap). */
   margin-top: calc(var(--space-7) * 2);
@@ -58,7 +54,7 @@
   border-radius: 50%;
   opacity: 0;
   transform: translate(-50%, -50%);
-  animation: lock-pulse 0.85s var(--ease-spring) forwards;
+  animation: lock-pulse 0.9s var(--ease-spring) forwards;
 }
 
 @keyframes lock-pulse {
@@ -93,14 +89,13 @@
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 760px) {
   .app-main {
-    padding: var(--space-2) 0 var(--space-3);
+    padding: var(--space-7) var(--space-4) var(--space-8);
   }
 
   .tuner-stage {
     gap: var(--space-4);
-    padding: 0 var(--space-4);
   }
 }
 
