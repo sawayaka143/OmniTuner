@@ -131,6 +131,25 @@ export class ChordFeedbackStore {
     return this.pinsSignal().map((e) => e.features);
   }
 
+  /**
+   * JSON string of every pinned voicing for the offline ML pipeline
+   * (scripts/train_model.py consumes this file).
+   */
+  exportTrainingData(): string {
+    const payload = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      pins: this.pinsSignal().map((e) => ({
+        tuning: e.tuning,
+        chord: e.chord,
+        frets: e.frets,
+        at: e.at,
+        features: e.features,
+      })),
+    };
+    return JSON.stringify(payload, null, 2);
+  }
+
   /** Toggle a pin: add it, or remove it if already pinned. */
   togglePin(tuning: ParsedTuning, chord: ParsedChord, shape: VoicingShape): void {
     const key = this.key(tuning, chord, shape.frets);

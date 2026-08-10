@@ -455,6 +455,13 @@
   }
 }
 
+/* Dropdown menus inside the control rail span their trigger width so they
+   align with the two-column rows (mirrors RootNotePicker). */
+.control-section .dropdown-menu {
+  left: 0;
+  width: 100%;
+}
+
 .rule-description {
   margin: var(--space-1) 0 var(--space-2);
   color: var(--text-dim);

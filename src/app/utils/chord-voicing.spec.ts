@@ -125,6 +125,33 @@ describe('searchChord', () => {
     const first = openF[0];
     expect(first.position).toBeLessThan(4);
   });
+
+  it('voices extended chords by covering required tones, with optional tones ringable', () => {
+    // C13 has 7 tones — impossible to ring all on 6 strings. The required
+    // guide tones (C E G Bb D) must all ring; the 11th (F) and 13th (A) may.
+    const c13 = chord('C13');
+    const requiredPcs = [0, 4, 7, 10, 2];
+    const shapes = searchChord(tuning, c13, baseOptions);
+    expect(shapes.length).toBeGreaterThan(0);
+    for (const shape of shapes) {
+      const pcs = new Set(shape.sounding.map((n) => n.midi % 12));
+      for (const pc of requiredPcs) expect(pcs.has(pc)).toBe(true);
+    }
+  });
+
+  it('lets optional tones ring where they are cheap to include', () => {
+    // C7#11's ♯11 (F#, pc 6) is optional — it sits at low-E fret 2, a cheap
+    // note, so at least one top-5 voicing should include it while the C7
+    // guide tones (C E G Bb) still ring.
+    const c7sharp11 = chord('C7#11');
+    const shapes = searchChord(tuning, c7sharp11, baseOptions);
+    expect(shapes.length).toBeGreaterThan(0);
+    for (const shape of shapes) {
+      const pcs = new Set(shape.sounding.map((n) => n.midi % 12));
+      for (const pc of [0, 4, 7, 10]) expect(pcs.has(pc)).toBe(true);
+    }
+    expect(shapes.some((s) => s.sounding.some((n) => n.midi % 12 === 6))).toBe(true);
+  });
 });
 
 describe('searchChord hard constraints', () => {

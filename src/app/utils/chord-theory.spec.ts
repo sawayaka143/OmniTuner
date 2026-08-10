@@ -81,11 +81,76 @@ describe('parseChord', () => {
     expect(delta.ok && delta.chord.quality).toBe('maj7');
   });
 
+  it('parses the new extended chord families', () => {
+    const maj9 = parseChord('Cmaj9');
+    expect(maj9.ok && maj9.chord.quality).toBe('maj9');
+    expect(maj9.ok && maj9.chord.pcs).toEqual([0, 4, 7, 11, 2]);
+    expect(maj9.ok && maj9.chord.optionalPcs).toEqual([]);
+
+    const thirteen = parseChord('C13');
+    expect(thirteen.ok && thirteen.chord.quality).toBe('13');
+    expect(thirteen.ok && thirteen.chord.pcs).toEqual([0, 4, 7, 10, 2, 5, 9]);
+    // 11th (F) and 13th (A) are optional; guide tones are required.
+    expect(thirteen.ok && thirteen.chord.optionalPcs).toEqual([5, 9]);
+
+    const b13 = parseChord('C7b13');
+    expect(b13.ok && b13.chord.quality).toBe('7b13');
+    expect(b13.ok && b13.chord.optionalPcs).toEqual([8]);
+
+    const m6s9 = parseChord('Cm6/9');
+    expect(m6s9.ok && m6s9.chord.quality).toBe('m6/9');
+    expect(m6s9.ok && m6s9.chord.pcs).toEqual([0, 3, 7, 9, 2]);
+
+    const mM9 = parseChord('Cm(maj9)');
+    expect(mM9.ok && mM9.chord.quality).toBe('mMaj9');
+
+    const halfDim9 = parseChord('Cø9');
+    expect(halfDim9.ok && halfDim9.chord.quality).toBe('ø9');
+
+    const sus13 = parseChord('C13sus4');
+    expect(sus13.ok && sus13.chord.quality).toBe('13sus4');
+    expect(sus13.ok && sus13.chord.optionalPcs).toEqual([9]);
+
+    const add11 = parseChord('Cadd11');
+    expect(add11.ok && add11.chord.quality).toBe('add11');
+    const madd9 = parseChord('Cmadd9');
+    expect(madd9.ok && madd9.chord.quality).toBe('madd9');
+  });
+
+  it('normalizes unicode accidentals in quality symbols', () => {
+    const sharp11 = parseChord('Cmaj7♯11');
+    expect(sharp11.ok && sharp11.chord.quality).toBe('maj7#11');
+    expect(sharp11.ok && sharp11.chord.optionalPcs).toEqual([6]);
+
+    const flat9 = parseChord('C7♭9');
+    expect(flat9.ok && flat9.chord.quality).toBe('7b9');
+  });
+
+  it('composes arbitrary alteration combinations', () => {
+    const b5b9 = parseChord('C7b5b9');
+    expect(b5b9.ok && b5b9.chord.intervals).toEqual([0, 4, 6, 10, 13]);
+
+    const sharp = parseChord('C7#9b13');
+    expect(sharp.ok && sharp.chord.intervals).toEqual([0, 4, 7, 10, 15, 20]);
+    expect(sharp.ok && sharp.chord.optionalPcs).toEqual([8]);
+
+    const all = parseChord('C7b5#9b13#11');
+    expect(all.ok && all.chord.intervals).toEqual([0, 4, 6, 10, 15, 18, 20]);
+    expect(all.ok && all.chord.optionalPcs).toEqual([6, 8]);
+
+    // Theoretical minor with ♭9 (user's spec: Cm♭9 = C Eb G Bb Db — a
+    // minor triad plus ♭9, no 7th).
+    const theoretical = parseChord('Cm♭9');
+    expect(theoretical.ok && theoretical.chord.intervals).toEqual([0, 3, 7, 13]);
+  });
+
   it('rejects unknown qualities and non-symbols', () => {
     const bad = parseChord('Cfoo');
     expect(bad.ok).toBe(false);
     const notAChord = parseChord('123');
     expect(notAChord.ok).toBe(false);
+    const gibberish = parseChord('C7x9');
+    expect(gibberish.ok).toBe(false);
   });
 });
 
@@ -96,6 +161,11 @@ describe('tokenizeProgression', () => {
 
   it('falls back to whitespace splitting', () => {
     expect(tokenizeProgression('Cm Gmaj Bb7')).toEqual(['Cm', 'Gmaj', 'Bb7']);
+  });
+
+  it('keeps 6/9 chords as a single token', () => {
+    expect(tokenizeProgression('C6/9, Fmaj7')).toEqual(['C6/9', 'Fmaj7']);
+    expect(tokenizeProgression('Cm6/9')).toEqual(['Cm6/9']);
   });
 });
 

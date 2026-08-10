@@ -47,23 +47,30 @@
             >02 · Key context <span class="label-sub">(tracking / labelling)</span></span
           >
           <div class="row-2">
-            <app-text-field
-              label="scale root"
-              [value]="scaleRootText()"
-              placeholder="C"
-              (valueChange)="scaleRootText.set($event)"
+            <app-listbox
+              [options]="rootNotes"
+              [value]="scaleRoot()"
+              ariaLabel="Scale root"
+              [triggerLabel]="scaleRoot()"
+              triggerKicker="root"
+              [optionLabel]="identityFn"
+              [optionAlt]="rootAltFn"
+              [trackByFn]="identityFn"
+              [open]="rootListOpen()"
+              (toggle)="toggleRootList()"
+              (select)="onScaleRootSelect($event)"
             />
             <app-listbox
               [options]="modeNames"
               [value]="modeName()"
               ariaLabel="Mode"
-              triggerLabel="Aeolian"
+              [triggerLabel]="modeName()"
               triggerKicker="mode"
               [optionLabel]="identityFn"
               [trackByFn]="identityFn"
               [open]="modeListOpen()"
               (toggle)="toggleModeList()"
-              (select)="modeName.set($event)"
+              (select)="onModeSelect($event)"
             />
           </div>
         </div>
@@ -190,6 +197,9 @@
               {{ copied() ? 'copied ✓' : 'copy tab' }}
             </button>
             <button class="btn small" type="button" (click)="clearResults()">clear</button>
+            <button class="btn small" type="button" (click)="exportTrainingData()">
+              export ML data
+            </button>
           </div>
         </div>
 

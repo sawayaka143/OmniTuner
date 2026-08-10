@@ -18,12 +18,79 @@ export const DEGREE_LABELS: readonly string[] = [
 
 const PC_LETTER: Readonly<Record<string, number>> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
 
-export const CHORD_FORMULAS: Readonly<Record<string, readonly number[]>> = {
-  maj: [0, 4, 7], min: [0, 3, 7], '7': [0, 4, 7, 10], maj7: [0, 4, 7, 11],
-  m7: [0, 3, 7, 10], mMaj7: [0, 3, 7, 11], dim: [0, 3, 6], dim7: [0, 3, 6, 9],
-  m7b5: [0, 3, 6, 10], aug: [0, 4, 8], sus2: [0, 2, 7], sus4: [0, 5, 7],
-  '6': [0, 4, 7, 9], m6: [0, 3, 7, 9], '9': [0, 4, 7, 10, 14], m9: [0, 3, 7, 10, 14],
-  add9: [0, 4, 7, 14], '5': [0, 7],
+/**
+ * A chord's interval formula. `intervals` are semitone offsets above the root
+ * (9th = 14, 11th = 17, 13th = 21). `optional` tones (11ths/13ths of extended
+ * chords) may be omitted from a voicing when there aren't enough strings —
+ * guide tones (1, 3, 5, 7, 9) must always ring.
+ */
+export interface ChordFormula {
+  readonly intervals: readonly number[];
+  readonly optional?: readonly number[];
+}
+
+export const CHORD_FORMULAS: Readonly<Record<string, ChordFormula>> = {
+  // Major family
+  maj: { intervals: [0, 4, 7] },
+  '6': { intervals: [0, 4, 7, 9] },
+  '6/9': { intervals: [0, 4, 7, 9, 14] },
+  maj7: { intervals: [0, 4, 7, 11] },
+  maj9: { intervals: [0, 4, 7, 11, 14] },
+  maj11: { intervals: [0, 4, 7, 11, 14, 17], optional: [17] },
+  maj13: { intervals: [0, 4, 7, 11, 14, 17, 21], optional: [17, 21] },
+  'maj7#11': { intervals: [0, 4, 7, 11, 18], optional: [18] },
+  'maj13#11': { intervals: [0, 4, 7, 11, 14, 18, 21], optional: [18, 21] },
+  'maj7#5': { intervals: [0, 4, 8, 11] },
+  'maj9#5': { intervals: [0, 4, 8, 11, 14] },
+
+  // Dominant family
+  '7': { intervals: [0, 4, 7, 10] },
+  '9': { intervals: [0, 4, 7, 10, 14] },
+  '11': { intervals: [0, 4, 7, 10, 14, 17], optional: [17] },
+  '13': { intervals: [0, 4, 7, 10, 14, 17, 21], optional: [17, 21] },
+  '7b5': { intervals: [0, 4, 6, 10] },
+  '7#5': { intervals: [0, 4, 8, 10] },
+  '7b9': { intervals: [0, 4, 7, 10, 13] },
+  '7#9': { intervals: [0, 4, 7, 10, 15] },
+  '7#11': { intervals: [0, 4, 7, 10, 18], optional: [18] },
+  '7b13': { intervals: [0, 4, 7, 10, 20], optional: [20] },
+  '9#11': { intervals: [0, 4, 7, 10, 14, 18], optional: [18] },
+  '13b9': { intervals: [0, 4, 7, 10, 13, 21], optional: [21] },
+  '7#9b13': { intervals: [0, 4, 7, 10, 15, 20], optional: [20] },
+
+  // Minor family
+  min: { intervals: [0, 3, 7] },
+  m6: { intervals: [0, 3, 7, 9] },
+  'm6/9': { intervals: [0, 3, 7, 9, 14] },
+  m7: { intervals: [0, 3, 7, 10] },
+  m9: { intervals: [0, 3, 7, 10, 14] },
+  m11: { intervals: [0, 3, 7, 10, 14, 17], optional: [17] },
+  m13: { intervals: [0, 3, 7, 10, 14, 17, 21], optional: [17, 21] },
+  mMaj7: { intervals: [0, 3, 7, 11] },
+  mMaj9: { intervals: [0, 3, 7, 11, 14] },
+  mMaj11: { intervals: [0, 3, 7, 11, 14, 17], optional: [17] },
+  mMaj13: { intervals: [0, 3, 7, 11, 14, 17, 21], optional: [17, 21] },
+  m7b5: { intervals: [0, 3, 6, 10] },
+
+  // Diminished / augmented / suspended / add / power
+  dim: { intervals: [0, 3, 6] },
+  dim7: { intervals: [0, 3, 6, 9] },
+  'ø9': { intervals: [0, 3, 6, 10, 14] },
+  aug: { intervals: [0, 4, 8] },
+  '9#5': { intervals: [0, 4, 8, 10, 14] },
+  sus2: { intervals: [0, 2, 7] },
+  sus4: { intervals: [0, 5, 7] },
+  '7sus2': { intervals: [0, 2, 7, 10] },
+  '7sus4': { intervals: [0, 5, 7, 10] },
+  maj7sus4: { intervals: [0, 5, 7, 11] },
+  '9sus4': { intervals: [0, 5, 7, 10, 14] },
+  '13sus4': { intervals: [0, 5, 7, 10, 14, 21], optional: [21] },
+  '6sus4': { intervals: [0, 5, 7, 9] },
+  add9: { intervals: [0, 4, 7, 14] },
+  add11: { intervals: [0, 4, 7, 17] },
+  madd9: { intervals: [0, 3, 7, 14] },
+  madd11: { intervals: [0, 3, 7, 17] },
+  '5': { intervals: [0, 7] },
 };
 
 const QUALITY_ALIASES: Readonly<Record<string, string>> = {
@@ -40,6 +107,42 @@ const QUALITY_ALIASES: Readonly<Record<string, string>> = {
   '6': '6', add6: '6', m6: 'm6',
   '9': '9', m9: 'm9', add9: 'add9', add2: 'add9',
   '5': '5', pow: '5',
+
+  // Major family
+  maj9: 'maj9', M9: 'maj9', 'Δ9': 'maj9', delta9: 'maj9',
+  maj11: 'maj11', M11: 'maj11', 'Δ11': 'maj11', delta11: 'maj11',
+  maj13: 'maj13', M13: 'maj13', 'Δ13': 'maj13', delta13: 'maj13',
+  'maj7#11': 'maj7#11', 'M7#11': 'maj7#11', 'Δ7#11': 'maj7#11',
+  'maj13#11': 'maj13#11', 'M13#11': 'maj13#11', 'Δ13#11': 'maj13#11',
+  'maj7#5': 'maj7#5', 'M7#5': 'maj7#5', 'Δ7#5': 'maj7#5', 'maj7+5': 'maj7#5',
+  'maj9#5': 'maj9#5', 'M9#5': 'maj9#5', 'Δ9#5': 'maj9#5', '9+5': 'maj9#5',
+  maj6: '6',
+  '6/9': '6/9', '69': '6/9', '6add9': '6/9',
+  'm6/9': 'm6/9', 'm69': 'm6/9', 'm6add9': 'm6/9',
+
+  // Dominant family
+  '11': '11', '13': '13',
+  '7b5': '7b5', '7#5': '7#5', '+7': '7#5', aug7: '7#5',
+  '7b9': '7b9', '7#9': '7#9', '7#11': '7#11', '7b13': '7b13',
+  '9#11': '9#11', '13b9': '13b9', '7#9b13': '7#9b13',
+
+  // Minor family
+  m11: 'm11', m13: 'm13',
+  mMaj9: 'mMaj9', mM9: 'mMaj9', 'm(maj9)': 'mMaj9', 'mΔ9': 'mMaj9', 'm(M9)': 'mMaj9',
+  mMaj11: 'mMaj11', mM11: 'mMaj11', 'm(maj11)': 'mMaj11', 'mΔ11': 'mMaj11',
+  mMaj13: 'mMaj13', mM13: 'mMaj13', 'm(maj13)': 'mMaj13', 'mΔ13': 'mMaj13',
+
+  // Diminished / augmented / suspended / add
+  'ø9': 'ø9', halfdim9: 'ø9',
+  '7sus2': '7sus2', '7sus': '7sus4', '7sus4': '7sus4',
+  maj7sus4: 'maj7sus4', M7sus4: 'maj7sus4', 'Δ7sus4': 'maj7sus4',
+  '9sus4': '9sus4', '9sus': '9sus4',
+  '13sus4': '13sus4', '13sus': '13sus4',
+  '6sus4': '6sus4',
+  add11: 'add11', add4: 'add11',
+  madd9: 'madd9', madd11: 'madd11', madd4: 'madd11',
+  '+maj7': 'maj7#5', augmaj7: 'maj7#5',
+  'Δ': 'maj7',
 };
 
 export type ModeName =
@@ -122,12 +225,109 @@ export interface ParsedChord {
   readonly quality: string;
   readonly intervals: readonly number[];
   readonly pcs: readonly number[];
+  /** Pitch classes that a voicing may omit (11ths/13ths of extended chords). */
+  readonly optionalPcs: readonly number[];
   readonly flats: boolean;
 }
 
 export type ChordParseResult =
   | { readonly ok: true; readonly chord: ParsedChord }
   | { readonly ok: false; readonly symbol: string; readonly error: string };
+
+const normalizeQuality = (raw: string): string =>
+  raw.replace(/♯/g, '#').replace(/♭/g, 'b').toLowerCase();
+
+const ALTERATION_RE = /(?:b|#)?(?:5|9|11|13)|add(?:9|11)/g;
+
+interface ComposedQuality {
+  readonly key: string;
+  readonly intervals: number[];
+  readonly optional: number[];
+}
+
+/**
+ * Compositional chord-quality parser: resolves symbols not in `QUALITY_ALIASES`
+ * by matching the longest `CHORD_FORMULAS` key as a base, then applying
+ * alteration/extension tokens. This makes every dominant combination
+ * (`7b5#9b13`, `7#5#11`, `13b9b5`, …) and theoretical minors (`m7b9`) parse
+ * without an explicit table entry. Returns null when the suffix can't be
+ * consumed — the caller reports it as an unknown quality.
+ */
+function composeQuality(raw: string): ComposedQuality | null {
+  const normalized = normalizeQuality(raw);
+  if (!normalized) return null;
+
+  let baseKey: string | null = null;
+  let prefixLength = 0;
+  for (const key of Object.keys(CHORD_FORMULAS)) {
+    if (normalized.startsWith(key) && (baseKey === null || key.length > baseKey.length)) {
+      baseKey = key;
+      prefixLength = key.length;
+    }
+  }
+  if (baseKey === null && normalized.startsWith('m')) {
+    // `m` is an alias for `min`, not a formula key — theoretical minor
+    // alterations like `m♭9` (min + b9) still compose.
+    baseKey = 'min';
+    prefixLength = 1;
+  }
+  if (baseKey === null) return null;
+
+  const base = CHORD_FORMULAS[baseKey];
+  const remainder = normalized.slice(prefixLength);
+  const intervals = [...base.intervals];
+  const optional = [...(base.optional ?? [])];
+  const tokens: string[] = [];
+  let match: RegExpExecArray | null;
+  let cursor = 0;
+  ALTERATION_RE.lastIndex = 0;
+  while ((match = ALTERATION_RE.exec(remainder)) !== null) {
+    if (match.index !== cursor) return null; // unconsumed garbage between tokens
+    tokens.push(match[0]);
+    cursor = ALTERATION_RE.lastIndex;
+  }
+  if (cursor !== remainder.length) return null; // trailing garbage
+
+  const drop = (value: number): void => {
+    const i = intervals.indexOf(value);
+    if (i >= 0) intervals.splice(i, 1);
+  };
+  const removeOptional = (value: number): void => {
+    const i = optional.indexOf(value);
+    if (i >= 0) optional.splice(i, 1);
+  };
+  const add = (value: number): void => {
+    if (!intervals.includes(value)) intervals.push(value);
+  };
+  /** Add an extension tone that a voicing may omit (11th/13th color tones). */
+  const addOptional = (value: number): void => {
+    add(value);
+    if (!optional.includes(value)) optional.push(value);
+  };
+
+  for (const token of tokens) {
+    switch (token) {
+      case 'b5': drop(7); add(6); removeOptional(6); break;
+      case '#5': drop(7); add(8); removeOptional(8); break;
+      case 'b9': drop(14); add(13); break;
+      case '#9': drop(14); add(15); break;
+      case '9': drop(13); drop(15); add(14); break;
+      case '11': addOptional(17); break;
+      case '#11': addOptional(18); break;
+      case '13': addOptional(21); break;
+      case 'b13': addOptional(20); break;
+      case 'add9': add(14); break;
+      case 'add11': addOptional(17); break;
+      default: break;
+    }
+  }
+
+  return {
+    key: `${baseKey}${tokens.join('')}`,
+    intervals: [...new Set(intervals)].sort((a, b) => a - b),
+    optional: [...new Set(optional)].sort((a, b) => a - b),
+  };
+}
 
 /** Parses a chord symbol like `Bb7`, `Cm`, `F#m7b5`. */
 export function parseChord(raw: string): ChordParseResult {
@@ -144,14 +344,26 @@ export function parseChord(raw: string): ChordParseResult {
   let quality: string | undefined;
   if (hasAlias(qualityRaw)) quality = QUALITY_ALIASES[qualityRaw];
   else if (hasAlias(qualityRaw.toLowerCase())) quality = QUALITY_ALIASES[qualityRaw.toLowerCase()];
-  if (!quality) {
+  let formula: ChordFormula | undefined;
+  if (quality) formula = CHORD_FORMULAS[quality];
+  if (!formula) {
+    // Fall back to compositional parsing for arbitrary alteration combos
+    // (e.g. `7b5#9b13`), whose key isn't a CHORD_FORMULAS entry.
+    const composed = composeQuality(qualityRaw);
+    if (composed) {
+      quality = composed.key;
+      formula = { intervals: composed.intervals, optional: composed.optional };
+    }
+  }
+  if (!quality || !formula) {
     return {
       ok: false,
       symbol,
       error: `unknown chord quality '${qualityRaw || '(none)'}' in '${symbol}'`,
     };
   }
-  const intervals = CHORD_FORMULAS[quality];
+  const intervals = formula.intervals;
+  const optionalIntervals = formula.optional ?? [];
   return {
     ok: true,
     chord: {
@@ -160,6 +372,7 @@ export function parseChord(raw: string): ChordParseResult {
       quality,
       intervals,
       pcs: intervals.map((interval) => mod12(rootPc + interval)),
+      optionalPcs: optionalIntervals.map((interval) => mod12(rootPc + interval)),
       flats: match[2] === 'b' || match[2] === '♭',
     },
   };
@@ -168,7 +381,9 @@ export function parseChord(raw: string): ChordParseResult {
 /** Splits a progression string into chord tokens (`, ; | /` or spaces). */
 export function tokenizeProgression(raw: string): string[] {
   const trimmed = String(raw).trim();
-  const tokens = trimmed.split(/[,;|/]/).map((t) => t.trim()).filter(Boolean);
+  // `/` is a separator only when NOT followed by a digit, so `C6/9`/`m6/9`
+  // stay one token while `C/G` and `Bb7 / Fm` still split.
+  const tokens = trimmed.split(/[,;|]|\/(?![0-9])/).map((t) => t.trim()).filter(Boolean);
   if (tokens.length <= 1 && /\s/.test(trimmed)) return trimmed.split(/\s+/).filter(Boolean);
   return tokens;
 }

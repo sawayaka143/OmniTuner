@@ -117,6 +117,10 @@ export function searchChord(
 ): VoicingShape[] {
   const n = tuning.midi.length;
   const pcs = new Set(chord.pcs);
+  // Optional tones (11ths/13ths of extended chords) may ring but needn't be
+  // covered — a 13th chord must still voice on 6 strings.
+  const optional = new Set(chord.optionalPcs);
+  const required = new Set(chord.pcs.filter((pc) => !optional.has(pc)));
 
   // Candidate frets per string that produce a chord tone.
   const candidates: number[][] = [];
@@ -154,7 +158,7 @@ export function searchChord(
 
   const dfs = (s: number, voiced: number, gapClosed: boolean, openCount: number): void => {
     if (results.length >= RAW_CAP) return;
-    for (const pc of pcs) {
+    for (const pc of required) {
       if (!covered.has(pc) && !suffixCover[s].has(pc)) return;
     }
     if (voiced + (n - s) < minNotes) return;
@@ -162,7 +166,7 @@ export function searchChord(
     if (options.openMode === 'mostly' && openCount + suffixOpenCount[s] < mostlyNeed) return;
 
     if (s === n) {
-      if (voiced >= minNotes && covered.size === pcs.size) {
+      if (voiced >= minNotes && covered.size === required.size) {
         if (options.openMode === 'require' && openCount === 0) return;
         if (options.openMode === 'mostly' && openCount * 2 <= voiced) return;
         const shape = makeShape(frets.slice(), tuning, chord);
@@ -194,7 +198,7 @@ export function searchChord(
         if (options.openMode === 'exclude' && fret === 0) continue;
         frets[s] = fret;
         const pc = mod12(tuning.midi[s] + fret);
-        const newlyCovered = !covered.has(pc);
+        const newlyCovered = required.has(pc) && !covered.has(pc);
         if (newlyCovered) covered.add(pc);
         dfs(s + 1, voiced + 1, gapClosed, openCount + (fret === 0 ? 1 : 0));
         if (newlyCovered) covered.delete(pc);

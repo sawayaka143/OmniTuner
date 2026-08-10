@@ -59,6 +59,22 @@ describe('ChordFinder', () => {
     expect(statusText()).toContain('done');
   });
 
+  it('generates voicings for extended and altered chords', () => {
+    const progressionInput = fieldInput('chords, comma-separated');
+    if (!progressionInput) throw new Error('progression input missing');
+    progressionInput.value = 'C13, G7b13';
+    progressionInput.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    click('.generate');
+    expect(statusText()).toContain('done');
+    // 2 cards, both parsed successfully (no error card).
+    expect(el().querySelectorAll('.chord-card').length).toBe(2);
+    expect(el().querySelectorAll('.chord-card .card-note.error').length).toBe(0);
+    // C13's optional 11th/13th show in parentheses (sharp spelling: A# for Bb).
+    expect(el().textContent).toContain('tones C E G A# D (F) (A)');
+  });
+
   it('reports a tuning parse error instead of generating', () => {
     const tuningInput = fieldInput('custom');
     if (!tuningInput) throw new Error('tuning input missing');
@@ -92,12 +108,53 @@ describe('ChordFinder', () => {
     expect(el().querySelectorAll('.tab-line').length).toBeGreaterThan(0);
   });
 
+  it('selects a mode from the key-context dropdown', () => {
+    // The mode listbox trigger shows the selected mode.
+    const triggers = el().querySelectorAll<HTMLButtonElement>('.control-section .btn');
+    const modeTrigger = [...triggers].find((t) => t.textContent?.includes('Aeolian'));
+    expect(modeTrigger).toBeTruthy();
+    modeTrigger?.click();
+    fixture.detectChanges();
+    expect(el().querySelector('.dropdown-menu')).toBeTruthy();
+
+    // Pick "Dorian" — the trigger updates and the menu closes.
+    const dorian = [...el().querySelectorAll<HTMLButtonElement>('.dropdown-item')].find((o) =>
+      o.textContent?.includes('Dorian'),
+    );
+    dorian?.click();
+    fixture.detectChanges();
+    expect(el().querySelector('.dropdown-menu')).toBeFalsy();
+    expect(
+      [...el().querySelectorAll<HTMLButtonElement>('.control-section .btn')].some((t) =>
+        t.textContent?.includes('Dorian'),
+      ),
+    ).toBe(true);
+  });
+
+  it('selects a scale root from the key-context dropdown', () => {
+    const triggers = el().querySelectorAll<HTMLButtonElement>('.control-section .btn');
+    const rootTrigger = [...triggers].find((t) => t.textContent?.includes('root'));
+    expect(rootTrigger).toBeTruthy();
+    rootTrigger?.click();
+    fixture.detectChanges();
+
+    const g = [...el().querySelectorAll<HTMLButtonElement>('.dropdown-item')].find(
+      (o) => o.querySelector('span')?.textContent === 'G',
+    );
+    g?.click();
+    fixture.detectChanges();
+
+    click('.generate');
+    // The stage key line reflects the selected root.
+    expect(el().querySelector('.stage-context')?.textContent).toContain('key G');
+  });
+
   it('clears results back to the welcome state', () => {
     click('.generate');
     expect(el().querySelectorAll('.chord-card').length).toBeGreaterThan(0);
 
     const toolbarButtons = el().querySelectorAll<HTMLButtonElement>('.control-rail .btn');
-    toolbarButtons[toolbarButtons.length - 1].click();
+    toolbarButtons[toolbarButtons.length - 2].click(); // clear (export ML data is last)
     fixture.detectChanges();
     expect(el().querySelectorAll('.chord-card').length).toBe(0);
     expect(el().querySelector('.stage-well')?.textContent).toContain('Chord finder ready.');
@@ -106,7 +163,7 @@ describe('ChordFinder', () => {
 
   it('refuses to copy before anything was generated', async () => {
     const toolbarButtons = el().querySelectorAll<HTMLButtonElement>('.control-rail .btn');
-    toolbarButtons[toolbarButtons.length - 2].click();
+    toolbarButtons[toolbarButtons.length - 3].click(); // copy tab (export ML data is last)
     fixture.detectChanges();
     await fixture.whenStable();
     expect(statusText()).toContain('nothing to copy');
@@ -232,5 +289,39 @@ describe('ChordFinder', () => {
 
     const occurrences = hint.split(WHY_HINTS['thumb']).length - 1;
     expect(occurrences).toBe(1);
+  });
+
+  it('bypasses Viterbi and clears transition badges when smooth transitions are off', () => {
+    // The toggle defaults to ON (Viterbi pathfinding); switch it OFF and
+    // generate: every chord keeps its shapes, but no transition pointers.
+    // The smooth-transitions toggle is the 3rd .toggle-row (after inversions
+    // and muted-string-gaps).
+    const toggles = el().querySelectorAll<HTMLButtonElement>('.toggle-row button[role="switch"]');
+    const smoothToggle = toggles[2];
+    if (!smoothToggle) throw new Error('smooth-transitions toggle missing');
+    smoothToggle.click();
+    fixture.detectChanges();
+
+    click('.generate');
+    expect(el().querySelectorAll('.chord-card').length).toBe(4);
+    expect(el().querySelectorAll('.transition-badge').length).toBe(0);
+    const results = (component as unknown as { results(): { bestNextIndex: (number | null)[] } }).results();
+    expect(results.bestNextIndex.every((i) => i === null)).toBe(true);
+  });
+
+  it('exports the pinned voicings as a training_data.json download', () => {
+    // Stub only the URL API; a real <a> element in jsdom is harmless to click.
+    const createObjectURL = vi.fn(() => 'blob:mock');
+    const revokeObjectURL = vi.fn();
+    Object.defineProperty(URL, 'createObjectURL', { value: createObjectURL, configurable: true });
+    Object.defineProperty(URL, 'revokeObjectURL', { value: revokeObjectURL, configurable: true });
+
+    click('.generate');
+    (component as unknown as { exportTrainingData(): void }).exportTrainingData();
+    fixture.detectChanges();
+
+    expect(createObjectURL).toHaveBeenCalledTimes(1);
+    expect(revokeObjectURL).toHaveBeenCalledTimes(1);
+    expect(statusText()).toContain('exported');
   });
 });

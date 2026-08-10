@@ -546,6 +546,7 @@ export function scoreProgressionVoicings(
   chords: readonly ParsedChord[],
   tuning: ParsedTuning,
   shapesPerChord: readonly (readonly VoicingShape[])[],
+  weights: ErgonomicsWeights = BASE_ERGONOMICS_WEIGHTS,
 ): { cost: number; choices: readonly number[]; path: readonly number[] } {
   const count = Math.min(chords.length, shapesPerChord.length);
   if (count === 0) return { cost: 0, choices: [], path: [] };
@@ -561,7 +562,7 @@ export function scoreProgressionVoicings(
     dp.push([Infinity]);
     back.push([-1]);
   } else {
-    dp.push(first.map((shape) => scoreErgonomics(shape, tuning, chords[0]).cost));
+    dp.push(first.map((shape) => scoreErgonomics(shape, tuning, chords[0], true, weights).cost));
     back.push(new Array(first.length).fill(-1));
     shapeScores.push(dp[0]);
     choices.push(dp[0].length ? Math.min(...dp[0]) : Infinity);
@@ -583,7 +584,7 @@ export function scoreProgressionVoicings(
     }
 
     for (let j = 0; j < current.length; j++) {
-      const ergo = scoreErgonomics(current[j], tuning, chords[i]).cost;
+      const ergo = scoreErgonomics(current[j], tuning, chords[i], true, weights).cost;
       rowScores.push(ergo);
       let best = Infinity;
       let bestK = -1;

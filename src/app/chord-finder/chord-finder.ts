@@ -2,7 +2,9 @@ import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { ScalePreferences } from '../services/scale-preferences';
 import { InstrumentRegistry } from '../services/instrument-registry';
 import { ChordFeedbackStore } from '../services/chord-feedback-store';
+import { MlWeightsService } from '../services/ml-weights-service';
 import { textColorOn } from '../data/interval-colors';
+import { SHARP_NAMES } from '../data/scale.constants';
 import {
   ChordParseResult,
   computeBadge,
@@ -28,7 +30,7 @@ import {
   VoicingOptions,
   VoicingShape,
 } from '../utils/chord-voicing';
-import { ergonomicsFeatures, scoreProgressionVoicings, WHY_HINTS } from '../utils/ergonomics';
+import { ergonomicsFeatures, scoreErgonomics, scoreProgressionVoicings, WHY_HINTS } from '../utils/ergonomics';
 import { DiagramLabelMode, DiagramView, NeckDiagram } from './neck-diagram/neck-diagram';
 import { Toggle } from '../ui/toggle/toggle';
 import { Segmented } from '../ui/segmented/segmented';
@@ -49,6 +51,15 @@ const OPEN_MODE_SHORT_LABELS: Readonly<Record<OpenStringMode, string>> = {
   require: '≥1 open',
   mostly: 'mostly',
   exclude: 'no opens',
+};
+
+/** Enharmonic alternate spelling shown as the dropdown secondary text. */
+const ALTERNATE_NOTES: Readonly<Record<string, string>> = {
+  'C#': 'D♭', Db: 'C♯',
+  'D#': 'E♭', Eb: 'D♯',
+  'F#': 'G♭', Gb: 'F♯',
+  'G#': 'A♭', Ab: 'G♯',
+  'A#': 'B♭', Bb: 'A♯',
 };
 
 export interface ChordEntry {
@@ -93,6 +104,7 @@ export class ChordFinder {
   private readonly preferences = inject(ScalePreferences);
   private readonly registry = inject(InstrumentRegistry);
   private readonly feedbackStore = inject(ChordFeedbackStore);
+  private readonly mlWeights = inject(MlWeightsService);
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly preferencesState = this.preferences.state;
@@ -128,6 +140,12 @@ export class ChordFinder {
   protected readonly labelChoiceLabelFn = (o: 'notes' | 'func'): string =>
     o === 'notes' ? 'notes' : 'R b3';
 
+  /** The 12 root notes for the key-context dropdown (sharp spelling). */
+  protected readonly rootNotes = SHARP_NAMES;
+  /** Enharmonic alternate shown as secondary text (e.g. `C#` → `D♭`). */
+  protected readonly rootAltFn = (note: string): string | null =>
+    ALTERNATE_NOTES[note] ?? null;
+
   /** The tuning option matching the currently selected registry tuning. */
   protected readonly selectedTuningOption = computed<TuningOption | null>(() => {
     const id = this.registry.selectedTuningId();
@@ -153,6 +171,8 @@ export class ChordFinder {
       .join(' '),
   );
   protected readonly scaleRootText = signal('');
+  /** Key-context root shown on the dropdown trigger (C when empty). */
+  protected readonly scaleRoot = computed(() => this.scaleRootText().trim() || 'C');
   protected readonly modeName = signal<ModeName>('Aeolian');
   protected readonly progressionText = signal('Cm, Gmaj, Bb7, Fm');
   protected readonly openMode = signal<OpenStringMode>('allow');
@@ -167,11 +187,12 @@ export class ChordFinder {
   );
   protected readonly labelMode = signal<DiagramLabelMode>('notes');
   /** Prefer voicings that connect smoothly to the next chord in the progression. */
-  protected readonly smoothTransitions = signal(false);
+  protected readonly smoothTransitions = signal(true);
 
   /** Dropdown open state for the shared listbox controls. */
   protected readonly tuningListOpen = signal(false);
   protected readonly modeListOpen = signal(false);
+  protected readonly rootListOpen = signal(false);
 
   // ── Output state ─────────────────────────────────────────────────
   protected readonly results = signal<GenerationResult | null>(null);
@@ -228,11 +249,6 @@ export class ChordFinder {
     if (target instanceof HTMLInputElement) this.tuningText.set(target.value);
   }
 
-  protected onScaleRootInput(event: Event): void {
-    const target = event.target;
-    if (target instanceof HTMLInputElement) this.scaleRootText.set(target.value);
-  }
-
   protected onModeChange(event: Event): void {
     const target = event.target;
     if (!(target instanceof HTMLSelectElement)) return;
@@ -278,12 +294,30 @@ export class ChordFinder {
 
   protected toggleTuningList(): void {
     this.modeListOpen.set(false);
+    this.rootListOpen.set(false);
     this.tuningListOpen.update((open) => !open);
   }
 
   protected toggleModeList(): void {
     this.tuningListOpen.set(false);
+    this.rootListOpen.set(false);
     this.modeListOpen.update((open) => !open);
+  }
+
+  protected toggleRootList(): void {
+    this.tuningListOpen.set(false);
+    this.modeListOpen.set(false);
+    this.rootListOpen.update((open) => !open);
+  }
+
+  protected onModeSelect(mode: ModeName): void {
+    this.modeName.set(mode);
+    this.modeListOpen.set(false);
+  }
+
+  protected onScaleRootSelect(note: string): void {
+    this.scaleRootText.set(note);
+    this.rootListOpen.set(false);
   }
 
   protected openModeIndex(mode: OpenStringMode): number {
@@ -318,7 +352,7 @@ export class ChordFinder {
     };
 
     const startedAt = performance.now();
-    const chords: ChordEntry[] = tokens.map((token) => {
+    let chords: ChordEntry[] = tokens.map((token) => {
       const parse = parseChord(token);
       if (!parse.ok) return { token, parse, shapes: [], badge: null };
       const shapes = searchChord(parsed.tuning, parse.chord, options);
@@ -342,29 +376,49 @@ export class ChordFinder {
       };
     });
 
-    // Viterbi pathfinding: choose the global-lowest-cost voicing path across
-    // the progression (ergonomics + transition cost between adjacent chords).
-    // We must filter BOTH the chords and the shapes arrays to keep them aligned
-    // in case the user typed an invalid chord token in the middle of the progression.
-    const validEntries = chords.filter((c) => c.parse.ok && c.shapes.length > 0) as (ChordEntry & { parse: { ok: true } })[];
-
-    const pathfinding = scoreProgressionVoicings(
-      validEntries.map((c) => c.parse.chord),
-      parsed.tuning,
-      validEntries.map((c) => c.shapes),
-    );
     // Best-transition pointer per chord (except the last): which voicing of
     // this chord connects most smoothly to a voicing of the next chord. The
     // path indexes only the *valid* chords; map them back to full indices.
-    const validIndices = chords
-      .map((c, i) => (c.parse.ok && c.shapes.length ? i : -1))
-      .filter((i) => i >= 0);
+    // When smooth transitions are OFF we skip pathfinding entirely and let
+    // each chord stand on its own ergonomics ranking.
+    const validEntries = chords.filter((c) => c.parse.ok && c.shapes.length > 0) as (ChordEntry & { parse: { ok: true } })[];
     const bestNextIndex: (number | null)[] = new Array(chords.length).fill(null);
-    for (let v = 0; v < validIndices.length - 1; v++) {
-      const i = validIndices[v];
-      const nextI = validIndices[v + 1];
-      if (nextI !== i + 1) continue; // No transition across a broken chord.
-      bestNextIndex[i] = pathfinding.path[v] ?? null;
+    const mlWeights = this.mlWeights.weights();
+
+    if (this.smoothTransitions() && validEntries.length > 1) {
+      // Viterbi pathfinding: choose the global-lowest-cost voicing path across
+      // the progression (ergonomics + transition cost between adjacent chords).
+      // We must filter BOTH the chords and the shapes arrays to keep them aligned
+      // in case the user typed an invalid chord token in the middle of the progression.
+      const pathfinding = scoreProgressionVoicings(
+        validEntries.map((c) => c.parse.chord),
+        parsed.tuning,
+        validEntries.map((c) => c.shapes),
+        mlWeights,
+      );
+      const validIndices = chords
+        .map((c, i) => (c.parse.ok && c.shapes.length ? i : -1))
+        .filter((i) => i >= 0);
+      for (let v = 0; v < validIndices.length - 1; v++) {
+        const i = validIndices[v];
+        const nextI = validIndices[v + 1];
+        if (nextI !== i + 1) continue; // No transition across a broken chord.
+        bestNextIndex[i] = pathfinding.path[v] ?? null;
+      }
+    } else {
+      // No pathfinding: rank each chord's voicings by pure ergonomics cost.
+      // (searchChord already pre-sorts by cost; re-sorting here keeps the
+      // ordering correct when ML weights are loaded and pins bubble to top.)
+      chords = chords.map((entry) => {
+        if (!entry.parse.ok) return entry;
+        const parsedEntry = entry as ChordEntry & { parse: { ok: true } };
+        const shapes = [...entry.shapes].sort(
+          (a, b) =>
+            scoreErgonomics(a, parsed.tuning, parsedEntry.parse.chord, true, mlWeights).cost -
+            scoreErgonomics(b, parsed.tuning, parsedEntry.parse.chord, true, mlWeights).cost,
+        );
+        return { ...entry, shapes };
+      });
     }
 
     const totalVoicings = chords.reduce((sum, c) => sum + c.shapes.length, 0);
@@ -462,6 +516,22 @@ export class ChordFinder {
 
   // ── Template helpers (pure) ──────────────────────────────────────
 
+  /** Download all pinned feature vectors as training_data.json for the ML pipeline. */
+  protected exportTrainingData(): void {
+    const json = this.feedbackStore.exportTrainingData();
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'training_data.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    this.status.set({
+      kind: 'plain',
+      text: `exported ${this.feedbackStore.count} pinned voicings — train scripts/train_model.py on training_data.json`,
+    });
+  }
+
   protected rulesSummary(result: GenerationResult): string {
     const { options } = result;
     const inversions = options.allowInversions
@@ -472,9 +542,14 @@ export class ChordFinder {
   }
 
   protected chordTonesLabel(chord: ParsedChord, flats: boolean): string {
-    return `${pcName(chord.rootPc, flats)} ${chord.quality} · tones ${chord.pcs
-      .map((pc) => pcName(pc, flats))
-      .join(' ')}`;
+    const optional = new Set(chord.optionalPcs);
+    const tones = chord.pcs
+      .map((pc) => {
+        const name = pcName(pc, flats);
+        return optional.has(pc) ? `(${name})` : name;
+      })
+      .join(' ');
+    return `${pcName(chord.rootPc, flats)} ${chord.quality} · tones ${tones}`;
   }
 
   protected flatsFor(result: GenerationResult, chord: ParsedChord): boolean {
