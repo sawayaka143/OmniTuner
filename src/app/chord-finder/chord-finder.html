@@ -88,7 +88,43 @@
         </div>
 
         <div class="control-section">
-          <span class="section-label">04 · Voicing rules</span>
+          <span class="section-label">04 · Direct voicing input</span>
+          <p class="tiny-note">
+            type a specific fingering and pin it — no search. e.g.
+            <code>x 3 2 0 1 0</code> or <code>x32010</code>
+          </p>
+          @if (!directCollapsed()) {
+            @if (parsedTuningValue(); as tuning) {
+              <app-direct-voicing-input
+                [tuning]="tuning"
+                [chordOptions]="directChordOptions()"
+                [pinned]="directPinned()"
+                [text]="directText()"
+                (textChange)="directText.set($event)"
+                (pin)="onDirectPin($event)"
+                (unpin)="onDirectUnpin($event)"
+              />
+            } @else {
+              <p class="tiny-note">{{ tuningError() }}</p>
+            }
+            @if (directStatus()) {
+              <p class="direct-status" [class.err]="directStatus()!.kind === 'err'">
+                {{ directStatus()!.text }}
+              </p>
+            }
+          }
+          <button
+            class="collapse-toggle"
+            type="button"
+            aria-expanded="!directCollapsed()"
+            (click)="directCollapsed.set(!directCollapsed())"
+          >
+            {{ directCollapsed() ? 'expand direct input' : 'collapse direct input' }}
+          </button>
+        </div>
+
+        <div class="control-section">
+          <span class="section-label">05 · Voicing rules</span>
 
           <span class="field-label">open string character (fret 0)</span>
           <app-segmented
@@ -197,9 +233,6 @@
               {{ copied() ? 'copied ✓' : 'copy tab' }}
             </button>
             <button class="btn small" type="button" (click)="clearResults()">clear</button>
-            <button class="btn small" type="button" (click)="exportTrainingData()">
-              export ML data
-            </button>
           </div>
         </div>
 

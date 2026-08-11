@@ -1,8 +1,8 @@
 import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
+import { DirectVoicingInput, DirectPinPayload } from './direct-voicing-input/direct-voicing-input';
 import { ScalePreferences } from '../services/scale-preferences';
 import { InstrumentRegistry } from '../services/instrument-registry';
 import { ChordFeedbackStore } from '../services/chord-feedback-store';
-import { MlWeightsService } from '../services/ml-weights-service';
 import { textColorOn } from '../data/interval-colors';
 import { SHARP_NAMES } from '../data/scale.constants';
 import {
@@ -31,6 +31,7 @@ import {
   VoicingShape,
 } from '../utils/chord-voicing';
 import { ergonomicsFeatures, scoreErgonomics, scoreProgressionVoicings, WHY_HINTS } from '../utils/ergonomics';
+import { parseDirectInput, DirectParseResult } from '../utils/direct-input';
 import { DiagramLabelMode, DiagramView, NeckDiagram } from './neck-diagram/neck-diagram';
 import { Toggle } from '../ui/toggle/toggle';
 import { Segmented } from '../ui/segmented/segmented';
@@ -92,7 +93,7 @@ const mod12 = (value: number): number => ((value % 12) + 12) % 12;
 
 @Component({
   selector: 'app-chord-finder',
-  imports: [NeckDiagram, Toggle, Segmented, Listbox, TextField],
+  imports: [NeckDiagram, Toggle, Segmented, Listbox, TextField, DirectVoicingInput],
   templateUrl: './chord-finder.html',
   styleUrl: './chord-finder.scss',
   host: {
@@ -104,13 +105,10 @@ export class ChordFinder {
   private readonly preferences = inject(ScalePreferences);
   private readonly registry = inject(InstrumentRegistry);
   private readonly feedbackStore = inject(ChordFeedbackStore);
-  private readonly mlWeights = inject(MlWeightsService);
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly preferencesState = this.preferences.state;
   protected readonly accentInk = computed(() => textColorOn(this.preferencesState().accent));
-
-  // ── Tunings from the shared registry (Tuner + Scales + Chords) ───
 
   /** Built-in + custom tunings of the currently selected instrument. */
   protected readonly tuningOptions = computed<readonly TuningOption[]>(() =>
@@ -130,7 +128,6 @@ export class ChordFinder {
   protected readonly labelChoices = ['notes', 'func'] as const;
   protected readonly maxFret = MAX_FRET;
 
-  /** Shared-control accessors. */
   protected readonly identityFn = <T>(value: T): T => value;
   protected readonly tuningLabelFn = (o: TuningOption): string => o.label;
   protected readonly tuningAltFn = (o: TuningOption): string | null => o.text;
@@ -140,7 +137,6 @@ export class ChordFinder {
   protected readonly labelChoiceLabelFn = (o: 'notes' | 'func'): string =>
     o === 'notes' ? 'notes' : 'R b3';
 
-  /** The 12 root notes for the key-context dropdown (sharp spelling). */
   protected readonly rootNotes = SHARP_NAMES;
   /** Enharmonic alternate shown as secondary text (e.g. `C#` → `D♭`). */
   protected readonly rootAltFn = (note: string): string | null =>
@@ -163,7 +159,6 @@ export class ChordFinder {
   });
 
   // ── Control state ────────────────────────────────────────────────
-  /** Starts from the registry's selected tuning so all sections share one memory. */
   protected readonly tuningText = signal(
     this.registry
       .selectedTuning()
@@ -171,10 +166,13 @@ export class ChordFinder {
       .join(' '),
   );
   protected readonly scaleRootText = signal('');
-  /** Key-context root shown on the dropdown trigger (C when empty). */
   protected readonly scaleRoot = computed(() => this.scaleRootText().trim() || 'C');
   protected readonly modeName = signal<ModeName>('Aeolian');
   protected readonly progressionText = signal('Cm, Gmaj, Bb7, Fm');
+  protected readonly directText = signal('');
+  protected readonly directCollapsed = signal(false);
+  protected readonly directStatus = signal<{ kind: 'plain' | 'err'; text: string } | null>(null);
+  protected readonly directChordIndex = signal<number | null>(null);
   protected readonly openMode = signal<OpenStringMode>('allow');
   protected readonly allowInversions = signal(false);
   protected readonly allowGaps = signal(false);
@@ -189,7 +187,6 @@ export class ChordFinder {
   /** Prefer voicings that connect smoothly to the next chord in the progression. */
   protected readonly smoothTransitions = signal(true);
 
-  /** Dropdown open state for the shared listbox controls. */
   protected readonly tuningListOpen = signal(false);
   protected readonly modeListOpen = signal(false);
   protected readonly rootListOpen = signal(false);
@@ -214,6 +211,47 @@ export class ChordFinder {
   // ── Live validation ──────────────────────────────────────────────
 
   protected readonly parsedTuning = computed(() => parseTuning(this.tuningText()));
+
+  protected readonly parsedTuningValue = computed<ParsedTuning | null>(() => {
+    const parsed = this.parsedTuning();
+    return parsed.ok ? parsed.tuning : null;
+  });
+
+  protected readonly tuningError = computed<string>(() => {
+    const parsed = this.parsedTuning();
+    return parsed.ok ? '' : parsed.error;
+  });
+
+  protected readonly directResult = computed<DirectParseResult | null>(() => {
+    const parsed = this.parsedTuning();
+    if (!parsed.ok) return null;
+    return parseDirectInput(this.directText(), parsed.tuning);
+  });
+
+  protected readonly directChordOptions = computed<readonly ParsedChord[]>(() =>
+    this.results()
+      ?.chords.map((entry) => (entry.parse.ok ? entry.parse.chord : null))
+      .filter((chord): chord is ParsedChord => chord !== null) ?? [],
+  );
+
+  protected readonly chosenDirectChord = computed<ParsedChord | null>(() => {
+    const options = this.directChordOptions();
+    const index = this.directChordIndex();
+    const fromResults = index !== null ? options[index] ?? null : options[0] ?? null;
+    if (fromResults) return fromResults;
+    const result = this.directResult();
+    if (result?.ok && result.inferredChord) return result.inferredChord;
+    if (result?.ok) return this.customChordFor(result.shape);
+    return null;
+  });
+
+  protected readonly directPinned = computed(() => {
+    const result = this.directResult();
+    const chord = this.chosenDirectChord();
+    const parsed = this.parsedTuning();
+    if (!result?.ok || !chord || !parsed.ok) return false;
+    return this.feedbackStore.isPinned(parsed.tuning, chord, result.shape);
+  });
 
   protected readonly tuningHint = computed(() => {
     const parsed = this.parsedTuning();
@@ -377,24 +415,18 @@ export class ChordFinder {
     });
 
     // Best-transition pointer per chord (except the last): which voicing of
-    // this chord connects most smoothly to a voicing of the next chord. The
-    // path indexes only the *valid* chords; map them back to full indices.
-    // When smooth transitions are OFF we skip pathfinding entirely and let
-    // each chord stand on its own ergonomics ranking.
+    // this chord connects most smoothly to a voicing of the next chord.
     const validEntries = chords.filter((c) => c.parse.ok && c.shapes.length > 0) as (ChordEntry & { parse: { ok: true } })[];
     const bestNextIndex: (number | null)[] = new Array(chords.length).fill(null);
-    const mlWeights = this.mlWeights.weights();
 
     if (this.smoothTransitions() && validEntries.length > 1) {
-      // Viterbi pathfinding: choose the global-lowest-cost voicing path across
-      // the progression (ergonomics + transition cost between adjacent chords).
-      // We must filter BOTH the chords and the shapes arrays to keep them aligned
-      // in case the user typed an invalid chord token in the middle of the progression.
+      // Viterbi pathfinding: global-lowest-cost voicing path across the
+      // progression (ergonomics + transition cost between adjacent chords).
+      // Filter both arrays so they stay aligned across invalid chord tokens.
       const pathfinding = scoreProgressionVoicings(
         validEntries.map((c) => c.parse.chord),
         parsed.tuning,
         validEntries.map((c) => c.shapes),
-        mlWeights,
       );
       const validIndices = chords
         .map((c, i) => (c.parse.ok && c.shapes.length ? i : -1))
@@ -407,15 +439,15 @@ export class ChordFinder {
       }
     } else {
       // No pathfinding: rank each chord's voicings by pure ergonomics cost.
-      // (searchChord already pre-sorts by cost; re-sorting here keeps the
-      // ordering correct when ML weights are loaded and pins bubble to top.)
+      // (searchChord already pre-sorts by cost; re-sorting keeps the order
+      // correct when pins bubble to top.)
       chords = chords.map((entry) => {
         if (!entry.parse.ok) return entry;
         const parsedEntry = entry as ChordEntry & { parse: { ok: true } };
         const shapes = [...entry.shapes].sort(
           (a, b) =>
-            scoreErgonomics(a, parsed.tuning, parsedEntry.parse.chord, true, mlWeights).cost -
-            scoreErgonomics(b, parsed.tuning, parsedEntry.parse.chord, true, mlWeights).cost,
+            scoreErgonomics(a, parsed.tuning, parsedEntry.parse.chord, true).cost -
+            scoreErgonomics(b, parsed.tuning, parsedEntry.parse.chord, true).cost,
         );
         return { ...entry, shapes };
       });
@@ -468,11 +500,49 @@ export class ChordFinder {
     this.generate();
   }
 
+  protected customChordFor(shape: VoicingShape): ParsedChord {
+    const parsed = this.parsedTuning();
+    return {
+      symbol: 'custom',
+      rootPc: shape.bassMidi % 12,
+      quality: '',
+      intervals: [],
+      pcs: [...new Set(shape.sounding.map((n) => n.midi % 12))],
+      optionalPcs: [],
+      flats: parsed.ok ? parsed.tuning.flats : false,
+    };
+  }
+
+  protected onDirectPin({ shape, chord }: DirectPinPayload): void {
+    const parsed = this.parsedTuning();
+    if (!parsed.ok) {
+      this.directStatus.set({ kind: 'err', text: `tuning: ${parsed.error}` });
+      return;
+    }
+    this.feedbackStore.togglePin(parsed.tuning, chord, shape);
+    this.directStatus.set({
+      kind: 'plain',
+      text: `pinned ${chord.symbol} — this fingering floats to the top on regenerate`,
+    });
+  }
+
+  protected onDirectUnpin({ shape, chord }: DirectPinPayload): void {
+    const parsed = this.parsedTuning();
+    if (!parsed.ok) {
+      this.directStatus.set({ kind: 'err', text: `tuning: ${parsed.error}` });
+      return;
+    }
+    this.feedbackStore.togglePin(parsed.tuning, chord, shape);
+    this.directStatus.set({
+      kind: 'plain',
+      text: `unpinned ${chord.symbol} — this fingering no longer floats to the top`,
+    });
+  }
+
   private chordAt(chordIndex: number): ChordEntry | undefined {
     return this.results()?.chords[chordIndex];
   }
 
-  /** Whether a specific fingering is pinned. */
   protected isPinned(chordIndex: number, shapeIndex: number): boolean {
     const result = this.results();
     const entry = result?.chords[chordIndex];
@@ -514,24 +584,6 @@ export class ChordFinder {
     }
   }
 
-  // ── Template helpers (pure) ──────────────────────────────────────
-
-  /** Download all pinned feature vectors as training_data.json for the ML pipeline. */
-  protected exportTrainingData(): void {
-    const json = this.feedbackStore.exportTrainingData();
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'training_data.json';
-    a.click();
-    URL.revokeObjectURL(url);
-    this.status.set({
-      kind: 'plain',
-      text: `exported ${this.feedbackStore.count} pinned voicings — train scripts/train_model.py on training_data.json`,
-    });
-  }
-
   protected rulesSummary(result: GenerationResult): string {
     const { options } = result;
     const inversions = options.allowInversions
@@ -567,7 +619,6 @@ export class ChordFinder {
     return `notes low->high: ${noteStr}   |   bass: ${bassStr}   |   span: ${shape.span} fret(s)   |   open strings: ${shape.openCount}`;
   }
 
-  /** Short reason this fingering ranked where it did (for the UI hint). */
   protected ergonomicsHint(shape: VoicingShape, chord: ParsedChord, tuning: ParsedTuning): string {
     const factors = ergonomicsFeatures(shape, tuning, chord);
     const labels: string[] = [];
@@ -581,7 +632,6 @@ export class ChordFinder {
     return labels.length ? labels.join(' · ') : 'balanced';
   }
 
-  /** True when this fingering is the smoothest bridge to the next chord. */
   protected isBestTransition(chordIndex: number, shapeIndex: number): boolean {
     return this.results()?.bestNextIndex[chordIndex] === shapeIndex;
   }

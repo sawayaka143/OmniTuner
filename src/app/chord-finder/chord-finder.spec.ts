@@ -4,6 +4,7 @@ import { ChordFinder } from './chord-finder';
 import { WHY_HINTS } from '../utils/ergonomics';
 import { parseChord, parseTuning, ParsedChord, ParsedTuning } from '../utils/chord-theory';
 import { SoundingNote, VoicingShape } from '../utils/chord-voicing';
+import { ChordFeedbackStore } from '../services/chord-feedback-store';
 
 describe('ChordFinder', () => {
   let component: ChordFinder;
@@ -17,6 +18,23 @@ describe('ChordFinder', () => {
   };
 
   const statusText = (): string => el().querySelector('.readout p')?.textContent?.trim() ?? '';
+
+  const directFieldInput = (): HTMLInputElement | null => {
+    const label = [...el().querySelectorAll<HTMLLabelElement>('label')].find((candidate) =>
+      candidate.textContent?.includes('frets (bottom'),
+    );
+    if (!label) return null;
+    const id = label.getAttribute('for');
+    return id ? el().querySelector<HTMLInputElement>(`#${id}`) : null;
+  };
+
+  const setDirectText = (value: string): void => {
+    const input = directFieldInput();
+    if (!input) throw new Error('direct frets input missing');
+    input.value = value;
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+  };
 
   const fieldInput = (labelText: string): HTMLInputElement | null => {
     const label = [...el().querySelectorAll<HTMLLabelElement>('label')].find((candidate) =>
@@ -154,7 +172,7 @@ describe('ChordFinder', () => {
     expect(el().querySelectorAll('.chord-card').length).toBeGreaterThan(0);
 
     const toolbarButtons = el().querySelectorAll<HTMLButtonElement>('.control-rail .btn');
-    toolbarButtons[toolbarButtons.length - 2].click(); // clear (export ML data is last)
+    toolbarButtons[toolbarButtons.length - 1].click(); // clear is last
     fixture.detectChanges();
     expect(el().querySelectorAll('.chord-card').length).toBe(0);
     expect(el().querySelector('.stage-well')?.textContent).toContain('Chord finder ready.');
@@ -163,7 +181,7 @@ describe('ChordFinder', () => {
 
   it('refuses to copy before anything was generated', async () => {
     const toolbarButtons = el().querySelectorAll<HTMLButtonElement>('.control-rail .btn');
-    toolbarButtons[toolbarButtons.length - 3].click(); // copy tab (export ML data is last)
+    toolbarButtons[toolbarButtons.length - 2].click(); // copy tab is second-to-last
     fixture.detectChanges();
     await fixture.whenStable();
     expect(statusText()).toContain('nothing to copy');
@@ -309,19 +327,47 @@ describe('ChordFinder', () => {
     expect(results.bestNextIndex.every((i) => i === null)).toBe(true);
   });
 
-  it('exports the pinned voicings as a training_data.json download', () => {
-    // Stub only the URL API; a real <a> element in jsdom is harmless to click.
-    const createObjectURL = vi.fn(() => 'blob:mock');
-    const revokeObjectURL = vi.fn();
-    Object.defineProperty(URL, 'createObjectURL', { value: createObjectURL, configurable: true });
-    Object.defineProperty(URL, 'revokeObjectURL', { value: revokeObjectURL, configurable: true });
+  it('parses a direct voicing input and shows a live preview', () => {
+    setDirectText('x 3 2 0 1 0');
+    expect(el().querySelectorAll('.direct-line').length).toBe(6);
+    expect(el().textContent).toContain('✓ 6 strings');
+    expect(el().textContent).toContain('span 2');
+  });
 
-    click('.generate');
-    (component as unknown as { exportTrainingData(): void }).exportTrainingData();
+  it('shows a validation hint when the string count is wrong', () => {
+    setDirectText('x 3 2 0 1');
+    expect(el().querySelectorAll('.direct-line').length).toBe(0);
+    expect(el().textContent).toContain('expected 6 strings, got 5');
+  });
+
+  it('pins a parsed direct shape into the feedback store', () => {
+    const store = TestBed.inject(ChordFeedbackStore);
+    const before = store.pins().length;
+    setDirectText('x 3 2 0 1 0');
+    const pinBtn = el().querySelector<HTMLButtonElement>('.direct-pin');
+    expect(pinBtn).toBeTruthy();
+    pinBtn?.click();
     fixture.detectChanges();
 
-    expect(createObjectURL).toHaveBeenCalledTimes(1);
-    expect(revokeObjectURL).toHaveBeenCalledTimes(1);
-    expect(statusText()).toContain('exported');
+    expect(store.pins().length).toBe(before + 1);
+    expect(el().querySelector('.direct-status')?.textContent).toContain('pinned');
+    // x 3 2 0 1 0 is an open C major shape → pinned under the inferred chord C.
+    expect(store.pins()[store.pins().length - 1].chord).toBe('C');
+    expect(store.pins()[store.pins().length - 1].frets).toBe(',3,2,0,1,0');
+  });
+
+  it('unpins a parsed direct shape on a second click', () => {
+    const store = TestBed.inject(ChordFeedbackStore);
+    setDirectText('x 3 2 0 1 0');
+    const pinBtn = el().querySelector<HTMLButtonElement>('.direct-pin');
+    pinBtn?.click();
+    fixture.detectChanges();
+    const before = store.pins().length;
+
+    const unpinBtn = el().querySelector<HTMLButtonElement>('.direct-pin');
+    unpinBtn?.click();
+    fixture.detectChanges();
+    expect(store.pins().length).toBe(before - 1);
+    expect(el().querySelector('.direct-status')?.textContent).toContain('unpinned');
   });
 });

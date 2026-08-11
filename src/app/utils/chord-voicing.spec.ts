@@ -36,12 +36,16 @@ describe('searchChord', () => {
     }
   });
 
-  it('prefers root in the bass when inversions are off (soft preference)', () => {
-    // The first shape for G7 should have the root in the bass, since
-    // non-root-bass shapes are now allowed but penalized.
-    const shapes = searchChord(tuning, chord('G7'), baseOptions);
+  it('rejects non-root bass (inversions) when inversions are off', () => {
+    const shapes = searchChord(tuning, chord('C'), baseOptions);
     expect(shapes.length).toBeGreaterThan(0);
-    expect(shapes[0].bassIsRoot).toBe(true);
+    for (const shape of shapes) expect(shape.bassIsRoot).toBe(true);
+  });
+
+  it('allows non-root bass (inversions) when inversions are on', () => {
+    const shapes = searchChord(tuning, chord('C'), { ...baseOptions, allowInversions: true });
+    expect(shapes.length).toBeGreaterThan(0);
+    expect(shapes.some((s) => !s.bassIsRoot)).toBe(true);
   });
 
   it('respects the max stretch rule', () => {
@@ -98,12 +102,14 @@ describe('searchChord', () => {
     expect(first.openCount).toBeGreaterThan(0);
   });
 
-  it('allows non-root bass (doubled root) when inversions are off', () => {
-    const shapes = searchChord(tuning, chord('C'), { ...baseOptions, openMode: 'exclude' });
-    // With opens excluded, some shapes will have the 5th or 3rd in the bass
-    // (root doubling across strings) — those must not be filtered out.
-    const nonRootBass = shapes.find((s) => !s.bassIsRoot);
-    expect(nonRootBass).toBeTruthy();
+  it('finds no non-root-bass shapes when inversions are off (incl. closed voicings)', () => {
+    const shapes = searchChord(tuning, chord('C'), {
+      ...baseOptions,
+      openMode: 'exclude',
+      allowInversions: false,
+    });
+    expect(shapes.length).toBeGreaterThan(0);
+    for (const shape of shapes) expect(shape.bassIsRoot).toBe(true);
   });
 
   it('ranks a root-bass shape among the top results', () => {
@@ -117,13 +123,15 @@ describe('searchChord', () => {
     expect(shapes[0].span).toBeLessThanOrEqual(2);
   });
 
-  it('ranks the open F shape before a 6-string barre F at the same position', () => {
-    // Open F: 1/3/3/2/1/1 — a barre but low position. Compare to a
-    // high-position barre F (8/10/10/10/8/8) which is harder.
-    const openF = searchChord(tuning, chord('F'), baseOptions);
-    expect(openF.length).toBeGreaterThan(0);
-    const first = openF[0];
-    expect(first.position).toBeLessThan(4);
+  it('keeps the open F (133211) only when inversions are allowed', () => {
+    const inverted = searchChord(tuning, chord('F'), {
+      ...baseOptions,
+      allowInversions: true,
+    });
+    const rootBass = searchChord(tuning, chord('F'), baseOptions);
+    expect(rootBass.length).toBeGreaterThan(0);
+    expect(inverted.some((s) => s.openCount > 0)).toBe(true);
+    expect(rootBass.every((s) => s.bassIsRoot)).toBe(true);
   });
 
   it('voices extended chords by covering required tones, with optional tones ringable', () => {
@@ -188,10 +196,12 @@ describe('searchChord hard constraints', () => {
   it('rejects unbarrable skip-fret shapes when rejectUnbarrable is set', () => {
     const withBarreCheck = searchChord(tuning, chord('C'), {
       ...baseOptions,
+      allowInversions: true,
       rejectUnbarrable: true,
     });
     const withoutBarreCheck = searchChord(tuning, chord('C'), {
       ...baseOptions,
+      allowInversions: true,
       rejectUnbarrable: false,
     });
     for (const shape of withBarreCheck) {

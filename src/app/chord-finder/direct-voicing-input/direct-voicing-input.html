@@ -1,0 +1,40 @@
+<app-text-field
+  label="frets (bottom → top, e.g. x 3 2 0 1 0)"
+  [value]="text()"
+  [hint]="validationHint()"
+  [hintTone]="hintTone()"
+  (valueChange)="onInput($event)"
+/>
+
+@if (parseResult().ok) {
+  <div class="direct-preview" aria-label="Parsed voicing preview">
+    @for (line of previewLines(); track $index) {
+      <div class="direct-line">
+        <span class="direct-label">{{ line.label }}</span>
+        <span class="direct-rail">|</span>
+        <span
+          class="direct-fret"
+          [class.mute]="line.fret === null"
+          [class.open]="line.fret === 0"
+          >{{ line.fret === null ? 'x' : line.fret }}</span
+        >
+        <span class="direct-rail">|</span>
+      </div>
+    }
+    <p class="direct-notes">{{ fretText() }}</p>
+  </div>
+
+  <p class="direct-why">{{ ergonomics() }}</p>
+
+  <button
+    class="btn small direct-pin"
+    type="button"
+    [class.active]="pinned()"
+    [attr.aria-pressed]="pinned()"
+    (click)="onPinClick()"
+  >
+    {{ actionLabel() }}
+  </button>
+} @else {
+  <p class="direct-empty">… type a voicing to preview and pin it</p>
+}

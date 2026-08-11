@@ -3,10 +3,7 @@ import { ParsedChord, ParsedTuning } from '../utils/chord-theory';
 import { VoicingShape } from '../utils/chord-voicing';
 import { ErgonomicsFeatures, ergonomicsFeatures } from '../utils/ergonomics';
 
-/** Legacy storage key (v1, like/dislike era). Kept for migration/compile safety. */
 export const FEEDBACK_STORAGE_KEY = 'omnituner.chord-feedback.v1';
-
-/** Storage key for the pins-only format. */
 export const PIN_STORAGE_KEY = 'omnituner.chord-pins.v1';
 
 export const FEEDBACK_STORAGE = new InjectionToken<Storage | null>('Chord feedback storage', {
@@ -25,9 +22,8 @@ export interface VoicingFeedback {
   readonly tuning: string;
   readonly chord: string;
   readonly frets: string;
-  /** The feature vector of the shape at pin time — the ML training input. */
+  /** Feature vector at pin time — the ML training input. */
   readonly features: ErgonomicsFeatures;
-  /** Pins are bookmarks; there is no like/dislike ranking signal anymore. */
   readonly rating: 'pin';
   readonly at: number;
 }
@@ -70,15 +66,9 @@ const parseEntries = (value: unknown): readonly VoicingFeedback[] => {
 };
 
 /**
- * Persistent store for chord-finder pins: which voicings the user bookmarked
- * for a specific chord/tuning.
- *
- * The old online training loop (`applyFeedback`) is gone. Pins are pure
- * bookmarks that bubble to the top of the per-chord list; the stored feature
- * vectors are the training data for a future **offline** ML re-ranker (e.g.
- * XGBoost / Random Forest trained in Python). The shipped ergonomics weights
- * are never mutated at runtime — an ML-generated JSON payload can override
- * them wholesale later via `scoreErgonomics`'s weights parameter.
+ * Persistent store for chord-finder pins: bookmarks that bubble to the top of
+ * each chord's list. The stored feature vectors are training data for an
+ * offline ML re-ranker; the shipped weights are never mutated at runtime.
  */
 @Service()
 export class ChordFeedbackStore {
@@ -121,33 +111,13 @@ export class ChordFeedbackStore {
     return this.pinsSignal().some((e) => e.key === key);
   }
 
-  /** Number of pinned voicings (for stats/debug). */
   get count(): number {
     return this.pinsSignal().length;
   }
 
-  /** The feature vectors of all pins — the ML training dataset. */
+  /** The feature vectors of all pins. */
   trainingData(): readonly ErgonomicsFeatures[] {
     return this.pinsSignal().map((e) => e.features);
-  }
-
-  /**
-   * JSON string of every pinned voicing for the offline ML pipeline
-   * (scripts/train_model.py consumes this file).
-   */
-  exportTrainingData(): string {
-    const payload = {
-      version: 1,
-      exportedAt: new Date().toISOString(),
-      pins: this.pinsSignal().map((e) => ({
-        tuning: e.tuning,
-        chord: e.chord,
-        frets: e.frets,
-        at: e.at,
-        features: e.features,
-      })),
-    };
-    return JSON.stringify(payload, null, 2);
   }
 
   /** Toggle a pin: add it, or remove it if already pinned. */

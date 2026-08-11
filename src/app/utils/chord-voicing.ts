@@ -178,6 +178,7 @@ export function searchChord(
           })
         )
           return;
+        if (!options.allowInversions && !shape.bassIsRoot) return;
         if (feedback?.excludeShape?.(shape)) return;
         const baseCost = scoreErgonomics(shape, tuning, chord, allowOpens).cost;
         results.push({

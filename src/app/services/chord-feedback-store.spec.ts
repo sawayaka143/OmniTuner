@@ -107,7 +107,7 @@ describe('ChordFeedbackStore', () => {
     expect(ERGONOMICS_WEIGHTS).toEqual(ERGONOMICS_WEIGHTS);
   });
 
-  it('exposes the feature vectors as ML training data', () => {
+  it('exposes the feature vectors of pinned voicings', () => {
     const store = createStore();
     const shape = firstShape('C');
     store.togglePin(tuning, chord('C'), shape);
@@ -116,17 +116,5 @@ describe('ChordFeedbackStore', () => {
     expect(data).toHaveLength(1);
     expect(data[0].position).toBeGreaterThanOrEqual(0);
     expect(data[0].stretchSpan).toBeGreaterThanOrEqual(0);
-  });
-
-  it('exports training data as JSON with the pinned feature vectors', () => {
-    const store = createStore();
-    const shape = firstShape('C');
-    store.togglePin(tuning, chord('C'), shape);
-
-    const json = store.exportTrainingData();
-    const parsed = JSON.parse(json) as { version: number; pins: { features: unknown }[] };
-    expect(parsed.version).toBe(1);
-    expect(parsed.pins).toHaveLength(1);
-    expect(parsed.pins[0].features).toEqual(store.trainingData()[0]);
   });
 });

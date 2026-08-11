@@ -4,7 +4,6 @@ import { textColorOn } from '../../data/interval-colors';
 import { TunerStartupMode } from '../../models/tuner-preferences.model';
 import { ScalePreferences } from '../../services/scale-preferences';
 import { TunerPreferences } from '../../services/tuner-preferences';
-import { MlWeightsService } from '../../services/ml-weights-service';
 import { Brand } from '../brand/brand';
 import { SettingsPanel } from '../settings-panel/settings-panel';
 
@@ -22,12 +21,6 @@ import { SettingsPanel } from '../settings-panel/settings-panel';
 export class AppShell {
   private readonly preferences = inject(ScalePreferences);
   private readonly tunerPreferences = inject(TunerPreferences);
-  private readonly mlWeights = inject(MlWeightsService);
-
-  constructor() {
-    // Load the offline-ML weight payload (if any) — falls back to defaults.
-    void this.mlWeights.load();
-  }
 
   protected readonly settingsOpen = signal(false);
   protected readonly preferencesState = this.preferences.state;
