@@ -44,10 +44,6 @@ const OCTAVE_CORRECTION_CENTS = 360;
  */
 const MAX_DROPOUT_HOLD_FRAMES = 3;
 
-/**
- * After this many consecutive dropouts we fully reset and go back
- * to 'listening'.
- */
 const RELEASE_FRAME_COUNT = 8;
 
 /**
@@ -68,7 +64,7 @@ export class AudioCaptureService {
   readonly isCapturing = signal(false);
   readonly trackingState = signal<PitchTrackingState>('idle');
   readonly captureError = signal<string | null>(null);
-  readonly inputLevel = signal(0);                          // #10
+  readonly inputLevel = signal(0);
   readonly debugInfo = computed(() => {
     const state = this.trackingState();
     const freq = this.frequency();
@@ -115,8 +111,8 @@ export class AudioCaptureService {
       if (!this.isCapturing() || sessionId !== this.captureSession) return;
 
       this.analysisInFlight = false;
-      this.clearAnalysisTimeout();                          // #7
-      this.inputLevel.set(inputLevel);                      // #10
+      this.clearAnalysisTimeout();
+      this.inputLevel.set(inputLevel);
 
       if (frequency === null || confidence <= 0) {
         this.handleDropout();
@@ -130,7 +126,7 @@ export class AudioCaptureService {
     this.worker.onerror = (err: ErrorEvent) => {
       console.error('[AudioCaptureService] worker error:', err.message);
       this.analysisInFlight = false;
-      this.clearAnalysisTimeout();                          // #7
+      this.clearAnalysisTimeout();
     };
 
     this.destroyRef.onDestroy(() => {
@@ -259,13 +255,13 @@ export class AudioCaptureService {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
     }
-    this.clearAnalysisTimeout();                            // #7
+    this.clearAnalysisTimeout();
     this.captureSession += 1;
     this.analysisInFlight = false;
     this.startInFlight = false;
     this.releaseAudioResources();
     this.frequency.set(null);
-    this.inputLevel.set(0);                                 // #10
+    this.inputLevel.set(0);
     this.isCapturing.set(false);
     this.trackingState.set('idle');
     this.resetTracking();
@@ -341,8 +337,6 @@ export class AudioCaptureService {
           sessionId: this.captureSession,
         });
 
-        // #7 – watchdog: if the worker never replies, unblock the
-        // loop so we can retry on the next eligible frame.
         this.clearAnalysisTimeout();
         this.analysisTimeout = setTimeout(() => {
           this.analysisInFlight = false;
@@ -356,7 +350,7 @@ export class AudioCaptureService {
     this.animationFrameId = requestAnimationFrame(tick);
   }
 
-  // #7 – small helper so we don't repeat the null-check + clearTimeout.
+  // #7
   private clearAnalysisTimeout(): void {
     if (this.analysisTimeout !== null) {
       clearTimeout(this.analysisTimeout);
@@ -369,12 +363,8 @@ export class AudioCaptureService {
   private handleDetection(rawFrequency: number): void {
     this.missedFrames = 0;
 
-    // 1. Octave correction: if the raw frequency jumped by more than
-    //    ~650 cents from our running median, try ÷2 and ×2 and pick
-    //    the candidate closest to the median.
     const corrected = this.correctOctaveJump(rawFrequency);
 
-    // 2. Median smoothing with a large-jump reset.
     const smoothed = this.smoothFrequency(corrected);
 
     if (this.recentFrequencies.length >= 3) {
@@ -391,10 +381,7 @@ export class AudioCaptureService {
   private handleDropout(): void {
     this.missedFrames += 1;
 
-    // Hold the last good pitch for a few frames so the needle
-    // doesn't flicker out on every momentary YIN miss.
     if (this.smoothedFrequency !== null && this.missedFrames <= MAX_DROPOUT_HOLD_FRAMES) {
-      // Keep displaying the last pitch; don't update the signal.
       return;
     }
 
@@ -413,8 +400,8 @@ export class AudioCaptureService {
       return;
     }
 
-    // Between MAX_DROPOUT_HOLD and RELEASE: stop displaying but
-    // stay 'locked' so we don't flash "LISTENING" on every pause.
+    // Keep the last pitch on screen during the hold window so the
+    // needle doesn't vanish on every momentary miss.
     if (this.missedFrames > MAX_DROPOUT_HOLD_FRAMES) {
       this.frequency.set(null);
     }
@@ -430,7 +417,6 @@ export class AudioCaptureService {
 
     if (jumpCents < OCTAVE_JUMP_CENTS) return frequency;
 
-    // Try the frequency as-is, one octave down, and one octave up.
     const candidates = [frequency, frequency / 2, frequency * 2].filter(
       (f) => f >= MIN_FREQUENCY && f <= MAX_FREQUENCY,
     );
@@ -442,7 +428,6 @@ export class AudioCaptureService {
         : closest,
     );
 
-    // Only accept the correction if it's reasonably close.
     return Math.abs(this.cents(best, reference)) < OCTAVE_CORRECTION_CENTS
       ? best
       : frequency;
@@ -479,8 +464,7 @@ export class AudioCaptureService {
       : sorted[mid];
   }
 
-  // #9 – guard against non-positive inputs that would produce
-  // NaN / ±Infinity and poison the median.
+  // #9 – guard against non-positive inputs (would yield NaN/±Infinity).
   private cents(a: number, b: number): number {
     if (a <= 0 || b <= 0) return 0;
     return 1200 * Math.log2(a / b);

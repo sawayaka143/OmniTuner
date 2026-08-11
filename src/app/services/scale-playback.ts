@@ -16,8 +16,7 @@ export const SCALE_AUDIO_CONTEXT_FACTORY = new InjectionToken<AudioContextFactor
   },
 );
 
-/** Single source of truth for MIDI → Hz lives in `pitch-utils`; re-exported here
- *  to preserve the existing public API of this module. */
+/** MIDI → Hz, re-exported from `pitch-utils` to preserve this module's public API. */
 export const midiToFrequency = midiNoteToFrequency;
 
 @Service()
@@ -26,7 +25,7 @@ export class ScalePlayback {
   private readonly destroyRef = inject(DestroyRef);
   private context: AudioContext | null = null;
 
-  /** True while a scale/tuning sequence is being played (drives the brand wobble). */
+  /** True while a scale/tuning sequence is playing (drives the brand wobble). */
   readonly isPlaying = signal(false);
 
   constructor() {

@@ -16,13 +16,12 @@ export const FEEDBACK_STORAGE = new InjectionToken<Storage | null>('Chord feedba
   },
 });
 
-/** A pinned voicing for a specific chord/tuning. */
 export interface VoicingFeedback {
   readonly key: string;
   readonly tuning: string;
   readonly chord: string;
   readonly frets: string;
-  /** Feature vector at pin time — the ML training input. */
+  /** Feature vector of the shape at pin time. */
   readonly features: ErgonomicsFeatures;
   readonly rating: 'pin';
   readonly at: number;
@@ -65,11 +64,7 @@ const parseEntries = (value: unknown): readonly VoicingFeedback[] => {
   return result;
 };
 
-/**
- * Persistent store for chord-finder pins: bookmarks that bubble to the top of
- * each chord's list. The stored feature vectors are training data for an
- * offline ML re-ranker; the shipped weights are never mutated at runtime.
- */
+/** Persistent store for chord-finder pins; never mutates the shipped ergonomics weights. */
 @Service()
 export class ChordFeedbackStore {
   private readonly storage = inject(FEEDBACK_STORAGE);
@@ -105,7 +100,6 @@ export class ChordFeedbackStore {
     return `${tuning.labels.join(' ')}|${chord.symbol}|${frets.map((f) => (f === null ? 'x' : f)).join(',')}`;
   }
 
-  /** Whether a specific shape is pinned. */
   isPinned(tuning: ParsedTuning, chord: ParsedChord, shape: VoicingShape): boolean {
     const key = this.key(tuning, chord, shape.frets);
     return this.pinsSignal().some((e) => e.key === key);
@@ -115,12 +109,10 @@ export class ChordFeedbackStore {
     return this.pinsSignal().length;
   }
 
-  /** The feature vectors of all pins. */
   trainingData(): readonly ErgonomicsFeatures[] {
     return this.pinsSignal().map((e) => e.features);
   }
 
-  /** Toggle a pin: add it, or remove it if already pinned. */
   togglePin(tuning: ParsedTuning, chord: ParsedChord, shape: VoicingShape): void {
     const key = this.key(tuning, chord, shape.frets);
     const exists = this.pinsSignal().some((e) => e.key === key);

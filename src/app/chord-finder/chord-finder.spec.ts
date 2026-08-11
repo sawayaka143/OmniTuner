@@ -86,7 +86,6 @@ describe('ChordFinder', () => {
 
     click('.generate');
     expect(statusText()).toContain('done');
-    // 2 cards, both parsed successfully (no error card).
     expect(el().querySelectorAll('.chord-card').length).toBe(2);
     expect(el().querySelectorAll('.chord-card .card-note.error').length).toBe(0);
     // C13's optional 11th/13th show in parentheses (sharp spelling: A# for Bb).
@@ -135,7 +134,6 @@ describe('ChordFinder', () => {
     fixture.detectChanges();
     expect(el().querySelector('.dropdown-menu')).toBeTruthy();
 
-    // Pick "Dorian" — the trigger updates and the menu closes.
     const dorian = [...el().querySelectorAll<HTMLButtonElement>('.dropdown-item')].find((o) =>
       o.textContent?.includes('Dorian'),
     );
@@ -163,7 +161,6 @@ describe('ChordFinder', () => {
     fixture.detectChanges();
 
     click('.generate');
-    // The stage key line reflects the selected root.
     expect(el().querySelector('.stage-context')?.textContent).toContain('key G');
   });
 
@@ -212,8 +209,6 @@ describe('ChordFinder', () => {
       '.shape-action.active[aria-label="Unpin this fingering"]',
     );
     expect(pinned).toBeTruthy();
-
-    // Regenerate: the pinned shape stays in the list (bubbles to top).
     click('.generate');
     const stillPinned = el().querySelector<HTMLButtonElement>(
       '.shape-action.active[aria-label="Unpin this fingering"]',
@@ -242,11 +237,6 @@ describe('ChordFinder', () => {
   });
 
   it('generates a progression with an invalid chord token in the middle without misaligning', () => {
-    // Regression (Bug 2): `generate()` previously filtered the parsed chords
-    // but passed the *unfiltered* shapes array to `scoreProgressionVoicings`,
-    // so a parse error mid-progression shifted the pathfinding indices and
-    // could misplace transition badges or crash. Both arrays are now filtered
-    // together to stay aligned.
     const progressionInput = fieldInput('chords, comma-separated');
     if (!progressionInput) throw new Error('progression input missing');
     progressionInput.value = 'Cm, NOTACHORD, G';
@@ -259,21 +249,12 @@ describe('ChordFinder', () => {
     expect(el().querySelectorAll('.chord-card').length).toBe(3);
     expect(el().querySelectorAll('.chord-card .card-note.error').length).toBe(1);
 
-    // Pathfinding must stay aligned: the invalid token breaks the adjacency,
-    // so neither valid chord may carry a transition pointer. (The buggy code
-    // filtered the parsed chords but passed the unfiltered shapes array,
-    // which made the path land on the invalid token's empty shapes and leaked
-    // a `-1` backpointer into bestNextIndex.)
     const results = (component as unknown as { results(): { bestNextIndex: (number | null)[] } }).results();
     expect(results.bestNextIndex[0]).toBeNull();
     expect(results.bestNextIndex[2]).toBeNull();
   });
 
   it('renders a single thumb hint when a shape has both string-skip and thumb-fretting', () => {
-    // Regression (Bug 3): `ergonomicsHint()` pushed WHY_HINTS['thumb'] twice
-    // when both `hasStringSkip` and `hasThumbFret` were true, producing a
-    // duplicated "thumb fretting / skipped string · thumb fretting / skipped
-    // string" label.
     const tuning = parseTuning('E2 A2 D3 G3 B3 E4');
     if (!tuning.ok) throw new Error('failed to parse tuning');
     const chord = parseChord('C');
@@ -310,10 +291,6 @@ describe('ChordFinder', () => {
   });
 
   it('bypasses Viterbi and clears transition badges when smooth transitions are off', () => {
-    // The toggle defaults to ON (Viterbi pathfinding); switch it OFF and
-    // generate: every chord keeps its shapes, but no transition pointers.
-    // The smooth-transitions toggle is the 3rd .toggle-row (after inversions
-    // and muted-string-gaps).
     const toggles = el().querySelectorAll<HTMLButtonElement>('.toggle-row button[role="switch"]');
     const smoothToggle = toggles[2];
     if (!smoothToggle) throw new Error('smooth-transitions toggle missing');

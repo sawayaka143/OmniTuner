@@ -4,15 +4,9 @@ let nextFieldId = 0;
 
 /**
  * Single-line text or number input with a visible label and optional inline
- * validation messaging.
- *
- * Accessibility is baked in: an `id` is generated and bound to both the
- * `<label for>` and the input; `aria-invalid` is computed from `[invalid]` *or*
- * a non-empty `[errorMessage]`; when either an error or a hint is shown, it
- * becomes the input's `aria-describedby` target, so screen readers always
- * announce validation state — closing the gap that existed in the chord-finder
- * fields, which previously surfaced validation only via a sibling `<p>` with
- * no aria wiring.
+ * validation messaging. Accessibility is baked in: a generated `id` links the
+ * `<label for>`, `aria-invalid` follows `[invalid]`/`[errorMessage]`, and any
+ * error/hint becomes `aria-describedby`.
  */
 @Component({
   selector: 'app-text-field',

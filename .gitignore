@@ -16,6 +16,9 @@
 *.cert
 *.crt
 
+# User-exported chord pin data (never commit)
+/training_data*.json
+
 # ------------------------------------------------------------------------------
 # 2. Dependencies & Package Managers
 # ------------------------------------------------------------------------------

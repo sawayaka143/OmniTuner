@@ -193,7 +193,6 @@ export class InstrumentRegistry {
 
     this.selectedInstrumentSignal.set(instrumentId);
 
-    // If the current tuning doesn't belong to the new instrument, reset.
     const tunings = [
       ...instrument.tunings,
       ...this.customTuningsSignal()
@@ -256,10 +255,8 @@ export class InstrumentRegistry {
 
     this.customInstrumentsSignal.set(next);
 
-    // Also remove all custom tunings for this instrument.
     this.customTuningsSignal.update((tunings) => tunings.filter((t) => t.instrumentId !== id));
 
-    // If the deleted instrument was selected, fall back to guitar/standard.
     if (this.selectedInstrumentSignal() === id) {
       this.selectedInstrumentSignal.set('guitar');
       this.selectedTuningSignal.set('standard');
@@ -319,7 +316,6 @@ export class InstrumentRegistry {
 
     this.customTuningsSignal.set(next);
 
-    // If the deleted tuning was selected, fall back to the first built-in.
     if (this.selectedTuningSignal() === id) {
       const instrument = this.selectedInstrument();
       this.selectedTuningSignal.set(instrument.tunings[0]?.id ?? 'standard');
@@ -440,9 +436,7 @@ export class InstrumentRegistry {
       const customInstruments = readCustomInstruments(parsed['customInstruments']);
       const customTunings = readCustomTunings(parsed['customTunings']);
 
-      // Validate persisted selection ids against the actual universe so a
-      // stale id (deleted instrument/tuning, old version) falls back to a
-      // real one instead of being re-persisted forever.
+      // Stale persisted selection ids fall back to a real one.
       const rawInstrumentId =
         typeof parsed['selectedInstrumentId'] === 'string'
           ? parsed['selectedInstrumentId']

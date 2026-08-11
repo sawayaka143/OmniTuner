@@ -34,9 +34,8 @@ export function ergonomicsHint(
 }
 
 /**
- * Direct voicing entry: type a specific fingering (bottom → top), see a live
- * tab preview + ergonomics hints, and pin it to the feedback store. Bypasses
- * the DFS search entirely — the shape is parsed as-is.
+ * Direct voicing entry: type a specific fingering (bottom → top) and pin it.
+ * Bypasses the DFS search entirely — the shape is parsed as-is.
  */
 @Component({
   selector: 'app-direct-voicing-input',
@@ -59,7 +58,7 @@ export class DirectVoicingInput {
     parseDirectInput(this.text(), this.tuning()),
   );
 
-  /** The ok-variant of the parse, or null when invalid (template-friendly). */
+  /** The ok-variant of the parse, or null when invalid. */
   protected readonly parsed = computed<DirectParseOk | null>(() => {
     const result = this.parseResult();
     return result.ok ? result : null;
@@ -91,7 +90,7 @@ export class DirectVoicingInput {
     return `✓ ${this.tuning().midi.length} strings · span ${parsed.shape.span}${chordText}`;
   });
 
-  /** Error message when the parse is invalid (template-friendly). */
+  /** Error message when the parse is invalid. */
   protected readonly parseError = computed<string>(() => {
     const result = this.parseResult();
     return result.ok ? '' : result.error;

@@ -1,14 +1,10 @@
 import { DestroyRef, Directive, inject, input } from '@angular/core';
 
 /**
- * Press-and-hold-to-repeat: invokes a callback on `pointerdown`, then again on
+ * Press-and-hold-to-repeat: fires a callback on `pointerdown`, then again on
  * an interval after an initial delay. Keyboard activation (`click` with
- * `detail === 0`) fires the callback once; pointer-initiated clicks are
- * suppressed (the `pointerdown` path already handled them) so the host never
- * sees a double-fire.
- *
- * Timing defaults mirror the previous inline editors: 420 ms delay then an
- * 85 ms interval. Both are configurable via signal inputs.
+ * `detail === 0`) fires once; pointer clicks are suppressed (the `pointerdown`
+ * path already handled them) so the host never double-fires.
  */
 @Directive({
   selector: '[appPressRepeat]',
@@ -47,9 +43,8 @@ export class PressRepeat {
   }
 
   protected onHostClick(event: MouseEvent): void {
-    // Keyboard activation produces `detail === 0`. Pointer activation has
-    // already been handled in `onPointerDown`; `click` after pointerup would
-    // double-fire if we also emitted here, so we only respond to the keyboard.
+    // Keyboard activation produces `detail === 0`; pointer clicks were already
+    // handled in `onPointerDown`, so only respond to the keyboard.
     if (event.detail === 0) {
       this.fire();
     }

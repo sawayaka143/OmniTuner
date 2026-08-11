@@ -42,10 +42,7 @@ interface MutedMarker {
   readonly y: number;
 }
 
-/**
- * Declarative neck diagram for a single voicing: fret wires, strings,
- * inlays, muted markers and either note dots or fret-number rings.
- */
+/** Declarative neck diagram for a single voicing. */
 @Component({
   selector: 'app-neck-diagram',
   templateUrl: './neck-diagram.html',

@@ -1,16 +1,9 @@
 /**
- * Ergonomics model for the chord-finder: deterministic, transparent playability
- * scoring. Pure functions only — no Angular imports — so vitest specs consume
- * the same code.
- *
- * The model converts a fingering into the physical features a guitarist feels
- * (barres, stretches, open strings, doublings, bass thickness), then combines
- * them with an exported weight set. The weights are the single knob for "what
- * makes a voicing easy". Cost is deliberately non-linear: stretches are
- * penalized quadratically (`stretchSpan²` — a 4-fret stretch is ~4× as hard as
- * a 2-fret), scaled by a fret-width factor that shrinks up the neck
- * (`1/(1 + position·0.05)`), and structurally impossible shapes are rejected
- * by `isPhysicallyPlayable` before scoring.
+ * Ergonomics model for the chord-finder: deterministic playability scoring.
+ * Pure functions only — no Angular imports — so vitest specs consume the same
+ * code. Converts a fingering into physical features (barres, stretches, open
+ * strings, doublings, bass thickness) and combines them with an exported
+ * weight set.
  */
 
 import { ParsedChord, ParsedTuning } from './chord-theory';
@@ -20,9 +13,8 @@ import { VoicingShape } from './chord-voicing';
 const THUMB_FRETTING_DELTA = 2;
 
 /**
- * Width of a fret at a given left-hand position, relative to the first fret.
- * Frets narrow up the neck, so a stretch at the 9th fret is physically easier
- * than the same stretch at the 1st (≈1.0 at position 1, ≈0.69 at position 9).
+ * Width of a fret at a given position, relative to the first fret — frets
+ * narrow up the neck, so stretches get easier higher up.
  */
 export function fretWidthFactor(position: number): number {
   return 1 / (1 + position * 0.05);
@@ -53,14 +45,14 @@ export function isPhysicallyPlayable(
   const rejectUnbarrable = options.rejectUnbarrable ?? false;
 
   const fretted = shape.frets.filter((f): f is number => f !== null && f > 0);
-  if (!fretted.length) return true; // All-muted is degenerate but not "impossible".
+  if (!fretted.length) return true;
 
   const minFret = Math.min(...fretted);
   const maxFret = Math.max(...fretted);
   if (maxSpan > 0 && maxFret - minFret > maxSpan) return false;
 
-  // Consecutive strings sharing a fret can be covered by one finger (barre);
-  // everything else needs its own finger. Five independent fingers are impossible.
+  // Consecutive strings sharing a fret are one finger (barre); everything
+  // else needs its own. Five independent fingers are impossible.
   let fingersNeeded = 0;
   let s = 0;
   while (s < shape.frets.length) {
@@ -151,10 +143,7 @@ export type ErgonomicsFactor =
   | 'doubling'
   | 'thumb';
 
-/**
- * Full feature vector — the input a learned re-ranker would consume. Keep it
- * stable: the offline Python pipeline trains on exactly these fields.
- */
+/** Feature vector consumed by the ergonomics cost model. //*/
 export interface ErgonomicsFeatures {
   readonly position: number;
   readonly span: number;
@@ -188,42 +177,25 @@ export interface ErgonomicsScore {
 }
 
 /**
- * Weights for the ergonomics cost model. Exported so tests consume the exact
- * same knobs the app uses. The shipped `BASE_ERGONOMICS_WEIGHTS` are never
+ * Weights for the ergonomics cost model. The shipped defaults are never
  * mutated at runtime.
  */
 export const ERGONOMICS_WEIGHTS = {
-  /** Each fret of left-hand position above the nut. */
   positionPerFret: 0.4,
-  /** Each fret of overall left-hand span (min→max fretted), squared. */
   spanPerFret: 0.6,
-  /** Each fret the index finger spans beyond its first (excluding barres), squared. */
   indexSpanPerFret: 0.8,
-  /** Each fret fingers 2-4 span beyond the index (the "real" stretch), squared. */
   stretchPerFret: 1.0,
-  /** Each barre. */
   barrePerBarre: 2.0,
-  /** Each barre string covered beyond 2. */
   barreWidthPerString: 0.5,
-  /** Extra penalty for a barre at position ≥ 7 (higher frets are harder). */
   barreHighFret: 3.0,
-  /** Per open string, capped at 2 (only when the open mode allows them). */
   openPerString: -1.0,
-  /** Per doubled chord tone (root/third/fifth doubled), capped at 1. */
   doublingPerTone: -0.5,
-  /** Extra bonus for a doubled root (the most common real-world doubling). */
   rootDoubleBonus: -0.75,
-  /** Extra penalty when the bass is not the chord root (weak bass). */
   bassNotRoot: 1.5,
-  /** Per string index (0 = lowest) the bass sits on (thicker strings first). */
   bassStringPerString: 0.25,
-  /** Flat penalty when a muted string sits between two sounding strings. */
   stringSkip: 2.5,
-  /** Flat penalty when the thumb would have to fret (low fretted + high fretted 2+ frets up). */
   thumbFretting: 4.0,
-  /** Exponent applied to stretch/span terms (2 = quadratic). */
   stretchExponent: 2,
-  /** Fret-width compensation rate: `1 / (1 + position · fretWidthRate)`. */
   fretWidthRate: 0.05,
 } as const;
 
@@ -253,10 +225,9 @@ const FACTOR_BY_FEATURE: readonly {
 const mod12 = (value: number): number => ((value % 12) + 12) % 12;
 
 /**
- * Estimate the finger shape of a voicing. Assumes the index finger takes the
- * lowest fretted fret and that strings sharing a fret under one finger form a
- * barre. An approximation — real fingering varies — but deterministic and
- * testable, and it captures the physical cost of barres and stretches.
+ * Estimate the finger shape of a voicing: the index finger takes the lowest
+ * fretted fret; strings sharing a fret under one finger form a barre.
+ * Deterministic and testable, though real fingering varies.
  */
 export function detectFingers(frets: readonly (number | null)[]): FingerShape {
   const n = frets.length;
@@ -321,7 +292,7 @@ export function ergonomicsFeatures(
   const maxBarreWidth = finger.barres.reduce((max, b) => Math.max(max, b.width), 0);
   const barreAtHighFret = finger.barres.some((b) => b.fret >= 7);
 
-  // Number of independent fingers: barre runs count as one finger each.
+  // Barre runs count as one finger each.
   const fingeredCount = new Set(finger.fingers.filter((f): f is number => f !== null)).size;
 
   // Widest gap between adjacent fretted strings (the "real" stretch).
@@ -335,7 +306,7 @@ export function ergonomicsFeatures(
     maxSpan = Math.max(maxSpan, (frets[b] ?? 0) - (frets[a] ?? 0));
   }
 
-  // A muted string between two sounding strings needs awkward muting.
+  // Muted string between two sounding strings needs awkward muting.
   const hasStringSkip = frets.some(
     (fret, index) =>
       fret === null &&
@@ -345,8 +316,7 @@ export function ergonomicsFeatures(
       frets[index + 1] !== null,
   );
 
-  // The lowest string fretted with higher strings 2+ frets above implies
-  // thumb fretting — advanced/situational, not a default voicing.
+  // Lowest string fretted with higher strings 2+ frets above implies thumb fretting.
   let hasThumbFret = false;
   if (frets[0] !== null && frets[0] > 0) {
     for (const fret of frets.slice(1)) {
@@ -401,11 +371,9 @@ export function ergonomicsFeatures(
 }
 
 /**
- * Total ergonomics cost of a voicing. Lower is better. A non-linear
- * combination of features with the exported weights: stretch/span terms are
- * raised to `stretchExponent` (2) and scaled by `fretWidthFactor(position)`;
- * string-skips and thumb-fretting get flat penalties. Impossible shapes never
- * reach here — the search filters via `isPhysicallyPlayable`.
+ * Total ergonomics cost of a voicing. Lower is better. Non-linear combination
+ * of features: stretch/span terms are squared and scaled by fret width at the
+ * position; string-skips and thumb-fretting get flat penalties.
  */
 export function scoreErgonomics(
   shape: VoicingShape,
@@ -463,13 +431,12 @@ export const WHY_HINTS: Readonly<Record<ErgonomicsFactor, string>> = {
 };
 
 /**
- * Viterbi-style pathfinding over a chord progression: finds the lowest total
- * cost path — per-chord ergonomics plus `transitionCost` between adjacent
- * voicings — with forward DP and backpointers, so the path is globally rather
- * than greedily optimal. O(chords × shapesPerChord²).
+ * Viterbi-style pathfinding over a chord progression: the globally lowest-cost
+ * path of voicings, where moving between adjacent voicings costs
+ * `transitionCost`. O(chords × shapesPerChord²).
  *
- * @returns `cost` = total path cost, `choices` = per-chord ergonomics cost of
- * the best voicing for that chord alone, `path` = the voicing index per chord.
+ * @returns `cost` total path cost, `choices` per-chord ergonomics cost,
+ * `path` voicing index per chord.
  */
 export function scoreProgressionVoicings(
   chords: readonly ParsedChord[],

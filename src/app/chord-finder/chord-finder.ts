@@ -313,7 +313,6 @@ export class ChordFinder {
     const option = this.tuningOptions().find((o) => o.id === tuningId);
     if (!option) return;
     this.tuningText.set(option.text);
-    // Keep the shared selection in sync with Tuner and Scales.
     this.registry.selectTuning(tuningId);
   }
 
@@ -394,7 +393,6 @@ export class ChordFinder {
       const parse = parseChord(token);
       if (!parse.ok) return { token, parse, shapes: [], badge: null };
       const shapes = searchChord(parsed.tuning, parse.chord, options);
-      // Pinned voicings bubble to the top of each chord's list.
       const pinned = shapes.filter((shape) =>
         this.feedbackStore.isPinned(parsed.tuning, parse.chord, shape),
       );
@@ -414,8 +412,6 @@ export class ChordFinder {
       };
     });
 
-    // Best-transition pointer per chord (except the last): which voicing of
-    // this chord connects most smoothly to a voicing of the next chord.
     const validEntries = chords.filter((c) => c.parse.ok && c.shapes.length > 0) as (ChordEntry & { parse: { ok: true } })[];
     const bestNextIndex: (number | null)[] = new Array(chords.length).fill(null);
 
@@ -434,13 +430,10 @@ export class ChordFinder {
       for (let v = 0; v < validIndices.length - 1; v++) {
         const i = validIndices[v];
         const nextI = validIndices[v + 1];
-        if (nextI !== i + 1) continue; // No transition across a broken chord.
+        if (nextI !== i + 1) continue;
         bestNextIndex[i] = pathfinding.path[v] ?? null;
       }
     } else {
-      // No pathfinding: rank each chord's voicings by pure ergonomics cost.
-      // (searchChord already pre-sorts by cost; re-sorting keeps the order
-      // correct when pins bubble to top.)
       chords = chords.map((entry) => {
         if (!entry.parse.ok) return entry;
         const parsedEntry = entry as ChordEntry & { parse: { ok: true } };
@@ -495,7 +488,7 @@ export class ChordFinder {
     });
   }
 
-  /** Regenerate the whole progression, keeping pins at the top. */
+  /** Regenerate, keeping pins at the top. */
   protected regenerate(): void {
     this.generate();
   }

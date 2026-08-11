@@ -27,12 +27,7 @@ export class AppShell {
   protected readonly accentInk = computed(() => textColorOn(this.preferencesState().accent));
   protected readonly tunerSettings = this.tunerPreferences.tunerSettings;
 
-  /**
-   * The user's in-tune color flows through the theme system as
-   * `--in-tune-color`. While the master switch is OFF the variable is
-   * unset so components fall back to the global default — i.e. today's
-   * exact appearance.
-   */
+  /** In-tune color as a theme var; unset while the master switch is OFF. */
   protected readonly inTuneColor = computed(() =>
     this.tunerSettings().inTune.enabled ? this.tunerSettings().inTune.color : null,
   );

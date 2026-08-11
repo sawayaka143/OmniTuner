@@ -104,10 +104,8 @@ function compareRanks(a: readonly number[], b: readonly number[]): number {
 /**
  * Depth-first search over strings × candidate frets with suffix pruning
  * (coverage, open availability). Returns the top shapes, best ergonomics
- * first. Physically impossible shapes (span > maxStretch, five independent
- * fingers, unbarrable layouts) are rejected by `isPhysicallyPlayable` before
- * scoring. An optional feedback hook lets the caller veto disliked shapes and
- * adjust costs (e.g. from user likes/dislikes).
+ * first. Physically impossible shapes are rejected by `isPhysicallyPlayable`
+ * before scoring.
  */
 export function searchChord(
   tuning: ParsedTuning,
@@ -117,8 +115,7 @@ export function searchChord(
 ): VoicingShape[] {
   const n = tuning.midi.length;
   const pcs = new Set(chord.pcs);
-  // Optional tones (11ths/13ths of extended chords) may ring but needn't be
-  // covered — a 13th chord must still voice on 6 strings.
+  // Optional tones (11ths/13ths) may ring but needn't be covered.
   const optional = new Set(chord.optionalPcs);
   const required = new Set(chord.pcs.filter((pc) => !optional.has(pc)));
 

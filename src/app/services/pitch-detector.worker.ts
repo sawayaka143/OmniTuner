@@ -41,9 +41,8 @@ let yinBufferSize = 0;
 self.onmessage = (event: MessageEvent<AnalyseRequest>) => {
   const { buffer, sampleRate, sessionId } = event.data;
 
-  // #6 – safety net: if anything inside the analysis throws, reply
-  // with a graceful "no pitch" instead of dying silently and leaving
-  // the main thread waiting forever.
+  // #6 – if analysis throws, reply "no pitch" instead of leaving the
+  // main thread waiting forever.
   try {
     const inputLevel = computeRMS(buffer);
     if (inputLevel < SILENCE_RMS) {
@@ -157,9 +156,9 @@ function yinDetect(buffer: Float32Array, sampleRate: number): PitchEstimate {
     return { frequency: null, confidence: 0, inputLevel: 0 };
   }
 
-  // Guitar fundamental preference: YIN frequently locks onto the 2nd harmonic
-  // (one octave up) on guitar, especially the low E and A strings. If the
-  // sub-octave lag (tau * 2) has a clearly better CMNDF value, prefer it.
+  // Guitar fundamental preference: YIN often locks onto the 2nd
+  // harmonic (one octave up) on low E/A strings; prefer the sub-octave
+  // lag when its CMNDF value is clearly better.
   tau = preferLowerFundamental(tau, yin, maxLag, sampleRate);
 
   // Step 4: parabolic interpolation for sub-sample accuracy.
@@ -199,12 +198,12 @@ function preferLowerFundamental(
   if (frequency < 180) return tau;          // already in the bass range
 
   const candidateTau = tau * 2;
-  if (candidateTau > maxLag) return tau;    // can't go lower
+  if (candidateTau > maxLag) return tau;
 
   const candidateValue = yin[candidateTau];
   const currentValue = yin[tau];
 
-  // Only switch if the sub-octave is *clearly* better.
+  // Only switch if the sub-octave is clearly better.
   if (candidateValue + 0.018 < currentValue) {
     return candidateTau;
   }

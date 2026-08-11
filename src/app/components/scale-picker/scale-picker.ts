@@ -16,18 +16,14 @@ interface ScaleGroup {
   styleUrl: './scale-picker.scss',
 })
 export class ScalePicker {
-  /** All selectable scales. */
   readonly scales = input.required<readonly Scale[]>();
-  /** Currently selected scale id. */
   readonly selectedId = input.required<string>();
-  /** Whether the dropdown menu is open. */
   readonly open = input(false);
 
   readonly select = output<string>();
   readonly toggle = output<void>();
   readonly close = output<void>();
 
-  /** Display label for the currently-selected scale. */
   protected readonly selectedLabel = computed(
     () => this.scales().find((s) => s.id === this.selectedId())?.label ?? '',
   );

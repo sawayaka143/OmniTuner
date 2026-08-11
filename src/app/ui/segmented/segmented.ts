@@ -2,18 +2,10 @@ import { Component, computed, input, output } from '@angular/core';
 
 /**
  * Segmented radiogroup with a sliding indicator. Renders one button per option
- * inside a `role="radiogroup"` container; the selected option uses `role="radio"`
- * with `aria-checked`, and the indicator slides to its position via
- * `translateX(selectedIndex * 100%)` — collapsing the three legacy indicator
- * mechanisms (index transform, `[class.second]` flip, nested ternary) into one.
- *
- * Defaults to the mixin's `inline-flex` layout; pass `[gridColumns]` (a CSS
- * `grid-template-columns` value) to switch to a grid layout (used by scale-options'
- * Accidentals/Frets groups).
- *
- * Excluded call sites: `instrument-seg` keeps its bespoke implementation because
- * it interleaves a "+" action segment that hides the indicator when active —
- * forcing that through `<app-segmented>` would muddy both.
+ * inside a `role="radiogroup"`; the selected option uses `role="radio"` with
+ * `aria-checked`, and the indicator slides via
+ * `translateX(selectedIndex * 100%)`. Defaults to `inline-flex`; pass
+ * `[gridColumns]` to switch to a grid layout.
  */
 @Component({
   selector: 'app-segmented',

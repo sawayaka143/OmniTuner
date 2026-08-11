@@ -32,18 +32,14 @@ interface DisplayRow {
 
 /**
  * Reusable form for editing a named list of MIDI note values (an instrument's
- * default tuning or a custom tuning). Owns the name/notes/count state and the
- * in-form validations (empty name, duplicate against `[disallowedNames]`);
- * the host is responsible for persistence and may pass an `[externalError]`
- * to surface a registry-throw in the same field-error slot.
+ * default or custom tuning). Owns the name/notes/count state and in-form
+ * validation; the host persists and may pass an `[externalError]`.
  *
- * Re-initialises itself whenever `[initialName]`, `[initialNotes]`,
- * `[initialStringCount]`, or `[mode]` change — so the host toggles between
- * create/edit by flipping those inputs, no imperative reset needed.
+ * Re-initialises whenever `[initialName]`, `[initialNotes]`,
+ * `[initialStringCount]`, or `[mode]` change — no imperative reset needed.
  *
- * The `preview` output fires on every step and preset application; the host
- * may ignore it (audio-monitor does) or use it to live-preview the tuning on
- * the fretboard (scales does).
+ * `preview` fires on every step/preset change; the host may ignore it or
+ * live-preview the tuning on a fretboard.
  */
 @Component({
   selector: 'app-string-editor',

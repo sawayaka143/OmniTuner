@@ -2,7 +2,6 @@
  * Direct fret input: parses a user-typed voicing (e.g. `x 3 2 0 1 0` or
  * `x32010`) into a full {@link VoicingShape} without the DFS search.
  */
-
 import { ParsedChord, ParsedTuning, parseChord, CHORD_FORMULAS } from './chord-theory';
 import { SoundingNote, VoicingShape } from './chord-voicing';
 import { isPhysicallyPlayable } from './ergonomics';

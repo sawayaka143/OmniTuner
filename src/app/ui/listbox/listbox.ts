@@ -3,12 +3,8 @@ import { Component, computed, input, output } from '@angular/core';
 /**
  * Accessible listbox dropdown: a pill trigger that opens a floating
  * `role="listbox"` menu of `role="option"` items. The parent owns the `open`
- * signal (matching the previous bespoke implementations); the primitive emits
- * `toggle` (trigger clicked) and `select` (an option chosen).
- *
- * Items may be grouped: pass an `optionGroup` accessor that returns a label
- * string for items that should sit under a group header, or `null` for ungrouped
- * items. Groups render in first-seen insertion order.
+ * signal; the primitive emits `toggle` (trigger clicked) and `select` (option
+ * chosen). Items may be grouped via `optionGroup` (first-seen order).
  */
 @Component({
   selector: 'app-listbox',

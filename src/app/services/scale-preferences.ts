@@ -104,7 +104,6 @@ export class ScalePreferences {
   }
 
   setScaleId(scaleId: string): void {
-    // Validation deferred to parseState on reload; accept any non-empty string.
     if (!scaleId) return;
     this.update({ scaleId });
   }

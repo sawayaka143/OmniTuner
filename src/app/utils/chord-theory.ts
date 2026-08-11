@@ -246,12 +246,10 @@ interface ComposedQuality {
 }
 
 /**
- * Compositional chord-quality parser: resolves symbols not in `QUALITY_ALIASES`
- * by matching the longest `CHORD_FORMULAS` key as a base, then applying
- * alteration/extension tokens. This makes every dominant combination
- * (`7b5#9b13`, `7#5#11`, `13b9b5`, …) and theoretical minors (`m7b9`) parse
- * without an explicit table entry. Returns null when the suffix can't be
- * consumed — the caller reports it as an unknown quality.
+ * Compositional chord-quality parser: resolves symbols not in
+ * `QUALITY_ALIASES` by matching the longest `CHORD_FORMULAS` key as a base,
+ * then applying alteration/extension tokens (`7b5#9b13`, `m7b9`, …).
+ * Returns null when the suffix can't be consumed.
  */
 function composeQuality(raw: string): ComposedQuality | null {
   const normalized = normalizeQuality(raw);
