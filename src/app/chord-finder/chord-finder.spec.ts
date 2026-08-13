@@ -4,7 +4,6 @@ import { ChordFinder } from './chord-finder';
 import { WHY_HINTS } from '../utils/ergonomics';
 import { parseChord, parseTuning, ParsedChord, ParsedTuning } from '../utils/chord-theory';
 import { SoundingNote, VoicingShape } from '../utils/chord-voicing';
-import { ChordFeedbackStore } from '../services/chord-feedback-store';
 
 describe('ChordFinder', () => {
   let component: ChordFinder;
@@ -18,23 +17,6 @@ describe('ChordFinder', () => {
   };
 
   const statusText = (): string => el().querySelector('.readout p')?.textContent?.trim() ?? '';
-
-  const directFieldInput = (): HTMLInputElement | null => {
-    const label = [...el().querySelectorAll<HTMLLabelElement>('label')].find((candidate) =>
-      candidate.textContent?.includes('frets (bottom'),
-    );
-    if (!label) return null;
-    const id = label.getAttribute('for');
-    return id ? el().querySelector<HTMLInputElement>(`#${id}`) : null;
-  };
-
-  const setDirectText = (value: string): void => {
-    const input = directFieldInput();
-    if (!input) throw new Error('direct frets input missing');
-    input.value = value;
-    input.dispatchEvent(new Event('input'));
-    fixture.detectChanges();
-  };
 
   const fieldInput = (labelText: string): HTMLInputElement | null => {
     const label = [...el().querySelectorAll<HTMLLabelElement>('label')].find((candidate) =>
@@ -197,45 +179,6 @@ describe('ChordFinder', () => {
     expect(badges.length).toBeGreaterThan(0);
   });
 
-  it('pins a fingering and it stays pinned on regenerate', () => {
-    click('.generate');
-    const pinBtn = el().querySelector<HTMLButtonElement>(
-      '.shape-action[aria-label="Pin this fingering"]',
-    );
-    pinBtn?.click();
-    fixture.detectChanges();
-    expect(statusText()).toContain('pinned');
-    const pinned = el().querySelector<HTMLButtonElement>(
-      '.shape-action.active[aria-label="Unpin this fingering"]',
-    );
-    expect(pinned).toBeTruthy();
-    click('.generate');
-    const stillPinned = el().querySelector<HTMLButtonElement>(
-      '.shape-action.active[aria-label="Unpin this fingering"]',
-    );
-    expect(stillPinned).toBeTruthy();
-  });
-
-  it('unpins a fingering on second click', () => {
-    click('.generate');
-    const pinBtn = el().querySelector<HTMLButtonElement>(
-      '.shape-action[aria-label="Pin this fingering"]',
-    );
-    pinBtn?.click();
-    fixture.detectChanges();
-
-    const unpinBtn = el().querySelector<HTMLButtonElement>(
-      '.shape-action[aria-label="Unpin this fingering"]',
-    );
-    unpinBtn?.click();
-    fixture.detectChanges();
-    expect(statusText()).toContain('unpinned');
-    const unmarked = el().querySelector<HTMLButtonElement>(
-      '.shape-action.active[aria-label="Unpin this fingering"]',
-    );
-    expect(unmarked).toBeFalsy();
-  });
-
   it('generates a progression with an invalid chord token in the middle without misaligning', () => {
     const progressionInput = fieldInput('chords, comma-separated');
     if (!progressionInput) throw new Error('progression input missing');
@@ -304,47 +247,4 @@ describe('ChordFinder', () => {
     expect(results.bestNextIndex.every((i) => i === null)).toBe(true);
   });
 
-  it('parses a direct voicing input and shows a live preview', () => {
-    setDirectText('x 3 2 0 1 0');
-    expect(el().querySelectorAll('.direct-line').length).toBe(6);
-    expect(el().textContent).toContain('✓ 6 strings');
-    expect(el().textContent).toContain('span 2');
-  });
-
-  it('shows a validation hint when the string count is wrong', () => {
-    setDirectText('x 3 2 0 1');
-    expect(el().querySelectorAll('.direct-line').length).toBe(0);
-    expect(el().textContent).toContain('expected 6 strings, got 5');
-  });
-
-  it('pins a parsed direct shape into the feedback store', () => {
-    const store = TestBed.inject(ChordFeedbackStore);
-    const before = store.pins().length;
-    setDirectText('x 3 2 0 1 0');
-    const pinBtn = el().querySelector<HTMLButtonElement>('.direct-pin');
-    expect(pinBtn).toBeTruthy();
-    pinBtn?.click();
-    fixture.detectChanges();
-
-    expect(store.pins().length).toBe(before + 1);
-    expect(el().querySelector('.direct-status')?.textContent).toContain('pinned');
-    // x 3 2 0 1 0 is an open C major shape → pinned under the inferred chord C.
-    expect(store.pins()[store.pins().length - 1].chord).toBe('C');
-    expect(store.pins()[store.pins().length - 1].frets).toBe(',3,2,0,1,0');
-  });
-
-  it('unpins a parsed direct shape on a second click', () => {
-    const store = TestBed.inject(ChordFeedbackStore);
-    setDirectText('x 3 2 0 1 0');
-    const pinBtn = el().querySelector<HTMLButtonElement>('.direct-pin');
-    pinBtn?.click();
-    fixture.detectChanges();
-    const before = store.pins().length;
-
-    const unpinBtn = el().querySelector<HTMLButtonElement>('.direct-pin');
-    unpinBtn?.click();
-    fixture.detectChanges();
-    expect(store.pins().length).toBe(before - 1);
-    expect(el().querySelector('.direct-status')?.textContent).toContain('unpinned');
-  });
 });

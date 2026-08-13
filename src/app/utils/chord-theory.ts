@@ -1,13 +1,3 @@
-/**
- * Chord theory primitives for the chord finder workbench:
- * note/tuning/chord parsing, chord formulas, church modes and the
- * diatonic-context badge. Pure functions only — no Angular imports —
- * so the voicing engine and specs can consume them directly.
- *
- * ASCII spellings (`#` / `b`) are used throughout, matching the
- * convention of `scale.constants.ts` (Unicode accidentals are display-only).
- */
-
 export const SHARP_PC_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'] as const;
 export const FLAT_PC_NAMES = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'] as const;
 

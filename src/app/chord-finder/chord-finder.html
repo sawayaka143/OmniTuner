@@ -88,43 +88,7 @@
         </div>
 
         <div class="control-section">
-          <span class="section-label">04 · Direct voicing input</span>
-          <p class="tiny-note">
-            type a specific fingering and pin it — no search. e.g.
-            <code>x 3 2 0 1 0</code> or <code>x32010</code>
-          </p>
-          @if (!directCollapsed()) {
-            @if (parsedTuningValue(); as tuning) {
-              <app-direct-voicing-input
-                [tuning]="tuning"
-                [chordOptions]="directChordOptions()"
-                [pinned]="directPinned()"
-                [text]="directText()"
-                (textChange)="directText.set($event)"
-                (pin)="onDirectPin($event)"
-                (unpin)="onDirectUnpin($event)"
-              />
-            } @else {
-              <p class="tiny-note">{{ tuningError() }}</p>
-            }
-            @if (directStatus()) {
-              <p class="direct-status" [class.err]="directStatus()!.kind === 'err'">
-                {{ directStatus()!.text }}
-              </p>
-            }
-          }
-          <button
-            class="collapse-toggle"
-            type="button"
-            aria-expanded="!directCollapsed()"
-            (click)="directCollapsed.set(!directCollapsed())"
-          >
-            {{ directCollapsed() ? 'expand direct input' : 'collapse direct input' }}
-          </button>
-        </div>
-
-        <div class="control-section">
-          <span class="section-label">05 · Voicing rules</span>
+          <span class="section-label">04 · Voicing rules</span>
 
           <span class="field-label">open string character (fret 0)</span>
           <app-segmented
@@ -166,10 +130,15 @@
               (change)="smoothTransitions.set($event)"
             />
           </div>
-          <p class="rule-description">
-            inversions off → the lowest sounding note must be the chord root · gaps off → sounding
-            strings must be contiguous · smooth → voicings ranked toward the next chord
-          </p>
+          <div class="toggle-row">
+            <span class="toggle-label">randomize high-quality voicings</span>
+            <app-toggle
+              [checked]="randomizeVoicings()"
+              label="randomize high-quality voicings"
+              title="adds slight variation to the ranking so you get fresh, but still excellent, voicings every time"
+              (change)="randomizeVoicings.set($event)"
+            />
+          </div>
 
           <div class="row-2">
             <app-text-field
@@ -354,23 +323,6 @@
                               <span class="transition-badge">→ easiest next</span>
                             }
                           </p>
-                          <div class="shape-actions" aria-label="Voicing actions">
-                            <button
-                              class="shape-action"
-                              type="button"
-                              [class.active]="isPinned(chordIndex, $index)"
-                              [attr.aria-pressed]="isPinned(chordIndex, $index)"
-                              [attr.aria-label]="
-                                isPinned(chordIndex, $index)
-                                  ? 'Unpin this fingering'
-                                  : 'Pin this fingering'
-                              "
-                              title="Pin — keep this fingering at the top on regenerate"
-                              (click)="ratePin(chordIndex, $index)"
-                            >
-                              📌
-                            </button>
-                          </div>
                         </div>
                       }
                     </div>

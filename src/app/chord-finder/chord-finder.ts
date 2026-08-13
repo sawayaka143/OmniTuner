@@ -1,8 +1,6 @@
 import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
-import { DirectVoicingInput, DirectPinPayload } from './direct-voicing-input/direct-voicing-input';
 import { ScalePreferences } from '../services/scale-preferences';
 import { InstrumentRegistry } from '../services/instrument-registry';
-import { ChordFeedbackStore } from '../services/chord-feedback-store';
 import { textColorOn } from '../data/interval-colors';
 import { SHARP_NAMES } from '../data/scale.constants';
 import {
@@ -30,8 +28,7 @@ import {
   VoicingOptions,
   VoicingShape,
 } from '../utils/chord-voicing';
-import { ergonomicsFeatures, scoreErgonomics, scoreProgressionVoicings, WHY_HINTS } from '../utils/ergonomics';
-import { parseDirectInput, DirectParseResult } from '../utils/direct-input';
+import { scoreErgonomics, scoreProgressionVoicings, WHY_HINTS, ERGONOMICS_WEIGHTS } from '../utils/ergonomics';
 import { DiagramLabelMode, DiagramView, NeckDiagram } from './neck-diagram/neck-diagram';
 import { Toggle } from '../ui/toggle/toggle';
 import { Segmented } from '../ui/segmented/segmented';
@@ -74,8 +71,6 @@ export interface GenerationResult {
   readonly tuning: ParsedTuning;
   readonly options: VoicingOptions;
   readonly chords: readonly ChordEntry[];
-  /** For each chord (except the last): index of the fingering that connects
-   *  most smoothly to the next chord. Null when no transition applies. */
   readonly bestNextIndex: readonly (number | null)[];
   readonly keyRoot: string;
   readonly modeName: ModeName;
@@ -93,7 +88,7 @@ const mod12 = (value: number): number => ((value % 12) + 12) % 12;
 
 @Component({
   selector: 'app-chord-finder',
-  imports: [NeckDiagram, Toggle, Segmented, Listbox, TextField, DirectVoicingInput],
+  imports: [NeckDiagram, Toggle, Segmented, Listbox, TextField],
   templateUrl: './chord-finder.html',
   styleUrl: './chord-finder.scss',
   host: {
@@ -104,7 +99,6 @@ const mod12 = (value: number): number => ((value % 12) + 12) % 12;
 export class ChordFinder {
   private readonly preferences = inject(ScalePreferences);
   private readonly registry = inject(InstrumentRegistry);
-  private readonly feedbackStore = inject(ChordFeedbackStore);
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly preferencesState = this.preferences.state;
@@ -169,24 +163,18 @@ export class ChordFinder {
   protected readonly scaleRoot = computed(() => this.scaleRootText().trim() || 'C');
   protected readonly modeName = signal<ModeName>('Aeolian');
   protected readonly progressionText = signal('Cm, Gmaj, Bb7, Fm');
-  protected readonly directText = signal('');
-  protected readonly directCollapsed = signal(false);
-  protected readonly directStatus = signal<{ kind: 'plain' | 'err'; text: string } | null>(null);
-  protected readonly directChordIndex = signal<number | null>(null);
   protected readonly openMode = signal<OpenStringMode>('allow');
   protected readonly allowInversions = signal(false);
   protected readonly allowGaps = signal(false);
   protected readonly maxStretchText = signal('4');
   protected readonly minNotesText = signal('3');
   protected readonly viewMode = signal<DiagramView | 'tab'>('lines');
-  /** Narrowed view for the diagram component (never 'tab'). */
   protected readonly diagramView = computed<DiagramView>(() =>
     this.viewMode() === 'dots' ? 'dots' : 'lines',
   );
   protected readonly labelMode = signal<DiagramLabelMode>('notes');
-  /** Prefer voicings that connect smoothly to the next chord in the progression. */
   protected readonly smoothTransitions = signal(true);
-
+  protected readonly randomizeVoicings = signal(true);
   protected readonly tuningListOpen = signal(false);
   protected readonly modeListOpen = signal(false);
   protected readonly rootListOpen = signal(false);
@@ -220,37 +208,6 @@ export class ChordFinder {
   protected readonly tuningError = computed<string>(() => {
     const parsed = this.parsedTuning();
     return parsed.ok ? '' : parsed.error;
-  });
-
-  protected readonly directResult = computed<DirectParseResult | null>(() => {
-    const parsed = this.parsedTuning();
-    if (!parsed.ok) return null;
-    return parseDirectInput(this.directText(), parsed.tuning);
-  });
-
-  protected readonly directChordOptions = computed<readonly ParsedChord[]>(() =>
-    this.results()
-      ?.chords.map((entry) => (entry.parse.ok ? entry.parse.chord : null))
-      .filter((chord): chord is ParsedChord => chord !== null) ?? [],
-  );
-
-  protected readonly chosenDirectChord = computed<ParsedChord | null>(() => {
-    const options = this.directChordOptions();
-    const index = this.directChordIndex();
-    const fromResults = index !== null ? options[index] ?? null : options[0] ?? null;
-    if (fromResults) return fromResults;
-    const result = this.directResult();
-    if (result?.ok && result.inferredChord) return result.inferredChord;
-    if (result?.ok) return this.customChordFor(result.shape);
-    return null;
-  });
-
-  protected readonly directPinned = computed(() => {
-    const result = this.directResult();
-    const chord = this.chosenDirectChord();
-    const parsed = this.parsedTuning();
-    if (!result?.ok || !chord || !parsed.ok) return false;
-    return this.feedbackStore.isPinned(parsed.tuning, chord, result.shape);
   });
 
   protected readonly tuningHint = computed(() => {
@@ -384,25 +341,19 @@ export class ChordFinder {
       allowGaps: this.allowGaps(),
       maxStretch,
       minNotes,
-      // Hard physical constraint: reject shapes that need an impossible barre.
       rejectUnbarrable: true,
     };
-
+    
+    const jitter = this.randomizeVoicings() ? 3.5 : 0;
     const startedAt = performance.now();
     let chords: ChordEntry[] = tokens.map((token) => {
       const parse = parseChord(token);
       if (!parse.ok) return { token, parse, shapes: [], badge: null };
       const shapes = searchChord(parsed.tuning, parse.chord, options);
-      const pinned = shapes.filter((shape) =>
-        this.feedbackStore.isPinned(parsed.tuning, parse.chord, shape),
-      );
-      const rest = shapes.filter(
-        (shape) => !this.feedbackStore.isPinned(parsed.tuning, parse.chord, shape),
-      );
       return {
         token,
         parse,
-        shapes: [...pinned, ...rest],
+        shapes,
         badge: computeBadge(
           parse.chord,
           this.scaleRootText(),
@@ -416,13 +367,12 @@ export class ChordFinder {
     const bestNextIndex: (number | null)[] = new Array(chords.length).fill(null);
 
     if (this.smoothTransitions() && validEntries.length > 1) {
-      // Viterbi pathfinding: global-lowest-cost voicing path across the
-      // progression (ergonomics + transition cost between adjacent chords).
-      // Filter both arrays so they stay aligned across invalid chord tokens.
       const pathfinding = scoreProgressionVoicings(
         validEntries.map((c) => c.parse.chord),
         parsed.tuning,
         validEntries.map((c) => c.shapes),
+        ERGONOMICS_WEIGHTS,
+        jitter,
       );
       const validIndices = chords
         .map((c, i) => (c.parse.ok && c.shapes.length ? i : -1))
@@ -437,12 +387,12 @@ export class ChordFinder {
       chords = chords.map((entry) => {
         if (!entry.parse.ok) return entry;
         const parsedEntry = entry as ChordEntry & { parse: { ok: true } };
-        const shapes = [...entry.shapes].sort(
-          (a, b) =>
-            scoreErgonomics(a, parsed.tuning, parsedEntry.parse.chord, true).cost -
-            scoreErgonomics(b, parsed.tuning, parsedEntry.parse.chord, true).cost,
-        );
-        return { ...entry, shapes };
+        const scored = entry.shapes.map((shape) => ({
+          shape,
+          cost: scoreErgonomics(shape, parsed.tuning, parsedEntry.parse.chord, true, ERGONOMICS_WEIGHTS, jitter).cost,
+        }));
+        scored.sort((a, b) => a.cost - b.cost);
+        return { ...entry, shapes: scored.map((s) => s.shape) };
       });
     }
 
@@ -470,78 +420,6 @@ export class ChordFinder {
     this.copyBuffer = '';
     this.stats.set('');
     this.status.set({ kind: 'plain', text: 'cleared — ready' });
-  }
-
-  /** Pin/unpin a fingering so it bubbles to the top on regenerate. */
-  protected ratePin(chordIndex: number, shapeIndex: number): void {
-    const entry = this.chordAt(chordIndex);
-    const shape = entry?.parse.ok ? entry.shapes[shapeIndex] : undefined;
-    if (!entry || !entry.parse.ok || !shape) return;
-    const chord = entry.parse.chord;
-    const pinned = this.feedbackStore.isPinned(this.results()!.tuning, chord, shape);
-    this.feedbackStore.togglePin(this.results()!.tuning, chord, shape);
-    this.status.set({
-      kind: 'plain',
-      text: pinned
-        ? 'unpinned — this fingering no longer floats to the top'
-        : 'pinned — this fingering floats to the top on regenerate',
-    });
-  }
-
-  /** Regenerate, keeping pins at the top. */
-  protected regenerate(): void {
-    this.generate();
-  }
-
-  protected customChordFor(shape: VoicingShape): ParsedChord {
-    const parsed = this.parsedTuning();
-    return {
-      symbol: 'custom',
-      rootPc: shape.bassMidi % 12,
-      quality: '',
-      intervals: [],
-      pcs: [...new Set(shape.sounding.map((n) => n.midi % 12))],
-      optionalPcs: [],
-      flats: parsed.ok ? parsed.tuning.flats : false,
-    };
-  }
-
-  protected onDirectPin({ shape, chord }: DirectPinPayload): void {
-    const parsed = this.parsedTuning();
-    if (!parsed.ok) {
-      this.directStatus.set({ kind: 'err', text: `tuning: ${parsed.error}` });
-      return;
-    }
-    this.feedbackStore.togglePin(parsed.tuning, chord, shape);
-    this.directStatus.set({
-      kind: 'plain',
-      text: `pinned ${chord.symbol} — this fingering floats to the top on regenerate`,
-    });
-  }
-
-  protected onDirectUnpin({ shape, chord }: DirectPinPayload): void {
-    const parsed = this.parsedTuning();
-    if (!parsed.ok) {
-      this.directStatus.set({ kind: 'err', text: `tuning: ${parsed.error}` });
-      return;
-    }
-    this.feedbackStore.togglePin(parsed.tuning, chord, shape);
-    this.directStatus.set({
-      kind: 'plain',
-      text: `unpinned ${chord.symbol} — this fingering no longer floats to the top`,
-    });
-  }
-
-  private chordAt(chordIndex: number): ChordEntry | undefined {
-    return this.results()?.chords[chordIndex];
-  }
-
-  protected isPinned(chordIndex: number, shapeIndex: number): boolean {
-    const result = this.results();
-    const entry = result?.chords[chordIndex];
-    const shape = entry?.parse.ok ? entry.shapes[shapeIndex] : undefined;
-    if (!result || !entry || !entry.parse.ok || !shape) return false;
-    return this.feedbackStore.isPinned(result.tuning, entry.parse.chord, shape);
   }
 
   protected async copyTab(): Promise<void> {
@@ -613,15 +491,8 @@ export class ChordFinder {
   }
 
   protected ergonomicsHint(shape: VoicingShape, chord: ParsedChord, tuning: ParsedTuning): string {
-    const factors = ergonomicsFeatures(shape, tuning, chord);
-    const labels: string[] = [];
-    if (!factors.bassIsRoot) labels.push(WHY_HINTS['bass']);
-    if (factors.openCount) labels.push(WHY_HINTS['open']);
-    if (factors.stretchSpan > 0) labels.push(WHY_HINTS['stretch']);
-    if (factors.barreCount > 0) labels.push(WHY_HINTS['barre']);
-    if (factors.position >= 7) labels.push(WHY_HINTS['position']);
-    if (factors.rootDoubled) labels.push(WHY_HINTS['doubling']);
-    if (factors.hasStringSkip || factors.hasThumbFret) labels.push(WHY_HINTS['thumb']);
+    const score = scoreErgonomics(shape, tuning, chord);
+    const labels = score.factors.map((f) => WHY_HINTS[f]);
     return labels.length ? labels.join(' · ') : 'balanced';
   }
 

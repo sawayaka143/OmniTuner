@@ -1,9 +1,3 @@
-/**
- * Chord voicing search engine: enumerates playable shapes for a chord in an
- * arbitrary tuning (custom / re-entrant supported) under voicing rules, then
- * ranks them by ergonomics. Pure functions only.
- */
-
 import { ParsedChord, ParsedTuning } from './chord-theory';
 import { isPhysicallyPlayable, scoreErgonomics } from './ergonomics';
 

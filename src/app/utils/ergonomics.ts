@@ -381,6 +381,7 @@ export function scoreErgonomics(
   chord: ParsedChord,
   allowOpens = true,
   weights: ErgonomicsWeights = ERGONOMICS_WEIGHTS,
+  jitter = 0,
 ): ErgonomicsScore {
   const f = ergonomicsFeatures(shape, tuning, chord);
   const w = weights;
@@ -404,6 +405,7 @@ export function scoreErgonomics(
   cost += f.bassString * w.bassStringPerString;
   if (f.hasStringSkip) cost += w.stringSkip;
   if (f.hasThumbFret) cost += w.thumbFretting;
+  if (jitter > 0) cost += Math.random() * jitter;
 
   const factors: ErgonomicsFactor[] = [];
   for (const { feature, factor } of FACTOR_BY_FEATURE) {
@@ -443,6 +445,7 @@ export function scoreProgressionVoicings(
   tuning: ParsedTuning,
   shapesPerChord: readonly (readonly VoicingShape[])[],
   weights: ErgonomicsWeights = BASE_ERGONOMICS_WEIGHTS,
+  jitter = 0,
 ): { cost: number; choices: readonly number[]; path: readonly number[] } {
   const count = Math.min(chords.length, shapesPerChord.length);
   if (count === 0) return { cost: 0, choices: [], path: [] };
@@ -457,7 +460,7 @@ export function scoreProgressionVoicings(
     dp.push([Infinity]);
     back.push([-1]);
   } else {
-    dp.push(first.map((shape) => scoreErgonomics(shape, tuning, chords[0], true, weights).cost));
+    dp.push(first.map((shape) => scoreErgonomics(shape, tuning, chords[0], true, weights, jitter).cost));
     back.push(new Array(first.length).fill(-1));
     choices.push(dp[0].length ? Math.min(...dp[0]) : Infinity);
   }
@@ -476,7 +479,7 @@ export function scoreProgressionVoicings(
     }
 
     for (let j = 0; j < current.length; j++) {
-      const ergo = scoreErgonomics(current[j], tuning, chords[i], true, weights).cost;
+      const ergo = scoreErgonomics(current[j], tuning, chords[i], true, weights, jitter).cost;
       let best = Infinity;
       let bestK = -1;
       const prevDp = dp[i - 1];
