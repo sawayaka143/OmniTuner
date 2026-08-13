@@ -69,9 +69,10 @@ export function isPhysicallyPlayable(
   if (fingersNeeded > 4) return false;
 
   // Strict barre logic (opt-in): a barre covers a contiguous run of strings at
-  // one fret. If two non-adjacent strings share a fret and the strings between
-  // them sound different frets, no single barre can cover both — reject when
-  // the caller opts in (some players can execute partial barres).
+  // one fret. If two strings share a fret and a string between them sounds a
+  // different fret (or is open/muted, breaking the barre), no single barre can
+  // cover both — reject when the caller opts in (some players can execute
+  // partial barres).
   if (rejectUnbarrable) {
     const frettedIndexes = shape.frets
       .map((fret, index) => (fret !== null && fret > 0 ? index : -1))
@@ -81,10 +82,10 @@ export function isPhysicallyPlayable(
       for (let j = i + 1; j < frettedIndexes.length; j++) {
         const b = frettedIndexes[j];
         if (shape.frets[a] === shape.frets[b] && b - a > 1) {
-          // Between a and b there is at least one sounding string; if that
-          // middle string's fret differs, the barre is impossible.
+          // Between a and b there is at least one string; if that string is
+          // open/muted or fretted at a different fret, the barre is impossible.
           for (let m = a + 1; m < b; m++) {
-            if (shape.frets[m] !== null && shape.frets[m] !== shape.frets[a]) return false;
+            if (shape.frets[m] === null || shape.frets[m] !== shape.frets[a]) return false;
           }
         }
       }
@@ -181,15 +182,15 @@ export interface ErgonomicsScore {
  * mutated at runtime.
  */
 export const ERGONOMICS_WEIGHTS = {
-  positionPerFret: 0.4,
-  spanPerFret: 0.6,
-  indexSpanPerFret: 0.8,
-  stretchPerFret: 1.0,
-  barrePerBarre: 2.0,
+  positionPerFret: 0.3,
+  spanPerFret: 0.5,
+  indexSpanPerFret: 0.7,
+  stretchPerFret: 0.9,
+  barrePerBarre: 1.2,
   barreWidthPerString: 0.5,
-  barreHighFret: 3.0,
-  openPerString: -1.0,
-  doublingPerTone: -0.5,
+  barreHighFret: 2.0,
+  openPerString: -0.6,
+  doublingPerTone: 0.5,
   rootDoubleBonus: -0.75,
   bassNotRoot: 1.5,
   bassStringPerString: 0.25,
@@ -197,6 +198,8 @@ export const ERGONOMICS_WEIGHTS = {
   thumbFretting: 4.0,
   stretchExponent: 2,
   fretWidthRate: 0.05,
+  /** Per extra ringing note above the chord-tone minimum (reward for fuller voicings). */
+  noteCountPerNote: -0.35,
 } as const;
 
 export type ErgonomicsWeights = typeof ERGONOMICS_WEIGHTS;
@@ -401,6 +404,9 @@ export function scoreErgonomics(
     (f.rootDoubled ? 1 : 0) + (f.thirdDoubled ? 1 : 0) + (f.fifthDoubled ? 1 : 0);
   cost += Math.min(doublingCount, 1) * w.doublingPerTone;
   if (f.rootDoubled) cost += w.rootDoubleBonus;
+  // Ringing more chord tones is a feature, not noise: reward each sounding
+  // note beyond the first (so sparse truncated shapes don't tie full ones).
+  cost += (f.noteCount - 1) * w.noteCountPerNote;
   if (!f.bassIsRoot) cost += w.bassNotRoot;
   cost += f.bassString * w.bassStringPerString;
   if (f.hasStringSkip) cost += w.stringSkip;

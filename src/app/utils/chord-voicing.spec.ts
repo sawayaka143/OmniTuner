@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { parseChord, parseTuning, ParsedChord, ParsedTuning } from './chord-theory';
 import { RESULTS_PER_CHORD, searchChord, VoicingOptions } from './chord-voicing';
+import { isPhysicallyPlayable } from './ergonomics';
 
 const STANDARD = parseTuning('E2 A2 D3 G3 B3 E4');
 if (!STANDARD.ok) throw new Error('failed to parse standard tuning');
@@ -205,17 +206,11 @@ describe('searchChord hard constraints', () => {
       rejectUnbarrable: false,
     });
     for (const shape of withBarreCheck) {
-      // Same fret on non-adjacent fretted strings with a different fret between.
-      for (let a = 0; a < shape.frets.length; a++) {
-        for (let b = a + 2; b < shape.frets.length; b++) {
-          if (shape.frets[a] === null || shape.frets[a] === 0) continue;
-          if (shape.frets[a] === shape.frets[b]) {
-            for (let m = a + 1; m < b; m++) {
-              expect(shape.frets[m]).not.toBe(shape.frets[a]);
-            }
-          }
-        }
-      }
+      // The production rule (isPhysicallyPlayable with rejectUnbarrable) is the
+      // contract: a same fret on two strings with a *fretted* string between
+      // them at a different fret is unbarrable; open/muted strings between do
+      // not break the barre (e.g. [3,3,2,0,1,0] barres strings 0-1 and is fine).
+      expect(isPhysicallyPlayable(shape, tuning, { rejectUnbarrable: true })).toBe(true);
     }
     // The check should never *add* shapes.
     expect(withBarreCheck.length).toBeLessThanOrEqual(withoutBarreCheck.length);

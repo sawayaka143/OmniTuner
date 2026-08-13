@@ -34,6 +34,12 @@ export interface VoicingOptions {
    * barres (e.g. same fret on non-adjacent strings). Defaults to false.
    */
   readonly rejectUnbarrable?: boolean;
+  /**
+   * How many top shapes to return (defaults to `RESULTS_PER_CHORD`). Callers
+   * that randomize may want a wider candidate pool (e.g. 12) and then jitter
+   * the ranking so fresh-but-still-good voicings surface.
+   */
+  readonly candidateCount?: number;
 }
 
 /** Optional per-shape feedback applied during search: adjusts the cost and
@@ -206,5 +212,6 @@ export function searchChord(
       ? compareRanks([-a.openCount, ...rankOf(a)], [-b.openCount, ...rankOf(b)])
       : compareRanks(rankOf(a), rankOf(b)),
   );
-  return results.slice(0, RESULTS_PER_CHORD);
+  const candidateCount = options.candidateCount ?? RESULTS_PER_CHORD;
+  return results.slice(0, candidateCount);
 }

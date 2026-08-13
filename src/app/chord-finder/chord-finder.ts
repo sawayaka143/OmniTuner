@@ -342,6 +342,9 @@ export class ChordFinder {
       maxStretch,
       minNotes,
       rejectUnbarrable: true,
+      // Search a wider pool than we display so randomization has diverse,
+      // still-good voicings to pick from (display stays at RESULTS_PER_CHORD).
+      candidateCount: 12,
     };
     
     const jitter = this.randomizeVoicings() ? 3.5 : 0;
@@ -395,6 +398,12 @@ export class ChordFinder {
         return { ...entry, shapes: scored.map((s) => s.shape) };
       });
     }
+
+    // Display the best few even though the search/randomization used a wider pool.
+    chords = chords.map((entry) => ({
+      ...entry,
+      shapes: entry.shapes.slice(0, RESULTS_PER_CHORD),
+    }));
 
     const totalVoicings = chords.reduce((sum, c) => sum + c.shapes.length, 0);
     this.results.set({

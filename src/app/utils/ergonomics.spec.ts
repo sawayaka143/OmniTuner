@@ -293,6 +293,45 @@ describe('scoreErgonomics', () => {
     expect(score.factors).toContain('barre');
     expect(score.factors).toContain('position');
   });
+
+  it('rewards ringing more notes (full voicings beat sparse truncations)', () => {
+    // The sparse [3,2,0,0] is a subset of full 320003; the model must prefer
+    // the full shape so the pool isn't full of near-identical truncations.
+    const sparse = shapeOf([3, 2, 0, 0, null, null]);
+    const full = shapeOf([3, 2, 0, 0, 0, 3]);
+    expect(scoreErgonomics(full, tuning, chord('G')).cost).toBeLessThan(
+      scoreErgonomics(sparse, tuning, chord('G')).cost,
+    );
+  });
+
+  it('prefers the full open G over a sparse rootless shape', () => {
+    // Regression for the "same 5 lame voicings" report: the full open G
+    // (320003, root in bass, 6 notes) must outrank the low-effort x2 0 0 1
+    // (G2 B2 D3 B3 B3 — rootless, no 3rd, doubled 3rd). Higher-position
+    // barre shapes (355433, x 10 12 12 12 10) are legitimately harder to play,
+    // so they're allowed to cost more — the point is the open classic wins.
+    const lame = shapeOf([null, 0, 0, 1, 1, 1]);
+    const openG = shapeOf([3, 2, 0, 0, 0, 3]);
+    const lameCost = scoreErgonomics(lame, tuning, chord('G')).cost;
+    expect(scoreErgonomics(openG, tuning, chord('G')).cost).toBeLessThan(lameCost);
+  });
+
+  it('penalizes doublings instead of rewarding them', () => {
+    // doublingPerTone is now a positive penalty. Both shapes ring 6 notes with
+    // the root in the bass and the same open/fretted structure; 320003 doubles
+    // the 3rd (B on strings 1 and 4), 300003 rings it once. The doubled shape
+    // must cost MORE.
+    const doubled = shapeOf([3, 2, 0, 0, 0, 3]); // G B D G B D — B doubled
+    const single = shapeOf([3, 0, 0, 0, 0, 3]); // G A D G B G — single B
+    const doubledFeat = ergonomicsFeatures(doubled, tuning, chord('G'));
+    const singleFeat = ergonomicsFeatures(single, tuning, chord('G'));
+    expect(doubledFeat.thirdDoubled).toBe(true);
+    expect(singleFeat.thirdDoubled).toBe(false);
+    expect(singleFeat.noteCount).toBe(doubledFeat.noteCount);
+    expect(scoreErgonomics(single, tuning, chord('G')).cost).toBeLessThan(
+      scoreErgonomics(doubled, tuning, chord('G')).cost,
+    );
+  });
 });
 
 describe('WHY_HINTS', () => {
