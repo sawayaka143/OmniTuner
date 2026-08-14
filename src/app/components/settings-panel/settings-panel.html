@@ -185,7 +185,7 @@
         </div>
 
         <section class="in-tune-color" aria-labelledby="in-tune-color-title">
-          <h4 id="in-tune-color-title">In-tune color</h4>
+          <h4 id="in-tune-color-title">Tuner colors</h4>
 
           <label class="custom-accent">
             <span
@@ -201,6 +201,22 @@
               [value]="tunerSettings().inTune.color"
               aria-label="Choose a custom in-tune color"
               (input)="onCustomInTuneColor($event)" />
+          </label>
+
+          <label class="custom-accent">
+            <span
+              class="color-preview"
+              [style.background-color]="tunerSettings().inTune.outOfTuneColor"
+              aria-hidden="true"></span>
+            <span class="custom-copy">
+              <strong>Custom out-of-tune color</strong>
+              <span>Use any six-digit color</span>
+            </span>
+            <input
+              type="color"
+              [value]="tunerSettings().inTune.outOfTuneColor"
+              aria-label="Choose a custom out-of-tune color"
+              (input)="onCustomOutOfTuneColor($event)" />
           </label>
         </section>
 

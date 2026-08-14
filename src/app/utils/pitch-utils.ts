@@ -1,11 +1,12 @@
 import { NOTE_NAMES } from '../data/instrument.constants';
 
-export interface NoteInfo {
-  noteName: string;
-  octave: number;
+export interface StringTarget {
+  name: string;
+  midi: number;
   cents: number;
-  semitone: number;
 }
+
+export const HYSTERESIS_CENTS = 10;
 
 export function midiNoteToFrequency(midiNote: number, ref = 440): number {
   return ref * 2 ** ((midiNote - 69) / 12);
@@ -29,6 +30,45 @@ export function centsFromMidiFloat(
 ): number | null {
   if (playedMidiFloat === null) return null;
   return (playedMidiFloat - targetMidi) * 100;
+}
+
+/**
+ * String of the tuning closest to the played pitch, with signed unclamped
+ * cents against it. String pitches are nominal (A4=440) so the target does
+ * not move when the user changes the reference pitch. Hysteresis: while the
+ * previous target is still within HYSTERESIS_CENTS of the winner it is kept,
+ * so a midpoint pitch cannot flicker between two strings.
+ */
+export function nearestStringTarget(
+  playedMidiFloat: number | null,
+  strings: ReadonlyArray<{ name: string; freq: number }>,
+  previousName?: string,
+): StringTarget | null {
+  if (playedMidiFloat === null || !Number.isFinite(playedMidiFloat) || strings.length === 0) {
+    return null;
+  }
+
+  let best: StringTarget | null = null;
+  let bestDistance = Number.POSITIVE_INFINITY;
+  let previous: { midi: number; distance: number } | null = null;
+
+  for (const string of strings) {
+    const midi = frequencyToMidiNote(string.freq) ?? 69;
+    const cents = centsFromMidiFloat(playedMidiFloat, midi)!;
+    const distance = Math.abs(cents);
+    if (string.name === previousName) previous = { midi, distance };
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      best = { name: string.name, midi, cents };
+    }
+  }
+
+  if (!best) return null;
+  if (previous && previous.distance <= bestDistance + HYSTERESIS_CENTS) {
+    const cents = centsFromMidiFloat(playedMidiFloat, previous.midi)!;
+    return { name: previousName!, midi: previous.midi, cents };
+  }
+  return best;
 }
 
 /**
@@ -56,38 +96,16 @@ export function midiNoteLabel(midiNote: number): string {
   return `${NOTE_NAMES[noteIndex]}${octave}`;
 }
 
-export function noteFromFrequency(frequency: number, previousSemitone?: number, ref = 440): NoteInfo | null {
-  if (!Number.isFinite(frequency) || frequency <= 0) return null;
-  const semitones = 12 * Math.log2(frequency / ref);
-  const nearestSemitone = Math.round(semitones);
-  const rounded =
-    previousSemitone !== undefined && Math.abs(semitones - previousSemitone) < 0.6
-      ? previousSemitone
-      : nearestSemitone;
-  const cents = Math.round((semitones - rounded) * 100);
-  const idx = ((rounded % 12) + 12) % 12;
-  const octave = 4 + Math.floor((rounded + 9) / 12);
-  return { noteName: NOTE_NAMES[idx], octave, cents, semitone: rounded };
-}
-
 export function hzDisplay(frequency: number | null): string {
   return frequency !== null ? `${frequency.toFixed(2)} Hz` : '\u2014 Hz';
 }
 
-export function centsOffsetDisplay(noteInfo: NoteInfo | null): string {
-  if (!noteInfo) return '\u2014';
-  if (Math.abs(noteInfo.cents) < 5) return 'IN TUNE';
-  return noteInfo.cents < 0
-    ? `${Math.abs(noteInfo.cents)}\u00a2 FLAT`
-    : `${noteInfo.cents}\u00a2 SHARP`;
-}
-
-/** Cents readout for manual mode: numeric and unclamped, mirroring the auto-mode idiom. */
-export function manualCentsOffset(cents: number | null): string {
+/** Tune prompt readout: numeric and unclamped, with the direction to tune. */
+export function tuneDirection(cents: number | null): string {
   if (cents === null || !Number.isFinite(cents)) return '\u2014';
   if (Math.abs(cents) < 5) return 'IN TUNE';
   const rounded = Math.round(cents);
   return rounded < 0
-    ? `${Math.abs(rounded)}\u00a2 FLAT`
-    : `${rounded}\u00a2 SHARP`;
+    ? `${Math.abs(rounded)}\u00a2 TUNE UP`
+    : `${rounded}\u00a2 TUNE DOWN`;
 }

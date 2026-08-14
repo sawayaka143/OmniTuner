@@ -16,6 +16,7 @@ import { SettingsPanel } from '../settings-panel/settings-panel';
     '[style.--scale-accent]': 'preferencesState().accent',
     '[style.--scale-accent-ink]': 'accentInk()',
     '[style.--in-tune-color]': 'inTuneColor()',
+    '[style.--out-of-tune-color]': 'outOfTuneColor()',
   },
 })
 export class AppShell {
@@ -31,6 +32,9 @@ export class AppShell {
   protected readonly inTuneColor = computed(() =>
     this.tunerSettings().inTune.enabled ? this.tunerSettings().inTune.color : null,
   );
+
+  /** Off-pitch color as a theme var; independent of the master switch. */
+  protected readonly outOfTuneColor = computed(() => this.tunerSettings().inTune.outOfTuneColor);
 
   protected setAccent(accent: string): void {
     this.preferences.setAccent(accent);
@@ -70,6 +74,10 @@ export class AppShell {
 
   protected setInTuneColor(color: string): void {
     this.tunerPreferences.setInTuneColor(color);
+  }
+
+  protected setOutOfTuneColor(color: string): void {
+    this.tunerPreferences.setOutOfTuneColor(color);
   }
 
   protected setInTuneTolerance(tolerance: number): void {

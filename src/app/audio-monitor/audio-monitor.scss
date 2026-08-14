@@ -24,8 +24,6 @@
   flex-direction: column;
   align-items: center;
   gap: var(--space-5);
-  /* Fixed distance below the controls block — identical on desktop
-     and mobile (added on top of .app-main's gap). */
   margin-top: calc(var(--space-7) * 2);
 }
 
@@ -35,6 +33,29 @@
   flex-direction: column;
   align-items: center;
   position: relative;
+}
+
+.tune-prompt {
+  font-family: var(--mono);
+  font-size: clamp(26px, 6vw, 38px);
+  line-height: var(--leading-tight);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  text-align: center;
+  min-height: var(--space-7);
+  transition: color var(--dur-slow) ease;
+
+  &.off {
+    color: var(--out-of-tune-color);
+  }
+
+  &.in-tune {
+    color: var(--in-tune-color);
+    font-weight: var(--fw-semibold);
+  }
 }
 
 .pulse-layer {

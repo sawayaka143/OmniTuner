@@ -52,6 +52,7 @@ export class SettingsPanel {
   readonly inTuneSoundChange = output<boolean>();
   readonly inTuneGlowChange = output<boolean>();
   readonly inTuneColorChange = output<string>();
+  readonly outOfTuneColorChange = output<string>();
   readonly inTuneToleranceChange = output<number>();
   readonly inTuneHoldMsChange = output<number>();
   readonly referencePitchChange = output<number>();
@@ -125,6 +126,11 @@ export class SettingsPanel {
   protected onCustomInTuneColor(event: Event): void {
     const target = event.target;
     if (target instanceof HTMLInputElement) this.chooseInTuneColor(target.value);
+  }
+
+  protected onCustomOutOfTuneColor(event: Event): void {
+    const target = event.target;
+    if (target instanceof HTMLInputElement) this.outOfTuneColorChange.emit(target.value);
   }
 
   protected onTolerance(event: Event): void {

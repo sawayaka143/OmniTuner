@@ -24,6 +24,10 @@
     padding-bottom: var(--space-1);
     transition: color var(--dur-slow) ease, text-shadow var(--dur-slow) ease;
 
+    &.off {
+      color: var(--out-of-tune-color);
+    }
+
     &.in-tune {
       color: var(--in-tune-color);
       animation: note-in-tune-glow 2.4s ease-in-out infinite alternate;
@@ -48,6 +52,10 @@
     margin-bottom: var(--space-3);
     transition: color var(--dur-slow) ease;
 
+    &.off {
+      color: var(--out-of-tune-color);
+    }
+
     &.in-tune {
       color: var(--in-tune-color);
     }
@@ -62,23 +70,6 @@
     margin-top: var(--space-1);
     letter-spacing: var(--tracking-narrow);
     font-variant-numeric: tabular-nums;
-  }
-
-  .pitch-cents {
-    font-family: var(--mono);
-    font-size: var(--text-sm);
-    line-height: var(--leading-snug);
-    letter-spacing: var(--tracking-wide);
-    font-weight: var(--fw-medium);
-    color: var(--text-muted);
-    margin-top: var(--space-2);
-    transition: color var(--dur-med) ease;
-    font-variant-numeric: tabular-nums;
-
-    &.in-tune-text {
-      color: var(--in-tune-color);
-      font-weight: var(--fw-semibold);
-    }
   }
 
   .pitch-status {

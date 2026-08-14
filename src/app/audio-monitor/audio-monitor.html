@@ -44,6 +44,13 @@
 
   <div class="tuner-stage">
     <div class="meter-area">
+      <div
+        class="tune-prompt"
+        [class.in-tune]="isTuned()"
+        [class.off]="isOffPitch()">
+        {{ tunePrompt() }}
+      </div>
+
       <app-pitch-meter [ticks]="ticks" [needleLeft]="needleLeft()" [cents]="frameCents()" [isTuned]="isTuned()" />
 
       <div class="pulse-layer" aria-hidden="true">
@@ -56,10 +63,10 @@
         [noteName]="displayNoteName()"
         [octave]="displayOctave()"
         [hz]="currentHz()"
-        [centsOffset]="centsOffset()"
         [statusMessage]="statusMessage()"
         [isLocked]="isLocked()"
         [isTuned]="isTuned()"
+        [offPitch]="isOffPitch()"
       />
     </div>
 
