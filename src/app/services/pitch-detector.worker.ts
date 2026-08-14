@@ -22,13 +22,13 @@ interface AnalyseResponse extends PitchEstimate {
 const MIN_FREQUENCY = 50;
 const MAX_FREQUENCY = 1200;
 
-// YIN dip threshold. Kept low so only clear periodic dips qualify, but not so
-// low that softer or harmonically rich notes are rejected outright.
-const YIN_THRESHOLD = 0.12;
+// YIN dip threshold. Kept at standard 0.15 so the fundamental dip qualifies
+// reliably across the full decay of the string.
+const YIN_THRESHOLD = 0.15;
 
-// Confidence gate. Anything below this is reported as "no pitch" rather than
-// feeding a noisy estimate into the main-thread smoothing.
-const MIN_CONFIDENCE = 0.72;
+// Confidence gate. Kept at 0.58 so decaying notes sustain naturally without
+// premature cutoffs while still rejecting unpitched noise.
+const MIN_CONFIDENCE = 0.58;
 
 const SILENCE_RMS = 0.004;
 
@@ -203,8 +203,8 @@ function preferLowerFundamental(
   const candidateValue = yin[candidateTau];
   const currentValue = yin[tau];
 
-  // Only switch if the sub-octave is clearly better.
-  if (candidateValue + 0.018 < currentValue) {
+  // Only switch if the sub-octave is clearly and significantly better.
+  if (candidateValue + 0.05 < currentValue) {
     return candidateTau;
   }
 

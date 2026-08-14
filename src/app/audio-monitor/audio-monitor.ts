@@ -31,12 +31,16 @@ import {
   frequencyToMidiFloat,
   frequencyToMidiNote,
   hzDisplay,
+  interpolateColor,
   midiNoteLabel,
-  nearestStringTarget,
+  nearestSemitone,
   needlePercentFromCents,
   shouldConfirm,
+  tuneCentsText,
+  tuneColorProgress,
+  tuneDirectionText,
+  nearestStringTarget,
   StringTarget,
-  tuneDirection,
 } from '../utils/pitch-utils';
 
 /** How long the one-shot lock pulse stays visible. */
@@ -88,6 +92,7 @@ export class AudioMonitor implements OnInit {
   // startupMode is 'remember'; manualIndex is always re-derived per session.
   readonly mode = signal<TunerMode>(this.initialMode());
   readonly manualIndex = signal(0);
+  readonly autoTuned = signal<readonly string[]>([]);   // confirmed string names, in order
   readonly confirmed = signal(false);
   readonly pulseActive = signal(false);
 
@@ -129,8 +134,16 @@ export class AudioMonitor implements OnInit {
   // Highlight strings that differ from the instrument's default tuning.
   readonly referenceNotes = computed(() => this.editorPresets()[0]?.notes ?? null);
 
-  /** Nearest string of the current tuning, resolved per frame in auto mode. */
-  readonly autoTarget = signal<StringTarget | null>(null);
+  readonly autoTarget = computed<StringTarget | null>(() => {
+    if (this.trackingState() !== 'locked' || !this.isCapturing()) return null;
+    const freq = this.frequency();
+    if (!freq || freq <= 0) return null;
+    const played = frequencyToMidiFloat(freq, this.refPitch());
+    if (played === null) return null;
+    return nearestStringTarget(played, this.currentStrings());
+  });
+
+  readonly autoTunedNames = computed(() => (this.mode() === 'auto' ? this.autoTuned() : []));
 
   readonly currentHz = computed(() => hzDisplay(this.frequency()));
 
@@ -201,29 +214,30 @@ export class AudioMonitor implements OnInit {
     return cents !== null && Math.abs(cents) < 5;
   });
 
-  readonly displayNoteName = computed(() => {
-    if (this.mode() === 'manual') return this.manualTargetInfo()?.noteName ?? null;
-    const target = this.autoTarget();
-    if (!target) return null;
-    return midiNoteLabel(target.midi).slice(0, -1);
-  });
-
-  readonly displayOctave = computed(() => {
-    if (this.mode() === 'manual') return this.manualTargetInfo()?.octave ?? null;
-    const target = this.autoTarget();
-    if (!target) return null;
-    return Number(midiNoteLabel(target.midi).slice(-1));
-  });
-
   readonly needleLeft = computed(() => needlePercentFromCents(this.frameCents()));
 
-  /** Hero prompt above the meter: cents + tune direction, or IN TUNE. */
-  readonly tunePrompt = computed(() => tuneDirection(this.frameCents()));
+  /** Big direction prompt above the meter. */
+  readonly tunePrompt = computed(() => {
+    return tuneDirectionText(this.frameCents());
+  });
 
-  /** True while a locked pitch sits outside the ±5¢ in-tune window. */
-  readonly isOffPitch = computed(
-    () => this.frameCents() !== null && Math.abs(this.frameCents()!) >= 5,
-  );
+  /** Small cents readout under the direction prompt. */
+  readonly tuneCents = computed(() => tuneCentsText(this.frameCents()));
+
+  /**
+   * Off-pitch accent blended from the user's out-of-tune color toward the
+   * in-tune color as the pitch approaches the target. Null while in tune
+   * (the .in-tune class takes over) or with no pitch.
+   */
+  readonly tuneColorHex = computed(() => {
+    const cents = this.frameCents();
+    if (cents === null || Math.abs(cents) < 5) return null;
+    const settings = this.tunerSettings().inTune;
+    return interpolateColor(settings.outOfTuneColor, settings.color, tuneColorProgress(cents));
+  });
+
+  /** Green chips only once the target actually confirms. */
+  readonly chipTuned = computed(() => this.isTuned() && this.activeString() !== null);
 
   /**
    * Auto: the string the tuner resolved as the target. Manual: the pinned string.
@@ -233,35 +247,72 @@ export class AudioMonitor implements OnInit {
     return this.autoTarget()?.name ?? null;
   });
 
+  /** Label for the nearest chromatic semitone of the played pitch. */
+  private readonly playedNoteLabel = computed(() => {
+    if (this.trackingState() !== 'locked') return null;
+    const played = frequencyToMidiFloat(this.frequency() ?? 0, this.refPitch());
+    const nearest = nearestSemitone(played);
+    return nearest ? midiNoteLabel(nearest.midi) : null;
+  });
+
+  /**
+   * Big note below the meter. Auto: the nearest chromatic semitone of the
+   * played pitch, snapping to target when close. Manual: the played note
+   * while far from target, snapping to pinned target within ±50¢.
+   */
+  readonly targetNoteLabel = computed(() => {
+    if (this.mode() === 'manual') {
+      const cents = this.frameCents();
+      if (cents !== null && Math.abs(cents) < 50) {
+        const target = this.manualTargetInfo();
+        if (target) return `${target.noteName}${target.octave}`;
+      }
+      return this.playedNoteLabel();
+    }
+
+    if (this.trackingState() !== 'locked') return null;
+    const target = this.autoTarget();
+    if (!target) return this.playedNoteLabel();
+
+    const cents = this.frameCents();
+    if (cents !== null && Math.abs(cents) < 50) {
+      return midiNoteLabel(target.midi);
+    }
+    return this.playedNoteLabel();
+  });
+
+  readonly displayNoteName = computed(() => {
+    const label = this.targetNoteLabel();
+    return label ? label.slice(0, -1) : null;
+  });
+
+  readonly displayOctave = computed(() => {
+    const label = this.targetNoteLabel();
+    return label ? Number(label.slice(-1)) : null;
+  });
+
   readonly statusMessage = computed(() => {
     const error = this.captureError();
     if (error) return error;
     if (!this.isCapturing()) return 'IDLE';
     if (this.showTuned()) return 'IN TUNE';
     if (this.isLocked()) {
-      return this.mode() === 'manual'
-        ? `TUNING ${this.manualTarget()?.name ?? ''}`.trim()
-        : 'LOCKED ON NOTE';
+      const target = this.mode() === 'manual' ? this.manualTarget() : this.autoTarget();
+      return target ? `TUNING ${target.name}` : 'LISTENING FOR A NOTE';
     }
     return 'LISTENING FOR A NOTE';
   });
 
   constructor() {
     effect(() => {
-      const frequency = this.frequency();
-      if (frequency === null || this.trackingState() !== 'locked') {
-        this.autoTarget.set(null);
-        return;
-      }
-
-      const previousName = untracked(() => this.autoTarget())?.name;
-      this.autoTarget.set(
-        nearestStringTarget(
-          frequencyToMidiFloat(frequency, this.refPitch()),
-          this.currentStrings(),
-          previousName,
-        ),
-      );
+      const mode = this.mode();
+      const tuningId = this.selectedTuningId();
+      const instrumentId = this.selectedInstrumentId();
+      untracked(() => {
+        this.autoTuned.set([]);
+        this.confirmed.set(false);
+        this.clearHoldTimer();
+      });
     });
 
     effect(() => {
@@ -269,14 +320,20 @@ export class AudioMonitor implements OnInit {
       const holdMs = this.tunerSettings().inTune.holdMs;
 
       if (!inRange) {
-        this.clearHoldTimer();
-        this.confirmed.set(false);
-        return;
+        const frameCents = this.frameCents();
+        const holding = this.holdTimer !== null;
+        const withinHysteresis =
+          holding &&
+          frameCents !== null &&
+          Math.abs(frameCents) <= this.tolerance() + 1.5;
+
+        if (!withinHysteresis) {
+          this.clearHoldTimer();
+          this.confirmed.set(false);
+          return;
+        }
       }
 
-      // Already confirmed: a tolerance/hold change must re-evaluate, not
-      // blind-reset — the lock survives as long as the pitch stays inside
-      // the (possibly new) window.
       if (this.confirmed()) return;
 
       const now = performance.now();
@@ -456,6 +513,15 @@ export class AudioMonitor implements OnInit {
     const inTune = this.tunerSettings().inTune;
     if (inTune.enabled && inTune.sound) this.scalePlayback.playChime();
     if (inTune.enabled && inTune.glow) this.triggerPulse();
+
+    if (this.mode() === 'auto') {
+      const target = this.autoTarget();
+      if (target) {
+        this.autoTuned.update((names) =>
+          names.includes(target.name) ? names : [...names, target.name],
+        );
+      }
+    }
   }
 
   private scheduleHoldTimer(ms: number): void {

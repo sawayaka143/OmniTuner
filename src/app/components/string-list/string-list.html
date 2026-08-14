@@ -7,6 +7,7 @@
       class="string-btn"
       [class.active]="activeString() === str.name"
       [class.in-tune]="inTune() && activeString() === str.name"
+      [class.tuned]="tunedStrings().includes(str.name)"
       type="button"
       role="radio"
       [attr.aria-checked]="activeString() === str.name"

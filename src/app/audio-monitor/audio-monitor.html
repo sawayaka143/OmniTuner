@@ -47,8 +47,9 @@
       <div
         class="tune-prompt"
         [class.in-tune]="isTuned()"
-        [class.off]="isOffPitch()">
-        {{ tunePrompt() }}
+        [style.color]="tuneColorHex()">
+        <span class="prompt-text">{{ tunePrompt() }}</span>
+        <span class="tune-cents" [class.visible]="!!tuneCents()">{{ tuneCents() || '\u00a0' }}</span>
       </div>
 
       <app-pitch-meter [ticks]="ticks" [needleLeft]="needleLeft()" [cents]="frameCents()" [isTuned]="isTuned()" />
@@ -66,14 +67,16 @@
         [statusMessage]="statusMessage()"
         [isLocked]="isLocked()"
         [isTuned]="isTuned()"
-        [offPitch]="isOffPitch()"
+        [tuneColor]="tuneColorHex()"
       />
     </div>
 
     <app-string-list
       [strings]="currentStrings()"
       [activeString]="activeString()"
-      [inTune]="showTuned()"
+      [inTune]="chipTuned()"
+      [tunedStrings]="autoTunedNames()"
+      [autoMode]="mode() === 'auto'"
       (select)="selectString($event)"
     />
   </div>

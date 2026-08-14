@@ -12,5 +12,5 @@ export class PitchDisplay {
   readonly statusMessage = input('READY TO TUNE');
   readonly isLocked = input(false);
   readonly isTuned = input(false);
-  readonly offPitch = input(false);
+  readonly tuneColor = input<string | null>(null);
 }

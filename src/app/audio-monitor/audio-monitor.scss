@@ -36,25 +36,56 @@
 }
 
 .tune-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 68px;
+  min-height: 68px;
+  max-height: 68px;
+  gap: var(--space-1);
   font-family: var(--mono);
-  font-size: clamp(26px, 6vw, 38px);
-  line-height: var(--leading-tight);
-  font-weight: var(--fw-medium);
-  letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
   font-variant-numeric: tabular-nums;
   color: var(--text);
   text-align: center;
-  min-height: var(--space-7);
   transition: color var(--dur-slow) ease;
-
-  &.off {
-    color: var(--out-of-tune-color);
-  }
+  overflow: hidden;
 
   &.in-tune {
     color: var(--in-tune-color);
+  }
+
+  .prompt-text {
+    font-size: clamp(24px, 5.5vw, 34px);
+    line-height: var(--leading-tight);
     font-weight: var(--fw-semibold);
+    letter-spacing: var(--tracking-wide);
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .tune-cents {
+    font-size: var(--text-sm);
+    font-weight: var(--fw-medium);
+    letter-spacing: var(--tracking-wide);
+    color: var(--text-muted);
+    height: 18px;
+    line-height: 18px;
+    visibility: hidden;
+    opacity: 0;
+    transition: color var(--dur-slow) ease, opacity var(--dur-fast) ease;
+
+    &.visible {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .tune-prompt.in-tune & {
+      color: var(--in-tune-color);
+    }
   }
 }
 

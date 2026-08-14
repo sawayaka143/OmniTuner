@@ -46,7 +46,8 @@
       opacity: 1;
     }
 
-    &.active.in-tune {
+    &.active.in-tune,
+    &.tuned {
       background-color: color-mix(
         in srgb,
         var(--in-tune-color) 12%,
@@ -72,12 +73,13 @@
     transition: color var(--dur-med) ease;
 
     .string-btn.active & {
-      color: var(--in-tune-color);
-      font-weight: var(--fw-semibold);
+      color: var(--text);
     }
 
-    .string-btn.active.in-tune & {
+    .string-btn.active.in-tune &,
+    .string-btn.tuned & {
       color: var(--in-tune-color);
+      font-weight: var(--fw-semibold);
     }
   }
 }

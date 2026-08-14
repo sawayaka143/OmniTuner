@@ -16,35 +16,32 @@ interface PitchAnalysisResponse {
 const ANALYSIS_INTERVAL_MS = 45;
 
 /**
- * Median-smoothing window.  5 frames at ~45 ms ≈ 225 ms of history.
- * Large enough to kill jitter, small enough to follow a bend.
+ * Median filter window size (frames).
+ * 3 frames provides rapid impulse/outlier rejection without phase lag.
  */
-const SMOOTHING_WINDOW = 5;
+const SMOOTHING_WINDOW = 3;
+
+/**
+ * Exponential Moving Average (EMA) smoothing coefficient.
+ * Damps continuous micro-jitter for a rock-solid needle and cents display.
+ */
+const EMA_ALPHA = 0.12;
 
 /**
  * If a new frame is more than this many cents away from the running
- * median, we assume it's a genuine note change (or a gross error)
+ * median, we assume it's a genuine note change (or gross error)
  * and reset the smoothing window instead of blending it in.
  */
 const MAX_SMOOTHING_JUMP_CENTS = 380;
 
 /**
- * If the raw frequency jumps more than this from the recent median,
- * we try octave-shifted candidates (×2, ÷2) and pick the closest
- * one — but only accept the correction if it lands within
- * OCTAVE_CORRECTION_CENTS of the median.
- */
-const OCTAVE_JUMP_CENTS = 650;
-const OCTAVE_CORRECTION_CENTS = 360;
-
-/**
  * When the worker returns "no pitch", we keep displaying the last
  * good pitch for this many frames before dropping to 'listening'.
- * Prevents the needle from vanishing on every single missed frame.
+ * Prevents the needle from vanishing during note decay.
  */
-const MAX_DROPOUT_HOLD_FRAMES = 3;
+const MAX_DROPOUT_HOLD_FRAMES = 6;
 
-const RELEASE_FRAME_COUNT = 8;
+const RELEASE_FRAME_COUNT = 10;
 
 /**
  * Safety-net timeout (ms).  If the worker hasn't replied within this
@@ -99,6 +96,7 @@ export class AudioCaptureService {
   // ── Smoothing / tracking state ────────────────────────────────
   private recentFrequencies: number[] = [];
   private smoothedFrequency: number | null = null;
+  private emaFrequency: number | null = null;
   private missedFrames = 0;
 
   constructor() {
@@ -311,6 +309,7 @@ export class AudioCaptureService {
   private resetTracking(): void {
     this.recentFrequencies = [];
     this.smoothedFrequency = null;
+    this.emaFrequency = null;
     this.missedFrames = 0;
   }
 
@@ -363,9 +362,7 @@ export class AudioCaptureService {
   private handleDetection(rawFrequency: number): void {
     this.missedFrames = 0;
 
-    const corrected = this.correctOctaveJump(rawFrequency);
-
-    const smoothed = this.smoothFrequency(corrected);
+    const smoothed = this.smoothFrequency(rawFrequency);
 
     if (this.recentFrequencies.length >= 3) {
       this.smoothedFrequency = smoothed;
@@ -381,67 +378,39 @@ export class AudioCaptureService {
   private handleDropout(): void {
     this.missedFrames += 1;
 
+    // Hold the current locked pitch through momentary frame dropouts
+    // as the string naturally decays.
     if (this.smoothedFrequency !== null && this.missedFrames <= MAX_DROPOUT_HOLD_FRAMES) {
       return;
     }
 
-    // #8 – clear stale smoothing history during extended silence so
-    // a new note after a pause isn't octave-corrected toward the old one.
-    if (this.missedFrames === 5) {
-      this.recentFrequencies = [];
-    }
-
-    // Sustained silence → release.
+    // Sustained silence → release and reset tracking state.
     if (this.missedFrames >= RELEASE_FRAME_COUNT) {
-      this.smoothedFrequency = null;
-      this.recentFrequencies = [];
+      this.resetTracking();
       this.frequency.set(null);
       this.trackingState.set('listening');
       return;
     }
 
-    // Keep the last pitch on screen during the hold window so the
-    // needle doesn't vanish on every momentary miss.
+    // Past the hold window: hide the frequency while tracking remains active.
     if (this.missedFrames > MAX_DROPOUT_HOLD_FRAMES) {
+      this.smoothedFrequency = null;
+      this.emaFrequency = null;
       this.frequency.set(null);
     }
   }
 
-  // ── Octave correction ─────────────────────────────────────────
-
-  private correctOctaveJump(frequency: number): number {
-    if (this.recentFrequencies.length === 0) return frequency;
-
-    const reference = this.median(this.recentFrequencies);
-    const jumpCents = Math.abs(this.cents(frequency, reference));
-
-    if (jumpCents < OCTAVE_JUMP_CENTS) return frequency;
-
-    const candidates = [frequency, frequency / 2, frequency * 2].filter(
-      (f) => f >= MIN_FREQUENCY && f <= MAX_FREQUENCY,
-    );
-
-    const best = candidates.reduce((closest, candidate) =>
-      Math.abs(this.cents(candidate, reference)) <
-      Math.abs(this.cents(closest, reference))
-        ? candidate
-        : closest,
-    );
-
-    return Math.abs(this.cents(best, reference)) < OCTAVE_CORRECTION_CENTS
-      ? best
-      : frequency;
-  }
-
-  // ── Median smoothing ──────────────────────────────────────────
+  // ── Hybrid Median + EMA Smoothing ──────────────────────────────
 
   private smoothFrequency(frequency: number): number {
     if (this.recentFrequencies.length > 0) {
       const med = this.median(this.recentFrequencies);
       const jump = Math.abs(this.cents(frequency, med));
 
+      // Intentional note change: reset history so the new note starts fresh.
       if (jump > MAX_SMOOTHING_JUMP_CENTS) {
         this.recentFrequencies = [frequency];
+        this.emaFrequency = frequency;
         return frequency;
       }
     }
@@ -451,7 +420,17 @@ export class AudioCaptureService {
       this.recentFrequencies.shift();
     }
 
-    return this.median(this.recentFrequencies);
+    const currentMedian = this.median(this.recentFrequencies);
+
+    // Initial lock: seed the EMA directly from the initial consensus median.
+    // Sustained tracking: blend via Exponential Moving Average (EMA) for rock-solid stability.
+    if (this.emaFrequency === null || this.recentFrequencies.length < 3) {
+      this.emaFrequency = currentMedian;
+    } else {
+      this.emaFrequency = EMA_ALPHA * currentMedian + (1 - EMA_ALPHA) * this.emaFrequency;
+    }
+
+    return this.emaFrequency;
   }
 
   // ── Math helpers ──────────────────────────────────────────────

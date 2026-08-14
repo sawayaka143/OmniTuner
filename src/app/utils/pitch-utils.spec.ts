@@ -2,12 +2,16 @@ import {
   centsFromMidiFloat,
   frequencyToMidiFloat,
   frequencyToMidiNote,
+  interpolateColor,
   midiNoteLabel,
   midiNoteToFrequency,
+  nearestSemitone,
   nearestStringTarget,
   needlePercentFromCents,
   shouldConfirm,
-  tuneDirection,
+  tuneCentsText,
+  tuneColorProgress,
+  tuneDirectionText,
 } from './pitch-utils';
 
 const GUITAR_STANDARD = [
@@ -117,13 +121,64 @@ describe('cents offset readout', () => {
     expect(centsFromMidiFloat(null, 64)).toBeNull();
   });
 
-  it('renders unclamped cents with the direction to tune', () => {
-    expect(tuneDirection(0)).toBe('IN TUNE');
-    expect(tuneDirection(-3.2)).toBe('IN TUNE');
-    expect(tuneDirection(12.4)).toBe('12¢ TUNE DOWN');
-    expect(tuneDirection(-187.7)).toBe('188¢ TUNE UP');
-    expect(tuneDirection(null)).toBe('\u2014');
-    expect(tuneDirection(Number.NaN)).toBe('\u2014');
+  it('renders the direction prompt without cents', () => {
+    expect(tuneDirectionText(0)).toBe('IN TUNE');
+    expect(tuneDirectionText(-3.2)).toBe('IN TUNE');
+    expect(tuneDirectionText(12.4)).toBe('TUNE DOWN');
+    expect(tuneDirectionText(-187.7)).toBe('TUNE UP');
+    expect(tuneDirectionText(null)).toBe('\u2014');
+    expect(tuneDirectionText(Number.NaN)).toBe('\u2014');
+  });
+
+  it('renders the cents magnitude under the prompt', () => {
+    expect(tuneCentsText(0)).toBe('');
+    expect(tuneCentsText(-3.2)).toBe('');
+    expect(tuneCentsText(12.4)).toBe('12¢');
+    expect(tuneCentsText(-187.7)).toBe('188¢');
+    expect(tuneCentsText(null)).toBe('');
+    expect(tuneCentsText(Number.NaN)).toBe('');
+  });
+});
+
+describe('nearestSemitone', () => {
+  it('rounds the played MIDI float to the nearest chromatic semitone', () => {
+    expect(nearestSemitone(69)).toEqual({ midi: 69 });
+    expect(nearestSemitone(69.1)).toEqual({ midi: 69 });
+    expect(nearestSemitone(69.6)).toEqual({ midi: 70 });
+    expect(nearestSemitone(null)).toBeNull();
+    expect(nearestSemitone(Number.NaN)).toBeNull();
+  });
+});
+
+describe('interpolateColor', () => {
+  it('blends two hex colors linearly per channel', () => {
+    expect(interpolateColor('#000000', '#ffffff', 0.5)).toBe('#808080');
+    expect(interpolateColor('#000000', '#ffffff', 0.25)).toBe('#404040');
+    expect(interpolateColor('#ff0000', '#00ff00', 0.5)).toBe('#808000');
+  });
+
+  it('clamps t to [0, 1]', () => {
+    expect(interpolateColor('#000000', '#ffffff', -1)).toBe('#000000');
+    expect(interpolateColor('#000000', '#ffffff', 2)).toBe('#ffffff');
+  });
+
+  it('returns null for invalid colors', () => {
+    expect(interpolateColor('red', '#ffffff', 0.5)).toBeNull();
+    expect(interpolateColor('#000000', 'blue', 0.5)).toBeNull();
+    expect(interpolateColor('#123', '#ffffff', 0.5)).toBeNull();
+  });
+});
+
+describe('tuneColorProgress', () => {
+  it('maps cents distance onto the 50→5 cent blend window', () => {
+    expect(tuneColorProgress(50)).toBe(0);
+    expect(tuneColorProgress(-50)).toBe(0);
+    expect(tuneColorProgress(5)).toBe(1);
+    expect(tuneColorProgress(-5)).toBe(1);
+    expect(tuneColorProgress(27.5)).toBeCloseTo(0.5, 5);
+    expect(tuneColorProgress(3)).toBe(1);
+    expect(tuneColorProgress(null)).toBe(0);
+    expect(tuneColorProgress(Number.NaN)).toBe(0);
   });
 });
 

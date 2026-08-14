@@ -1,9 +1,7 @@
 <div class="pitch-display">
   <div class="pitch-row">
-    <span class="pitch-note" [class.in-tune]="isTuned()" [class.off]="offPitch()">{{ noteName() || '\u2014' }}</span>
-    @if (octave(); as o) {
-      <span class="pitch-octave" [class.in-tune]="isTuned()" [class.off]="offPitch()">{{ o }}</span>
-    }
+    <span class="pitch-note" [class.in-tune]="isTuned()" [style.color]="tuneColor()">{{ noteName() || '\u2014' }}</span>
+    <span class="pitch-octave" [class.in-tune]="isTuned()" [class.visible]="octave() !== null" [style.color]="tuneColor()">{{ octave() ?? '\u00a0' }}</span>
   </div>
   <div class="pitch-hz">{{ hz() }}</div>
   <p class="pitch-status" [class.locked]="isLocked()" [class.in-tune]="isTuned()">

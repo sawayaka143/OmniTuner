@@ -17,10 +17,8 @@
     }
   </div>
   <div class="meter-labels">
-    <span>-50</span>
-    <span>-25</span>
-    <span class="center-label">0</span>
-    <span>+25</span>
-    <span>+50</span>
+    @for (label of labels; track label.leftPos) {
+      <span [class.center-label]="label.center" [style.left]="label.leftPos">{{ label.text }}</span>
+    }
   </div>
 </div>
