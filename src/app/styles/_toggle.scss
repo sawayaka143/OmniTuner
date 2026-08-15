@@ -33,16 +33,11 @@
     height: var(--space-2);
     border-radius: 50%;
     background: var(--text-dim);
-    box-shadow: 0 0 0 3px transparent;
-    transition: background-color var(--dur-med) ease, box-shadow var(--dur-med) ease;
+    transition: background-color var(--dur-med) ease;
   }
 
   &:hover {
     border-color: var(--border-medium);
-  }
-
-  &:active {
-    transform: scale(0.97);
   }
 
   &.active {
@@ -52,7 +47,6 @@
 
     .toggle-lamp {
       background: var(--scale-accent);
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--scale-accent) 18%, transparent);
     }
   }
 

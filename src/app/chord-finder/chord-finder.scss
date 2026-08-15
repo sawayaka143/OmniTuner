@@ -22,31 +22,27 @@
 .resize-handle {
   width: 8px;
   align-self: stretch;
+  display: grid;
+  place-items: center;
   cursor: col-resize;
   background: transparent;
-  border-radius: var(--r-sm);
-  position: relative;
+  border: 0;
   touch-action: none;
 
   &::after {
-    content: '';
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    width: 2px;
-    height: 28px;
+    content: "";
+    width: 5px;
+    height: 24px;
     border-radius: 999px;
-    background: var(--border-medium);
-    opacity: 0.9;
+    background: var(--text-dim);
+    opacity: 0.5;
   }
 
-  &:hover,
-  &:active {
-    background: color-mix(in srgb, var(--border-medium) 35%, transparent);
+  &:hover::after,
+  &:active::after {
+    opacity: 1;
   }
 }
-
 /* ════════════════ Stage (hero output) ════════════════ */
 
 .stage {
@@ -105,7 +101,6 @@
   padding: var(--space-4);
   overflow: auto;
   border: 1px solid var(--border-subtle);
-  border-radius: var(--r-sm);
   background: var(--workbench-inset);
   box-shadow: var(--shadow-inset-panel);
 
@@ -394,7 +389,6 @@
 
 .controls-panel {
   min-width: 0;
-  border-right: 1px solid var(--border-subtle);
   padding: var(--space-3) var(--space-3) var(--space-4);
 }
 
