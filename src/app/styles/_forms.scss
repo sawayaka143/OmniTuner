@@ -32,6 +32,10 @@
   &[aria-invalid='true'] {
     border-color: var(--danger);
   }
+
+  &.compact {
+    max-width: 112px;
+  }
 }
 
 /// Uppercase micro-label above a form field.

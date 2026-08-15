@@ -10,41 +10,38 @@ interface PitchAnalysisResponse {
 }
 
 // ── Tuning constants ──────────────────────────────────────────────────
-// Grouped here so you can experiment without digging through logic.
-
-/** How often we read the analyser and post to the worker (ms). */
 const ANALYSIS_INTERVAL_MS = 45;
-
-/**
- * Median filter window size (frames).
- * 3 frames provides rapid impulse/outlier rejection without phase lag.
- */
 const SMOOTHING_WINDOW = 3;
-
-/**
- * Exponential Moving Average (EMA) smoothing coefficient.
- * Damps continuous micro-jitter for a rock-solid needle and cents display.
- */
 const EMA_ALPHA = 0.12;
-
-/**
- * If a new frame is more than this many cents away from the running
- * median, we assume it's a genuine note change (or gross error)
- * and reset the smoothing window instead of blending it in.
- */
 const MAX_SMOOTHING_JUMP_CENTS = 380;
 
 /**
- * When the worker returns "no pitch", we keep displaying the last
- * good pitch for this many frames before dropping to 'listening'.
- * Prevents the needle from vanishing during note decay.
+ * When the worker returns "no pitch" for a silent input, we keep
+ * displaying the last good pitch for this many frames before dropping
+ * to 'listening'.
  */
 const MAX_DROPOUT_HOLD_FRAMES = 6;
+
+/**
+ * A decaying string fails the confidence gate long before it goes
+ * silent. While the input is still audible the pitch is not changing,
+ * so keep displaying the last good pitch for up to this many frames
+ * (~2.7 s at the analysis cadence) instead of blanking mid-decay.
+ */
+const AUDIBLE_HOLD_FRAMES = 60;
+
+/**
+ * Silence gate for dropout classification. Must stay in sync with
+ * SILENCE_RMS in pitch-detector.worker: worker messages carry the raw
+ * input level, and below this the input counts as true silence rather
+ * than a decaying note.
+ */
+const SILENCE_RMS = 0.004;
 
 const RELEASE_FRAME_COUNT = 10;
 
 /**
- * Safety-net timeout (ms).  If the worker hasn't replied within this
+ * Safety-net timeout (ms). If the worker hasn't replied within this
  * window we assume the message was lost and unblock the analysis loop.
  */
 const ANALYSIS_TIMEOUT_MS = 500;
@@ -82,13 +79,13 @@ export class AudioCaptureService {
   private captureSession = 0;
   private startInFlight = false;
 
-  // #7 – watchdog that unblocks the loop if the worker never replies.
+  // Watchdog that unblocks the loop if the worker never replies.
   private analysisTimeout: ReturnType<typeof setTimeout> | null = null;
 
-  // #2 – bound listener references so we can remove them on teardown.
+  // Bound listener references so we can remove them on teardown.
   private onVisibilityChange: (() => void) | null = null;
   private onContextStateChange: (() => void) | null = null;
-  // #2 – context-unlock listeners ({once:true}) must also be removable in case
+  // Context-unlock listeners ({once:true}) must also be removable in case
   // the context never reaches 'running' before capture is stopped.
   private onUnlockTouch: (() => void) | null = null;
   private onUnlockClick: (() => void) | null = null;
@@ -98,6 +95,7 @@ export class AudioCaptureService {
   private smoothedFrequency: number | null = null;
   private emaFrequency: number | null = null;
   private missedFrames = 0;
+  private pendingNoteFrequency: number | null = null;
 
   constructor() {
     this.worker = new Worker(
@@ -113,14 +111,14 @@ export class AudioCaptureService {
       this.inputLevel.set(inputLevel);
 
       if (frequency === null || confidence <= 0) {
-        this.handleDropout();
+        this.handleDropout(inputLevel);
       } else {
         this.handleDetection(frequency);
       }
     };
 
-    // #6 – if the worker throws an unhandled error, unblock the loop
-    // so the rAF tick can retry on the next frame.
+    // Unblock the loop if the worker throws an unhandled error,
+    // allowing the rAF tick to retry on the next frame.
     this.worker.onerror = (err: ErrorEvent) => {
       console.error('[AudioCaptureService] worker error:', err.message);
       this.analysisInFlight = false;
@@ -152,15 +150,15 @@ export class AudioCaptureService {
         },
       });
 
-      // #11 – hint the browser to pick a small hardware buffer.
+      // Hint the browser to pick a small hardware buffer.
       const ctx = new AudioContext({ latencyHint: 'interactive' });
 
       if (ctx.state === 'suspended') {
         await ctx.resume();
       }
 
-      // #3 – always register unlock listeners; remove them once the
-      // context actually reaches 'running'.  Covers iOS Safari where
+      // Always register unlock listeners; remove them once the
+      // context actually reaches 'running'. Covers iOS Safari where
       // the context can still be suspended after getUserMedia resolves.
       const unlock = (): void => {
         void ctx.resume();
@@ -181,7 +179,7 @@ export class AudioCaptureService {
 
       const source = ctx.createMediaStreamSource(this.stream);
 
-      // #4 – warn in dev if the OS ignored the channelCount hint.
+      // Warn in dev if the OS ignored the channelCount hint.
       const trackSettings = this.stream.getAudioTracks()[0]?.getSettings();
       if (trackSettings && (trackSettings.channelCount ?? 1) > 1) {
         console.warn(
@@ -193,8 +191,8 @@ export class AudioCaptureService {
       highpass.type = 'highpass';
       highpass.frequency.value = 38;
       highpass.Q.value = 0.7;
-      highpass.channelCount = 1;                            // #4
-      highpass.channelCountMode = 'explicit';               // #4
+      highpass.channelCount = 1;
+      highpass.channelCountMode = 'explicit';
 
       const lowpass = ctx.createBiquadFilter();
       lowpass.type = 'lowpass';
@@ -202,8 +200,8 @@ export class AudioCaptureService {
       lowpass.Q.value = 0.7;
 
       const analyser = ctx.createAnalyser();
-      analyser.fftSize = 8192;            // large window for low-freq resolution
-      analyser.smoothingTimeConstant = 0; // we do our own smoothing
+      analyser.fftSize = 8192;            // Large window for low-freq resolution
+      analyser.smoothingTimeConstant = 0; // We do our own smoothing
 
       source.connect(highpass);
       highpass.connect(lowpass);
@@ -221,7 +219,7 @@ export class AudioCaptureService {
       this.trackingState.set('listening');
       this.scheduleAnalysis();
 
-      // #2 – auto-resume the context when the OS suspends it
+      // Auto-resume the context when the OS suspends it
       // (incoming call, notification shade, etc.).
       this.onContextStateChange = () => {
         if (ctx.state === 'suspended' && this.isCapturing()) {
@@ -230,7 +228,7 @@ export class AudioCaptureService {
       };
       ctx.addEventListener('statechange', this.onContextStateChange);
 
-      // #2 – auto-resume when the user returns to the tab.
+      // Auto-resume when the user returns to the tab.
       this.onVisibilityChange = () => {
         if (document.visibilityState === 'visible' && this.isCapturing()) {
           void this.audioContext?.resume();
@@ -268,7 +266,7 @@ export class AudioCaptureService {
   // ── Audio lifecycle ───────────────────────────────────────────
 
   private releaseAudioResources(): void {
-    // #2 – tear down recovery listeners before the context is closed.
+    // Tear down recovery listeners before the context is closed.
     if (this.onContextStateChange && this.audioContext) {
       this.audioContext.removeEventListener('statechange', this.onContextStateChange);
     }
@@ -311,6 +309,7 @@ export class AudioCaptureService {
     this.smoothedFrequency = null;
     this.emaFrequency = null;
     this.missedFrames = 0;
+    this.pendingNoteFrequency = null;
   }
 
   // ── Analysis loop ─────────────────────────────────────────────
@@ -349,7 +348,6 @@ export class AudioCaptureService {
     this.animationFrameId = requestAnimationFrame(tick);
   }
 
-  // #7
   private clearAnalysisTimeout(): void {
     if (this.analysisTimeout !== null) {
       clearTimeout(this.analysisTimeout);
@@ -375,16 +373,21 @@ export class AudioCaptureService {
     }
   }
 
-  private handleDropout(): void {
+  private handleDropout(inputLevel: number): void {
     this.missedFrames += 1;
+    const audible = inputLevel >= SILENCE_RMS;
 
-    // Hold the current locked pitch through momentary frame dropouts
-    // as the string naturally decays.
-    if (this.smoothedFrequency !== null && this.missedFrames <= MAX_DROPOUT_HOLD_FRAMES) {
+    // Decay tail: the string is still ringing but the estimate no longer
+    // clears the confidence gate. The pitch itself is not changing — hold
+    // the display instead of blanking it mid-decay.
+    if (audible && this.missedFrames <= AUDIBLE_HOLD_FRAMES) return;
+
+    // Brief grace period for true silence before the needle is dropped.
+    if (this.missedFrames <= MAX_DROPOUT_HOLD_FRAMES && this.smoothedFrequency !== null) {
       return;
     }
 
-    // Sustained silence → release and reset tracking state.
+    // Sustained silence / untrusted input → release and reset tracking.
     if (this.missedFrames >= RELEASE_FRAME_COUNT) {
       this.resetTracking();
       this.frequency.set(null);
@@ -393,11 +396,9 @@ export class AudioCaptureService {
     }
 
     // Past the hold window: hide the frequency while tracking remains active.
-    if (this.missedFrames > MAX_DROPOUT_HOLD_FRAMES) {
-      this.smoothedFrequency = null;
-      this.emaFrequency = null;
-      this.frequency.set(null);
-    }
+    this.smoothedFrequency = null;
+    this.emaFrequency = null;
+    this.frequency.set(null);
   }
 
   // ── Hybrid Median + EMA Smoothing ──────────────────────────────
@@ -407,12 +408,26 @@ export class AudioCaptureService {
       const med = this.median(this.recentFrequencies);
       const jump = Math.abs(this.cents(frequency, med));
 
-      // Intentional note change: reset history so the new note starts fresh.
+      // Far frame: a single octave slip or transient blip must not move
+      // the needle. Commit to a note change only after two consecutive
+      // far frames that also agree with each other.
       if (jump > MAX_SMOOTHING_JUMP_CENTS) {
-        this.recentFrequencies = [frequency];
+        const coherent =
+          this.pendingNoteFrequency !== null &&
+          Math.abs(this.cents(frequency, this.pendingNoteFrequency)) <= MAX_SMOOTHING_JUMP_CENTS;
+        this.pendingNoteFrequency = frequency;
+
+        if (!coherent) {
+          return this.emaFrequency ?? this.median(this.recentFrequencies);
+        }
+
+        // Confirmed note change: seed a fresh consensus on the new note.
+        this.pendingNoteFrequency = null;
+        this.recentFrequencies = [frequency, frequency, frequency];
         this.emaFrequency = frequency;
         return frequency;
       }
+      this.pendingNoteFrequency = null;
     }
 
     this.recentFrequencies.push(frequency);
@@ -443,7 +458,7 @@ export class AudioCaptureService {
       : sorted[mid];
   }
 
-  // #9 – guard against non-positive inputs (would yield NaN/±Infinity).
+  // Guard against non-positive inputs (would yield NaN/±Infinity).
   private cents(a: number, b: number): number {
     if (a <= 0 || b <= 0) return 0;
     return 1200 * Math.log2(a / b);

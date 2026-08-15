@@ -168,6 +168,10 @@ export class ChordFinder {
   protected readonly allowGaps = signal(false);
   protected readonly maxStretchText = signal('4');
   protected readonly minNotesText = signal('3');
+  private readonly controlsStorageKey = 'omnituner.chordfinder.controlsWidth';
+  private resizeState: { startX: number; startW: number } | null = null;
+  private onResizeMove = (e: PointerEvent): void => this.handleResizeMove(e);
+  private onResizeUp = (): void => this.handleResizeEnd();
   protected readonly viewMode = signal<DiagramView | 'tab'>('lines');
   protected readonly diagramView = computed<DiagramView>(() =>
     this.viewMode() === 'dots' ? 'dots' : 'lines',
@@ -191,9 +195,68 @@ export class ChordFinder {
   private copyResetTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
+    const saved = this.readControlsWidth();
+    if (saved !== null) this.applyControlsWidth(saved);
     this.destroyRef.onDestroy(() => {
       if (this.copyResetTimer) clearTimeout(this.copyResetTimer);
+      this.detachResizeListeners();
     });
+  }
+
+  protected onResizeStart(event: PointerEvent): void {
+    event.preventDefault();
+    const el = document.querySelector('.finder-columns') as HTMLElement | null;
+    if (!el) return;
+    const w = parseFloat(getComputedStyle(el).getPropertyValue('--controls-w')) || 300;
+    this.resizeState = { startX: event.clientX, startW: w };
+    (event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId);
+    window.addEventListener('pointermove', this.onResizeMove);
+    window.addEventListener('pointerup', this.onResizeUp);
+    window.addEventListener('pointercancel', this.onResizeUp);
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'col-resize';
+  }
+
+  private handleResizeMove(event: PointerEvent): void {
+    if (!this.resizeState) return;
+    const dx = event.clientX - this.resizeState.startX;
+    const next = Math.min(420, Math.max(240, this.resizeState.startW + dx));
+    this.applyControlsWidth(next);
+  }
+
+  private handleResizeEnd(): void {
+    if (!this.resizeState) return;
+    const el = document.querySelector('.finder-columns') as HTMLElement | null;
+    const w = el ? parseFloat(getComputedStyle(el).getPropertyValue('--controls-w')) || 0 : 0;
+    if (w) this.persistControlsWidth(w);
+    this.detachResizeListeners();
+  }
+
+  private detachResizeListeners(): void {
+    window.removeEventListener('pointermove', this.onResizeMove);
+    window.removeEventListener('pointerup', this.onResizeUp);
+    window.removeEventListener('pointercancel', this.onResizeUp);
+    document.body.style.userSelect = '';
+    document.body.style.cursor = '';
+    this.resizeState = null;
+  }
+
+  private applyControlsWidth(px: number): void {
+    const el = document.querySelector('.finder-columns') as HTMLElement | null;
+    if (el) el.style.setProperty('--controls-w', `${px}px`);
+  }
+
+  private persistControlsWidth(px: number): void {
+    try { localStorage.setItem(this.controlsStorageKey, String(Math.round(px))); } catch { /* ignore */ }
+  }
+
+  private readControlsWidth(): number | null {
+    try {
+      const raw = localStorage.getItem(this.controlsStorageKey);
+      if (!raw) return null;
+      const n = parseInt(raw, 10);
+      return Number.isFinite(n) ? Math.min(420, Math.max(240, n)) : null;
+    } catch { return null; }
   }
 
   // ── Live validation ──────────────────────────────────────────────

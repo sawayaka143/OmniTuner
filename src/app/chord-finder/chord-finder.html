@@ -140,10 +140,11 @@
             />
           </div>
 
-          <div class="row-2">
+          <div class="row-2 compact">
             <app-text-field
               label="max stretch"
               type="number"
+              inputClass="compact"
               [value]="maxStretchText()"
               [min]="1"
               [max]="6"
@@ -152,6 +153,7 @@
             <app-text-field
               label="min notes"
               type="number"
+              inputClass="compact"
               [value]="minNotesText()"
               [min]="2"
               [max]="6"
@@ -169,6 +171,12 @@
         <p class="keynote">shortcut: Ctrl+Enter</p>
       </aside>
 
+      <button
+        class="resize-handle"
+        type="button"
+        aria-label="Resize controls panel"
+        (pointerdown)="onResizeStart($event)"></button>
+
       <!-- ══════════ OUTPUT / STAGE (hero) ══════════ -->
       <section class="stage" aria-label="Generated voicings">
         <div class="control-rail">
@@ -180,7 +188,8 @@
               [value]="viewMode()"
               ariaLabel="Voicing display mode"
               indicator="accent"
-              [gridColumns]="'repeat(3, 56px)'"
+              [compact]="true"
+              [gridColumns]="'repeat(3, 48px)'"
               [optionLabel]="viewLabelFn"
               [trackByFn]="identityFn"
               (select)="viewMode.set($event)"
@@ -192,7 +201,8 @@
               [value]="labelMode()"
               ariaLabel="Marker label mode"
               indicator="accent"
-              [gridColumns]="'repeat(2, 56px)'"
+              [compact]="true"
+              [gridColumns]="'repeat(2, 48px)'"
               [optionLabel]="labelChoiceLabelFn"
               [trackByFn]="identityFn"
               (select)="onLabelModeSelect($event)"

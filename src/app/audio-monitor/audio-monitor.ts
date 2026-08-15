@@ -100,6 +100,13 @@ export class AudioMonitor implements OnInit {
   private holdStartedAt = 0;
   private pulseTimeout: ReturnType<typeof setTimeout> | null = null;
 
+  /**
+   * Last string the auto mode resolved as target. Fed back into
+   * nearestStringTarget as the hysteresis "previous" name so a pitch
+   * hovering at a string midpoint cannot flicker between two targets.
+   */
+  private readonly lastAutoTargetName = signal<string | null>(null);
+
   readonly ticks: Tick[] = [];
 
   readonly selectedInstrumentIndex = computed(() =>
@@ -140,7 +147,11 @@ export class AudioMonitor implements OnInit {
     if (!freq || freq <= 0) return null;
     const played = frequencyToMidiFloat(freq, this.refPitch());
     if (played === null) return null;
-    return nearestStringTarget(played, this.currentStrings());
+    return nearestStringTarget(
+      played,
+      this.currentStrings(),
+      this.lastAutoTargetName() ?? undefined,
+    );
   });
 
   readonly autoTunedNames = computed(() => (this.mode() === 'auto' ? this.autoTuned() : []));
@@ -311,8 +322,20 @@ export class AudioMonitor implements OnInit {
       untracked(() => {
         this.autoTuned.set([]);
         this.confirmed.set(false);
+        this.lastAutoTargetName.set(null);
         this.clearHoldTimer();
       });
+    });
+
+    // Hysteresis feedback: record the resolved target so the next
+    // evaluation keeps it while the pitch stays within the margin.
+    // Writing the same value is a no-op, so this settles after one
+    // recompute instead of looping.
+    effect(() => {
+      const target = this.autoTarget();
+      if (target && target.name !== this.lastAutoTargetName()) {
+        this.lastAutoTargetName.set(target.name);
+      }
     });
 
     effect(() => {

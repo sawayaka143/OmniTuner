@@ -1,11 +1,8 @@
 import { Component, computed, input, output } from '@angular/core';
 
 /**
- * Segmented radiogroup with a sliding indicator. Renders one button per option
- * inside a `role="radiogroup"`; the selected option uses `role="radio"` with
- * `aria-checked`, and the indicator slides via
- * `translateX(selectedIndex * 100%)`. Defaults to `inline-flex`; pass
- * `[gridColumns]` to switch to a grid layout.
+ * Segmented control component (radio group) with a sliding active indicator.
+ * Supports both inline-flex (default) and grid layouts via the `gridColumns` input.
  */
 @Component({
   selector: 'app-segmented',
@@ -13,6 +10,7 @@ import { Component, computed, input, output } from '@angular/core';
     <div
       class="segmented"
       [class.is-grid]="!!gridColumns()"
+      [class.compact]="compact()"
       [class.indicator-accent]="indicator() === 'accent'"
       [style.--seg-count]="options().length"
       [style.grid-template-columns]="gridColumns() || null"
@@ -49,6 +47,7 @@ export class Segmented<T> {
   readonly trackByFn = input.required<(o: T) => unknown>();
   readonly compareWith = input((a: T, b: T) => a === b);
   readonly gridColumns = input<string>();
+  readonly compact = input(false);
   readonly disabled = input(false);
 
   readonly select = output<T>();

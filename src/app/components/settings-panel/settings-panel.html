@@ -161,12 +161,12 @@
 
           <div class="toggle-row">
             <div class="custom-copy">
-              <strong>Confirmation sound</strong>
-              <span>Play a soft chime when the note locks</span>
+              <strong>In-tune chime (ping)</strong>
+              <span>Play a soft chime when the note locks — turn off to mute the ping</span>
             </div>
             <app-toggle
               [checked]="tunerSettings().inTune.sound"
-              label="Confirmation sound"
+              label="In-tune chime (ping)"
               (change)="inTuneSoundChange.emit($event)"
             />
           </div>

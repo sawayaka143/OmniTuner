@@ -41,6 +41,7 @@
     justify-self: center;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: var(--space-6);
   }
 
@@ -49,13 +50,21 @@
     padding: var(--space-2) 0;
     color: var(--text-muted);
     text-decoration: none;
-    transition: color var(--dur-med) ease;
+    transition:
+      color var(--dur-med) ease,
+      font-size var(--dur-slow) var(--ease-spring),
+      font-weight var(--dur-slow) var(--ease-spring);
     font-size: var(--text-sm);
     font-weight: var(--fw-medium);
 
-    &.active,
-    &:hover {
+    &:hover:not(.active) {
       color: var(--text);
+    }
+
+    &.active {
+      color: var(--scale-accent);
+      font-size: var(--text-base);
+      font-weight: var(--fw-semibold);
     }
 
     &::after {

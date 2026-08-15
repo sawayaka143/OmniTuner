@@ -9,13 +9,42 @@
 /* ════════════════ Columns ════════════════ */
 
 .finder-columns {
+  --controls-w: 300px;
   display: grid;
-  /* Controls on the right, stage on the left gets the remaining width. */
-  grid-template-columns: minmax(0, 1fr) 360px;
-  gap: var(--space-3);
+  grid-template-columns: var(--controls-w) 8px minmax(0, 1fr);
+  gap: 0;
   padding: var(--space-3);
   border-top: 1px solid var(--border-subtle);
   background: var(--canvas);
+  align-items: start;
+}
+
+.resize-handle {
+  width: 8px;
+  align-self: stretch;
+  cursor: col-resize;
+  background: transparent;
+  border-radius: var(--r-sm);
+  position: relative;
+  touch-action: none;
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 2px;
+    height: 28px;
+    border-radius: 999px;
+    background: var(--border-medium);
+    opacity: 0.9;
+  }
+
+  &:hover,
+  &:active {
+    background: color-mix(in srgb, var(--border-medium) 35%, transparent);
+  }
 }
 
 /* ════════════════ Stage (hero output) ════════════════ */
@@ -364,6 +393,8 @@
 /* ════════════════ Controls panel ════════════════ */
 
 .controls-panel {
+  min-width: 0;
+  border-right: 1px solid var(--border-subtle);
   padding: var(--space-3) var(--space-3) var(--space-4);
 }
 
@@ -409,6 +440,15 @@
   > * {
     flex: 1;
     min-width: 0;
+  }
+
+  &.compact {
+    justify-content: flex-start;
+
+    > * {
+      flex: 0 0 112px;
+      max-width: 112px;
+    }
   }
 }
 
@@ -498,7 +538,6 @@
 @media (max-width: 980px) {
   .finder-columns {
     grid-template-columns: 1fr;
-    /* Controls first, then the stage on small screens. */
     grid-template-areas:
       'controls'
       'stage';
@@ -510,6 +549,10 @@
 
   .controls-panel {
     grid-area: controls;
+  }
+
+  .resize-handle {
+    display: none;
   }
 
   .stage-well {
