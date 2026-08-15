@@ -3,19 +3,11 @@
 .segmented {
   @include seg-control('plain', 'segment-indicator');
 
-  &.indicator-accent {
-    @include seg-control('accent', 'segment-indicator');
-  }
-
   &.is-grid {
     display: grid;
 
     button {
       min-width: unset;
     }
-  }
-
-  .segment-indicator.hidden {
-    opacity: 0;
   }
 }

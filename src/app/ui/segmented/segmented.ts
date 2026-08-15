@@ -19,8 +19,8 @@ import { Component, computed, input, output } from '@angular/core';
     >
       <span
         class="segment-indicator"
-        [style.transform]="'translateX(' + selectedIndex() * 100 + '%)'"
         [class.hidden]="selectedIndex() === -1"
+        [style.transform]="selectedIndex() === -1 ? 'translateX(-100%)' : 'translateX(' + selectedIndex() * 100 + '%)'"
         aria-hidden="true"
       ></span>
       @for (option of options(); track trackByFn()(option)) {

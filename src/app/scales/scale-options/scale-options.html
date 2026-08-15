@@ -2,9 +2,9 @@
   <div class="option-group">
     <span class="option-label">Accidentals</span>
     <div
-      class="segmented"
-      role="radiogroup"
-      aria-label="Note accidental spelling">
+       class="segmented indicator-accent"
+       role="radiogroup"
+       aria-label="Note accidental spelling">
       <span
         class="segment-indicator"
         [class.second]="accidental() === 'flat'"
@@ -31,9 +31,9 @@
   <div class="option-group">
     <span class="option-label">Frets</span>
     <div
-      class="segmented frets"
-      role="radiogroup"
-      aria-label="Number of frets">
+       class="segmented frets indicator-accent"
+       role="radiogroup"
+       aria-label="Number of frets">
       <span
         class="segment-indicator"
         [style.transform]="fretCount() === 12 ? 'translateX(0%)' : fretCount() === 15 ? 'translateX(100%)' : 'translateX(200%)'"
