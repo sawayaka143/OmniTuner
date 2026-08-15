@@ -31,7 +31,7 @@ import { Component, computed, input, output } from '@angular/core';
           [attr.aria-checked]="isSelected(option)"
           (click)="select.emit(option)"
         >
-          {{ optionLabel()(option) }}
+          <span class="seg-label">{{ optionLabel()(option) }}</span>
         </button>
       }
     </div>

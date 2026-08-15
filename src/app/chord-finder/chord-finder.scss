@@ -31,7 +31,7 @@
 
   &::after {
     content: "";
-    width: 5px;
+    width: 1px;
     height: 24px;
     border-radius: 999px;
     background: var(--text-dim);
@@ -389,10 +389,12 @@
 
 .controls-panel {
   min-width: 0;
+  overflow: hidden;
   padding: var(--space-3) var(--space-3) var(--space-4);
 }
 
 .control-section {
+  min-width: 0;
   display: block;
   padding: 2px 0 var(--space-3);
 
@@ -448,6 +450,26 @@
 
 /* Dropdown menus inside the control rail span their trigger width so they
    align with the two-column rows (mirrors RootNotePicker). */
+.controls-panel app-segmented {
+  display: block;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.controls-panel .segmented {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.controls-panel .segmented button {
+  min-width: 0;
+  flex: 1 1 0;
+  padding: var(--space-1);
+  font-size: var(--text-2xs);
+  overflow: hidden;
+}
+
 .control-section .dropdown-menu {
   left: 0;
   width: 100%;
