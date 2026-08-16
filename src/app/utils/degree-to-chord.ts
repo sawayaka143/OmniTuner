@@ -1,7 +1,13 @@
 import { pcName } from './chord-theory';
 
 const ROMAN_OFFSET: Readonly<Record<string, number>> = {
-  I: 0, II: 2, III: 4, IV: 5, V: 7, VI: 9, VII: 11,
+  I: 0,
+  II: 2,
+  III: 4,
+  IV: 5,
+  V: 7,
+  VI: 9,
+  VII: 11,
 };
 
 const mod12 = (value: number): number => ((value % 12) + 12) % 12;
@@ -55,10 +61,12 @@ export function degreeToChordSymbol(
 }
 
 export function tonicPcOf(noteName: string): number | null {
-  const m = String(noteName).trim().match(/^([A-Ga-g])\s*([#b♯♭]?)/);
+  const m = String(noteName)
+    .trim()
+    .match(/^([A-Ga-g])\s*([#b♯♭]?)/);
   if (!m) return null;
   const letters: Record<string, number> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
-  let pc = letters[m[1].toUpperCase()] as number;
+  let pc = letters[m[1].toUpperCase()];
   if (m[2] === '#' || m[2] === '♯') pc += 1;
   if (m[2] === 'b' || m[2] === '♭') pc -= 1;
   return mod12(pc);

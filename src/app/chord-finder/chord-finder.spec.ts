@@ -44,7 +44,10 @@ describe('ChordFinder', () => {
   it('starts with a random progression and matching key context', () => {
     const input = fieldInput('chords, comma-separated');
     expect(input?.value.trim().length).toBeGreaterThan(0);
-    const tokens = input!.value.split(/[,;|]/).map((t) => t.trim()).filter(Boolean);
+    const tokens = input!.value
+      .split(/[,;|]/)
+      .map((t) => t.trim())
+      .filter(Boolean);
     expect(tokens.length).toBeGreaterThanOrEqual(3);
     expect(tokens.length).toBeLessThanOrEqual(6);
   });
@@ -58,9 +61,13 @@ describe('ChordFinder', () => {
     expect(shuffleBtn).toBeTruthy();
     shuffleBtn.click();
     fixture.detectChanges();
-    const tokens = input.value.split(/[,;|]/).map((t) => t.trim()).filter(Boolean);
+    const tokens = input.value
+      .split(/[,;|]/)
+      .map((t) => t.trim())
+      .filter(Boolean);
     expect(tokens.length).toBeGreaterThanOrEqual(3);
     expect(tokens.length).toBeLessThanOrEqual(6);
+    expect(input.value).not.toEqual(before);
   });
 
   it('validates the default tuning live', () => {
@@ -124,8 +131,10 @@ describe('ChordFinder', () => {
   });
 
   it('selects a mode from the key-context dropdown', () => {
-    const modeSection = el().querySelectorAll<HTMLElement>('.control-section')[1]!;
-    const modeTrigger = modeSection.querySelector<HTMLButtonElement>('.btn');
+    const modeSection = el().querySelectorAll<HTMLElement>('.control-section')[1];
+    const modeTrigger = [...modeSection.querySelectorAll<HTMLButtonElement>('.btn')].find(
+      (t) => t.querySelector('.button-kicker')?.textContent?.trim() === 'mode',
+    );
     expect(modeTrigger).toBeTruthy();
     modeTrigger?.click();
     fixture.detectChanges();
@@ -211,5 +220,4 @@ describe('ChordFinder', () => {
     click('.generate');
     expect(el().querySelectorAll('.chord-card').length).toBe(before);
   });
-
 });

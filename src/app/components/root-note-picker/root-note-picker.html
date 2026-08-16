@@ -4,20 +4,30 @@
     type="button"
     [attr.aria-expanded]="open()"
     aria-haspopup="listbox"
-    (click)="toggle.emit(); $event.stopPropagation()">
+    (click)="toggle.emit(); $event.stopPropagation()"
+  >
     <span class="button-copy">
       <span class="button-kicker">Root note</span>
       <span class="value-wrap">
         <strong>{{ selected() }}</strong>
       </span>
     </span>
-    <span class="material-symbols-outlined dropdown-icon" [class.rotated]="open()" aria-hidden="true">
+    <span
+      class="material-symbols-outlined dropdown-icon"
+      [class.rotated]="open()"
+      aria-hidden="true"
+    >
       expand_more
     </span>
   </button>
 
   @if (open()) {
-    <div class="dropdown-menu card" role="listbox" aria-label="Root note selection" (click)="$event.stopPropagation()">
+    <div
+      class="dropdown-menu card"
+      role="listbox"
+      aria-label="Root note selection"
+      (click)="$event.stopPropagation()"
+    >
       @for (note of notes(); track note) {
         <button
           type="button"
@@ -25,7 +35,8 @@
           [attr.aria-selected]="selected() === note"
           class="dropdown-item"
           [class.selected]="selected() === note"
-          (click)="select.emit(note)">
+          (click)="select.emit(note)"
+        >
           <span>{{ note }}</span>
           @if (alternative(note); as alt) {
             <span class="item-alt">{{ alt }}</span>

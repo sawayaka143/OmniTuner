@@ -13,8 +13,7 @@ class PrHost {
   protected readonly onTick = (): void => this.count.update((n) => n + 1);
 }
 
-const wait = (ms: number): Promise<void> =>
-  new Promise((resolve) => setTimeout(resolve, ms));
+const wait = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
 describe('PressRepeat', () => {
   let fixture: ComponentFixture<PrHost>;
@@ -47,22 +46,30 @@ describe('PressRepeat', () => {
     expect(fixture.componentInstance.count()).toBe(1);
   });
 
-  it('repeats after the initial delay and on each interval', async () => {
-    button.dispatchEvent(new PointerEvent('pointerdown'));
-    expect(fixture.componentInstance.count()).toBe(1);
+  it('repeats after the initial delay and on each interval', () => {
+    vi.useFakeTimers();
+    try {
+      button.dispatchEvent(new PointerEvent('pointerdown'));
+      expect(fixture.componentInstance.count()).toBe(1);
 
-    await wait(50);
-    expect(fixture.componentInstance.count()).toBe(1);
+      vi.advanceTimersByTime(419);
+      expect(fixture.componentInstance.count()).toBe(1);
 
-    await wait(500);
-    expect(fixture.componentInstance.count()).toBe(2);
+      vi.advanceTimersByTime(1);
+      expect(fixture.componentInstance.count()).toBe(1);
 
-    await wait(100);
-    expect(fixture.componentInstance.count()).toBe(3);
+      vi.advanceTimersByTime(85);
+      expect(fixture.componentInstance.count()).toBe(2);
 
-    button.dispatchEvent(new PointerEvent('pointerup'));
-    await wait(200);
-    expect(fixture.componentInstance.count()).toBe(3);
+      vi.advanceTimersByTime(85);
+      expect(fixture.componentInstance.count()).toBe(3);
+
+      button.dispatchEvent(new PointerEvent('pointerup'));
+      vi.advanceTimersByTime(200);
+      expect(fixture.componentInstance.count()).toBe(3);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('stops on pointerleave', async () => {

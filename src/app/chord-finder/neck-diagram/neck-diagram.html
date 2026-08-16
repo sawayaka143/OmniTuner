@@ -3,17 +3,20 @@
   role="img"
   [attr.aria-label]="ariaLabel()"
   [attr.width]="layout().width"
-  [attr.height]="layout().height">
+  [attr.height]="layout().height"
+>
   <rect
     x="0.5"
     y="0.5"
     [attr.width]="layout().width - 1"
     [attr.height]="layout().height - 1"
-    rx="6" />
+    rx="6"
+  />
 
   <!-- diagram header: chord symbol + fingering rank -->
   <text class="head-symbol" x="10" y="15">
-    {{ symbol() }}<tspan class="head-rank" dx="7">#{{ index() + 1 }}</tspan>
+    {{ symbol() }}
+    <tspan class="head-rank" dx="7">#{{ index() + 1 }}</tspan>
   </text>
 
   <!-- inlay markers -->
@@ -30,7 +33,8 @@
           [attr.x1]="wire.x"
           [attr.y1]="layout().yTop - 2"
           [attr.x2]="wire.x"
-          [attr.y2]="layout().yBot + 2" />
+          [attr.y2]="layout().yBot + 2"
+        />
       }
       @default {
         <line
@@ -39,7 +43,8 @@
           [attr.x1]="wire.x"
           [attr.y1]="layout().yTop - 2"
           [attr.x2]="wire.x"
-          [attr.y2]="layout().yBot + 2" />
+          [attr.y2]="layout().yBot + 2"
+        />
       }
     }
   }
@@ -51,7 +56,8 @@
       [attr.x1]="layout().gridL - 26"
       [attr.y1]="string.y"
       [attr.x2]="layout().gridR"
-      [attr.y2]="string.y" />
+      [attr.y2]="string.y"
+    />
   }
 
   <!-- open-string note labels -->
@@ -60,7 +66,10 @@
       class="string-label"
       [class.muted]="label.muted"
       [attr.x]="layout().gridL - 30"
-      [attr.y]="label.y">{{ label.text }}</text>
+      [attr.y]="label.y"
+    >
+      {{ label.text }}
+    </text>
   }
 
   <!-- fret number axis -->
@@ -81,17 +90,19 @@
         [class.root]="dot.isRoot"
         [attr.cx]="dot.x"
         [attr.cy]="dot.y"
-        [style.fill]="dot.color" />
+        [style.fill]="dot.color"
+      />
       <text class="dot-text" [attr.x]="dot.x" [attr.y]="dot.y">{{ dot.inner }}</text>
     } @else {
-      <circle
-        class="note-ring"
-        [attr.cx]="dot.x"
-        [attr.cy]="dot.y"
-        [style.stroke]="dot.color" />
+      <circle class="note-ring" [attr.cx]="dot.x" [attr.cy]="dot.y" [style.stroke]="dot.color" />
       <text class="ring-text" [attr.x]="dot.x" [attr.y]="dot.y">{{ dot.inner }}</text>
     }
-    <text class="edge-label" [attr.x]="layout().gridR + 30" [attr.y]="dot.y" [style.fill]="dot.color">
+    <text
+      class="edge-label"
+      [attr.x]="layout().gridR + 30"
+      [attr.y]="dot.y"
+      [style.fill]="dot.color"
+    >
       {{ dot.edge }}
     </text>
   }

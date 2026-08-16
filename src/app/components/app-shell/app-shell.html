@@ -14,7 +14,8 @@
         aria-controls="settings-dialog"
         [class.active]="settingsOpen()"
         [attr.aria-expanded]="settingsOpen()"
-        (click)="settingsOpen.set(true)">
+        (click)="settingsOpen.set(true)"
+      >
         <span class="material-symbols-outlined" aria-hidden="true">settings</span>
       </button>
     </div>
@@ -46,4 +47,5 @@
   (inTuneToleranceChange)="setInTuneTolerance($event)"
   (inTuneHoldMsChange)="setInTuneHoldMs($event)"
   (referencePitchChange)="setReferencePitch($event)"
-  (dismiss)="settingsOpen.set(false)" />
+  (dismiss)="settingsOpen.set(false)"
+/>

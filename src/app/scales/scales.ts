@@ -3,16 +3,9 @@ import { RootNotePicker } from '../components/root-note-picker/root-note-picker'
 import { ScalePicker } from '../components/scale-picker/scale-picker';
 import { Fretboard } from '../components/fretboard/fretboard';
 import { FretCell, IntervalEntry, ScaleTone } from '../models/scale.model';
-import {
-  AccidentalPreference,
-  LabelMode,
-  ScaleFretCount,
-} from '../models/scale-preferences.model';
+import { AccidentalPreference, LabelMode, ScaleFretCount } from '../models/scale-preferences.model';
 import { FLAT_NAMES, SCALES, SHARP_NAMES } from '../data/scale.constants';
-import {
-  MAX_TUNING_MIDI_NOTE,
-  MIN_TUNING_MIDI_NOTE,
-} from '../data/scale-tuning.constants';
+import { MAX_TUNING_MIDI_NOTE, MIN_TUNING_MIDI_NOTE } from '../data/scale-tuning.constants';
 import { textColorOn } from '../data/interval-colors';
 import { computeFretboard, noteName, parseNote } from '../utils/scale-theory';
 import { frequencyToMidiNote } from '../utils/pitch-utils';
@@ -115,8 +108,8 @@ export class Scales {
   );
 
   /** Reference notes for highlighting changes in the editor. */
-  protected readonly referenceNotes = computed<readonly number[] | null>(() =>
-    this.tuningPresets()[0]?.notes ?? null,
+  protected readonly referenceNotes = computed<readonly number[] | null>(
+    () => this.tuningPresets()[0]?.notes ?? null,
   );
 
   /** The instrument label shown in the editor subtitle. */
@@ -128,16 +121,15 @@ export class Scales {
     this.preferencesState().accidental === 'flat' ? FLAT_NAMES : SHARP_NAMES,
   );
   protected readonly rootNote = computed(() =>
-    noteName(
-      this.preferencesState().rootPitchClass,
-      this.preferencesState().accidental === 'flat',
-    ),
+    noteName(this.preferencesState().rootPitchClass, this.preferencesState().accidental === 'flat'),
   );
   protected readonly scaleId = computed(() => this.preferencesState().scaleId);
   protected readonly currentScale = computed(
     () => SCALES.find((scale) => scale.id === this.scaleId()) ?? SCALES[0],
   );
-  protected readonly intervals = computed<IntervalEntry[]>(() => [...this.currentScale().intervals]);
+  protected readonly intervals = computed<IntervalEntry[]>(() => [
+    ...this.currentScale().intervals,
+  ]);
   protected readonly preferFlats = computed(() => this.preferencesState().accidental === 'flat');
   protected readonly fretCount = computed(() => this.preferencesState().fretCount);
   protected readonly labelMode = computed(() => this.preferencesState().labelMode);
@@ -163,7 +155,9 @@ export class Scales {
   });
 
   /** The fretboard is high-string-first; persisted tunings are low-string-first. */
-  private readonly openMidiNotes = computed<number[]>(() => [...this.activeTuning().notes].reverse());
+  private readonly openMidiNotes = computed<number[]>(() =>
+    [...this.activeTuning().notes].reverse(),
+  );
   private readonly openPitchClasses = computed<number[]>(() =>
     this.openMidiNotes().map((midi) => midi % 12),
   );
@@ -175,18 +169,22 @@ export class Scales {
       this.fretboardIntervals(),
       this.preferFlats(),
       this.openMidiNotes(),
-    ).map((row) => row.map((cell) => cell.interval
-      ? {
-          ...cell,
-          color: cell.isRoot
-            ? this.preferencesState().rootNoteColor
-            : this.preferencesState().noteColor,
-        }
-      : cell)),
+    ).map((row) =>
+      row.map((cell) =>
+        cell.interval
+          ? {
+              ...cell,
+              color: cell.isRoot
+                ? this.preferencesState().rootNoteColor
+                : this.preferencesState().noteColor,
+            }
+          : cell,
+      ),
+    ),
   );
 
-  private readonly scaleRootMidi = computed(() =>
-    40 + ((this.preferencesState().rootPitchClass - 4 + 12) % 12),
+  private readonly scaleRootMidi = computed(
+    () => 40 + ((this.preferencesState().rootPitchClass - 4 + 12) % 12),
   );
 
   protected readonly scaleTones = computed<readonly ScaleTone[]>(() =>
@@ -198,16 +196,19 @@ export class Scales {
         midi,
         noteName: noteName(pitchClass, this.preferFlats()),
         interval,
-        color: interval.semitones % 12 === 0
-          ? this.preferencesState().rootNoteColor
-          : this.preferencesState().noteColor,
+        color:
+          interval.semitones % 12 === 0
+            ? this.preferencesState().rootNoteColor
+            : this.preferencesState().noteColor,
         isRoot: interval.semitones % 12 === 0,
       };
     }),
   );
 
   protected readonly tuningNotesLabel = computed(() =>
-    this.activeTuning().notes.map((midi) => this.midiNoteName(midi)).join('  '),
+    this.activeTuning()
+      .notes.map((midi) => this.midiNoteName(midi))
+      .join('  '),
   );
 
   protected readonly readout = computed(() => {
@@ -308,13 +309,11 @@ export class Scales {
       return;
     }
 
-    const notes = this.activeTuning().notes as readonly number[];
+    const notes = this.activeTuning().notes;
     const rows = this.cells(); // high-string-first: rows[0] = 1st string
     const entries = notes.map((midi, index) => ({
       midi,
-      highlight:
-        rows[rows.length - 1 - index]?.find((cell) => cell.fret === 0) ??
-        null,
+      highlight: rows[rows.length - 1 - index]?.find((cell) => cell.fret === 0) ?? null,
     }));
 
     this.playNotes(entries, 'tuning');
@@ -343,13 +342,16 @@ export class Scales {
       );
     });
 
-    this.queueTimer(() => {
-      this.playbackSource.set(null);
-      this.playback.isPlaying.set(false);
-      this.activeMidi.set(null);
-      this.activeCell.set(null);
-      this.cleanupMuteGain();
-    }, entries.length * 160 + 380);
+    this.queueTimer(
+      () => {
+        this.playbackSource.set(null);
+        this.playback.isPlaying.set(false);
+        this.activeMidi.set(null);
+        this.activeCell.set(null);
+        this.cleanupMuteGain();
+      },
+      entries.length * 160 + 380,
+    );
   }
 
   private stopPlayback(): void {
@@ -358,7 +360,11 @@ export class Scales {
 
   private cleanupMuteGain(): void {
     if (this.muteGain) {
-      try { this.muteGain.disconnect(); } catch { /* ok */ }
+      try {
+        this.muteGain.disconnect();
+      } catch {
+        /* ok */
+      }
       this.muteGain = null;
     }
   }
@@ -447,11 +453,7 @@ export class Scales {
     this.tuningEditorOpen.set(false);
   }
 
-  private pulse(
-    midi: number,
-    cell: FretCell | null,
-    lightScaleNote = true,
-  ): void {
+  private pulse(midi: number, cell: FretCell | null, lightScaleNote = true): void {
     if (this.pulseTimer) clearTimeout(this.pulseTimer);
     if (lightScaleNote) this.activeMidi.set(midi);
     this.activeCell.set(cell);

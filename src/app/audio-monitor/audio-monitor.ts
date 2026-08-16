@@ -92,7 +92,7 @@ export class AudioMonitor implements OnInit {
   // startupMode is 'remember'; manualIndex is always re-derived per session.
   readonly mode = signal<TunerMode>(this.initialMode());
   readonly manualIndex = signal(0);
-  readonly autoTuned = signal<readonly string[]>([]);   // confirmed string names, in order
+  readonly autoTuned = signal<readonly string[]>([]); // confirmed string names, in order
   readonly confirmed = signal(false);
   readonly pulseActive = signal(false);
 
@@ -316,9 +316,9 @@ export class AudioMonitor implements OnInit {
 
   constructor() {
     effect(() => {
-      const mode = this.mode();
-      const tuningId = this.selectedTuningId();
-      const instrumentId = this.selectedInstrumentId();
+      this.mode();
+      this.selectedTuningId();
+      this.selectedInstrumentId();
       untracked(() => {
         this.autoTuned.set([]);
         this.confirmed.set(false);
@@ -346,9 +346,7 @@ export class AudioMonitor implements OnInit {
         const frameCents = this.frameCents();
         const holding = this.holdTimer !== null;
         const withinHysteresis =
-          holding &&
-          frameCents !== null &&
-          Math.abs(frameCents) <= this.tolerance() + 1.5;
+          holding && frameCents !== null && Math.abs(frameCents) <= this.tolerance() + 1.5;
 
         if (!withinHysteresis) {
           this.clearHoldTimer();

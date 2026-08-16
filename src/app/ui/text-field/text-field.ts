@@ -36,7 +36,14 @@ let nextFieldId = 0;
     @if (errorMessage()) {
       <p [id]="errorId" class="field-error">{{ errorMessage() }}</p>
     } @else if (hint()) {
-      <p [id]="hintId" class="hint" [class.good]="hintTone() === 'good'" [class.bad]="hintTone() === 'bad'">{{ hint() }}</p>
+      <p
+        [id]="hintId"
+        class="hint"
+        [class.good]="hintTone() === 'good'"
+        [class.bad]="hintTone() === 'bad'"
+      >
+        {{ hint() }}
+      </p>
     }
   `,
   styleUrl: './text-field.scss',

@@ -76,7 +76,9 @@
     line-height: 18px;
     visibility: hidden;
     opacity: 0;
-    transition: color var(--dur-slow) ease, opacity var(--dur-fast) ease;
+    transition:
+      color var(--dur-slow) ease,
+      opacity var(--dur-fast) ease;
 
     &.visible {
       visibility: visible;

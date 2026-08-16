@@ -22,8 +22,10 @@ describe('StringEditor', () => {
 
   afterEach(() => fixture?.destroy());
 
-  const form = (): HTMLFormElement => fixture.nativeElement.querySelector('.editor-form') as HTMLFormElement;
-  const nameInput = (): HTMLInputElement => fixture.nativeElement.querySelector('input') as HTMLInputElement;
+  const form = (): HTMLFormElement =>
+    fixture.nativeElement.querySelector('.editor-form') as HTMLFormElement;
+  const nameInput = (): HTMLInputElement =>
+    fixture.nativeElement.querySelector('input') as HTMLInputElement;
   const stepButtons = (): HTMLButtonElement[] =>
     [...fixture.nativeElement.querySelectorAll('button.step-button')] as HTMLButtonElement[];
   // First two step-buttons belong to the count stepper (rendered when allowCountChange=true).
@@ -174,7 +176,9 @@ describe('StringEditor', () => {
     fixture.detectChanges();
     lowestStringDownButton().dispatchEvent(new MouseEvent('click', { detail: 0 }));
     fixture.detectChanges();
-    const changed = [...fixture.nativeElement.querySelectorAll('.note-name.changed')] as HTMLElement[];
+    const changed = [
+      ...fixture.nativeElement.querySelectorAll('.note-name.changed'),
+    ] as HTMLElement[];
     expect(changed.length).toBe(1);
   });
 

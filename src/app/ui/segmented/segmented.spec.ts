@@ -108,7 +108,7 @@ describe('Segmented', () => {
   });
 
   it('hides the indicator when no option matches the value', () => {
-    host.selected.set({ value: 'unknown', label: 'Unknown' } as Mode);
+    host.selected.set({ value: 'unknown', label: 'Unknown' });
     fixture.detectChanges();
     expect(indicator().classList.contains('hidden')).toBe(true);
   });

@@ -32,7 +32,5 @@ export class PitchMeter {
   ];
 
   /** Clamped to the meter's ±50¢ scale so aria-valuenow stays in range. */
-  protected readonly ariaNow = computed(() =>
-    Math.max(-50, Math.min(50, this.cents() ?? 0)),
-  );
+  protected readonly ariaNow = computed(() => Math.max(-50, Math.min(50, this.cents() ?? 0)));
 }

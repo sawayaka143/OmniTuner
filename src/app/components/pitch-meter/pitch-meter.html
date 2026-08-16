@@ -4,16 +4,18 @@
   aria-label="Pitch deviation in cents, from minus 50 to plus 50"
   [attr.aria-valuemin]="-50"
   [attr.aria-valuemax]="50"
-  [attr.aria-valuenow]="ariaNow()">
+  [attr.aria-valuenow]="ariaNow()"
+>
   <div class="meter-track"></div>
   <div class="needle meter-needle" [class.in-tune]="isTuned()" [style.left]="needleLeft()"></div>
   <div class="ticks-container">
     @for (tick of ticks(); track $index) {
-      <div class="meter-tick"
-           [class.major]="tick.type === 'major'"
-           [class.center]="tick.type === 'center'"
-           [style.left]="tick.leftPos">
-      </div>
+      <div
+        class="meter-tick"
+        [class.major]="tick.type === 'major'"
+        [class.center]="tick.type === 'center'"
+        [style.left]="tick.leftPos"
+      ></div>
     }
   </div>
   <div class="meter-labels">

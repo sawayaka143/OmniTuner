@@ -13,7 +13,6 @@ const ALTERNATE_NOTES: Readonly<Record<string, string>> = {
   Bb: 'A♯',
 };
 
-
 @Component({
   selector: 'app-root-note-picker',
   templateUrl: './root-note-picker.html',

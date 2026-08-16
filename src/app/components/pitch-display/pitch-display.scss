@@ -22,7 +22,9 @@
     font-weight: var(--fw-normal);
     color: var(--text);
     padding-bottom: var(--space-1);
-    transition: color var(--dur-slow) ease, text-shadow var(--dur-slow) ease;
+    transition:
+      color var(--dur-slow) ease,
+      text-shadow var(--dur-slow) ease;
 
     &.in-tune {
       color: var(--in-tune-color);
@@ -49,7 +51,9 @@
     min-width: 1ch;
     visibility: hidden;
     opacity: 0;
-    transition: color var(--dur-slow) ease, opacity var(--dur-fast) ease;
+    transition:
+      color var(--dur-slow) ease,
+      opacity var(--dur-fast) ease;
 
     &.visible {
       visibility: visible;

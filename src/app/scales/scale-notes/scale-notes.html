@@ -8,7 +8,8 @@
       [style.--tone-color]="tone.color"
       [style.--tone-ink]="textColorOn(tone.color)"
       [attr.aria-label]="'Play ' + tone.noteName + ', scale degree ' + tone.interval.label"
-      (click)="play.emit(tone)">
+      (click)="play.emit(tone)"
+    >
       <strong>{{ tone.noteName }}</strong>
       <span>{{ tone.interval.label }}</span>
     </button>

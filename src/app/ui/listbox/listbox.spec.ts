@@ -117,8 +117,8 @@ describe('Listbox', () => {
   it('renders the alt text for options that provide one', () => {
     host.open.set(true);
     fixture.detectChanges();
-    const raspberry = [...fixture.nativeElement.querySelectorAll('[role="option"]')].find((o: HTMLElement) =>
-      o.textContent?.includes('Raspberry'),
+    const raspberry = [...fixture.nativeElement.querySelectorAll('[role="option"]')].find(
+      (o: HTMLElement) => o.textContent?.includes('Raspberry'),
     ) as HTMLElement;
     expect(raspberry.querySelector('.item-alt')?.textContent).toBe('Rubus idaeus');
   });
@@ -126,8 +126,8 @@ describe('Listbox', () => {
   it('emits select with the chosen option and closes', () => {
     host.open.set(true);
     fixture.detectChanges();
-    const lemon = [...fixture.nativeElement.querySelectorAll('[role="option"]')].find((o: HTMLElement) =>
-      o.textContent?.includes('Lemon'),
+    const lemon = [...fixture.nativeElement.querySelectorAll('[role="option"]')].find(
+      (o: HTMLElement) => o.textContent?.includes('Lemon'),
     ) as HTMLButtonElement;
     lemon.click();
     expect(host.selected()?.id).toBe('lemon');

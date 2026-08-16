@@ -1,9 +1,46 @@
-export const SHARP_PC_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'] as const;
-export const FLAT_PC_NAMES = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'] as const;
+export const SHARP_PC_NAMES = [
+  'C',
+  'C#',
+  'D',
+  'D#',
+  'E',
+  'F',
+  'F#',
+  'G',
+  'G#',
+  'A',
+  'A#',
+  'B',
+] as const;
+export const FLAT_PC_NAMES = [
+  'C',
+  'Db',
+  'D',
+  'Eb',
+  'E',
+  'F',
+  'Gb',
+  'G',
+  'Ab',
+  'A',
+  'Bb',
+  'B',
+] as const;
 
 /** Interval degree labels relative to a chord root (index = pitch-class offset). */
 export const DEGREE_LABELS: readonly string[] = [
-  'R', 'b2', '2', 'b3', '3', '4', 'b5', '5', '#5', '6', 'b7', '7',
+  'R',
+  'b2',
+  '2',
+  'b3',
+  '3',
+  '4',
+  'b5',
+  '5',
+  '#5',
+  '6',
+  'b7',
+  '7',
 ];
 
 const PC_LETTER: Readonly<Record<string, number>> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
@@ -65,7 +102,7 @@ export const CHORD_FORMULAS: Readonly<Record<string, ChordFormula>> = {
   // Diminished / augmented / suspended / add / power
   dim: { intervals: [0, 3, 6] },
   dim7: { intervals: [0, 3, 6, 9] },
-  'ø9': { intervals: [0, 3, 6, 10, 14] },
+  ø9: { intervals: [0, 3, 6, 10, 14] },
   aug: { intervals: [0, 4, 8] },
   '9#5': { intervals: [0, 4, 8, 10, 14] },
   sus2: { intervals: [0, 2, 7] },
@@ -84,60 +121,141 @@ export const CHORD_FORMULAS: Readonly<Record<string, ChordFormula>> = {
 };
 
 const QUALITY_ALIASES: Readonly<Record<string, string>> = {
-  '': 'maj', maj: 'maj', M: 'maj', major: 'maj',
-  m: 'min', min: 'min', mi: 'min', '-': 'min',
-  '7': '7', dom7: '7',
-  maj7: 'maj7', M7: 'maj7', Δ7: 'maj7', delta7: 'maj7',
-  m7: 'm7', mMaj7: 'mMaj7', 'm(maj7)': 'mMaj7',
-  dim: 'dim', '°': 'dim', o: 'dim',
-  dim7: 'dim7', '°7': 'dim7', o7: 'dim7',
-  m7b5: 'm7b5', 'ø': 'm7b5', 'ø7': 'm7b5', halfdim: 'm7b5',
-  aug: 'aug', '+': 'aug',
-  sus2: 'sus2', sus4: 'sus4', sus: 'sus4',
-  '6': '6', add6: '6', m6: 'm6',
-  '9': '9', m9: 'm9', add9: 'add9', add2: 'add9',
-  '5': '5', pow: '5',
+  '': 'maj',
+  maj: 'maj',
+  M: 'maj',
+  major: 'maj',
+  m: 'min',
+  min: 'min',
+  mi: 'min',
+  '-': 'min',
+  '7': '7',
+  dom7: '7',
+  maj7: 'maj7',
+  M7: 'maj7',
+  Δ7: 'maj7',
+  delta7: 'maj7',
+  m7: 'm7',
+  mMaj7: 'mMaj7',
+  'm(maj7)': 'mMaj7',
+  dim: 'dim',
+  '°': 'dim',
+  o: 'dim',
+  dim7: 'dim7',
+  '°7': 'dim7',
+  o7: 'dim7',
+  m7b5: 'm7b5',
+  ø: 'm7b5',
+  ø7: 'm7b5',
+  halfdim: 'm7b5',
+  aug: 'aug',
+  '+': 'aug',
+  sus2: 'sus2',
+  sus4: 'sus4',
+  sus: 'sus4',
+  '6': '6',
+  add6: '6',
+  m6: 'm6',
+  '9': '9',
+  m9: 'm9',
+  add9: 'add9',
+  add2: 'add9',
+  '5': '5',
+  pow: '5',
 
   // Major family
-  maj9: 'maj9', M9: 'maj9', 'Δ9': 'maj9', delta9: 'maj9',
-  maj11: 'maj11', M11: 'maj11', 'Δ11': 'maj11', delta11: 'maj11',
-  maj13: 'maj13', M13: 'maj13', 'Δ13': 'maj13', delta13: 'maj13',
-  'maj7#11': 'maj7#11', 'M7#11': 'maj7#11', 'Δ7#11': 'maj7#11',
-  'maj13#11': 'maj13#11', 'M13#11': 'maj13#11', 'Δ13#11': 'maj13#11',
-  'maj7#5': 'maj7#5', 'M7#5': 'maj7#5', 'Δ7#5': 'maj7#5', 'maj7+5': 'maj7#5',
-  'maj9#5': 'maj9#5', 'M9#5': 'maj9#5', 'Δ9#5': 'maj9#5', '9+5': 'maj9#5',
+  maj9: 'maj9',
+  M9: 'maj9',
+  Δ9: 'maj9',
+  delta9: 'maj9',
+  maj11: 'maj11',
+  M11: 'maj11',
+  Δ11: 'maj11',
+  delta11: 'maj11',
+  maj13: 'maj13',
+  M13: 'maj13',
+  Δ13: 'maj13',
+  delta13: 'maj13',
+  'maj7#11': 'maj7#11',
+  'M7#11': 'maj7#11',
+  'Δ7#11': 'maj7#11',
+  'maj13#11': 'maj13#11',
+  'M13#11': 'maj13#11',
+  'Δ13#11': 'maj13#11',
+  'maj7#5': 'maj7#5',
+  'M7#5': 'maj7#5',
+  'Δ7#5': 'maj7#5',
+  'maj7+5': 'maj7#5',
+  'maj9#5': 'maj9#5',
+  'M9#5': 'maj9#5',
+  'Δ9#5': 'maj9#5',
+  '9+5': 'maj9#5',
   maj6: '6',
-  '6/9': '6/9', '69': '6/9', '6add9': '6/9',
-  'm6/9': 'm6/9', 'm69': 'm6/9', 'm6add9': 'm6/9',
+  '6/9': '6/9',
+  '69': '6/9',
+  '6add9': '6/9',
+  'm6/9': 'm6/9',
+  m69: 'm6/9',
+  m6add9: 'm6/9',
 
   // Dominant family
-  '11': '11', '13': '13',
-  '7b5': '7b5', '7#5': '7#5', '+7': '7#5', aug7: '7#5',
-  '7b9': '7b9', '7#9': '7#9', '7#11': '7#11', '7b13': '7b13',
-  '9#11': '9#11', '13b9': '13b9', '7#9b13': '7#9b13',
+  '11': '11',
+  '13': '13',
+  '7b5': '7b5',
+  '7#5': '7#5',
+  '+7': '7#5',
+  aug7: '7#5',
+  '7b9': '7b9',
+  '7#9': '7#9',
+  '7#11': '7#11',
+  '7b13': '7b13',
+  '9#11': '9#11',
+  '13b9': '13b9',
+  '7#9b13': '7#9b13',
 
   // Minor family
-  m11: 'm11', m13: 'm13',
-  mMaj9: 'mMaj9', mM9: 'mMaj9', 'm(maj9)': 'mMaj9', 'mΔ9': 'mMaj9', 'm(M9)': 'mMaj9',
-  mMaj11: 'mMaj11', mM11: 'mMaj11', 'm(maj11)': 'mMaj11', 'mΔ11': 'mMaj11',
-  mMaj13: 'mMaj13', mM13: 'mMaj13', 'm(maj13)': 'mMaj13', 'mΔ13': 'mMaj13',
+  m11: 'm11',
+  m13: 'm13',
+  mMaj9: 'mMaj9',
+  mM9: 'mMaj9',
+  'm(maj9)': 'mMaj9',
+  mΔ9: 'mMaj9',
+  'm(M9)': 'mMaj9',
+  mMaj11: 'mMaj11',
+  mM11: 'mMaj11',
+  'm(maj11)': 'mMaj11',
+  mΔ11: 'mMaj11',
+  mMaj13: 'mMaj13',
+  mM13: 'mMaj13',
+  'm(maj13)': 'mMaj13',
+  mΔ13: 'mMaj13',
 
   // Diminished / augmented / suspended / add
-  'ø9': 'ø9', halfdim9: 'ø9',
-  '7sus2': '7sus2', '7sus': '7sus4', '7sus4': '7sus4',
-  maj7sus4: 'maj7sus4', M7sus4: 'maj7sus4', 'Δ7sus4': 'maj7sus4',
-  '9sus4': '9sus4', '9sus': '9sus4',
-  '13sus4': '13sus4', '13sus': '13sus4',
+  ø9: 'ø9',
+  halfdim9: 'ø9',
+  '7sus2': '7sus2',
+  '7sus': '7sus4',
+  '7sus4': '7sus4',
+  maj7sus4: 'maj7sus4',
+  M7sus4: 'maj7sus4',
+  Δ7sus4: 'maj7sus4',
+  '9sus4': '9sus4',
+  '9sus': '9sus4',
+  '13sus4': '13sus4',
+  '13sus': '13sus4',
   '6sus4': '6sus4',
-  add11: 'add11', add4: 'add11',
-  madd9: 'madd9', madd11: 'madd11', madd4: 'madd11',
-  '+maj7': 'maj7#5', augmaj7: 'maj7#5',
-  'Δ': 'maj7',
+  add11: 'add11',
+  add4: 'add11',
+  madd9: 'madd9',
+  madd11: 'madd11',
+  madd4: 'madd11',
+  '+maj7': 'maj7#5',
+  augmaj7: 'maj7#5',
+  Δ: 'maj7',
 };
 
 export type ModeName =
-  | 'Ionian' | 'Dorian' | 'Phrygian' | 'Lydian'
-  | 'Mixolydian' | 'Aeolian' | 'Locrian';
+  'Ionian' | 'Dorian' | 'Phrygian' | 'Lydian' | 'Mixolydian' | 'Aeolian' | 'Locrian';
 
 export const MODES: Readonly<Record<ModeName, readonly number[]>> = {
   Ionian: [0, 2, 4, 5, 7, 9, 11],
@@ -173,7 +291,7 @@ export interface ParsedNote {
 export function parseNoteToken(token: string): ParsedNote | null {
   const match = String(token).match(/^([A-Ga-g])\s*([#b♯♭]?)([-+]?\d+)$/);
   if (!match) return null;
-  let pc = PC_LETTER[match[1].toUpperCase()] as number;
+  let pc = PC_LETTER[match[1].toUpperCase()];
   if (match[2] === '#' || match[2] === '♯') pc += 1;
   if (match[2] === 'b' || match[2] === '♭') pc -= 1;
   const midi = (parseInt(match[3], 10) + 1) * 12 + pc;
@@ -193,7 +311,10 @@ export type TuningParseResult =
 
 /** Parses a whitespace/comma-separated tuning, low string first. */
 export function parseTuning(raw: string): TuningParseResult {
-  const tokens = String(raw).split(/[,\s]+/).map((t) => t.trim()).filter(Boolean);
+  const tokens = String(raw)
+    .split(/[,\s]+/)
+    .map((t) => t.trim())
+    .filter(Boolean);
   if (tokens.length === 0) return { ok: false, error: 'empty tuning' };
   if (tokens.length > 12) return { ok: false, error: 'max 12 strings' };
   const midi: number[] = [];
@@ -295,18 +416,49 @@ function composeQuality(raw: string): ComposedQuality | null {
 
   for (const token of tokens) {
     switch (token) {
-      case 'b5': drop(7); add(6); removeOptional(6); break;
-      case '#5': drop(7); add(8); removeOptional(8); break;
-      case 'b9': drop(14); add(13); break;
-      case '#9': drop(14); add(15); break;
-      case '9': drop(13); drop(15); add(14); break;
-      case '11': addOptional(17); break;
-      case '#11': addOptional(18); break;
-      case '13': addOptional(21); break;
-      case 'b13': addOptional(20); break;
-      case 'add9': add(14); break;
-      case 'add11': addOptional(17); break;
-      default: break;
+      case 'b5':
+        drop(7);
+        add(6);
+        removeOptional(6);
+        break;
+      case '#5':
+        drop(7);
+        add(8);
+        removeOptional(8);
+        break;
+      case 'b9':
+        drop(14);
+        add(13);
+        break;
+      case '#9':
+        drop(14);
+        add(15);
+        break;
+      case '9':
+        drop(13);
+        drop(15);
+        add(14);
+        break;
+      case '11':
+        addOptional(17);
+        break;
+      case '#11':
+        addOptional(18);
+        break;
+      case '13':
+        addOptional(21);
+        break;
+      case 'b13':
+        addOptional(20);
+        break;
+      case 'add9':
+        add(14);
+        break;
+      case 'add11':
+        addOptional(17);
+        break;
+      default:
+        break;
     }
   }
 
@@ -322,7 +474,7 @@ export function parseChord(raw: string): ChordParseResult {
   const symbol = String(raw).trim();
   const match = symbol.match(/^([A-Ga-g])\s*([#b♯♭]?)\s*(.*?)\s*$/);
   if (!match) return { ok: false, symbol, error: `'${symbol}' is not a chord symbol` };
-  let rootPc = PC_LETTER[match[1].toUpperCase()] as number;
+  let rootPc = PC_LETTER[match[1].toUpperCase()];
   if (match[2] === '#' || match[2] === '♯') rootPc += 1;
   if (match[2] === 'b' || match[2] === '♭') rootPc -= 1;
   rootPc = mod12(rootPc);
@@ -402,7 +554,8 @@ export function computeBadge(
   if (!scaleRoot) return null;
   const token = /\d/.test(scaleRoot) ? scaleRoot : `${scaleRoot}3`;
   const parsed = parseNoteToken(token);
-  if (!parsed) return { kind: 'warn', text: `scale root '${scaleRoot}' unreadable — badge skipped` };
+  if (!parsed)
+    return { kind: 'warn', text: `scale root '${scaleRoot}' unreadable — badge skipped` };
 
   const steps = MODES[modeName];
   let degreeIndex = -1;
@@ -421,7 +574,10 @@ export function computeBadge(
   const third = mod12(steps[(degreeIndex + 2) % 7] - steps[degreeIndex]);
   const fifth = mod12(steps[(degreeIndex + 4) % 7] - steps[degreeIndex]);
   const EXPECTED: Readonly<Record<string, string>> = {
-    '3,6': 'dim', '3,7': 'min', '4,7': 'maj', '4,8': 'aug',
+    '3,6': 'dim',
+    '3,7': 'min',
+    '4,7': 'maj',
+    '4,8': 'aug',
   };
   const expectedQuality = EXPECTED[`${third},${fifth}`] ?? 'maj';
 
@@ -431,9 +587,12 @@ export function computeBadge(
   if (expectedQuality === 'aug') numeral += '+';
 
   const QUALITY_WORD: Readonly<Record<string, string>> = {
-    maj: 'major', min: 'minor', dim: 'diminished', aug: 'augmented',
+    maj: 'major',
+    min: 'minor',
+    dim: 'diminished',
+    aug: 'augmented',
   };
-  const actualThird = chord.intervals.includes(4) ? 4 : (chord.intervals.includes(3) ? 3 : null);
+  const actualThird = chord.intervals.includes(4) ? 4 : chord.intervals.includes(3) ? 3 : null;
   let actualFifth: number | null = null;
   for (const candidate of [7, 6, 8]) {
     if (chord.intervals.includes(candidate)) {

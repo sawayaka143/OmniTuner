@@ -46,9 +46,6 @@ const RELEASE_FRAME_COUNT = 10;
  */
 const ANALYSIS_TIMEOUT_MS = 500;
 
-const MIN_FREQUENCY = 50;
-const MAX_FREQUENCY = 1200;
-
 @Service()
 export class AudioCaptureService {
   private readonly destroyRef = inject(DestroyRef);
@@ -98,9 +95,7 @@ export class AudioCaptureService {
   private pendingNoteFrequency: number | null = null;
 
   constructor() {
-    this.worker = new Worker(
-      new URL('./pitch-detector.worker', import.meta.url),
-    );
+    this.worker = new Worker(new URL('./pitch-detector.worker', import.meta.url));
 
     this.worker.onmessage = (event: MessageEvent<PitchAnalysisResponse>) => {
       const { frequency, confidence, inputLevel, sessionId } = event.data;
@@ -182,9 +177,7 @@ export class AudioCaptureService {
       // Warn in dev if the OS ignored the channelCount hint.
       const trackSettings = this.stream.getAudioTracks()[0]?.getSettings();
       if (trackSettings && (trackSettings.channelCount ?? 1) > 1) {
-        console.warn(
-          '[AudioCaptureService] mic delivered multi-channel; forcing mono downmix.',
-        );
+        console.warn('[AudioCaptureService] mic delivered multi-channel; forcing mono downmix.');
       }
 
       const highpass = ctx.createBiquadFilter();
@@ -200,7 +193,7 @@ export class AudioCaptureService {
       lowpass.Q.value = 0.7;
 
       const analyser = ctx.createAnalyser();
-      analyser.fftSize = 8192;            // Large window for low-freq resolution
+      analyser.fftSize = 8192; // Large window for low-freq resolution
       analyser.smoothingTimeConstant = 0; // We do our own smoothing
 
       source.connect(highpass);
@@ -321,10 +314,7 @@ export class AudioCaptureService {
     const tick = (timestamp: number): void => {
       if (!this.analyser || !this.audioContext) return;
 
-      if (
-        !this.analysisInFlight &&
-        timestamp - lastAnalysisAt >= ANALYSIS_INTERVAL_MS
-      ) {
+      if (!this.analysisInFlight && timestamp - lastAnalysisAt >= ANALYSIS_INTERVAL_MS) {
         this.analyser.getFloatTimeDomainData(buffer);
         this.analysisInFlight = true;
         lastAnalysisAt = timestamp;
@@ -453,9 +443,7 @@ export class AudioCaptureService {
   private median(values: readonly number[]): number {
     const sorted = [...values].sort((a, b) => a - b);
     const mid = Math.floor(sorted.length / 2);
-    return sorted.length % 2 === 0
-      ? (sorted[mid - 1] + sorted[mid]) / 2
-      : sorted[mid];
+    return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
   }
 
   // Guard against non-positive inputs (would yield NaN/±Infinity).

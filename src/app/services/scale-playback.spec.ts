@@ -1,9 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import {
-  SCALE_AUDIO_CONTEXT_FACTORY,
-  ScalePlayback,
-  midiToFrequency,
-} from './scale-playback';
+import { SCALE_AUDIO_CONTEXT_FACTORY, ScalePlayback, midiToFrequency } from './scale-playback';
 
 describe('ScalePlayback', () => {
   afterEach(() => TestBed.resetTestingModule());

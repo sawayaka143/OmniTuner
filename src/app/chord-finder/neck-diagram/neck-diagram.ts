@@ -10,9 +10,14 @@ const INLAY_DOUBLE = new Set([12, 24]);
 /** Chord-tone function → colour role (mapped in the component stylesheet). */
 const FUNC_COLOR: Readonly<Record<number, string>> = {
   0: 'var(--neck-root)',
-  3: 'var(--neck-third)', 4: 'var(--neck-third)',
-  5: 'var(--neck-fifth)', 7: 'var(--neck-fifth)',
-  6: 'var(--neck-alt)', 8: 'var(--neck-alt)', 10: 'var(--neck-alt)', 11: 'var(--neck-alt)',
+  3: 'var(--neck-third)',
+  4: 'var(--neck-third)',
+  5: 'var(--neck-fifth)',
+  7: 'var(--neck-fifth)',
+  6: 'var(--neck-alt)',
+  8: 'var(--neck-alt)',
+  10: 'var(--neck-alt)',
+  11: 'var(--neck-alt)',
 };
 const OTHER_COLOR = 'var(--neck-other)';
 
@@ -74,7 +79,15 @@ export class NeckDiagram {
     const yTop = NECK.TOP;
     const yBot = NECK.TOP + n * NECK.ROW;
     return {
-      n, lo, cols, gridL, gridR, width, height, yTop, yBot,
+      n,
+      lo,
+      cols,
+      gridL,
+      gridR,
+      width,
+      height,
+      yTop,
+      yBot,
       indCx: NECK.LEFT + NECK.IND / 2,
       stringY: (s: number): number => yTop + (n - 1 - s) * NECK.ROW + NECK.ROW / 2,
       fretX: (f: number): number => gridL + (f - lo) * NECK.COL + NECK.COL / 2,
@@ -157,14 +170,18 @@ export class NeckDiagram {
       const degreeLabel = DEGREE_LABELS[degree];
       if (this.view() === 'dots') {
         dots.push({
-          x, y, color,
+          x,
+          y,
+          color,
           isRoot: degree === 0,
           inner: labelMode === 'notes' ? noteLabel : degreeLabel,
           edge: labelMode === 'notes' ? degreeLabel : noteLabel,
         });
       } else {
         dots.push({
-          x, y, color,
+          x,
+          y,
+          color,
           isRoot: degree === 0,
           inner: String(fret),
           edge: labelMode === 'notes' ? midiName(midi, flats) : degreeLabel,
@@ -174,7 +191,5 @@ export class NeckDiagram {
     return { dots, muted };
   });
 
-  protected readonly ariaLabel = computed(
-    () => `${this.symbol()} fingering ${this.index() + 1}`,
-  );
+  protected readonly ariaLabel = computed(() => `${this.symbol()} fingering ${this.index() + 1}`);
 }

@@ -27,8 +27,11 @@
     gap: 2px;
     opacity: 0.7;
     cursor: pointer;
-    transition: opacity var(--dur-med) ease, border-color var(--dur-med) ease,
-      background-color var(--dur-med) ease, transform var(--dur-fast) ease;
+    transition:
+      opacity var(--dur-med) ease,
+      border-color var(--dur-med) ease,
+      background-color var(--dur-med) ease,
+      transform var(--dur-fast) ease;
 
     &:hover {
       opacity: 1;
@@ -48,11 +51,7 @@
 
     &.active.in-tune,
     &.tuned {
-      background-color: color-mix(
-        in srgb,
-        var(--in-tune-color) 12%,
-        var(--surface-container-high)
-      );
+      background-color: color-mix(in srgb, var(--in-tune-color) 12%, var(--surface-container-high));
       border-color: color-mix(in srgb, var(--in-tune-color) 65%, transparent);
       box-shadow: var(--string-glow);
     }

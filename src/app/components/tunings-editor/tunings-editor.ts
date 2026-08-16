@@ -5,11 +5,7 @@ import {
   MAX_TUNER_MIDI_NOTE,
   MIN_TUNER_MIDI_NOTE,
 } from '../../models/tuner-preferences.model';
-import {
-  PresetOption,
-  StringEditor,
-  StringEditorValue,
-} from '../string-editor/string-editor';
+import { PresetOption, StringEditor, StringEditorValue } from '../string-editor/string-editor';
 import { IconButton } from '../../ui/icon-button/icon-button';
 
 export type TuningEditorValue = StringEditorValue;

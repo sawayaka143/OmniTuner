@@ -64,7 +64,9 @@
     height: var(--needle-height);
     background: var(--needle-color);
     transform: translate(-50%, -50%);
-    transition: left var(--dur-slow) var(--ease-spring), background-color var(--dur-med) ease;
+    transition:
+      left var(--dur-slow) var(--ease-spring),
+      background-color var(--dur-med) ease;
     z-index: var(--z-float);
     border-radius: var(--r-sm);
 

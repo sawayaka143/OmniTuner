@@ -165,8 +165,12 @@ describe('InstrumentRegistry', () => {
     it('validates notes match string count and range', () => {
       const service = createService();
       expect(() => service.createInstrument('Test', 6, [40, 45])).toThrow(RangeError);
-      expect(() => service.createInstrument('Test', 6, [34, 45, 50, 55, 59, 64])).toThrow(RangeError);
-      expect(() => service.createInstrument('Test', 6, [40, 45, 50, 55, 59, 87])).toThrow(RangeError);
+      expect(() => service.createInstrument('Test', 6, [34, 45, 50, 55, 59, 64])).toThrow(
+        RangeError,
+      );
+      expect(() => service.createInstrument('Test', 6, [40, 45, 50, 55, 59, 87])).toThrow(
+        RangeError,
+      );
     });
   });
 
@@ -261,9 +265,7 @@ describe('InstrumentRegistry', () => {
         'omnituner.tuner-preferences.v1',
         JSON.stringify({
           version: 2,
-          tunings: [
-            { id: 'custom-old', instrumentId: 'guitar', name: 'Old', notes: GUITAR_NOTES },
-          ],
+          tunings: [{ id: 'custom-old', instrumentId: 'guitar', name: 'Old', notes: GUITAR_NOTES }],
         }),
       );
 

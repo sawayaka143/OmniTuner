@@ -44,15 +44,19 @@
 
   <div class="tuner-stage">
     <div class="meter-area">
-      <div
-        class="tune-prompt"
-        [class.in-tune]="isTuned()"
-        [style.color]="tuneColorHex()">
+      <div class="tune-prompt" [class.in-tune]="isTuned()" [style.color]="tuneColorHex()">
         <span class="prompt-text">{{ tunePrompt() }}</span>
-        <span class="tune-cents" [class.visible]="!!tuneCents()">{{ tuneCents() || '\u00a0' }}</span>
+        <span class="tune-cents" [class.visible]="!!tuneCents()">{{
+          tuneCents() || '\u00a0'
+        }}</span>
       </div>
 
-      <app-pitch-meter [ticks]="ticks" [needleLeft]="needleLeft()" [cents]="frameCents()" [isTuned]="isTuned()" />
+      <app-pitch-meter
+        [ticks]="ticks"
+        [needleLeft]="needleLeft()"
+        [cents]="frameCents()"
+        [isTuned]="isTuned()"
+      />
 
       <div class="pulse-layer" aria-hidden="true">
         @if (pulseActive()) {
@@ -94,7 +98,9 @@
   <span class="sr-only" aria-live="polite" aria-atomic="true">{{ statusMessage() }}</span>
 
   @if (showDebug) {
-    <pre class="debug-hud" aria-hidden="true"
+    <pre
+      class="debug-hud"
+      aria-hidden="true"
     ><span class="debug-hud__dot" [class.active]="isCapturing()"></span
     ><span class="debug-hud__label">DEBUG · temporary</span>
 lvl {{ inputLevel().toFixed(3) }}

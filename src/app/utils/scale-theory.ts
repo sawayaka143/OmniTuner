@@ -91,9 +91,7 @@ export const computeFretboard = (
         stringIndex,
         fret,
         pitchClass,
-        midi: openMidiNotes?.[stringIndex] !== undefined
-          ? openMidiNotes[stringIndex] + fret
-          : null,
+        midi: openMidiNotes?.[stringIndex] !== undefined ? openMidiNotes[stringIndex] + fret : null,
         interval,
         noteName: noteName(pitchClass, preferFlats),
         color: interval ? colorForLabel(interval.label) : '',

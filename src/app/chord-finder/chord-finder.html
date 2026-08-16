@@ -84,7 +84,14 @@
             (enter)="generate()"
           />
           @if (shuffleEnabled()) {
-            <button class="btn small" type="button" aria-label="Shuffle progression and key" (click)="shuffle()">Shuffle</button>
+            <button
+              class="btn small"
+              type="button"
+              aria-label="Shuffle progression and key"
+              (click)="shuffle()"
+            >
+              Shuffle
+            </button>
           }
         </div>
 
@@ -159,7 +166,8 @@
         class="resize-handle"
         type="button"
         aria-label="Resize controls panel"
-        (pointerdown)="onResizeStart($event)"></button>
+        (pointerdown)="onResizeStart($event)"
+      ></button>
 
       <!-- ══════════ OUTPUT / STAGE (hero) ══════════ -->
       <section class="stage" aria-label="Generated voicings">

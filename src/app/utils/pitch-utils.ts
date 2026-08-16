@@ -85,7 +85,11 @@ export function needlePercentFromCents(cents: number | null): string {
  * stayed inside the tolerance window for at least `holdMs`. Pure so the
  * edge cases get a real unit test.
  */
-export function shouldConfirm(options: { inRange: boolean; elapsedMs: number; holdMs: number }): boolean {
+export function shouldConfirm(options: {
+  inRange: boolean;
+  elapsedMs: number;
+  holdMs: number;
+}): boolean {
   return options.inRange && options.elapsedMs >= options.holdMs;
 }
 

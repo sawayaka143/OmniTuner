@@ -195,7 +195,7 @@ function preferLowerFundamental(
   sampleRate: number,
 ): number {
   const frequency = sampleRate / tau;
-  if (frequency < 180) return tau;          // already in the bass range
+  if (frequency < 180) return tau; // already in the bass range
 
   const candidateTau = tau * 2;
   if (candidateTau > maxLag) return tau;

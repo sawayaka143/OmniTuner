@@ -13,7 +13,10 @@
   font-weight: var(--fw-semibold);
   letter-spacing: var(--tracking-narrow);
   cursor: pointer;
-  transition: filter var(--dur-med) ease, transform var(--dur-fast) ease, opacity var(--dur-med) ease;
+  transition:
+    filter var(--dur-med) ease,
+    transform var(--dur-fast) ease,
+    opacity var(--dur-med) ease;
 
   &:hover {
     filter: brightness(1.1);
@@ -54,8 +57,11 @@
   color: var(--text-muted);
   font-family: var(--mono);
   cursor: pointer;
-  transition: background-color var(--dur-med) ease, border-color var(--dur-med) ease,
-    color var(--dur-med) ease, transform var(--dur-fast) ease;
+  transition:
+    background-color var(--dur-med) ease,
+    border-color var(--dur-med) ease,
+    color var(--dur-med) ease,
+    transform var(--dur-fast) ease;
 
   .material-symbols-outlined {
     font-size: var(--text-lg);
@@ -96,7 +102,9 @@
   font-size: var(--text-2sm);
   cursor: pointer;
   text-align: start;
-  transition: background-color var(--dur-med) ease, color var(--dur-med) ease;
+  transition:
+    background-color var(--dur-med) ease,
+    color var(--dur-med) ease;
 
   &:hover {
     background-color: var(--surface-container);

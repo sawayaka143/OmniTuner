@@ -51,11 +51,16 @@ const OPEN_MODE_SHORT_LABELS: Readonly<Record<OpenStringMode, string>> = {
 
 /** Enharmonic alternate spelling shown as the dropdown secondary text. */
 const ALTERNATE_NOTES: Readonly<Record<string, string>> = {
-  'C#': 'D♭', Db: 'C♯',
-  'D#': 'E♭', Eb: 'D♯',
-  'F#': 'G♭', Gb: 'F♯',
-  'G#': 'A♭', Ab: 'G♯',
-  'A#': 'B♭', Bb: 'A♯',
+  'C#': 'D♭',
+  Db: 'C♯',
+  'D#': 'E♭',
+  Eb: 'D♯',
+  'F#': 'G♭',
+  Gb: 'F♯',
+  'G#': 'A♭',
+  Ab: 'G♯',
+  'A#': 'B♭',
+  Bb: 'A♯',
 };
 
 export interface ChordEntry {
@@ -125,8 +130,7 @@ export class ChordFinder {
 
   protected readonly rootNotes = SHARP_NAMES;
   /** Enharmonic alternate shown as secondary text (e.g. `C#` → `D♭`). */
-  protected readonly rootAltFn = (note: string): string | null =>
-    ALTERNATE_NOTES[note] ?? null;
+  protected readonly rootAltFn = (note: string): string | null => ALTERNATE_NOTES[note] ?? null;
 
   /** The tuning option matching the currently selected registry tuning. */
   protected readonly selectedTuningOption = computed<TuningOption | null>(() => {
@@ -236,7 +240,7 @@ export class ChordFinder {
 
   protected onResizeStart(event: PointerEvent): void {
     event.preventDefault();
-    const el = document.querySelector('.finder-columns') as HTMLElement | null;
+    const el = document.querySelector('.finder-columns');
     if (!el) return;
     const w = parseFloat(getComputedStyle(el).getPropertyValue('--controls-w')) || 300;
     this.resizeState = { startX: event.clientX, startW: w };
@@ -257,7 +261,7 @@ export class ChordFinder {
 
   private handleResizeEnd(): void {
     if (!this.resizeState) return;
-    const el = document.querySelector('.finder-columns') as HTMLElement | null;
+    const el = document.querySelector('.finder-columns');
     const w = el ? parseFloat(getComputedStyle(el).getPropertyValue('--controls-w')) || 0 : 0;
     if (w) this.persistControlsWidth(w);
     this.detachResizeListeners();
@@ -273,12 +277,16 @@ export class ChordFinder {
   }
 
   private applyControlsWidth(px: number): void {
-    const el = document.querySelector('.finder-columns') as HTMLElement | null;
+    const el = document.querySelector<HTMLElement>('.finder-columns');
     if (el) el.style.setProperty('--controls-w', `${px}px`);
   }
 
   private persistControlsWidth(px: number): void {
-    try { localStorage.setItem(this.controlsStorageKey, String(Math.round(px))); } catch { /* ignore */ }
+    try {
+      localStorage.setItem(this.controlsStorageKey, String(Math.round(px)));
+    } catch {
+      /* ignore */
+    }
   }
 
   private readControlsWidth(): number | null {
@@ -287,7 +295,9 @@ export class ChordFinder {
       if (!raw) return null;
       const n = parseInt(raw, 10);
       return Number.isFinite(n) ? Math.min(420, Math.max(240, n)) : null;
-    } catch { return null; }
+    } catch {
+      return null;
+    }
   }
 
   // ── Live validation ──────────────────────────────────────────────
@@ -319,7 +329,7 @@ export class ChordFinder {
     if (!tokens.length) return { kind: 'idle' as const, text: '0 chords parsed' };
     const readable = tokens.filter((t) => parseChord(t).ok).length;
     return {
-      kind: (readable < tokens.length ? 'bad' : 'good') as 'bad' | 'good',
+      kind: readable < tokens.length ? 'bad' : 'good',
       text: `${tokens.length} chords parsed · ${readable} readable`,
     };
   });
@@ -424,7 +434,7 @@ export class ChordFinder {
       // still-good voicings to pick from (display stays at RESULTS_PER_CHORD).
       candidateCount: 12,
     };
-    
+
     const jitter = this.randomizeVoicings() ? 3.5 : 0;
     let chords: ChordEntry[] = tokens.map((token) => {
       const parse = parseChord(token);
@@ -448,7 +458,14 @@ export class ChordFinder {
       const parsedEntry = entry as ChordEntry & { parse: { ok: true } };
       const scored = entry.shapes.map((shape) => ({
         shape,
-        cost: scoreErgonomics(shape, parsed.tuning, parsedEntry.parse.chord, true, ERGONOMICS_WEIGHTS, jitter).cost,
+        cost: scoreErgonomics(
+          shape,
+          parsed.tuning,
+          parsedEntry.parse.chord,
+          true,
+          ERGONOMICS_WEIGHTS,
+          jitter,
+        ).cost,
       }));
       scored.sort((a, b) => a.cost - b.cost);
       return { ...entry, shapes: scored.map((s) => s.shape) };

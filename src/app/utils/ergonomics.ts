@@ -414,7 +414,9 @@ export function scoreProgressionVoicings(
     dp.push([Infinity]);
     back.push([-1]);
   } else {
-    dp.push(first.map((shape) => scoreErgonomics(shape, tuning, chords[0], true, weights, jitter).cost));
+    dp.push(
+      first.map((shape) => scoreErgonomics(shape, tuning, chords[0], true, weights, jitter).cost),
+    );
     back.push(new Array(first.length).fill(-1));
     choices.push(dp[0].length ? Math.min(...dp[0]) : Infinity);
   }

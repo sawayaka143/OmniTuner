@@ -66,17 +66,23 @@ export class InstrumentManager {
 
   protected readonly title = computed(() => {
     switch (this.mode()) {
-      case 'create': return 'New instrument';
-      case 'edit': return 'Edit instrument';
-      default: return 'Manage instruments';
+      case 'create':
+        return 'New instrument';
+      case 'edit':
+        return 'Edit instrument';
+      default:
+        return 'Manage instruments';
     }
   });
 
   protected readonly subtitle = computed(() => {
     switch (this.mode()) {
-      case 'create': return 'Define a custom instrument with its own string count and default tuning';
-      case 'edit': return 'Update the name, string count, or default tuning';
-      default: return 'Built-in instruments are read-only. Custom instruments can be edited or removed.';
+      case 'create':
+        return 'Define a custom instrument with its own string count and default tuning';
+      case 'edit':
+        return 'Update the name, string count, or default tuning';
+      default:
+        return 'Built-in instruments are read-only. Custom instruments can be edited or removed.';
     }
   });
 

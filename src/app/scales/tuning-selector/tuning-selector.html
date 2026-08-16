@@ -5,14 +5,19 @@
     aria-haspopup="dialog"
     aria-controls="tuning-selector-menu"
     [attr.aria-expanded]="open()"
-    (click)="toggle.emit(); $event.stopPropagation()">
+    (click)="toggle.emit(); $event.stopPropagation()"
+  >
     <span class="selector-copy">
       <span class="selector-kicker">Tuning</span>
       <span class="value-wrap">
         <strong>{{ selectedName() }}</strong>
       </span>
     </span>
-    <span class="material-symbols-outlined selector-icon" [class.rotated]="open()" aria-hidden="true">
+    <span
+      class="material-symbols-outlined selector-icon"
+      [class.rotated]="open()"
+      aria-hidden="true"
+    >
       expand_more
     </span>
   </button>
@@ -23,7 +28,8 @@
       class="selector-menu"
       role="dialog"
       aria-label="Choose or manage guitar tuning"
-      (click)="$event.stopPropagation()">
+      (click)="$event.stopPropagation()"
+    >
       <div class="selector-group">Presets</div>
       @for (preset of presets(); track preset.id) {
         <button
@@ -31,7 +37,8 @@
           type="button"
           [class.selected]="isSelected(preset.id)"
           [attr.aria-pressed]="isSelected(preset.id)"
-          (click)="select.emit(preset.id)">
+          (click)="select.emit(preset.id)"
+        >
           <span>{{ preset.name }}</span>
           <span class="note-summary">{{ notesLabel(preset.notes) }}</span>
         </button>
@@ -45,7 +52,8 @@
               class="selector-option saved-main"
               type="button"
               [attr.aria-pressed]="isSelected(tuning.id)"
-              (click)="select.emit(tuning.id)">
+              (click)="select.emit(tuning.id)"
+            >
               <span>{{ tuning.name }}</span>
               <span class="note-summary">{{ notesLabel(tuning.notes) }}</span>
             </button>
@@ -74,7 +82,8 @@
       <button
         class="selector-option create-option"
         type="button"
-        (click)="create.emit(); $event.stopPropagation()">
+        (click)="create.emit(); $event.stopPropagation()"
+      >
         <span>New custom tuning…</span>
         <span class="note-summary">Start from current</span>
       </button>

@@ -61,7 +61,9 @@
           <output
             class="note-name"
             [class.changed]="isChanged(r.noteIndex)"
-            [attr.aria-label]="'String ' + r.stringNumber + ' is tuned to ' + noteName(notes()[r.noteIndex])"
+            [attr.aria-label]="
+              'String ' + r.stringNumber + ' is tuned to ' + noteName(notes()[r.noteIndex])
+            "
           >
             {{ noteName(notes()[r.noteIndex]) }}
           </output>
@@ -79,7 +81,9 @@
   </div>
 
   <footer class="editor-footer">
-    <button class="cancel-button" type="button" (click)="requestCancel()">{{ cancelLabel() }}</button>
+    <button class="cancel-button" type="button" (click)="requestCancel()">
+      {{ cancelLabel() }}
+    </button>
     <button class="save-button" type="submit" [disabled]="!!effectiveError()">
       {{ saveLabel() }}
     </button>
