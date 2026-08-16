@@ -2,13 +2,13 @@ import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { ScalePreferences } from '../services/scale-preferences';
 import { InstrumentRegistry } from '../services/instrument-registry';
 import { textColorOn } from '../data/interval-colors';
-import { SHARP_NAMES } from '../data/scale.constants';
+import { SHARP_NAMES, FLAT_NAMES } from '../data/scale.constants';
+import { PROGRESSION_PRESETS } from '../data/chord-progression-presets';
+import { degreeToChordSymbol, tonicPcOf } from '../utils/degree-to-chord';
 import {
   ChordParseResult,
   computeBadge,
-  DEGREE_LABELS,
   DiatonicBadge,
-  midiName,
   MODE_NAMES,
   ModeName,
   parseChord,
@@ -20,15 +20,13 @@ import {
 } from '../utils/chord-theory';
 import {
   MAX_FRET,
-  OPEN_MODE_DESCRIPTIONS,
-  OPEN_MODE_SUMMARIES,
   OpenStringMode,
   RESULTS_PER_CHORD,
   searchChord,
   VoicingOptions,
   VoicingShape,
 } from '../utils/chord-voicing';
-import { scoreErgonomics, scoreProgressionVoicings, WHY_HINTS, ERGONOMICS_WEIGHTS } from '../utils/ergonomics';
+import { scoreErgonomics, ERGONOMICS_WEIGHTS } from '../utils/ergonomics';
 import { DiagramLabelMode, DiagramView, NeckDiagram } from './neck-diagram/neck-diagram';
 import { Toggle } from '../ui/toggle/toggle';
 import { Segmented } from '../ui/segmented/segmented';
@@ -71,9 +69,6 @@ export interface GenerationResult {
   readonly tuning: ParsedTuning;
   readonly options: VoicingOptions;
   readonly chords: readonly ChordEntry[];
-  readonly bestNextIndex: readonly (number | null)[];
-  readonly keyRoot: string;
-  readonly modeName: ModeName;
 }
 
 export interface TabLine {
@@ -83,8 +78,6 @@ export interface TabLine {
   readonly padRight: number;
   readonly kind: 'mute' | 'open' | 'fret';
 }
-
-const mod12 = (value: number): number => ((value % 12) + 12) % 12;
 
 @Component({
   selector: 'app-chord-finder',
@@ -121,7 +114,6 @@ export class ChordFinder {
   protected readonly viewChoices = ['tab', 'dots', 'lines'] as const;
   protected readonly labelChoices = ['notes', 'func'] as const;
   protected readonly maxFret = MAX_FRET;
-
   protected readonly identityFn = <T>(value: T): T => value;
   protected readonly tuningLabelFn = (o: TuningOption): string => o.label;
   protected readonly tuningAltFn = (o: TuningOption): string | null => o.text;
@@ -162,7 +154,7 @@ export class ChordFinder {
   protected readonly scaleRootText = signal('');
   protected readonly scaleRoot = computed(() => this.scaleRootText().trim() || 'C');
   protected readonly modeName = signal<ModeName>('Aeolian');
-  protected readonly progressionText = signal('Cm, Gmaj, Bb7, Fm');
+  protected readonly progressionText = signal('');
   protected readonly openMode = signal<OpenStringMode>('allow');
   protected readonly allowInversions = signal(false);
   protected readonly allowGaps = signal(false);
@@ -177,7 +169,6 @@ export class ChordFinder {
     this.viewMode() === 'dots' ? 'dots' : 'lines',
   );
   protected readonly labelMode = signal<DiagramLabelMode>('notes');
-  protected readonly smoothTransitions = signal(true);
   protected readonly randomizeVoicings = signal(true);
   protected readonly tuningListOpen = signal(false);
   protected readonly modeListOpen = signal(false);
@@ -185,11 +176,6 @@ export class ChordFinder {
 
   // ── Output state ─────────────────────────────────────────────────
   protected readonly results = signal<GenerationResult | null>(null);
-  protected readonly status = signal<{ kind: 'plain' | 'err'; text: string }>({
-    kind: 'plain',
-    text: 'ready — press Generate (Ctrl+Enter)',
-  });
-  protected readonly stats = signal('');
   protected readonly copied = signal(false);
   private copyBuffer = '';
   private copyResetTimer: ReturnType<typeof setTimeout> | null = null;
@@ -197,10 +183,55 @@ export class ChordFinder {
   constructor() {
     const saved = this.readControlsWidth();
     if (saved !== null) this.applyControlsWidth(saved);
+    if (this.preferencesState().chordRandomProgression) this.applyRandomPreset();
     this.destroyRef.onDestroy(() => {
       if (this.copyResetTimer) clearTimeout(this.copyResetTimer);
       this.detachResizeListeners();
     });
+  }
+
+  private pickRandomPreset() {
+    const i = Math.floor(Math.random() * PROGRESSION_PRESETS.length);
+    return PROGRESSION_PRESETS[i];
+  }
+
+  private pickRandomKey() {
+    const pc = Math.floor(Math.random() * 12);
+    const flats = [1, 3, 6, 8, 10].includes(pc);
+    const name = (flats ? FLAT_NAMES : SHARP_NAMES)[pc];
+    const roll = Math.random();
+    let mode: ModeName;
+    if (roll < 0.4) mode = 'Ionian';
+    else if (roll < 0.8) mode = 'Aeolian';
+    else {
+      const others: ModeName[] = ['Dorian', 'Mixolydian', 'Lydian'];
+      mode = others[Math.floor(Math.random() * others.length)];
+    }
+    return { pc, name, flats, mode };
+  }
+
+  private applyRandomPreset(): void {
+    const preset = this.pickRandomPreset();
+    const { pc, name, flats, mode: presetMode } = this.pickRandomKey();
+    const mode: ModeName = preset.mode ?? presetMode;
+    const tonicPc = tonicPcOf(name) ?? pc;
+    const useFlats = flats;
+    const symbols = preset.degrees
+      .map((d) => degreeToChordSymbol(d, tonicPc, useFlats))
+      .filter((s): s is string => s !== null);
+    const bounded = symbols.slice(0, 6);
+    if (bounded.length < 3) return;
+    this.scaleRootText.set(name);
+    this.modeName.set(mode);
+    this.progressionText.set(bounded.join(', '));
+  }
+
+  protected shuffleEnabled = computed(() => this.preferencesState().chordRandomProgression);
+
+  protected shuffle(): void {
+    if (!this.preferencesState().chordRandomProgression) return;
+    this.applyRandomPreset();
+    this.generate();
   }
 
   protected onResizeStart(event: PointerEvent): void {
@@ -293,10 +324,7 @@ export class ChordFinder {
     };
   });
 
-  protected readonly openModeDescription = computed(() => OPEN_MODE_DESCRIPTIONS[this.openMode()]);
-
   // ── Actions ──────────────────────────────────────────────────────
-
   protected onTuningPresetChange(event: Event): void {
     const target = event.target;
     if (target instanceof HTMLSelectElement) this.applyTuning(target.value);
@@ -377,27 +405,14 @@ export class ChordFinder {
     this.rootListOpen.set(false);
   }
 
-  protected openModeIndex(mode: OpenStringMode): number {
-    return OPEN_MODES.indexOf(mode);
-  }
-
   protected generate(): void {
     const parsed = this.parsedTuning();
-    if (!parsed.ok) {
-      this.status.set({ kind: 'err', text: `tuning: ${parsed.error}` });
-      return;
-    }
+    if (!parsed.ok) return;
     const tokens = tokenizeProgression(this.progressionText());
-    if (!tokens.length) {
-      this.status.set({ kind: 'err', text: 'type a chord progression first…' });
-      return;
-    }
+    if (!tokens.length) return;
     const maxStretch = parseInt(this.maxStretchText(), 10);
     const minNotes = parseInt(this.minNotesText(), 10);
-    if (Number.isNaN(maxStretch) || Number.isNaN(minNotes)) {
-      this.status.set({ kind: 'err', text: 'max stretch / min notes must be numbers' });
-      return;
-    }
+    if (Number.isNaN(maxStretch) || Number.isNaN(minNotes)) return;
     const options: VoicingOptions = {
       openMode: this.openMode(),
       allowInversions: this.allowInversions(),
@@ -411,7 +426,6 @@ export class ChordFinder {
     };
     
     const jitter = this.randomizeVoicings() ? 3.5 : 0;
-    const startedAt = performance.now();
     let chords: ChordEntry[] = tokens.map((token) => {
       const parse = parseChord(token);
       if (!parse.ok) return { token, parse, shapes: [], badge: null };
@@ -429,38 +443,16 @@ export class ChordFinder {
       };
     });
 
-    const validEntries = chords.filter((c) => c.parse.ok && c.shapes.length > 0) as (ChordEntry & { parse: { ok: true } })[];
-    const bestNextIndex: (number | null)[] = new Array(chords.length).fill(null);
-
-    if (this.smoothTransitions() && validEntries.length > 1) {
-      const pathfinding = scoreProgressionVoicings(
-        validEntries.map((c) => c.parse.chord),
-        parsed.tuning,
-        validEntries.map((c) => c.shapes),
-        ERGONOMICS_WEIGHTS,
-        jitter,
-      );
-      const validIndices = chords
-        .map((c, i) => (c.parse.ok && c.shapes.length ? i : -1))
-        .filter((i) => i >= 0);
-      for (let v = 0; v < validIndices.length - 1; v++) {
-        const i = validIndices[v];
-        const nextI = validIndices[v + 1];
-        if (nextI !== i + 1) continue;
-        bestNextIndex[i] = pathfinding.path[v] ?? null;
-      }
-    } else {
-      chords = chords.map((entry) => {
-        if (!entry.parse.ok) return entry;
-        const parsedEntry = entry as ChordEntry & { parse: { ok: true } };
-        const scored = entry.shapes.map((shape) => ({
-          shape,
-          cost: scoreErgonomics(shape, parsed.tuning, parsedEntry.parse.chord, true, ERGONOMICS_WEIGHTS, jitter).cost,
-        }));
-        scored.sort((a, b) => a.cost - b.cost);
-        return { ...entry, shapes: scored.map((s) => s.shape) };
-      });
-    }
+    chords = chords.map((entry) => {
+      if (!entry.parse.ok) return entry;
+      const parsedEntry = entry as ChordEntry & { parse: { ok: true } };
+      const scored = entry.shapes.map((shape) => ({
+        shape,
+        cost: scoreErgonomics(shape, parsed.tuning, parsedEntry.parse.chord, true, ERGONOMICS_WEIGHTS, jitter).cost,
+      }));
+      scored.sort((a, b) => a.cost - b.cost);
+      return { ...entry, shapes: scored.map((s) => s.shape) };
+    });
 
     // Display the best few even though the search/randomization used a wider pool.
     chords = chords.map((entry) => ({
@@ -468,37 +460,21 @@ export class ChordFinder {
       shapes: entry.shapes.slice(0, RESULTS_PER_CHORD),
     }));
 
-    const totalVoicings = chords.reduce((sum, c) => sum + c.shapes.length, 0);
     this.results.set({
       tuning: parsed.tuning,
       options,
       chords,
-      bestNextIndex,
-      keyRoot: this.scaleRootText().trim(),
-      modeName: this.modeName(),
     });
     this.copyBuffer = this.buildCopyBuffer(parsed.tuning, chords);
-    this.stats.set(
-      `${chords.length} chords · ${totalVoicings} voicings · ${(performance.now() - startedAt).toFixed(1)} ms`,
-    );
-    this.status.set({
-      kind: 'plain',
-      text: `done — top ${RESULTS_PER_CHORD} per chord, best ergonomics first`,
-    });
   }
 
   protected clearResults(): void {
     this.results.set(null);
     this.copyBuffer = '';
-    this.stats.set('');
-    this.status.set({ kind: 'plain', text: 'cleared — ready' });
   }
 
   protected async copyTab(): Promise<void> {
-    if (!this.copyBuffer) {
-      this.status.set({ kind: 'err', text: 'nothing to copy yet — generate first' });
-      return;
-    }
+    if (!this.copyBuffer) return;
     let ok = false;
     try {
       await navigator.clipboard.writeText(this.copyBuffer);
@@ -518,22 +494,10 @@ export class ChordFinder {
       document.body.removeChild(textarea);
     }
     if (ok) {
-      this.status.set({ kind: 'plain', text: 'tab copied to clipboard' });
       this.copied.set(true);
       if (this.copyResetTimer) clearTimeout(this.copyResetTimer);
       this.copyResetTimer = setTimeout(() => this.copied.set(false), 1100);
-    } else {
-      this.status.set({ kind: 'err', text: 'copy failed' });
     }
-  }
-
-  protected rulesSummary(result: GenerationResult): string {
-    const { options } = result;
-    const inversions = options.allowInversions
-      ? 'inversions allowed'
-      : 'inversions off — root must be lowest';
-    const gaps = options.allowGaps ? 'inner mutes allowed' : 'inner mutes banned';
-    return `rules   stretch ≤ ${options.maxStretch} (opens ignored) · ≥ ${options.minNotes} notes · ${OPEN_MODE_SUMMARIES[options.openMode]} · ${inversions} · ${gaps} · frets 0-${MAX_FRET}`;
   }
 
   protected chordTonesLabel(chord: ParsedChord, flats: boolean): string {
@@ -549,27 +513,6 @@ export class ChordFinder {
 
   protected flatsFor(result: GenerationResult, chord: ParsedChord): boolean {
     return chord.flats || result.tuning.flats;
-  }
-
-  protected shapeInfo(shape: VoicingShape, chord: ParsedChord, flats: boolean): string {
-    const notes = [...shape.sounding].sort(
-      (a, b) => a.midi - b.midi || a.stringIndex - b.stringIndex,
-    );
-    const noteStr = notes
-      .map((n) => `${midiName(n.midi, flats)}(${DEGREE_LABELS[mod12(n.midi - chord.rootPc)]})`)
-      .join(' ');
-    const bassStr = shape.bassIsRoot ? 'root' : DEGREE_LABELS[mod12(shape.bassMidi - chord.rootPc)];
-    return `notes low->high: ${noteStr}   |   bass: ${bassStr}   |   span: ${shape.span} fret(s)   |   open strings: ${shape.openCount}`;
-  }
-
-  protected ergonomicsHint(shape: VoicingShape, chord: ParsedChord, tuning: ParsedTuning): string {
-    const score = scoreErgonomics(shape, tuning, chord);
-    const labels = score.factors.map((f) => WHY_HINTS[f]);
-    return labels.length ? labels.join(' · ') : 'balanced';
-  }
-
-  protected isBestTransition(chordIndex: number, shapeIndex: number): boolean {
-    return this.results()?.bestNextIndex[chordIndex] === shapeIndex;
   }
 
   protected tabLines(shape: VoicingShape, tuning: ParsedTuning): TabLine[] {
@@ -614,7 +557,6 @@ export class ChordFinder {
         parts.push(`=== ${entry.token} ===`, `!! ${parse.error}`, '');
         continue;
       }
-      const flats = parse.chord.flats || tuning.flats;
       entry.shapes.forEach((shape, k) => {
         parts.push(`=== ${parse.chord.symbol} - Fingering ${k + 1} ===`);
         const wide = shape.frets.some((f) => f !== null && f >= 10);
@@ -628,7 +570,6 @@ export class ChordFinder {
             `${tuning.labels[s].padEnd(5)}|${'-'.repeat(padLeft)}${symbol}${'-'.repeat(padRight)}|`,
           );
         }
-        parts.push(this.shapeInfo(shape, parse.chord, flats));
         parts.push('');
       });
     }

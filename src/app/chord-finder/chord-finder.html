@@ -33,7 +33,7 @@
           />
 
           <app-text-field
-            label="custom (bottom → top, e.g. F2 G2 C3 D#3 A#2 C4)"
+            label="custom"
             [value]="tuningText()"
             [hint]="tuningHint().text"
             [hintTone]="tuningHintTone()"
@@ -43,9 +43,7 @@
         </div>
 
         <div class="control-section">
-          <span class="section-label"
-            >02 · Key context <span class="label-sub">(tracking / labelling)</span></span
-          >
+          <span class="section-label">02 · Key context</span>
           <div class="row-2">
             <app-listbox
               [options]="rootNotes"
@@ -85,6 +83,9 @@
             (valueChange)="progressionText.set($event)"
             (enter)="generate()"
           />
+          @if (shuffleEnabled()) {
+            <button class="btn small" type="button" aria-label="Shuffle progression and key" (click)="shuffle()">Shuffle</button>
+          }
         </div>
 
         <div class="control-section">
@@ -101,14 +102,12 @@
             [trackByFn]="identityFn"
             (select)="setOpenMode($event)"
           />
-          <p class="rule-description">{{ openModeDescription() }}</p>
 
           <div class="toggle-row">
             <span class="toggle-label">allow inversions</span>
             <app-toggle
               [checked]="allowInversions()"
               label="allow inversions"
-              title="search rule — press Generate to apply"
               (change)="allowInversions.set($event)"
             />
           </div>
@@ -117,17 +116,7 @@
             <app-toggle
               [checked]="allowGaps()"
               label="allow muted string gaps"
-              title="search rule — press Generate to apply"
               (change)="allowGaps.set($event)"
-            />
-          </div>
-          <div class="toggle-row">
-            <span class="toggle-label">smooth transitions</span>
-            <app-toggle
-              [checked]="smoothTransitions()"
-              label="smooth transitions"
-              title="prefer voicings that connect to the next chord with minimal hand movement"
-              (change)="smoothTransitions.set($event)"
             />
           </div>
           <div class="toggle-row">
@@ -135,7 +124,6 @@
             <app-toggle
               [checked]="randomizeVoicings()"
               label="randomize high-quality voicings"
-              title="adds slight variation to the ranking so you get fresh, but still excellent, voicings every time"
               (change)="randomizeVoicings.set($event)"
             />
           </div>
@@ -160,15 +148,11 @@
               (valueChange)="minNotesText.set($event)"
             />
           </div>
-          <p class="tiny-note">
-            stretch ignores open strings · search window: frets 0-{{ maxFret }}
-          </p>
         </div>
 
         <button class="btn primary generate" type="button" (click)="generate()">
           GENERATE VOICINGS
         </button>
-        <p class="keynote">shortcut: Ctrl+Enter</p>
       </aside>
 
       <button
@@ -226,27 +210,8 @@
             <div class="welcome">
               <span class="welcome-mark" aria-hidden="true"></span>
               <p>Chord finder ready.</p>
-              <p>
-                1. set your tuning (or pick a preset) · 2. name the key context · 3. type a
-                progression, e.g. <strong>Cm, Gmaj, Bb7, Fm</strong> · 4. press Generate
-              </p>
-              <p class="dim">
-                view: [ tab | dots | lines ] swaps the drawing per fingering · bench rules: frets
-                0-{{ maxFret }} · stretch ≤ 4 (opens ignored) · ≥ 3 sounding notes
-              </p>
             </div>
           } @else {
-            <div class="stage-head">
-              <span class="section-label"
-                >PROGRESSION — {{ results()!.chords.length }} chord(s)</span
-              >
-              <span class="stage-context">
-                tuning {{ results()!.tuning.labels.join(' · ') }} · key
-                {{ results()!.keyRoot || '—' }} {{ results()!.modeName }} ·
-                {{ rulesSummary(results()!) }}
-              </span>
-            </div>
-
             @for (entry of results()!.chords; track $index; let chordIndex = $index) {
               <article
                 class="chord-card"
@@ -317,22 +282,6 @@
                               [flats]="flatsFor(results()!, entry.parse.chord)"
                             />
                           }
-                          <p class="card-meta">
-                            {{
-                              shapeInfo(
-                                shape,
-                                entry.parse.chord,
-                                flatsFor(results()!, entry.parse.chord)
-                              )
-                            }}
-                          </p>
-                          <p class="card-reason">
-                            <span class="reason-label">why</span>
-                            {{ ergonomicsHint(shape, entry.parse.chord, results()!.tuning) }}
-                            @if (isBestTransition(chordIndex, $index)) {
-                              <span class="transition-badge">→ easiest next</span>
-                            }
-                          </p>
                         </div>
                       }
                     </div>
@@ -356,13 +305,5 @@
         </div>
       </section>
     </div>
-
-    <footer class="workbench-footer">
-      <div class="readout">
-        <span class="section-label">Status</span>
-        <p [class.err]="status().kind === 'err'">{{ status().text }}</p>
-      </div>
-      <span class="run-stats">{{ stats() }}</span>
-    </footer>
   </section>
 </main>
