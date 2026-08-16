@@ -14,4 +14,5 @@ export const DEFAULT_SCALE_PREFERENCES: ScalePreferencesState = {
   rootNoteColor: '#ffffff',
   noteColor: '#2e2e28',
   workbenchScale: 1,
+  chordRandomProgression: true,
 };

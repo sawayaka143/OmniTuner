@@ -84,6 +84,10 @@ const parseState = (value: unknown): ScalePreferencesState | null => {
     noteColor: typeof noteColor === 'string' && HEX_COLOR.test(noteColor)
       ? noteColor.toLowerCase()
       : DEFAULT_SCALE_PREFERENCES.noteColor,
+    chordRandomProgression:
+      typeof state['chordRandomProgression'] === 'boolean'
+        ? state['chordRandomProgression']
+        : DEFAULT_SCALE_PREFERENCES.chordRandomProgression,
     workbenchScale:
       typeof state['workbenchScale'] === 'number' && Number.isFinite(state['workbenchScale'])
         ? clampWorkbenchScale(state['workbenchScale'])
@@ -144,6 +148,10 @@ export class ScalePreferences {
     if (!isFinite(scale)) return;
     const snapped = Math.round(clampWorkbenchScale(scale) * WORKBENCH_SCALE_STEPS_PER_UNIT) / WORKBENCH_SCALE_STEPS_PER_UNIT;
     this.update({ workbenchScale: snapped });
+  }
+
+  setChordRandomProgression(chordRandomProgression: boolean): void {
+    this.update({ chordRandomProgression });
   }
 
   resetWorkbenchScale(): void {

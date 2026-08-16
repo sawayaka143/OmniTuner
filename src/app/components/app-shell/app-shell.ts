@@ -52,6 +52,10 @@ export class AppShell {
     this.preferences.setWorkbenchScale(scale);
   }
 
+  protected setChordRandomProgression(chordRandomProgression: boolean): void {
+    this.preferences.setChordRandomProgression(chordRandomProgression);
+  }
+
   protected resetWorkbenchScale(): void {
     this.preferences.resetWorkbenchScale();
   }
