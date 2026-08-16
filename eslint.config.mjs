@@ -10,7 +10,7 @@ const HTML_FILES = ['**/*.html'];
 
 export default ts.config(
   {
-    ignores: ['dist/', 'node_modules/', 'out-tsc/', 'coverage/', 'src/main.ts'],
+    ignores: ['dist/', 'node_modules/', 'out-tsc/', 'coverage/'],
   },
   ...ts.configs.recommendedTypeChecked.map((config) => ({
     ...config,
@@ -52,14 +52,6 @@ export default ts.config(
       '@typescript-eslint/unbound-method': 'off',
     },
   },
-  {
-    files: HTML_FILES,
-    languageOptions: {
-      parserOptions: {
-        projectService: true,
-        tsconfigRootDir: import.meta.dirname,
-      },
-    },
-  },
+  { files: HTML_FILES },
   prettier,
 );

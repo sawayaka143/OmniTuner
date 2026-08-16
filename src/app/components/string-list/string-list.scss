@@ -25,6 +25,7 @@
     align-items: center;
     justify-content: center;
     gap: 2px;
+    /* WCAG exempt: inactive affordance — hover/active restores full opacity */
     opacity: 0.7;
     cursor: pointer;
     transition:

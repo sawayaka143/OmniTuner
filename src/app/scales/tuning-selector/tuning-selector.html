@@ -4,7 +4,7 @@
     class="selector-button"
     type="button"
     aria-haspopup="listbox"
-    aria-controls="tuning-selector-menu"
+    [attr.aria-controls]="open() ? menuId : null"
     [attr.aria-expanded]="open()"
     (click)="toggle.emit(); $event.stopPropagation()"
     (keydown)="onTriggerKeydown($event)"
@@ -27,14 +27,14 @@
   @if (open()) {
     <div
       #menu
-      id="tuning-selector-menu"
+      [id]="menuId"
       class="selector-menu"
       role="listbox"
       aria-label="Choose or manage guitar tuning"
       (click)="$event.stopPropagation()"
       (keydown)="onMenuKeydown($event)"
     >
-      <div class="selector-group">Presets</div>
+      <div class="selector-group" role="presentation">Presets</div>
       @for (preset of presets(); track preset.id) {
         <button
           class="selector-option"
@@ -51,7 +51,7 @@
       }
 
       @if (savedTunings().length) {
-        <div class="selector-group">Saved</div>
+        <div class="selector-group" role="presentation">Saved</div>
         @for (tuning of savedTunings(); track tuning.id) {
           <div class="saved-option" [class.selected]="isSelected(tuning.id)">
             <button
@@ -86,10 +86,13 @@
         }
       }
 
-      <div class="selector-group">Custom</div>
+      <div class="selector-group" role="presentation">Custom</div>
       <button
         class="selector-option create-option"
         type="button"
+        role="option"
+        data-nav-item
+        aria-selected="false"
         (click)="create.emit(); $event.stopPropagation()"
       >
         <span>New custom tuning…</span>

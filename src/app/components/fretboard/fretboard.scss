@@ -218,6 +218,7 @@
     color: var(--text-dim);
     font-size: var(--text-3xs);
     font-weight: var(--fw-medium);
+    /* WCAG exempt: inactive ghost — hover/focus restores AA */
     opacity: 0.66;
     box-shadow: none;
 

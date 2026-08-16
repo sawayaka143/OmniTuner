@@ -121,9 +121,14 @@
       <div class="readout">
         <span class="section-label">Position</span>
         <p>{{ readout() }}</p>
-        @if (playbackError(); as err) {
-          <p class="playback-error" role="alert">{{ err }}</p>
-        }
+        <p class="playback-error" role="alert" aria-live="assertive">
+          @if (playbackError(); as err) {
+            {{ err }}
+            <button type="button" class="playback-error-dismiss" (click)="dismissPlaybackError()">
+              Dismiss
+            </button>
+          }
+        </p>
       </div>
       <app-scale-notes
         [tones]="scaleTones()"

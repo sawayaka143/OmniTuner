@@ -1,6 +1,8 @@
 import { Component, ElementRef, input, output, viewChild } from '@angular/core';
 import { AccidentalPreference } from '../../models/scale-preferences.model';
 import { midiDisplayName } from '../../data/note-display-names';
+
+let nextTuningSelectorId = 0;
 import { IconButton } from '../../ui/icon-button/icon-button';
 
 export interface TuningOption {
@@ -23,6 +25,8 @@ export class TuningSelector {
   readonly selectedName = input.required<string>();
   readonly accidental = input<AccidentalPreference>('sharp');
   readonly open = input(false);
+
+  protected readonly menuId = `tuning-selector-menu-${nextTuningSelectorId++}`;
 
   readonly select = output<string>();
   readonly edit = output<string>();

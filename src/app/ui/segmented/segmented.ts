@@ -1,4 +1,4 @@
-import { Component, computed, ElementRef, input, output, viewChild } from '@angular/core';
+import { Component, computed, ElementRef, input, output, signal, viewChild } from '@angular/core';
 
 /**
  * Segmented control component (radio group) with a sliding active indicator.
@@ -38,6 +38,7 @@ import { Component, computed, ElementRef, input, output, viewChild } from '@angu
           [disabled]="disabled()"
           [tabindex]="tabIndexFor(i)"
           (click)="select.emit(option)"
+          (focus)="onFocus(i)"
         >
           <span class="seg-label">{{ optionLabel()(option) }}</span>
         </button>
@@ -61,6 +62,7 @@ export class Segmented<T> {
   readonly select = output<T>();
 
   protected readonly group = viewChild<ElementRef<HTMLElement>>('group');
+  private readonly focusIndex = signal<number | null>(null);
 
   protected readonly selectedIndex = computed(() => {
     const value = this.value();
@@ -77,15 +79,24 @@ export class Segmented<T> {
   }
 
   protected tabIndexFor(index: number): number {
-    return this.selectedIndex() === index ? 0 : -1;
+    const focused = this.focusIndex();
+    if (focused !== null) return focused === index ? 0 : -1;
+    const sel = this.selectedIndex();
+    return (sel === -1 ? 0 : sel) === index ? 0 : -1;
+  }
+
+  protected onFocus(index: number): void {
+    this.focusIndex.set(index);
   }
 
   protected onKeydown(event: KeyboardEvent): void {
     if (this.disabled()) return;
-    const btns =
-      this.group()?.nativeElement.querySelectorAll<HTMLButtonElement>('button[role="radio"]');
-    if (!btns || btns.length === 0) return;
-    const currentIdx = [...btns].indexOf(event.target as HTMLButtonElement);
+    const btns = [
+      ...(this.group()?.nativeElement.querySelectorAll<HTMLButtonElement>('button[role="radio"]') ??
+        []),
+    ].filter((b) => !b.disabled);
+    if (btns.length === 0) return;
+    const currentIdx = btns.indexOf(event.target as HTMLButtonElement);
     const lastIdx = btns.length - 1;
 
     if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {

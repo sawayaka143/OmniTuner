@@ -224,6 +224,10 @@ export class Scales {
   /** Playback failure surfaced to the view (set when AudioContext fails). */
   protected readonly playbackError = computed(() => this.playback.error());
 
+  protected dismissPlaybackError(): void {
+    this.playback.clearError();
+  }
+
   constructor() {
     this.destroyRef.onDestroy(() => this.stopPlayback());
     effect(() => {
@@ -277,11 +281,13 @@ export class Scales {
   protected playCell(cell: FretCell): void {
     if (cell.midi === null) return;
     this.playback.playNote(cell.midi);
+    if (this.playback.error()) return;
     this.pulse(cell.midi, cell);
   }
 
   protected playTone(tone: ScaleTone): void {
     this.playback.playNote(tone.midi);
+    if (this.playback.error()) return;
     this.pulse(tone.midi, this.findCellForMidi(tone.midi));
   }
 

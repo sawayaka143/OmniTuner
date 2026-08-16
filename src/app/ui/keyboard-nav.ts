@@ -1,4 +1,4 @@
-import { Directive, HostListener, input } from '@angular/core';
+import { AfterViewInit, Directive, ElementRef, HostListener, inject, input } from '@angular/core';
 
 /**
  * Adds radiogroup keyboard navigation to a host with `role="radiogroup"`:
@@ -8,15 +8,24 @@ import { Directive, HostListener, input } from '@angular/core';
 @Directive({
   selector: '[appRovingRadioGroup]',
 })
-export class RovingRadioGroup {
+export class RovingRadioGroup implements AfterViewInit {
   /** Whether navigation is enabled (no-op when disabled). */
   readonly appRovingRadioGroup = input(true);
+
+  private readonly hostEl = inject(ElementRef<HTMLElement>);
+
+  ngAfterViewInit(): void {
+    if (!this.appRovingRadioGroup()) return;
+    const radios = this.radios(this.hostEl.nativeElement);
+    const activeIdx = radios.findIndex((r) => r.getAttribute('aria-checked') === 'true');
+    this.updateTabindex(radios, activeIdx === -1 ? 0 : activeIdx);
+  }
 
   @HostListener('keydown', ['$event'])
   protected onKeydown(event: KeyboardEvent): void {
     if (!this.appRovingRadioGroup()) return;
     const host = event.currentTarget as HTMLElement;
-    const radios = this.radios(host);
+    const radios = this.radios(host).filter((r) => !r.disabled);
     if (radios.length === 0) return;
     const current = radios.indexOf(event.target as HTMLButtonElement);
 
@@ -34,6 +43,7 @@ export class RovingRadioGroup {
     }
     event.preventDefault();
     this.focusRadio(radios, next);
+    radios[next]?.click();
   }
 
   @HostListener('focusin', ['$event'])

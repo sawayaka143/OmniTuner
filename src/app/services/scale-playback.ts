@@ -31,6 +31,10 @@ export class ScalePlayback {
   /** Set when the AudioContext could not be created (e.g. unsupported browser). */
   readonly error = signal<string | null>(null);
 
+  clearError(): void {
+    this.error.set(null);
+  }
+
   constructor() {
     this.destroyRef.onDestroy(() => {
       if (this.context && this.context.state !== 'closed') void this.context.close();
@@ -45,19 +49,35 @@ export class ScalePlayback {
   createGain(): GainNode | null {
     const context = this.getContext();
     if (!context) return null;
-    const gain = context.createGain();
-    gain.connect(context.destination);
-    return gain;
+    try {
+      const gain = context.createGain();
+      gain.connect(context.destination);
+      return gain;
+    } catch {
+      this.error.set('Audio playback was interrupted. Tap again to retry.');
+      return null;
+    }
   }
 
   playNote(midi: number, delaySeconds = 0, durationSeconds = 0.55, destination?: AudioNode): void {
     const context = this.getContext();
     if (!context) return;
-    if (context.state === 'suspended') void context.resume();
+    if (context.state === 'suspended')
+      void context.resume().catch(() => {
+        this.error.set('Audio playback was blocked. Tap again to retry.');
+      });
 
-    const oscillator = context.createOscillator();
-    const gain = context.createGain();
-    const lowPass = context.createBiquadFilter();
+    let oscillator: OscillatorNode;
+    let gain: GainNode;
+    let lowPass: BiquadFilterNode;
+    try {
+      oscillator = context.createOscillator();
+      gain = context.createGain();
+      lowPass = context.createBiquadFilter();
+    } catch {
+      this.error.set('Audio playback was interrupted. Tap again to retry.');
+      return;
+    }
     const startAt = context.currentTime + Math.max(0, delaySeconds);
     const duration = Math.max(0.08, durationSeconds);
 
@@ -84,7 +104,10 @@ export class ScalePlayback {
   playChime(): void {
     const context = this.getContext();
     if (!context) return;
-    if (context.state === 'suspended') void context.resume();
+    if (context.state === 'suspended')
+      void context.resume().catch(() => {
+        this.error.set('Audio playback was blocked. Tap again to retry.');
+      });
 
     const startAt = context.currentTime;
     this.playTone(context, midiToFrequency(69), startAt, 0.12, 0.65);
@@ -98,8 +121,15 @@ export class ScalePlayback {
     peakGain: number,
     duration: number,
   ): void {
-    const oscillator = context.createOscillator();
-    const gain = context.createGain();
+    let oscillator: OscillatorNode;
+    let gain: GainNode;
+    try {
+      oscillator = context.createOscillator();
+      gain = context.createGain();
+    } catch {
+      this.error.set('Audio playback was interrupted. Tap again to retry.');
+      return;
+    }
     oscillator.type = 'triangle';
     oscillator.frequency.setValueAtTime(frequency, startAt);
     gain.gain.setValueAtTime(0.0001, startAt);
@@ -112,6 +142,7 @@ export class ScalePlayback {
   }
 
   private getContext(): AudioContext | null {
+    if (this.context?.state === 'closed') this.context = null;
     if (!this.context) {
       this.context = this.createAudioContext();
       this.error.set(this.context ? null : 'Audio playback is unavailable in this browser.');

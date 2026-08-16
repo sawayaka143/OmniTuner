@@ -1,6 +1,7 @@
 {
-  "name": "tuner-app",
-  "short_name": "tuner-app",
+  "name": "OmniTuner",
+  "short_name": "OmniTuner",
+  "description": "Chromatic instrument tuner with real-time pitch detection.",
   "display": "standalone",
   "theme_color": "#121211",
   "background_color": "#121211",

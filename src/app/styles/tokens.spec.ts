@@ -3,6 +3,7 @@
  * (WCAG AA) against every surface token. Values are kept in sync with
  * styles.scss — the guard catches regressions that would silently fail
  * contrast for micro-labels, dropdown groups and rail captions.
+ * KEEP IN SYNC — src/styles.scss:5-18 (and --canvas/surface-* tokens).
  */
 const TEXT_TOKENS: Record<string, string> = {
   '--text': '#f5f5f3',

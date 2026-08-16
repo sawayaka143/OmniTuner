@@ -143,6 +143,9 @@ export class Listbox<T> {
     } else if (event.key === 'End') {
       event.preventDefault();
       options[options.length - 1]?.focus();
+    } else if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      (event.target as HTMLButtonElement).click();
     } else if (event.key === 'Escape') {
       event.preventDefault();
       this.closeMenu();
