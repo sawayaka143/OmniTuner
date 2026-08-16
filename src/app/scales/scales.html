@@ -121,6 +121,9 @@
       <div class="readout">
         <span class="section-label">Position</span>
         <p>{{ readout() }}</p>
+        @if (playbackError(); as err) {
+          <p class="playback-error" role="alert">{{ err }}</p>
+        }
       </div>
       <app-scale-notes
         [tones]="scaleTones()"

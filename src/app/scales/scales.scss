@@ -73,6 +73,12 @@
   border-top: 1px solid var(--border-subtle);
 }
 
+.playback-error {
+  margin-top: var(--space-1);
+  color: var(--danger);
+  font-size: var(--text-2sm);
+}
+
 @media (max-width: 1040px) {
   .scales-controls {
     grid-template-columns: 162px 210px 220px;

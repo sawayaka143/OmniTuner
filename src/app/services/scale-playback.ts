@@ -28,6 +28,9 @@ export class ScalePlayback {
   /** True while a scale/tuning sequence is playing (drives the brand wobble). */
   readonly isPlaying = signal(false);
 
+  /** Set when the AudioContext could not be created (e.g. unsupported browser). */
+  readonly error = signal<string | null>(null);
+
   constructor() {
     this.destroyRef.onDestroy(() => {
       if (this.context && this.context.state !== 'closed') void this.context.close();
@@ -109,7 +112,10 @@ export class ScalePlayback {
   }
 
   private getContext(): AudioContext | null {
-    this.context ??= this.createAudioContext();
+    if (!this.context) {
+      this.context = this.createAudioContext();
+      this.error.set(this.context ? null : 'Audio playback is unavailable in this browser.');
+    }
     return this.context;
   }
 }

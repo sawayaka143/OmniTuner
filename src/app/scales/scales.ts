@@ -221,6 +221,9 @@ export class Scales {
     return `${note} · string ${cell.stringIndex + 1} · ${position}`;
   });
 
+  /** Playback failure surfaced to the view (set when AudioContext fails). */
+  protected readonly playbackError = computed(() => this.playback.error());
+
   constructor() {
     this.destroyRef.onDestroy(() => this.stopPlayback());
     effect(() => {
