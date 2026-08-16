@@ -1,10 +1,16 @@
-// Augments vitest's Assertion with the axe matcher.
-// vitest-axe@0.1 targets the legacy `Vi` namespace (vitest <=3); vitest 4
-// declares matchers inside `@vitest/expect`, so we re-declare it here.
+// Loads vitest-axe's global Assertion augmentation (toHaveNoViolations).
+// The package ships no exports map, so `types: ["vitest-axe/extend-expect"]`
+// does not resolve — importing the d.ts here pulls it into the program.
 import 'vitest-axe/extend-expect';
 
 declare module '@vitest/expect' {
   interface Assertion {
     toHaveNoViolations(): void;
   }
+}
+
+// Raw-text import used by the token contrast guard.
+declare module '*.scss?raw' {
+  const content: string;
+  export default content;
 }

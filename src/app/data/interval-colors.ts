@@ -54,7 +54,7 @@ export const INTERVAL_COLORS: Readonly<Record<string, string>> = {
 };
 
 /** Fallback for any interval label not present in the map. Matches --text-dim. */
-export const DEFAULT_INTERVAL_COLOR = '#62625d';
+export const DEFAULT_INTERVAL_COLOR = '#94948e';
 
 /** Resolve a color for an interval label, with a safe fallback. */
 export const colorForLabel = (label: string): string =>
