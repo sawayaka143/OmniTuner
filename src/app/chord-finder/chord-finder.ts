@@ -1,23 +1,29 @@
-import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, effect, inject, signal } from '@angular/core';
 import { ScalePreferences } from '../services/scale-preferences';
 import { InstrumentRegistry } from '../services/instrument-registry';
 import { textColorOn } from '../data/interval-colors';
 import { SHARP_NAMES, FLAT_NAMES } from '../data/scale.constants';
 import { PROGRESSION_PRESETS } from '../data/chord-progression-presets';
-import { degreeToChordSymbol, tonicPcOf } from '../utils/degree-to-chord';
+import { degreesToProgression, tonicPcOf } from '../utils/degree-to-chord';
 import {
-  ChordParseResult,
+  flatsForPc,
+  parseChord,
+  tokenizeProgression,
   computeBadge,
   DiatonicBadge,
   MODE_NAMES,
   ModeName,
-  parseChord,
+  ChordParseResult,
   ParsedChord,
   ParsedTuning,
   parseTuning,
   pcName,
-  tokenizeProgression,
 } from '../utils/chord-theory';
+import {
+  flattenProgression,
+  parseProgressionMeta,
+  ProgressionMeta,
+} from '../utils/progression-meta';
 import {
   MAX_FRET,
   OpenStringMode,
@@ -159,6 +165,12 @@ export class ChordFinder {
   protected readonly scaleRoot = computed(() => this.scaleRootText().trim() || 'C');
   protected readonly modeName = signal<ModeName>('Aeolian');
   protected readonly progressionText = signal('');
+  /**
+   * Degree source of the visible progression, when it is degree-derived
+   * (shuffle/random). Null for manually typed progressions, which must not
+   * be transposed when the root changes.
+   */
+  private readonly progressionMeta = signal<ProgressionMeta | null>(null);
   protected readonly openMode = signal<OpenStringMode>('allow');
   protected readonly allowInversions = signal(false);
   protected readonly allowGaps = signal(false);
@@ -188,6 +200,18 @@ export class ChordFinder {
     const saved = this.readControlsWidth();
     if (saved !== null) this.applyControlsWidth(saved);
     if (this.preferencesState().chordRandomProgression) this.applyRandomPreset();
+    effect(() => {
+      // Transpose a degree-derived progression when the root changes.
+      // Reads scaleRoot so the effect re-runs on key edits, and deliberately
+      // avoids progressionText to keep it acyclic.
+      const meta = this.progressionMeta();
+      if (!meta) return;
+      const rootRaw = this.scaleRoot();
+      const tonic = tonicPcOf(rootRaw);
+      if (tonic === null) return;
+      const useFlats = flatsForPc(tonic);
+      this.progressionText.set(flattenProgression(meta, tonic, useFlats));
+    });
     this.destroyRef.onDestroy(() => {
       if (this.copyResetTimer) clearTimeout(this.copyResetTimer);
       this.detachResizeListeners();
@@ -201,7 +225,7 @@ export class ChordFinder {
 
   private pickRandomKey() {
     const pc = Math.floor(Math.random() * 12);
-    const flats = [1, 3, 6, 8, 10].includes(pc);
+    const flats = flatsForPc(pc);
     const name = (flats ? FLAT_NAMES : SHARP_NAMES)[pc];
     const roll = Math.random();
     let mode: ModeName;
@@ -220,11 +244,9 @@ export class ChordFinder {
     const mode: ModeName = preset.mode ?? presetMode;
     const tonicPc = tonicPcOf(name) ?? pc;
     const useFlats = flats;
-    const symbols = preset.degrees
-      .map((d) => degreeToChordSymbol(d, tonicPc, useFlats))
-      .filter((s): s is string => s !== null);
-    const bounded = symbols.slice(0, 6);
+    const bounded = degreesToProgression(preset.degrees, tonicPc, useFlats);
     if (bounded.length < 3) return;
+    this.progressionMeta.set({ presetId: preset.id, degrees: preset.degrees });
     this.scaleRootText.set(name);
     this.modeName.set(mode);
     this.progressionText.set(bounded.join(', '));
@@ -234,7 +256,19 @@ export class ChordFinder {
 
   protected shuffle(): void {
     if (!this.preferencesState().chordRandomProgression) return;
-    this.applyRandomPreset();
+    const preset = this.pickRandomPreset();
+    const rawRoot = this.scaleRootText().trim() || this.scaleRoot();
+    const tonic = tonicPcOf(rawRoot) ?? 0;
+    const useFlats =
+      rawRoot.includes('b') || rawRoot.includes('♭')
+        ? true
+        : rawRoot.includes('#') || rawRoot.includes('♯')
+          ? false
+          : flatsForPc(tonic);
+    const bounded = degreesToProgression(preset.degrees, tonic, useFlats);
+    if (bounded.length < 3) return;
+    this.progressionMeta.set({ presetId: preset.id, degrees: preset.degrees });
+    this.progressionText.set(bounded.join(', '));
     this.generate();
   }
 
@@ -376,9 +410,10 @@ export class ChordFinder {
     if (mode) this.modeName.set(mode);
   }
 
-  protected onProgressionInput(event: Event): void {
-    const target = event.target;
-    if (target instanceof HTMLInputElement) this.progressionText.set(target.value);
+  protected onProgressionInput(value: string): void {
+    this.progressionText.set(value);
+    const tonic = tonicPcOf(this.scaleRoot()) ?? 0;
+    this.progressionMeta.set(parseProgressionMeta(value, tonic, flatsForPc(tonic)));
   }
 
   protected onMaxStretchInput(event: Event): void {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { degreeToChordSymbol, tonicPcOf } from './degree-to-chord';
+import { degreeToChordSymbol, degreesToProgression, tonicPcOf } from './degree-to-chord';
 import { parseChord } from './chord-theory';
 
 describe('degreeToChordSymbol', () => {
@@ -41,6 +41,37 @@ describe('degreeToChordSymbol', () => {
         expect(parseChord(sym).ok, `${d} in pc ${pc} -> ${sym}`).toBe(true);
       }
     }
+  });
+});
+
+describe('degreesToProgression', () => {
+  it('keeps the classic i–VI–III–VII mixture at Bb (the chosen sound)', () => {
+    const bbPc = tonicPcOf('Bb')!;
+    expect(degreesToProgression(['i', 'VI', 'III', 'VII'], bbPc, true)).toEqual([
+      'Bbm',
+      'G',
+      'D',
+      'A',
+    ]);
+  });
+
+  it('transposes the same degrees to other tonics', () => {
+    expect(degreesToProgression(['i', 'VI', 'III', 'VII'], 0, false)).toEqual([
+      'Cm',
+      'A',
+      'E',
+      'B',
+    ]);
+    expect(degreesToProgression(['i', 'VI', 'III', 'VII'], 2, false)).toEqual([
+      'Dm',
+      'B',
+      'F#',
+      'C#',
+    ]);
+  });
+
+  it('caps the result at six chords', () => {
+    expect(degreesToProgression(['I', 'I', 'IV', 'V', 'IV', 'I', 'V'], 0, false)).toHaveLength(6);
   });
 });
 

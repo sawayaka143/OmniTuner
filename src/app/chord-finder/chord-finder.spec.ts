@@ -220,4 +220,45 @@ describe('ChordFinder', () => {
     click('.generate');
     expect(el().querySelectorAll('.chord-card').length).toBe(before);
   });
+
+  it('transposes the degree-derived progression when the root changes', () => {
+    const input = fieldInput('chords, comma-separated')!;
+    const before = input.value;
+    const rootTrigger = [...el().querySelectorAll<HTMLButtonElement>('.control-section .btn')].find(
+      (t) => t.textContent?.includes('root'),
+    )!;
+    rootTrigger.click();
+    fixture.detectChanges();
+    const g = [...el().querySelectorAll<HTMLButtonElement>('.dropdown-item')].find(
+      (o) => o.querySelector('span')?.textContent === 'G',
+    )!;
+    g.click();
+    fixture.detectChanges();
+
+    const after = fieldInput('chords, comma-separated')!.value;
+    // Degree-derived progressions re-render at the new tonic, so the text
+    // should differ; if it were manual text it would stay identical.
+    expect(after).not.toEqual(before);
+  });
+
+  it('leaves a manually typed progression unchanged when the root changes', () => {
+    const input = fieldInput('chords, comma-separated')!;
+    // A chromatic, non-degree-derived progression that has no degree mapping.
+    input.value = 'Cmaj7, Bbmaj7, Abmaj7';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    const rootTrigger = [...el().querySelectorAll<HTMLButtonElement>('.control-section .btn')].find(
+      (t) => t.textContent?.includes('root'),
+    )!;
+    rootTrigger.click();
+    fixture.detectChanges();
+    const d = [...el().querySelectorAll<HTMLButtonElement>('.dropdown-item')].find(
+      (o) => o.querySelector('span')?.textContent === 'D',
+    )!;
+    d.click();
+    fixture.detectChanges();
+
+    expect(fieldInput('chords, comma-separated')!.value).toBe('Cmaj7, Bbmaj7, Abmaj7');
+  });
 });

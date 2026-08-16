@@ -21,7 +21,7 @@ interface ParsedDegree {
 
 const DEGREE_RE = /^(b|#)?(VII|VI|IV|V|III|II|I)(.*)$/i;
 
-function parseDegree(raw: string): ParsedDegree | null {
+export function parseDegree(raw: string): ParsedDegree | null {
   const m = raw.trim().match(DEGREE_RE);
   if (!m) return null;
   const accidental: -1 | 0 | 1 = m[1] === 'b' ? -1 : m[1] === '#' ? 1 : 0;
@@ -58,6 +58,18 @@ export function degreeToChordSymbol(
     quality = parsed.isMinorCore ? 'm' : '';
   }
   return `${rootName}${quality}`;
+}
+
+/** Converts scale degrees (e.g. `i`, `bVII`) into chord symbols at a tonic, capped at 6. */
+export function degreesToProgression(
+  degrees: readonly string[],
+  tonicPc: number,
+  useFlats: boolean,
+): string[] {
+  return degrees
+    .map((degree) => degreeToChordSymbol(degree, tonicPc, useFlats))
+    .filter((symbol): symbol is string => symbol !== null)
+    .slice(0, 6);
 }
 
 export function tonicPcOf(noteName: string): number | null {

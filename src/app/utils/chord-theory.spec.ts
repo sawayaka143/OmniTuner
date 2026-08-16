@@ -212,4 +212,28 @@ describe('computeBadge', () => {
     const badge = computeBadge(fs.chord, 'C', 'Ionian', false);
     expect(badge?.kind).toBe('bad');
   });
+
+  it('labels parallel-major mixture as borrowed in minor keys', () => {
+    // Gm is the vi chord of Bb major — borrowed into Bb Aeolian.
+    const gm = parseChord('Gm');
+    if (!gm.ok) throw new Error('parse failed');
+    const badge = computeBadge(gm.chord, 'Bb', 'Aeolian', true);
+    expect(badge).toEqual({ kind: 'warn', text: '◈ vi — borrowed from Bb major' });
+  });
+
+  it('labels parallel-minor mixture as borrowed in major keys', () => {
+    // Bb is the bVII chord of C minor — borrowed into C Ionian.
+    const bb = parseChord('Bb');
+    if (!bb.ok) throw new Error('parse failed');
+    const badge = computeBadge(bb.chord, 'C', 'Ionian', true);
+    expect(badge).toEqual({ kind: 'warn', text: '◈ bVII — borrowed from C minor' });
+  });
+
+  it('keeps the parallel-major VI in minor keys chromatic when the quality does not match', () => {
+    // G major is not the VI of Bb major (that is Gm), so it stays chromatic.
+    const g = parseChord('G');
+    if (!g.ok) throw new Error('parse failed');
+    const badge = computeBadge(g.chord, 'Bb', 'Aeolian', true);
+    expect(badge?.kind).toBe('bad');
+  });
 });
