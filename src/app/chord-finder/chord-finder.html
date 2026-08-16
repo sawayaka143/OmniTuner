@@ -80,7 +80,7 @@
             [value]="progressionText()"
             [hint]="progressionHint().text"
             [hintTone]="progressionHintTone()"
-            (valueChange)="progressionText.set($event)"
+            (valueChange)="onProgressionInput($event)"
             (enter)="generate()"
           />
           @if (shuffleEnabled()) {

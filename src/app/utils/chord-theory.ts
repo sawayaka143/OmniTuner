@@ -271,6 +271,11 @@ export const MODE_NAMES = Object.keys(MODES) as ModeName[];
 
 const mod12 = (value: number): number => ((value % 12) + 12) % 12;
 
+/** Black-key pitch classes are spelled with flats when no other context exists. */
+export function flatsForPc(pc: number): boolean {
+  return [1, 3, 6, 8, 10].includes(mod12(pc));
+}
+
 /** Pitch-class name for a given accidental preference. */
 export function pcName(pc: number, flats: boolean): string {
   return (flats ? FLAT_PC_NAMES : SHARP_PC_NAMES)[mod12(pc)];
@@ -557,41 +562,9 @@ export function computeBadge(
   if (!parsed)
     return { kind: 'warn', text: `scale root '${scaleRoot}' unreadable — badge skipped` };
 
-  const steps = MODES[modeName];
-  let degreeIndex = -1;
-  for (let i = 0; i < 7; i++) {
-    if (mod12(parsed.pc + steps[i]) === chord.rootPc) {
-      degreeIndex = i;
-      break;
-    }
-  }
   const scaleRootName = pcName(parsed.pc, parsed.flats || tuningFlats);
   const rootName = pcName(chord.rootPc, chord.flats || tuningFlats);
-  if (degreeIndex < 0) {
-    return { kind: 'bad', text: `◈ chromatic — ${rootName} isn't in ${scaleRootName} ${modeName}` };
-  }
 
-  const third = mod12(steps[(degreeIndex + 2) % 7] - steps[degreeIndex]);
-  const fifth = mod12(steps[(degreeIndex + 4) % 7] - steps[degreeIndex]);
-  const EXPECTED: Readonly<Record<string, string>> = {
-    '3,6': 'dim',
-    '3,7': 'min',
-    '4,7': 'maj',
-    '4,8': 'aug',
-  };
-  const expectedQuality = EXPECTED[`${third},${fifth}`] ?? 'maj';
-
-  let numeral = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'][degreeIndex];
-  if (expectedQuality === 'min' || expectedQuality === 'dim') numeral = numeral.toLowerCase();
-  if (expectedQuality === 'dim') numeral += '°';
-  if (expectedQuality === 'aug') numeral += '+';
-
-  const QUALITY_WORD: Readonly<Record<string, string>> = {
-    maj: 'major',
-    min: 'minor',
-    dim: 'diminished',
-    aug: 'augmented',
-  };
   const actualThird = chord.intervals.includes(4) ? 4 : chord.intervals.includes(3) ? 3 : null;
   let actualFifth: number | null = null;
   for (const candidate of [7, 6, 8]) {
@@ -600,14 +573,107 @@ export function computeBadge(
       break;
     }
   }
-  const matches =
-    (actualThird === null || actualThird === third) &&
-    (actualFifth === null || actualFifth === fifth);
-  if (matches) {
-    return { kind: 'good', text: `◈ ${numeral} — diatonic to ${scaleRootName} ${modeName}` };
+
+  interface DegreeLookup {
+    readonly degreeIndex: number;
+    readonly third: number;
+    readonly fifth: number;
+    readonly expectedQuality: string;
+    readonly numeral: string;
   }
-  return {
-    kind: 'warn',
-    text: `◈ ${numeral} — borrowed: ${modeName} expects ${expectedQuality} (${QUALITY_WORD[expectedQuality]}) here`,
+
+  const EXPECTED: Readonly<Record<string, string>> = {
+    '3,6': 'dim',
+    '3,7': 'min',
+    '4,7': 'maj',
+    '4,8': 'aug',
   };
+
+  const numeralFor = (
+    degreeIndex: number,
+    expectedQuality: string,
+    steps: readonly number[],
+  ): string => {
+    const base = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'][degreeIndex];
+    const lower =
+      expectedQuality === 'min' || expectedQuality === 'dim' ? base.toLowerCase() : base;
+    const suffix = expectedQuality === 'dim' ? '°' : expectedQuality === 'aug' ? '+' : '';
+    // Accidentals follow the key's own spelling relative to the major scale
+    // (minor keys get bIII/bVI/bVII, Lydian gets #IV, and so on).
+    const diff = mod12(steps[degreeIndex] - MODES.Ionian[degreeIndex]);
+    const prefix = diff === 11 ? 'b' : diff === 1 ? '#' : '';
+    return `${prefix}${lower}${suffix}`;
+  };
+
+  /** Accidental prefix for a chord whose root lies outside the key scale. */
+  const accidentalPrefixFor = (steps: readonly number[]): string => {
+    if (chord.rootPc === mod12(parsed.pc + steps[0])) return '';
+    let flats = 0;
+    let sharps = 0;
+    for (let i = 0; i < 7; i++) {
+      if (mod12(parsed.pc + steps[i] - 1) === chord.rootPc) flats++;
+      if (mod12(parsed.pc + steps[i] + 1) === chord.rootPc) sharps++;
+    }
+    if (flats && !sharps) return 'b';
+    if (sharps && !flats) return '#';
+    return '';
+  };
+
+  const lookupIn = (steps: readonly number[]): DegreeLookup | null => {
+    let degreeIndex = -1;
+    for (let i = 0; i < 7; i++) {
+      if (mod12(parsed.pc + steps[i]) === chord.rootPc) {
+        degreeIndex = i;
+        break;
+      }
+    }
+    if (degreeIndex < 0) return null;
+    const third = mod12(steps[(degreeIndex + 2) % 7] - steps[degreeIndex]);
+    const fifth = mod12(steps[(degreeIndex + 4) % 7] - steps[degreeIndex]);
+    const expectedQuality = EXPECTED[`${third},${fifth}`] ?? 'maj';
+    const prefix = accidentalPrefixFor(steps);
+    const numeral = `${prefix}${numeralFor(degreeIndex, expectedQuality, steps)}`;
+    return { degreeIndex, third, fifth, expectedQuality, numeral };
+  };
+
+  const qualityMatches = (lookup: DegreeLookup): boolean =>
+    (actualThird === null || actualThird === lookup.third) &&
+    (actualFifth === null || actualFifth === lookup.fifth);
+
+  const primary = lookupIn(MODES[modeName]);
+  if (primary) {
+    if (qualityMatches(primary)) {
+      return {
+        kind: 'good',
+        text: `◈ ${primary.numeral} — diatonic to ${scaleRootName} ${modeName}`,
+      };
+    }
+    const QUALITY_WORD: Readonly<Record<string, string>> = {
+      maj: 'major',
+      min: 'minor',
+      dim: 'diminished',
+      aug: 'augmented',
+    };
+    return {
+      kind: 'warn',
+      text: `◈ ${primary.numeral} — borrowed: ${modeName} expects ${primary.expectedQuality} (${QUALITY_WORD[primary.expectedQuality]}) here`,
+    };
+  }
+
+  // Root isn't in the selected mode: it may still be borrowed from the
+  // parallel major or minor key (modal mixture) rather than chromatic.
+  for (const [steps, label] of [
+    [MODES.Ionian, 'major'],
+    [MODES.Aeolian, 'minor'],
+  ] as const) {
+    const lookup = lookupIn(steps);
+    if (lookup && qualityMatches(lookup)) {
+      return {
+        kind: 'warn',
+        text: `◈ ${lookup.numeral} — borrowed from ${scaleRootName} ${label}`,
+      };
+    }
+  }
+
+  return { kind: 'bad', text: `◈ chromatic — ${rootName} isn't in ${scaleRootName} ${modeName}` };
 }
