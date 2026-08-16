@@ -134,17 +134,7 @@ export interface FingerShape {
   readonly position: number;
 }
 
-/** Which playability factors are being penalized/bonused (for UI hints). */
-export type ErgonomicsFactor =
-  | 'barre'
-  | 'stretch'
-  | 'position'
-  | 'bass'
-  | 'open'
-  | 'doubling'
-  | 'thumb';
-
-/** Feature vector consumed by the ergonomics cost model. //*/
+/** Feature vector consumed by the ergonomics cost model. */
 export interface ErgonomicsFeatures {
   readonly position: number;
   readonly span: number;
@@ -173,8 +163,6 @@ export interface ErgonomicsScore {
   /** Lower is better. */
   readonly cost: number;
   readonly features: ErgonomicsFeatures;
-  /** Factors that meaningfully contributed (for UI hints). */
-  readonly factors: readonly ErgonomicsFactor[];
 }
 
 /**
@@ -206,24 +194,6 @@ export type ErgonomicsWeights = typeof ERGONOMICS_WEIGHTS;
 
 /** Shipped default weights. */
 export const BASE_ERGONOMICS_WEIGHTS: ErgonomicsWeights = ERGONOMICS_WEIGHTS;
-
-/** Feature names that map to ergonomics factors (for UI hints). */
-const FACTOR_BY_FEATURE: readonly {
-  feature: keyof ErgonomicsFeatures;
-  factor: ErgonomicsFactor;
-}[] = [
-  { feature: 'barreCount', factor: 'barre' },
-  { feature: 'maxBarreWidth', factor: 'barre' },
-  { feature: 'stretchSpan', factor: 'stretch' },
-  { feature: 'indexSpan', factor: 'stretch' },
-  { feature: 'span', factor: 'stretch' },
-  { feature: 'position', factor: 'position' },
-  { feature: 'bassString', factor: 'bass' },
-  { feature: 'openCount', factor: 'open' },
-  { feature: 'rootDoubled', factor: 'doubling' },
-  { feature: 'hasStringSkip', factor: 'thumb' },
-  { feature: 'hasThumbFret', factor: 'thumb' },
-];
 
 const mod12 = (value: number): number => ((value % 12) + 12) % 12;
 
@@ -413,30 +383,8 @@ export function scoreErgonomics(
   if (f.hasThumbFret) cost += w.thumbFretting;
   if (jitter > 0) cost += Math.random() * jitter;
 
-  const factors: ErgonomicsFactor[] = [];
-  for (const { feature, factor } of FACTOR_BY_FEATURE) {
-    if (factor === 'doubling' && !f.rootDoubled) continue;
-    if (f[feature]) factors.push(factor);
-  }
-  if (f.barreAtHighFret) factors.push('barre');
-  if (f.stretchSpan > 0) factors.push('stretch');
-  if (f.indexSpan > 0) factors.push('stretch');
-  if (f.hasStringSkip) factors.push('thumb');
-  if (f.hasThumbFret) factors.push('thumb');
-
-  return { cost, features: f, factors: [...new Set(factors)] };
+  return { cost, features: f };
 }
-
-/** Short human explanations for each ergonomics factor (UI hints). */
-export const WHY_HINTS: Readonly<Record<ErgonomicsFactor, string>> = {
-  barre: 'barre',
-  stretch: 'stretch',
-  position: 'high position',
-  bass: 'root not in bass',
-  open: 'open strings',
-  doubling: 'doubled root',
-  thumb: 'thumb fretting / skipped string',
-};
 
 /**
  * Viterbi-style pathfinding over a chord progression: the globally lowest-cost

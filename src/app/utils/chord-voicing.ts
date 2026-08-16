@@ -2,7 +2,7 @@ import { ParsedChord, ParsedTuning } from './chord-theory';
 import { isPhysicallyPlayable, scoreErgonomics } from './ergonomics';
 
 export const MAX_FRET = 12;
-export const RESULTS_PER_CHORD = 5;
+export const RESULTS_PER_CHORD = 6;
 
 const RAW_CAP = 5000;
 

@@ -11,7 +11,6 @@ import {
   scoreErgonomics,
   scoreProgressionVoicings,
   transitionCost,
-  WHY_HINTS,
 } from './ergonomics';
 
 const STANDARD = parseTuning('E2 A2 D3 G3 B3 E4');
@@ -287,13 +286,6 @@ describe('scoreErgonomics', () => {
     expect(thumbCost).toBeGreaterThan(plainCost);
   });
 
-  it('returns factors for UI hints', () => {
-    const barreShape = shapeOf([8, 10, 10, 9, 8, 8]);
-    const score = scoreErgonomics(barreShape, tuning, chord('C'));
-    expect(score.factors).toContain('barre');
-    expect(score.factors).toContain('position');
-  });
-
   it('rewards ringing more notes (full voicings beat sparse truncations)', () => {
     // The sparse [3,2,0,0] is a subset of full 320003; the model must prefer
     // the full shape so the pool isn't full of near-identical truncations.
@@ -331,18 +323,6 @@ describe('scoreErgonomics', () => {
     expect(scoreErgonomics(single, tuning, chord('G')).cost).toBeLessThan(
       scoreErgonomics(doubled, tuning, chord('G')).cost,
     );
-  });
-});
-
-describe('WHY_HINTS', () => {
-  it('explains each factor', () => {
-    expect(WHY_HINTS['barre']).toBeTruthy();
-    expect(WHY_HINTS['stretch']).toBeTruthy();
-    expect(WHY_HINTS['position']).toBeTruthy();
-    expect(WHY_HINTS['bass']).toBeTruthy();
-    expect(WHY_HINTS['open']).toBeTruthy();
-    expect(WHY_HINTS['doubling']).toBeTruthy();
-    expect(WHY_HINTS['thumb']).toBeTruthy();
   });
 });
 
