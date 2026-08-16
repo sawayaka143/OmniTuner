@@ -366,12 +366,18 @@ export function parseChord(raw: string): ChordParseResult {
   };
 }
 
-/** Splits a progression string into chord tokens (`, ; | /` or spaces). */
+/**
+ * Splits a progression string into chord tokens.
+ * Separators: `,` `;` `|` `/` (unless followed by a digit, so `C6/9` stays
+ * one token), whitespace, and progression arrows/em-dashes (`->` `→` `—` `–`).
+ * A `-` glued to a root (`C-`) is a minor-suffix, not a separator.
+ */
 export function tokenizeProgression(raw: string): string[] {
   const trimmed = String(raw).trim();
-  // `/` is a separator only when NOT followed by a digit, so `C6/9`/`m6/9`
-  // stay one token while `C/G` and `Bb7 / Fm` still split.
-  const tokens = trimmed.split(/[,;|]|\/(?![0-9])/).map((t) => t.trim()).filter(Boolean);
+  const tokens = trimmed
+    .split(/(?:->|→|—|–|,|;|\|)|\/(?![0-9])/)
+    .map((t) => t.trim())
+    .filter(Boolean);
   if (tokens.length <= 1 && /\s/.test(trimmed)) return trimmed.split(/\s+/).filter(Boolean);
   return tokens;
 }

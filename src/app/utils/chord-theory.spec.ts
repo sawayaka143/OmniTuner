@@ -167,6 +167,20 @@ describe('tokenizeProgression', () => {
     expect(tokenizeProgression('C6/9, Fmaj7')).toEqual(['C6/9', 'Fmaj7']);
     expect(tokenizeProgression('Cm6/9')).toEqual(['Cm6/9']);
   });
+
+  it('splits on progression arrows', () => {
+    expect(tokenizeProgression('Am -> Dm -> G')).toEqual(['Am', 'Dm', 'G']);
+    expect(tokenizeProgression('C → G → Am')).toEqual(['C', 'G', 'Am']);
+  });
+
+  it('splits on em/en dashes', () => {
+    expect(tokenizeProgression('C — G – Am')).toEqual(['C', 'G', 'Am']);
+  });
+
+  it('keeps minor-suffix dashes glued to their root', () => {
+    expect(tokenizeProgression('C- G')).toEqual(['C-', 'G']);
+    expect(tokenizeProgression('C- -> F')).toEqual(['C-', 'F']);
+  });
 });
 
 describe('note names', () => {
