@@ -5,12 +5,13 @@ import {
   ScaleFretCount,
 } from '../../models/scale-preferences.model';
 import { Toggle } from '../../ui/toggle/toggle';
+import { RovingRadioGroup } from '../../ui/keyboard-nav';
 
 @Component({
   selector: 'app-scale-options',
   templateUrl: './scale-options.html',
   styleUrl: './scale-options.scss',
-  imports: [Toggle],
+  imports: [Toggle, RovingRadioGroup],
   host: {
     '(document:mousedown)': 'onDocumentMouseDown($event)',
   },

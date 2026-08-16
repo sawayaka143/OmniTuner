@@ -13,6 +13,7 @@ import {
 } from '../../models/tuner-preferences.model';
 import { Toggle } from '../../ui/toggle/toggle';
 import { IconButton } from '../../ui/icon-button/icon-button';
+import { RovingRadioGroup } from '../../ui/keyboard-nav';
 
 interface StartupModeOption {
   readonly value: TunerStartupMode;
@@ -23,7 +24,7 @@ interface StartupModeOption {
   selector: 'app-settings-panel',
   templateUrl: './settings-panel.html',
   styleUrl: './settings-panel.scss',
-  imports: [Toggle, IconButton],
+  imports: [Toggle, IconButton, RovingRadioGroup],
 })
 export class SettingsPanel {
   readonly open = input(false);

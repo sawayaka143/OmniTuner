@@ -1,7 +1,12 @@
 <div class="scale-options" aria-label="Scale display options">
   <div class="option-group">
     <span class="option-label">Accidentals</span>
-    <div class="segmented indicator-accent" role="radiogroup" aria-label="Note accidental spelling">
+    <div
+      class="segmented indicator-accent"
+      role="radiogroup"
+      aria-label="Note accidental spelling"
+      [appRovingRadioGroup]="true"
+    >
       <span
         class="segment-indicator"
         [class.second]="accidental() === 'flat'"
@@ -30,7 +35,12 @@
 
   <div class="option-group">
     <span class="option-label">Frets</span>
-    <div class="segmented frets indicator-accent" role="radiogroup" aria-label="Number of frets">
+    <div
+      class="segmented frets indicator-accent"
+      role="radiogroup"
+      aria-label="Number of frets"
+      [appRovingRadioGroup]="true"
+    >
       <span
         class="segment-indicator"
         [style.transform]="

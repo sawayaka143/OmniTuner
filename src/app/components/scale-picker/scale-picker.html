@@ -1,10 +1,13 @@
 <div class="dropdown-wrapper">
   <button
+    #trigger
     class="btn"
     type="button"
     [attr.aria-expanded]="open()"
     aria-haspopup="listbox"
+    [attr.aria-controls]="open() ? menuId : null"
     (click)="toggle.emit(); $event.stopPropagation()"
+    (keydown)="onTriggerKeydown($event)"
   >
     <span class="button-copy">
       <span class="button-kicker">Scale</span>
@@ -23,10 +26,13 @@
 
   @if (open()) {
     <div
+      #menu
+      [id]="menuId"
       class="dropdown-menu card"
       role="listbox"
       aria-label="Scale selection"
       (click)="$event.stopPropagation()"
+      (keydown)="onMenuKeydown($event)"
     >
       @for (group of groupedScales(); track group.label) {
         <div class="dropdown-group">{{ group.label }}</div>

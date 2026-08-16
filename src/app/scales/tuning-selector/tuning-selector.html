@@ -1,11 +1,13 @@
 <div class="tuning-selector">
   <button
+    #trigger
     class="selector-button"
     type="button"
-    aria-haspopup="dialog"
+    aria-haspopup="listbox"
     aria-controls="tuning-selector-menu"
     [attr.aria-expanded]="open()"
     (click)="toggle.emit(); $event.stopPropagation()"
+    (keydown)="onTriggerKeydown($event)"
   >
     <span class="selector-copy">
       <span class="selector-kicker">Tuning</span>
@@ -24,19 +26,23 @@
 
   @if (open()) {
     <div
+      #menu
       id="tuning-selector-menu"
       class="selector-menu"
-      role="dialog"
+      role="listbox"
       aria-label="Choose or manage guitar tuning"
       (click)="$event.stopPropagation()"
+      (keydown)="onMenuKeydown($event)"
     >
       <div class="selector-group">Presets</div>
       @for (preset of presets(); track preset.id) {
         <button
           class="selector-option"
           type="button"
+          role="option"
+          data-nav-item
           [class.selected]="isSelected(preset.id)"
-          [attr.aria-pressed]="isSelected(preset.id)"
+          [attr.aria-selected]="isSelected(preset.id)"
           (click)="select.emit(preset.id)"
         >
           <span>{{ preset.name }}</span>
@@ -51,7 +57,9 @@
             <button
               class="selector-option saved-main"
               type="button"
-              [attr.aria-pressed]="isSelected(tuning.id)"
+              role="option"
+              data-nav-item
+              [attr.aria-selected]="isSelected(tuning.id)"
               (click)="select.emit(tuning.id)"
             >
               <span>{{ tuning.name }}</span>

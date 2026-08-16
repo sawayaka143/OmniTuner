@@ -281,6 +281,30 @@ export class ChordFinder {
     if (el) el.style.setProperty('--controls-w', `${px}px`);
   }
 
+  protected onResizeKeydown(event: KeyboardEvent): void {
+    const el = document.querySelector<HTMLElement>('.finder-columns');
+    if (!el) return;
+    const w = parseFloat(getComputedStyle(el).getPropertyValue('--controls-w')) || 300;
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      this.applyControlsWidth(Math.max(240, w - 20));
+    } else if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      this.applyControlsWidth(Math.min(420, w + 20));
+    } else if (event.key === 'Home') {
+      event.preventDefault();
+      this.applyControlsWidth(240);
+    } else if (event.key === 'End') {
+      event.preventDefault();
+      this.applyControlsWidth(420);
+    } else {
+      return;
+    }
+    this.persistControlsWidth(
+      parseFloat(getComputedStyle(el).getPropertyValue('--controls-w')) || 300,
+    );
+  }
+
   private persistControlsWidth(px: number): void {
     try {
       localStorage.setItem(this.controlsStorageKey, String(Math.round(px)));

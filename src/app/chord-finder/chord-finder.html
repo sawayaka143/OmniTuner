@@ -166,7 +166,9 @@
         class="resize-handle"
         type="button"
         aria-label="Resize controls panel"
+        title="Drag to resize, or use Left/Right arrow keys"
         (pointerdown)="onResizeStart($event)"
+        (keydown)="onResizeKeydown($event)"
       ></button>
 
       <!-- ══════════ OUTPUT / STAGE (hero) ══════════ -->
