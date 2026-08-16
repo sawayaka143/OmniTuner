@@ -2,6 +2,8 @@
   "name": "tuner-app",
   "short_name": "tuner-app",
   "display": "standalone",
+  "theme_color": "#121211",
+  "background_color": "#121211",
   "scope": "./",
   "start_url": "./",
   "icons": [
