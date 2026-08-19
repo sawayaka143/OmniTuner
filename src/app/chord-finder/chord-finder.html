@@ -95,68 +95,6 @@
           }
         </div>
 
-        <div class="control-section">
-          <span class="section-label">04 · Voicing rules</span>
-
-          <span class="field-label">open string character (fret 0)</span>
-          <app-segmented
-            [options]="openModes"
-            [value]="openMode()"
-            ariaLabel="Open string character"
-            indicator="accent"
-            [gridColumns]="'repeat(4, minmax(0, 1fr))'"
-            [optionLabel]="openModeLabelFn"
-            [trackByFn]="identityFn"
-            (select)="setOpenMode($event)"
-          />
-
-          <div class="toggle-row">
-            <span class="toggle-label">allow inversions</span>
-            <app-toggle
-              [checked]="allowInversions()"
-              label="allow inversions"
-              (change)="allowInversions.set($event)"
-            />
-          </div>
-          <div class="toggle-row">
-            <span class="toggle-label">allow muted string gaps</span>
-            <app-toggle
-              [checked]="allowGaps()"
-              label="allow muted string gaps"
-              (change)="allowGaps.set($event)"
-            />
-          </div>
-          <div class="toggle-row">
-            <span class="toggle-label">randomize high-quality voicings</span>
-            <app-toggle
-              [checked]="randomizeVoicings()"
-              label="randomize high-quality voicings"
-              (change)="randomizeVoicings.set($event)"
-            />
-          </div>
-
-          <div class="row-2 compact">
-            <app-text-field
-              label="max stretch"
-              type="number"
-              inputClass="compact"
-              [value]="maxStretchText()"
-              [min]="1"
-              [max]="6"
-              (valueChange)="maxStretchText.set($event)"
-            />
-            <app-text-field
-              label="min notes"
-              type="number"
-              inputClass="compact"
-              [value]="minNotesText()"
-              [min]="2"
-              [max]="6"
-              (valueChange)="minNotesText.set($event)"
-            />
-          </div>
-        </div>
-
         <button class="btn primary generate" type="button" (click)="generate()">
           GENERATE VOICINGS
         </button>
@@ -255,9 +193,7 @@
                     </p>
                   }
                   @if (!entry.shapes.length) {
-                    <p class="card-note warn">
-                      no voicings satisfy these rules — try: {{ relaxHints(results()!.options) }}
-                    </p>
+                    <p class="card-note warn">no voicings satisfy these rules — try: {{ relaxHints() }}</p>
                   } @else {
                     <div class="card-shapes">
                       @for (shape of entry.shapes; track $index) {

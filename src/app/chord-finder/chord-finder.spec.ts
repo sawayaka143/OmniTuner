@@ -188,13 +188,6 @@ describe('ChordFinder', () => {
     await fixture.whenStable();
   });
 
-  it('shows the voicing-rule toggles', () => {
-    const toggles = el().querySelectorAll<HTMLButtonElement>('.toggle-row button[role="switch"]');
-    expect(toggles.length).toBeGreaterThanOrEqual(3);
-    click('.generate');
-    expect(el().querySelectorAll('.chord-card').length).toBeGreaterThan(0);
-  });
-
   it('generates a progression with an invalid chord token in the middle without misaligning', () => {
     const progressionInput = fieldInput('chords, comma-separated');
     if (!progressionInput) throw new Error('progression input missing');
@@ -206,19 +199,6 @@ describe('ChordFinder', () => {
     // 3 cards: two valid chords + one invalid token card.
     expect(el().querySelectorAll('.chord-card').length).toBe(3);
     expect(el().querySelectorAll('.chord-card .card-note.error').length).toBe(1);
-  });
-
-  it('regenerates with different rule settings', () => {
-    click('.generate');
-    const before = el().querySelectorAll('.chord-card').length;
-    const toggles = el().querySelectorAll<HTMLButtonElement>('.toggle-row button[role="switch"]');
-    const inversionsToggle = toggles[0];
-    if (!inversionsToggle) throw new Error('inversions toggle missing');
-    inversionsToggle.click();
-    fixture.detectChanges();
-
-    click('.generate');
-    expect(el().querySelectorAll('.chord-card').length).toBe(before);
   });
 
   it('transposes the degree-derived progression when the root changes', () => {

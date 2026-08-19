@@ -24,17 +24,8 @@ import {
   parseProgressionMeta,
   ProgressionMeta,
 } from '../utils/progression-meta';
-import {
-  MAX_FRET,
-  OpenStringMode,
-  RESULTS_PER_CHORD,
-  searchChord,
-  VoicingOptions,
-  VoicingShape,
-} from '../utils/chord-voicing';
-import { scoreErgonomics, ERGONOMICS_WEIGHTS } from '../utils/ergonomics';
+import { MAX_FRET, RESULTS_PER_CHORD, searchChord, VoicingShape } from '../utils/chord-voicing';
 import { DiagramLabelMode, DiagramView, NeckDiagram } from './neck-diagram/neck-diagram';
-import { Toggle } from '../ui/toggle/toggle';
 import { Segmented } from '../ui/segmented/segmented';
 import { Listbox } from '../ui/listbox/listbox';
 import { TextField } from '../ui/text-field/text-field';
@@ -46,14 +37,9 @@ interface TuningOption {
   readonly text: string;
 }
 
-const OPEN_MODES: readonly OpenStringMode[] = ['allow', 'require', 'mostly', 'exclude'];
+const OPEN_MODES = [] as const;
 
-const OPEN_MODE_SHORT_LABELS: Readonly<Record<OpenStringMode, string>> = {
-  allow: 'free',
-  require: '≥1 open',
-  mostly: 'mostly',
-  exclude: 'no opens',
-};
+const OPEN_MODE_SHORT_LABELS: Readonly<Record<string, string>> = {};
 
 /** Enharmonic alternate spelling shown as the dropdown secondary text. */
 const ALTERNATE_NOTES: Readonly<Record<string, string>> = {
@@ -78,7 +64,7 @@ export interface ChordEntry {
 
 export interface GenerationResult {
   readonly tuning: ParsedTuning;
-  readonly options: VoicingOptions;
+  readonly options: Record<string, unknown>;
   readonly chords: readonly ChordEntry[];
 }
 
@@ -92,7 +78,7 @@ export interface TabLine {
 
 @Component({
   selector: 'app-chord-finder',
-  imports: [NeckDiagram, Toggle, Segmented, Listbox, TextField],
+  imports: [NeckDiagram, Segmented, Listbox, TextField],
   templateUrl: './chord-finder.html',
   styleUrl: './chord-finder.scss',
   host: {
@@ -129,7 +115,7 @@ export class ChordFinder {
   protected readonly tuningLabelFn = (o: TuningOption): string => o.label;
   protected readonly tuningAltFn = (o: TuningOption): string | null => o.text;
   protected readonly tuningTrackFn = (o: TuningOption): string => o.id;
-  protected readonly openModeLabelFn = (o: OpenStringMode): string => OPEN_MODE_SHORT_LABELS[o];
+  protected readonly openModeLabelFn = (o: string): string => OPEN_MODE_SHORT_LABELS[o] ?? o;
   protected readonly viewLabelFn = (o: 'tab' | 'dots' | 'lines'): string => o;
   protected readonly labelChoiceLabelFn = (o: 'notes' | 'func'): string =>
     o === 'notes' ? 'notes' : 'R b3';
@@ -165,17 +151,7 @@ export class ChordFinder {
   protected readonly scaleRoot = computed(() => this.scaleRootText().trim() || 'C');
   protected readonly modeName = signal<ModeName>('Aeolian');
   protected readonly progressionText = signal('');
-  /**
-   * Degree source of the visible progression, when it is degree-derived
-   * (shuffle/random). Null for manually typed progressions, which must not
-   * be transposed when the root changes.
-   */
   private readonly progressionMeta = signal<ProgressionMeta | null>(null);
-  protected readonly openMode = signal<OpenStringMode>('allow');
-  protected readonly allowInversions = signal(false);
-  protected readonly allowGaps = signal(false);
-  protected readonly maxStretchText = signal('4');
-  protected readonly minNotesText = signal('3');
   private readonly controlsStorageKey = 'omnituner.chordfinder.controlsWidth';
   private resizeState: { startX: number; startW: number } | null = null;
   private onResizeMove = (e: PointerEvent): void => this.handleResizeMove(e);
@@ -185,7 +161,6 @@ export class ChordFinder {
     this.viewMode() === 'dots' ? 'dots' : 'lines',
   );
   protected readonly labelMode = signal<DiagramLabelMode>('notes');
-  protected readonly randomizeVoicings = signal(true);
   protected readonly tuningListOpen = signal(false);
   protected readonly modeListOpen = signal(false);
   protected readonly rootListOpen = signal(false);
@@ -416,16 +391,6 @@ export class ChordFinder {
     this.progressionMeta.set(parseProgressionMeta(value, tonic, flatsForPc(tonic)));
   }
 
-  protected onMaxStretchInput(event: Event): void {
-    const target = event.target;
-    if (target instanceof HTMLInputElement) this.maxStretchText.set(target.value);
-  }
-
-  protected onMinNotesInput(event: Event): void {
-    const target = event.target;
-    if (target instanceof HTMLInputElement) this.minNotesText.set(target.value);
-  }
-
   protected applyTuning(tuningId: string): void {
     const option = this.tuningOptions().find((o) => o.id === tuningId);
     if (!option) return;
@@ -436,10 +401,6 @@ export class ChordFinder {
   protected onTuningSelect(option: TuningOption): void {
     this.applyTuning(option.id);
     this.tuningListOpen.set(false);
-  }
-
-  protected setOpenMode(mode: OpenStringMode): void {
-    this.openMode.set(mode);
   }
 
   protected onLabelModeSelect(mode: 'notes' | 'func'): void {
@@ -479,83 +440,21 @@ export class ChordFinder {
     if (!parsed.ok) return;
     const tokens = tokenizeProgression(this.progressionText());
     if (!tokens.length) return;
-    const maxStretch = parseInt(this.maxStretchText(), 10);
-    const minNotes = parseInt(this.minNotesText(), 10);
-    if (Number.isNaN(maxStretch) || Number.isNaN(minNotes)) return;
-    const options: VoicingOptions = {
-      openMode: this.openMode(),
-      allowInversions: this.allowInversions(),
-      allowGaps: this.allowGaps(),
-      maxStretch,
-      minNotes,
-      rejectUnbarrable: true,
-      // Search a wider pool than we display so randomization has diverse,
-      // still-good voicings to pick from (display stays at RESULTS_PER_CHORD).
-      candidateCount: 12,
-    };
-
-    const doJitter = this.randomizeVoicings();
-    let chords: ChordEntry[] = tokens.map((token) => {
+    const chords: ChordEntry[] = tokens.map((token) => {
       const parse = parseChord(token);
       if (!parse.ok) return { token, parse, shapes: [], badge: null };
-      const shapes = searchChord(parsed.tuning, parse.chord, options);
+      const shapes = searchChord(parsed.tuning, parse.chord);
       return {
         token,
         parse,
         shapes,
-        badge: computeBadge(
-          parse.chord,
-          this.scaleRootText(),
-          this.modeName(),
-          parsed.tuning.flats,
-        ),
+        badge: computeBadge(parse.chord, this.scaleRootText(), this.modeName(), parsed.tuning.flats),
       };
     });
-
-    chords = chords.map((entry) => {
-      if (!entry.parse.ok) return entry;
-      const parsedEntry = entry as ChordEntry & { parse: { ok: true } };
-      // Bound jitter: diversify within quality band, never promote outside bestCost+2.
-      const baseCosts = entry.shapes.map(
-        (shape) =>
-          scoreErgonomics(
-            shape,
-            parsed.tuning,
-            parsedEntry.parse.chord,
-            true,
-            ERGONOMICS_WEIGHTS,
-            0,
-          ).cost,
-      );
-      const bestCost = baseCosts.length ? Math.min(...baseCosts) : 0;
-      const scored = entry.shapes.map((shape, i) => {
-        const jitter = doJitter && baseCosts[i] <= bestCost + 2 ? 1.2 : 0;
-        return {
-          shape,
-          cost: scoreErgonomics(
-            shape,
-            parsed.tuning,
-            parsedEntry.parse.chord,
-            true,
-            ERGONOMICS_WEIGHTS,
-            jitter,
-          ).cost,
-        };
-      });
-      scored.sort((a, b) => a.cost - b.cost);
-      return { ...entry, shapes: scored.map((s) => s.shape) };
-    });
-
-    // Display the best few even though the search/randomization used a wider pool.
-    chords = chords.map((entry) => ({
-      ...entry,
-      shapes: entry.shapes.slice(0, RESULTS_PER_CHORD),
-    }));
-
     this.results.set({
       tuning: parsed.tuning,
-      options,
-      chords,
+      options: {},
+      chords: chords.map((entry) => ({ ...entry, shapes: entry.shapes.slice(0, RESULTS_PER_CHORD) })),
     });
     this.copyBuffer = this.buildCopyBuffer(parsed.tuning, chords);
   }
@@ -626,15 +525,8 @@ export class ChordFinder {
     return lines;
   }
 
-  protected relaxHints(options: VoicingOptions): string {
-    const hints: string[] = [];
-    if (options.openMode === 'exclude') hints.push('allow open strings');
-    if (options.openMode === 'mostly') hints.push('relax mostly open');
-    if (options.openMode === 'require') hints.push('drop the open requirement');
-    if (!options.allowInversions) hints.push('enable inversions');
-    if (options.maxStretch < 6) hints.push('widen the stretch');
-    if (!options.allowGaps) hints.push('allow string gaps');
-    return hints.join(' · ') || 'relax the rules';
+  protected relaxHints(): string {
+    return 'try a different tuning or chord spelling';
   }
 
   private buildCopyBuffer(tuning: ParsedTuning, chords: readonly ChordEntry[]): string {
