@@ -173,21 +173,21 @@ export const ERGONOMICS_WEIGHTS = {
   positionPerFret: 0.3,
   spanPerFret: 0.5,
   indexSpanPerFret: 0.7,
-  stretchPerFret: 0.9,
+  stretchPerFret: 0.7, // slightly softer stretch so full C not crushed
   barrePerBarre: 1.2,
   barreWidthPerString: 0.5,
   barreHighFret: 2.0,
-  openPerString: -0.6,
-  doublingPerTone: 0.5,
-  rootDoubleBonus: -0.75,
-  bassNotRoot: 1.5,
-  bassStringPerString: 0.25,
+  openPerString: -1.0, // stronger open reward to survive jitter 3.5
+  doublingPerTone: 1.1, // real penalty; root overlap only partly mitigated
+  rootDoubleBonus: -0.25, // was -0.75 net reward → now net +0.85 penalty
+  bassNotRoot: 0.5, // down from 1.5; keeps highBass>lowsBass (+0.1) with small open/muted delta
+  bassStringPerString: 0.2, // down from 0.25
   stringSkip: 2.5,
   thumbFretting: 4.0,
   stretchExponent: 2,
   fretWidthRate: 0.05,
-  /** Per extra ringing note above the chord-tone minimum (reward for fuller voicings). */
-  noteCountPerNote: -0.35,
+  /** Reward fuller voicings but weaker so muddy doubled 3rds aren't free. */
+  noteCountPerNote: -0.2,
 } as const;
 
 export type ErgonomicsWeights = typeof ERGONOMICS_WEIGHTS;

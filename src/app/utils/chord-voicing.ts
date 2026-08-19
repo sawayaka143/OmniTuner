@@ -94,13 +94,6 @@ function makeShape(
   return { frets, sounding, span, bassMidi: bass, bassIsRoot, position, openCount, cost: 0 };
 }
 
-function compareRanks(a: readonly number[], b: readonly number[]): number {
-  for (let i = 0; i < a.length; i++) {
-    if (a[i] !== b[i]) return a[i] - b[i];
-  }
-  return 0;
-}
-
 /**
  * Depth-first search over strings × candidate frets with suffix pruning
  * (coverage, open availability). Returns the top shapes, best ergonomics
@@ -206,12 +199,16 @@ export function searchChord(
   };
   dfs(0, 0, false, 0);
 
-  const rankOf = (shape: VoicingShape): number[] => [shape.cost, shape.span, shape.position];
-  results.sort((a, b) =>
-    options.openMode === 'mostly'
-      ? compareRanks([-a.openCount, ...rankOf(a)], [-b.openCount, ...rankOf(b)])
-      : compareRanks(rankOf(a), rankOf(b)),
-  );
+  const epsilon = 0.5;
+  results.sort((a, b) => {
+    if (options.openMode === 'mostly' && a.openCount !== b.openCount)
+      return b.openCount - a.openCount;
+    const costDiff = a.cost - b.cost;
+    if (Math.abs(costDiff) > epsilon) return costDiff;
+    if (a.span !== b.span) return a.span - b.span;
+    if (a.position !== b.position) return a.position - b.position;
+    return costDiff;
+  });
   const candidateCount = options.candidateCount ?? RESULTS_PER_CHORD;
   return results.slice(0, candidateCount);
 }

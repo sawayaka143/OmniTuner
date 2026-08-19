@@ -494,7 +494,7 @@ export class ChordFinder {
       candidateCount: 12,
     };
 
-    const jitter = this.randomizeVoicings() ? 3.5 : 0;
+    const doJitter = this.randomizeVoicings();
     let chords: ChordEntry[] = tokens.map((token) => {
       const parse = parseChord(token);
       if (!parse.ok) return { token, parse, shapes: [], badge: null };
@@ -515,17 +515,33 @@ export class ChordFinder {
     chords = chords.map((entry) => {
       if (!entry.parse.ok) return entry;
       const parsedEntry = entry as ChordEntry & { parse: { ok: true } };
-      const scored = entry.shapes.map((shape) => ({
-        shape,
-        cost: scoreErgonomics(
+      // Bound jitter: diversify within quality band, never promote outside bestCost+2.
+      const baseCosts = entry.shapes.map(
+        (shape) =>
+          scoreErgonomics(
+            shape,
+            parsed.tuning,
+            parsedEntry.parse.chord,
+            true,
+            ERGONOMICS_WEIGHTS,
+            0,
+          ).cost,
+      );
+      const bestCost = baseCosts.length ? Math.min(...baseCosts) : 0;
+      const scored = entry.shapes.map((shape, i) => {
+        const jitter = doJitter && baseCosts[i] <= bestCost + 2 ? 1.2 : 0;
+        return {
           shape,
-          parsed.tuning,
-          parsedEntry.parse.chord,
-          true,
-          ERGONOMICS_WEIGHTS,
-          jitter,
-        ).cost,
-      }));
+          cost: scoreErgonomics(
+            shape,
+            parsed.tuning,
+            parsedEntry.parse.chord,
+            true,
+            ERGONOMICS_WEIGHTS,
+            jitter,
+          ).cost,
+        };
+      });
       scored.sort((a, b) => a.cost - b.cost);
       return { ...entry, shapes: scored.map((s) => s.shape) };
     });
