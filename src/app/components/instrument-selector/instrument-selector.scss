@@ -65,6 +65,47 @@
   }
 }
 
+/* Make the "+" segment a true circle so hover/active/focus highlights are round,
+   not square (the parent segmented control otherwise imposes a sharper radius). */
+.instrument-seg .add-instrument-segment {
+  --plus-width: var(--ctrl-h-lg);
+  flex: 0 0 var(--plus-width);
+  width: var(--plus-width);
+  min-width: unset;
+  aspect-ratio: 1 / 1;
+  padding: 0;
+  border-radius: var(--r-pill);
+  display: grid;
+  place-items: center;
+}
+
+.instrument-seg .add-instrument-segment .material-symbols-outlined {
+  font-size: var(--text-md);
+}
+
+.instrument-seg .add-instrument-segment:hover {
+  color: var(--text);
+  background: var(--surface-container);
+}
+
+.instrument-seg .add-instrument-segment.active::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--scale-accent) 14%, var(--surface-container-high));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--scale-accent) 32%, transparent);
+  transform: translate(-50%, -50%);
+  content: '';
+}
+
+.instrument-seg .add-instrument-segment:focus-visible {
+  outline: 2px solid var(--border-active);
+  outline-offset: -2px;
+}
+
 .instrument-seg .add-instrument-segment {
   position: relative;
   flex: 0 0 var(--plus-width);
