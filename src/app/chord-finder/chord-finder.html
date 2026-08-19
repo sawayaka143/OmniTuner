@@ -43,38 +43,7 @@
         </div>
 
         <div class="control-section">
-          <span class="section-label">02 · Key context</span>
-          <div class="row-2">
-            <app-listbox
-              [options]="rootNotes"
-              [value]="scaleRoot()"
-              ariaLabel="Scale root"
-              [triggerLabel]="scaleRoot()"
-              triggerKicker="root"
-              [optionLabel]="identityFn"
-              [optionAlt]="rootAltFn"
-              [trackByFn]="identityFn"
-              [open]="rootListOpen()"
-              (toggle)="toggleRootList()"
-              (select)="onScaleRootSelect($event)"
-            />
-            <app-listbox
-              [options]="modeNames"
-              [value]="modeName()"
-              ariaLabel="Mode"
-              [triggerLabel]="modeName()"
-              triggerKicker="mode"
-              [optionLabel]="identityFn"
-              [trackByFn]="identityFn"
-              [open]="modeListOpen()"
-              (toggle)="toggleModeList()"
-              (select)="onModeSelect($event)"
-            />
-          </div>
-        </div>
-
-        <div class="control-section">
-          <span class="section-label">03 · Progression</span>
+          <span class="section-label">02 · Progression</span>
           <app-text-field
             label="chords, comma-separated"
             [value]="progressionText()"
@@ -160,6 +129,14 @@
               <p>Chord finder ready.</p>
             </div>
           } @else {
+            @if (detectedKey()) {
+              <p class="card-note" [class.good]="detectedKey()!.confidence === 'strong'" [class.warn]="detectedKey()!.confidence === 'moderate'">
+                Detected key: {{ detectedKey()!.tonicName }} {{ detectedKey()!.mode }} · {{ detectedKey()!.confidence }}
+                @if (detectedKey()!.alternatives.length) {
+                  <span> · also: {{ detectedKey()!.alternatives[0].tonicName }} {{ detectedKey()!.alternatives[0].mode }}</span>
+                }
+              </p>
+            }
             @for (entry of results()!.chords; track $index; let chordIndex = $index) {
               <article
                 class="chord-card"

@@ -544,11 +544,6 @@ export interface DiatonicBadge {
   readonly text: string;
 }
 
-/**
- * Labels a chord's function relative to a key context (scale root + mode):
- * diatonic degree, borrowed quality or chromatic. Returns null when no
- * scale root is provided.
- */
 export function computeBadge(
   chord: ParsedChord,
   scaleRootRaw: string,
@@ -561,8 +556,17 @@ export function computeBadge(
   const parsed = parseNoteToken(token);
   if (!parsed)
     return { kind: 'warn', text: `scale root '${scaleRoot}' unreadable — badge skipped` };
+  return computeBadgeForPc(chord, parsed.pc, modeName, tuningFlats, parsed.flats);
+}
 
-  const scaleRootName = pcName(parsed.pc, parsed.flats || tuningFlats);
+export function computeBadgeForPc(
+  chord: ParsedChord,
+  tonicPc: number,
+  modeName: ModeName,
+  tuningFlats: boolean,
+  tonicFlats: boolean,
+): DiatonicBadge | null {
+  const scaleRootName = pcName(tonicPc, tonicFlats || tuningFlats);
   const rootName = pcName(chord.rootPc, chord.flats || tuningFlats);
 
   const actualThird = chord.intervals.includes(4) ? 4 : chord.intervals.includes(3) ? 3 : null;
@@ -607,12 +611,12 @@ export function computeBadge(
 
   /** Accidental prefix for a chord whose root lies outside the key scale. */
   const accidentalPrefixFor = (steps: readonly number[]): string => {
-    if (chord.rootPc === mod12(parsed.pc + steps[0])) return '';
+    if (chord.rootPc === mod12(tonicPc + steps[0])) return '';
     let flats = 0;
     let sharps = 0;
     for (let i = 0; i < 7; i++) {
-      if (mod12(parsed.pc + steps[i] - 1) === chord.rootPc) flats++;
-      if (mod12(parsed.pc + steps[i] + 1) === chord.rootPc) sharps++;
+      if (mod12(tonicPc + steps[i] - 1) === chord.rootPc) flats++;
+      if (mod12(tonicPc + steps[i] + 1) === chord.rootPc) sharps++;
     }
     if (flats && !sharps) return 'b';
     if (sharps && !flats) return '#';
@@ -622,7 +626,7 @@ export function computeBadge(
   const lookupIn = (steps: readonly number[]): DegreeLookup | null => {
     let degreeIndex = -1;
     for (let i = 0; i < 7; i++) {
-      if (mod12(parsed.pc + steps[i]) === chord.rootPc) {
+      if (mod12(tonicPc + steps[i]) === chord.rootPc) {
         degreeIndex = i;
         break;
       }

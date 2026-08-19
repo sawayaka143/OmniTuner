@@ -41,7 +41,7 @@ describe('ChordFinder', () => {
     expect(el().querySelector('.stage-well')?.textContent).toContain('Chord finder ready.');
   });
 
-  it('starts with a random progression and matching key context', () => {
+  it('starts with a random progression', () => {
     const input = fieldInput('chords, comma-separated');
     expect(input?.value.trim().length).toBeGreaterThan(0);
     const tokens = input!.value
@@ -52,7 +52,7 @@ describe('ChordFinder', () => {
     expect(tokens.length).toBeLessThanOrEqual(6);
   });
 
-  it('shuffle randomizes the progression and key', () => {
+  it('shuffle randomizes the progression', () => {
     const input = fieldInput('chords, comma-separated')!;
     const before = input.value;
     const shuffleBtn = [...el().querySelectorAll<HTMLButtonElement>('button')].find(
@@ -130,44 +130,14 @@ describe('ChordFinder', () => {
     expect(el().querySelectorAll('.tab-line').length).toBeGreaterThan(0);
   });
 
-  it('selects a mode from the key-context dropdown', () => {
-    const modeSection = el().querySelectorAll<HTMLElement>('.control-section')[1];
-    const modeTrigger = [...modeSection.querySelectorAll<HTMLButtonElement>('.btn')].find(
-      (t) => t.querySelector('.button-kicker')?.textContent?.trim() === 'mode',
-    );
-    expect(modeTrigger).toBeTruthy();
-    modeTrigger?.click();
+  it('shows detected key after generating', () => {
+    const input = fieldInput('chords, comma-separated')!;
+    input.value = 'C, F, G';
+    input.dispatchEvent(new Event('input'));
     fixture.detectChanges();
-    expect(el().querySelector('.dropdown-menu')).toBeTruthy();
-
-    const dorian = [...el().querySelectorAll<HTMLButtonElement>('.dropdown-item')].find((o) =>
-      o.textContent?.includes('Dorian'),
-    );
-    dorian?.click();
-    fixture.detectChanges();
-    expect(el().querySelector('.dropdown-menu')).toBeFalsy();
-    expect(
-      [...el().querySelectorAll<HTMLButtonElement>('.control-section .btn')].some((t) =>
-        t.textContent?.includes('Dorian'),
-      ),
-    ).toBe(true);
-  });
-
-  it('selects a scale root from the key-context dropdown', () => {
-    const triggers = el().querySelectorAll<HTMLButtonElement>('.control-section .btn');
-    const rootTrigger = [...triggers].find((t) => t.textContent?.includes('root'));
-    expect(rootTrigger).toBeTruthy();
-    rootTrigger?.click();
-    fixture.detectChanges();
-
-    const g = [...el().querySelectorAll<HTMLButtonElement>('.dropdown-item')].find(
-      (o) => o.querySelector('span')?.textContent === 'G',
-    );
-    g?.click();
-    fixture.detectChanges();
-
     click('.generate');
-    expect(el().textContent).toContain('G');
+    expect(el().textContent).toContain('Detected key:');
+    expect(el().textContent).toContain('C');
   });
 
   it('clears results back to the welcome state', () => {
@@ -201,44 +171,4 @@ describe('ChordFinder', () => {
     expect(el().querySelectorAll('.chord-card .card-note.error').length).toBe(1);
   });
 
-  it('transposes the degree-derived progression when the root changes', () => {
-    const input = fieldInput('chords, comma-separated')!;
-    const before = input.value;
-    const rootTrigger = [...el().querySelectorAll<HTMLButtonElement>('.control-section .btn')].find(
-      (t) => t.textContent?.includes('root'),
-    )!;
-    rootTrigger.click();
-    fixture.detectChanges();
-    const g = [...el().querySelectorAll<HTMLButtonElement>('.dropdown-item')].find(
-      (o) => o.querySelector('span')?.textContent === 'G',
-    )!;
-    g.click();
-    fixture.detectChanges();
-
-    const after = fieldInput('chords, comma-separated')!.value;
-    // Degree-derived progressions re-render at the new tonic, so the text
-    // should differ; if it were manual text it would stay identical.
-    expect(after).not.toEqual(before);
-  });
-
-  it('leaves a manually typed progression unchanged when the root changes', () => {
-    const input = fieldInput('chords, comma-separated')!;
-    // A chromatic, non-degree-derived progression that has no degree mapping.
-    input.value = 'Cmaj7, Bbmaj7, Abmaj7';
-    input.dispatchEvent(new Event('input'));
-    fixture.detectChanges();
-
-    const rootTrigger = [...el().querySelectorAll<HTMLButtonElement>('.control-section .btn')].find(
-      (t) => t.textContent?.includes('root'),
-    )!;
-    rootTrigger.click();
-    fixture.detectChanges();
-    const d = [...el().querySelectorAll<HTMLButtonElement>('.dropdown-item')].find(
-      (o) => o.querySelector('span')?.textContent === 'D',
-    )!;
-    d.click();
-    fixture.detectChanges();
-
-    expect(fieldInput('chords, comma-separated')!.value).toBe('Cmaj7, Bbmaj7, Abmaj7');
-  });
 });

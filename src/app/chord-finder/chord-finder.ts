@@ -1,59 +1,37 @@
-import { Component, computed, DestroyRef, effect, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { ScalePreferences } from '../services/scale-preferences';
 import { InstrumentRegistry } from '../services/instrument-registry';
 import { textColorOn } from '../data/interval-colors';
 import { SHARP_NAMES, FLAT_NAMES } from '../data/scale.constants';
 import { PROGRESSION_PRESETS } from '../data/chord-progression-presets';
-import { degreesToProgression, tonicPcOf } from '../utils/degree-to-chord';
+import { degreesToProgression } from '../utils/degree-to-chord';
 import {
   flatsForPc,
   parseChord,
   tokenizeProgression,
-  computeBadge,
   DiatonicBadge,
-  MODE_NAMES,
-  ModeName,
   ChordParseResult,
   ParsedChord,
   ParsedTuning,
   parseTuning,
   pcName,
 } from '../utils/chord-theory';
-import {
-  flattenProgression,
-  parseProgressionMeta,
-  ProgressionMeta,
-} from '../utils/progression-meta';
 import { MAX_FRET, RESULTS_PER_CHORD, searchChord, VoicingShape } from '../utils/chord-voicing';
 import { DiagramLabelMode, DiagramView, NeckDiagram } from './neck-diagram/neck-diagram';
 import { Segmented } from '../ui/segmented/segmented';
 import { Listbox } from '../ui/listbox/listbox';
 import { TextField } from '../ui/text-field/text-field';
+import { DetectedKey, detectKey } from '../utils/key-detector';
+import { computeBadgeForPc } from '../utils/chord-theory';
 
 interface TuningOption {
   readonly id: string;
   readonly label: string;
-  /** Whitespace-separated note tokens, low string first. */
   readonly text: string;
 }
 
 const OPEN_MODES = [] as const;
-
 const OPEN_MODE_SHORT_LABELS: Readonly<Record<string, string>> = {};
-
-/** Enharmonic alternate spelling shown as the dropdown secondary text. */
-const ALTERNATE_NOTES: Readonly<Record<string, string>> = {
-  'C#': 'D♭',
-  Db: 'C♯',
-  'D#': 'E♭',
-  Eb: 'D♯',
-  'F#': 'G♭',
-  Gb: 'F♯',
-  'G#': 'A♭',
-  Ab: 'G♯',
-  'A#': 'B♭',
-  Bb: 'A♯',
-};
 
 export interface ChordEntry {
   readonly token: string;
@@ -66,6 +44,7 @@ export interface GenerationResult {
   readonly tuning: ParsedTuning;
   readonly options: Record<string, unknown>;
   readonly chords: readonly ChordEntry[];
+  readonly detectedKey: DetectedKey | null;
 }
 
 export interface TabLine {
@@ -89,12 +68,10 @@ export interface TabLine {
 export class ChordFinder {
   private readonly preferences = inject(ScalePreferences);
   private readonly registry = inject(InstrumentRegistry);
-  private readonly destroyRef = inject(DestroyRef);
 
   protected readonly preferencesState = this.preferences.state;
   protected readonly accentInk = computed(() => textColorOn(this.preferencesState().accent));
 
-  /** Built-in + custom tunings of the currently selected instrument. */
   protected readonly tuningOptions = computed<readonly TuningOption[]>(() =>
     this.registry.availableTunings().map((tuning) => ({
       id: tuning.id,
@@ -105,9 +82,6 @@ export class ChordFinder {
 
   protected readonly instrumentLabel = computed(() => this.registry.selectedInstrument().label);
 
-  protected readonly modeNames = MODE_NAMES;
-  protected readonly openModes = OPEN_MODES;
-  protected readonly openModeShortLabels = OPEN_MODE_SHORT_LABELS;
   protected readonly viewChoices = ['tab', 'dots', 'lines'] as const;
   protected readonly labelChoices = ['notes', 'func'] as const;
   protected readonly maxFret = MAX_FRET;
@@ -120,38 +94,16 @@ export class ChordFinder {
   protected readonly labelChoiceLabelFn = (o: 'notes' | 'func'): string =>
     o === 'notes' ? 'notes' : 'R b3';
 
-  protected readonly rootNotes = SHARP_NAMES;
-  /** Enharmonic alternate shown as secondary text (e.g. `C#` → `D♭`). */
-  protected readonly rootAltFn = (note: string): string | null => ALTERNATE_NOTES[note] ?? null;
+  protected readonly openModes = OPEN_MODES;
+  protected readonly openModeShortLabels = OPEN_MODE_SHORT_LABELS;
 
-  /** The tuning option matching the currently selected registry tuning. */
-  protected readonly selectedTuningOption = computed<TuningOption | null>(() => {
-    const id = this.registry.selectedTuningId();
-    return this.tuningOptions().find((o) => o.id === id) ?? null;
-  });
-
-  protected readonly tuningHintTone = computed<'good' | 'bad' | 'neutral'>(() => {
-    const kind = this.tuningHint().kind;
-    return kind === 'good' ? 'good' : kind === 'bad' ? 'bad' : 'neutral';
-  });
-
-  protected readonly progressionHintTone = computed<'good' | 'bad' | 'neutral'>(() => {
-    const kind = this.progressionHint().kind;
-    return kind === 'good' ? 'good' : kind === 'bad' ? 'bad' : 'neutral';
-  });
-
-  // ── Control state ────────────────────────────────────────────────
   protected readonly tuningText = signal(
     this.registry
       .selectedTuning()
       .strings.map((s) => s.name)
       .join(' '),
   );
-  protected readonly scaleRootText = signal('');
-  protected readonly scaleRoot = computed(() => this.scaleRootText().trim() || 'C');
-  protected readonly modeName = signal<ModeName>('Aeolian');
   protected readonly progressionText = signal('');
-  private readonly progressionMeta = signal<ProgressionMeta | null>(null);
   private readonly controlsStorageKey = 'omnituner.chordfinder.controlsWidth';
   private resizeState: { startX: number; startW: number } | null = null;
   private onResizeMove = (e: PointerEvent): void => this.handleResizeMove(e);
@@ -162,11 +114,9 @@ export class ChordFinder {
   );
   protected readonly labelMode = signal<DiagramLabelMode>('notes');
   protected readonly tuningListOpen = signal(false);
-  protected readonly modeListOpen = signal(false);
-  protected readonly rootListOpen = signal(false);
 
-  // ── Output state ─────────────────────────────────────────────────
   protected readonly results = signal<GenerationResult | null>(null);
+  protected readonly detectedKey = computed(() => this.results()?.detectedKey ?? null);
   protected readonly copied = signal(false);
   private copyBuffer = '';
   private copyResetTimer: ReturnType<typeof setTimeout> | null = null;
@@ -175,22 +125,6 @@ export class ChordFinder {
     const saved = this.readControlsWidth();
     if (saved !== null) this.applyControlsWidth(saved);
     if (this.preferencesState().chordRandomProgression) this.applyRandomPreset();
-    effect(() => {
-      // Transpose a degree-derived progression when the root changes.
-      // Reads scaleRoot so the effect re-runs on key edits, and deliberately
-      // avoids progressionText to keep it acyclic.
-      const meta = this.progressionMeta();
-      if (!meta) return;
-      const rootRaw = this.scaleRoot();
-      const tonic = tonicPcOf(rootRaw);
-      if (tonic === null) return;
-      const useFlats = flatsForPc(tonic);
-      this.progressionText.set(flattenProgression(meta, tonic, useFlats));
-    });
-    this.destroyRef.onDestroy(() => {
-      if (this.copyResetTimer) clearTimeout(this.copyResetTimer);
-      this.detachResizeListeners();
-    });
   }
 
   private pickRandomPreset() {
@@ -198,32 +132,12 @@ export class ChordFinder {
     return PROGRESSION_PRESETS[i];
   }
 
-  private pickRandomKey() {
-    const pc = Math.floor(Math.random() * 12);
-    const flats = flatsForPc(pc);
-    const name = (flats ? FLAT_NAMES : SHARP_NAMES)[pc];
-    const roll = Math.random();
-    let mode: ModeName;
-    if (roll < 0.4) mode = 'Ionian';
-    else if (roll < 0.8) mode = 'Aeolian';
-    else {
-      const others: ModeName[] = ['Dorian', 'Mixolydian', 'Lydian'];
-      mode = others[Math.floor(Math.random() * others.length)];
-    }
-    return { pc, name, flats, mode };
-  }
-
   private applyRandomPreset(): void {
     const preset = this.pickRandomPreset();
-    const { pc, name, flats, mode: presetMode } = this.pickRandomKey();
-    const mode: ModeName = preset.mode ?? presetMode;
-    const tonicPc = tonicPcOf(name) ?? pc;
-    const useFlats = flats;
+    const tonicPc = Math.floor(Math.random() * 12);
+    const useFlats = flatsForPc(tonicPc);
     const bounded = degreesToProgression(preset.degrees, tonicPc, useFlats);
     if (bounded.length < 3) return;
-    this.progressionMeta.set({ presetId: preset.id, degrees: preset.degrees });
-    this.scaleRootText.set(name);
-    this.modeName.set(mode);
     this.progressionText.set(bounded.join(', '));
   }
 
@@ -232,17 +146,10 @@ export class ChordFinder {
   protected shuffle(): void {
     if (!this.preferencesState().chordRandomProgression) return;
     const preset = this.pickRandomPreset();
-    const rawRoot = this.scaleRootText().trim() || this.scaleRoot();
-    const tonic = tonicPcOf(rawRoot) ?? 0;
-    const useFlats =
-      rawRoot.includes('b') || rawRoot.includes('♭')
-        ? true
-        : rawRoot.includes('#') || rawRoot.includes('♯')
-          ? false
-          : flatsForPc(tonic);
-    const bounded = degreesToProgression(preset.degrees, tonic, useFlats);
+    const tonicPc = Math.floor(Math.random() * 12);
+    const useFlats = flatsForPc(tonicPc);
+    const bounded = degreesToProgression(preset.degrees, tonicPc, useFlats);
     if (bounded.length < 3) return;
-    this.progressionMeta.set({ presetId: preset.id, degrees: preset.degrees });
     this.progressionText.set(bounded.join(', '));
     this.generate();
   }
@@ -333,8 +240,6 @@ export class ChordFinder {
     }
   }
 
-  // ── Live validation ──────────────────────────────────────────────
-
   protected readonly parsedTuning = computed(() => parseTuning(this.tuningText()));
 
   protected readonly parsedTuningValue = computed<ParsedTuning | null>(() => {
@@ -367,28 +272,24 @@ export class ChordFinder {
     };
   });
 
-  // ── Actions ──────────────────────────────────────────────────────
-  protected onTuningPresetChange(event: Event): void {
-    const target = event.target;
-    if (target instanceof HTMLSelectElement) this.applyTuning(target.value);
-  }
+  protected readonly selectedTuningOption = computed<TuningOption | null>(() => {
+    const id = this.registry.selectedTuningId();
+    return this.tuningOptions().find((o) => o.id === id) ?? null;
+  });
 
-  protected onTuningInput(event: Event): void {
-    const target = event.target;
-    if (target instanceof HTMLInputElement) this.tuningText.set(target.value);
-  }
+  protected readonly tuningHintTone = computed<'good' | 'bad' | 'neutral'>(() => {
+    const kind = this.tuningHint().kind;
+    return kind === 'good' ? 'good' : kind === 'bad' ? 'bad' : 'neutral';
+  });
 
-  protected onModeChange(event: Event): void {
-    const target = event.target;
-    if (!(target instanceof HTMLSelectElement)) return;
-    const mode = MODE_NAMES.find((name) => name === target.value);
-    if (mode) this.modeName.set(mode);
-  }
+  protected readonly progressionHintTone = computed<'good' | 'bad' | 'neutral'>(() => {
+    const kind = this.progressionHint().kind;
+    return kind === 'good' ? 'good' : kind === 'bad' ? 'bad' : 'neutral';
+  });
 
-  protected onProgressionInput(value: string): void {
-    this.progressionText.set(value);
-    const tonic = tonicPcOf(this.scaleRoot()) ?? 0;
-    this.progressionMeta.set(parseProgressionMeta(value, tonic, flatsForPc(tonic)));
+  protected onTuningSelect(option: TuningOption): void {
+    this.applyTuning(option.id);
+    this.tuningListOpen.set(false);
   }
 
   protected applyTuning(tuningId: string): void {
@@ -398,41 +299,16 @@ export class ChordFinder {
     this.registry.selectTuning(tuningId);
   }
 
-  protected onTuningSelect(option: TuningOption): void {
-    this.applyTuning(option.id);
-    this.tuningListOpen.set(false);
+  protected toggleTuningList(): void {
+    this.tuningListOpen.update((open) => !open);
   }
 
   protected onLabelModeSelect(mode: 'notes' | 'func'): void {
     this.labelMode.set(mode);
   }
 
-  protected toggleTuningList(): void {
-    this.modeListOpen.set(false);
-    this.rootListOpen.set(false);
-    this.tuningListOpen.update((open) => !open);
-  }
-
-  protected toggleModeList(): void {
-    this.tuningListOpen.set(false);
-    this.rootListOpen.set(false);
-    this.modeListOpen.update((open) => !open);
-  }
-
-  protected toggleRootList(): void {
-    this.tuningListOpen.set(false);
-    this.modeListOpen.set(false);
-    this.rootListOpen.update((open) => !open);
-  }
-
-  protected onModeSelect(mode: ModeName): void {
-    this.modeName.set(mode);
-    this.modeListOpen.set(false);
-  }
-
-  protected onScaleRootSelect(note: string): void {
-    this.scaleRootText.set(note);
-    this.rootListOpen.set(false);
+  protected onProgressionInput(value: string): void {
+    this.progressionText.set(value);
   }
 
   protected generate(): void {
@@ -440,23 +316,34 @@ export class ChordFinder {
     if (!parsed.ok) return;
     const tokens = tokenizeProgression(this.progressionText());
     if (!tokens.length) return;
+
+    const validChords: ParsedChord[] = [];
+    for (const token of tokens) {
+      const p = parseChord(token);
+      if (p.ok) validChords.push(p.chord);
+    }
+    const dk = validChords.length ? detectKey(validChords, { tuningFlats: parsed.tuning.flats }) : null;
+
     const chords: ChordEntry[] = tokens.map((token) => {
       const parse = parseChord(token);
       if (!parse.ok) return { token, parse, shapes: [], badge: null };
       const shapes = searchChord(parsed.tuning, parse.chord);
-      return {
-        token,
-        parse,
-        shapes,
-        badge: computeBadge(parse.chord, this.scaleRootText(), this.modeName(), parsed.tuning.flats),
-      };
+      let badge: DiatonicBadge | null = null;
+      if (dk) {
+        const useFlats =
+          validChords.some((c) => c.flats) || parsed.tuning.flats || flatsForPc(dk.tonicPc);
+        badge = computeBadgeForPc(parse.chord, dk.tonicPc, dk.mode, parsed.tuning.flats, useFlats);
+      }
+      return { token, parse, shapes, badge };
     });
+
     this.results.set({
       tuning: parsed.tuning,
       options: {},
+      detectedKey: dk,
       chords: chords.map((entry) => ({ ...entry, shapes: entry.shapes.slice(0, RESULTS_PER_CHORD) })),
     });
-    this.copyBuffer = this.buildCopyBuffer(parsed.tuning, chords);
+    this.copyBuffer = this.buildCopyBuffer(parsed.tuning, chords, dk);
   }
 
   protected clearResults(): void {
@@ -529,11 +416,14 @@ export class ChordFinder {
     return 'try a different tuning or chord spelling';
   }
 
-  private buildCopyBuffer(tuning: ParsedTuning, chords: readonly ChordEntry[]): string {
+  private buildCopyBuffer(
+    tuning: ParsedTuning,
+    chords: readonly ChordEntry[],
+    dk: DetectedKey | null,
+  ): string {
     const parts: string[] = [];
-    parts.push(
-      `Chord finder — tuning ${tuning.labels.join(' ')} — key ${this.scaleRootText().trim() || '—'} ${this.modeName()}`,
-    );
+    const keyLabel = dk ? `${dk.tonicName} ${dk.mode}` : '—';
+    parts.push(`Chord finder — tuning ${tuning.labels.join(' ')} — key ${keyLabel}`);
     parts.push('');
     for (const entry of chords) {
       const parse = entry.parse;
