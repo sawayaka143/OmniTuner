@@ -58,6 +58,9 @@ const LOCK_PULSE_DURATION_MS = 900;
   ],
   templateUrl: './audio-monitor.html',
   styleUrl: './audio-monitor.scss',
+  host: {
+    '(window:keydown)': 'onWindowKeydown($event)',
+  },
 })
 export class AudioMonitor implements OnInit {
   private readonly audioCapture = inject(AudioCaptureService);
@@ -501,6 +504,21 @@ export class AudioMonitor implements OnInit {
     } else {
       void this.audioCapture.startCapture();
     }
+  }
+
+  protected onWindowKeydown(event: KeyboardEvent): void {
+    if (event.code !== 'Space' && event.key !== ' ') return;
+    const target = event.target as HTMLElement | null;
+    if (
+      target &&
+      (target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.tagName === 'SELECT' ||
+        target.isContentEditable)
+    )
+      return;
+    event.preventDefault();
+    this.toggleCapture();
   }
 
   private notesForTuning(tuning: Tuning): readonly number[] {
