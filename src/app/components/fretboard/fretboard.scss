@@ -29,7 +29,9 @@
   position: relative;
   width: max-content;
   margin: 0 auto;
-  transition: width var(--dur-slow) ease, height var(--dur-slow) ease;
+  transition:
+    width var(--dur-slow) ease,
+    height var(--dur-slow) ease;
 }
 
 .fretboard {
@@ -188,8 +190,11 @@
   font-variant-numeric: tabular-nums;
   box-shadow: var(--dot-shadow);
   cursor: pointer;
-  transition: transform var(--dur-fast) ease, filter var(--dur-med) ease,
-    box-shadow var(--dur-med) ease, opacity var(--dur-med) ease;
+  transition:
+    transform var(--dur-fast) ease,
+    filter var(--dur-med) ease,
+    box-shadow var(--dur-med) ease,
+    opacity var(--dur-med) ease;
 
   &:hover {
     filter: brightness(1.13);
@@ -213,6 +218,7 @@
     color: var(--text-dim);
     font-size: var(--text-3xs);
     font-weight: var(--fw-medium);
+    /* WCAG exempt: inactive ghost — hover/focus restores AA */
     opacity: 0.66;
     box-shadow: none;
 

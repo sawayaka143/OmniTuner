@@ -35,6 +35,8 @@ export interface InTunePreferences {
   readonly glow: boolean;
   /** Single user-configurable color driving every in-tune cue, via --in-tune-color. */
   readonly color: string;
+  /** Color driving every off-pitch cue (hero note, tune prompt), via --out-of-tune-color. */
+  readonly outOfTuneColor: string;
   /** ± cents window for the lock. */
   readonly tolerance: number;
   /** ms the pitch must stay in range before confirming. */
@@ -55,6 +57,7 @@ export const DEFAULT_IN_TUNE_PREFERENCES: InTunePreferences = {
   sound: true,
   glow: true,
   color: '#7ecba8',
+  outOfTuneColor: '#ff8aab',
   tolerance: 5,
   holdMs: 500,
 };

@@ -1,17 +1,25 @@
-<div class="strings-grid"
-     role="radiogroup"
-     aria-label="Strings"
-     [style.grid-template-columns]="'repeat(' + strings().length + ', 1fr)'">
-  @for (str of strings(); track str.name) {
+<div
+  #group
+  class="strings-grid"
+  role="radiogroup"
+  aria-label="Strings"
+  [style.grid-template-columns]="'repeat(' + strings().length + ', 1fr)'"
+  (keydown)="onKeydown($event)"
+>
+  @for (str of strings(); track str.name; let i = $index) {
     <button
       class="string-btn"
       [class.active]="activeString() === str.name"
       [class.in-tune]="inTune() && activeString() === str.name"
+      [class.tuned]="tunedStrings().includes(str.name)"
       type="button"
       role="radio"
       [attr.aria-checked]="activeString() === str.name"
+      [tabindex]="tabIndexFor(i)"
       [title]="'Target ' + str.name"
-      (click)="select.emit($index)">
+      (click)="select.emit(i)"
+      (focus)="onFocus(i)"
+    >
       <span class="string-note">{{ str.name }}</span>
     </button>
   }

@@ -16,6 +16,7 @@ import { SettingsPanel } from '../settings-panel/settings-panel';
     '[style.--scale-accent]': 'preferencesState().accent',
     '[style.--scale-accent-ink]': 'accentInk()',
     '[style.--in-tune-color]': 'inTuneColor()',
+    '[style.--out-of-tune-color]': 'outOfTuneColor()',
   },
 })
 export class AppShell {
@@ -27,15 +28,13 @@ export class AppShell {
   protected readonly accentInk = computed(() => textColorOn(this.preferencesState().accent));
   protected readonly tunerSettings = this.tunerPreferences.tunerSettings;
 
-  /**
-   * The user's in-tune color flows through the theme system as
-   * `--in-tune-color`. While the master switch is OFF the variable is
-   * unset so components fall back to the global default — i.e. today's
-   * exact appearance.
-   */
+  /** In-tune color as a theme var; unset while the master switch is OFF. */
   protected readonly inTuneColor = computed(() =>
     this.tunerSettings().inTune.enabled ? this.tunerSettings().inTune.color : null,
   );
+
+  /** Off-pitch color as a theme var; independent of the master switch. */
+  protected readonly outOfTuneColor = computed(() => this.tunerSettings().inTune.outOfTuneColor);
 
   protected setAccent(accent: string): void {
     this.preferences.setAccent(accent);
@@ -51,6 +50,10 @@ export class AppShell {
 
   protected setWorkbenchScale(scale: number): void {
     this.preferences.setWorkbenchScale(scale);
+  }
+
+  protected setChordRandomProgression(chordRandomProgression: boolean): void {
+    this.preferences.setChordRandomProgression(chordRandomProgression);
   }
 
   protected resetWorkbenchScale(): void {
@@ -75,6 +78,10 @@ export class AppShell {
 
   protected setInTuneColor(color: string): void {
     this.tunerPreferences.setInTuneColor(color);
+  }
+
+  protected setOutOfTuneColor(color: string): void {
+    this.tunerPreferences.setOutOfTuneColor(color);
   }
 
   protected setInTuneTolerance(tolerance: number): void {

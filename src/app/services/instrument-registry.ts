@@ -193,7 +193,6 @@ export class InstrumentRegistry {
 
     this.selectedInstrumentSignal.set(instrumentId);
 
-    // If the current tuning doesn't belong to the new instrument, reset.
     const tunings = [
       ...instrument.tunings,
       ...this.customTuningsSignal()
@@ -232,7 +231,12 @@ export class InstrumentRegistry {
     return this.toInstrument(record);
   }
 
-  updateInstrument(id: string, name: string, stringCount: number, defaultNotes: readonly number[]): Instrument {
+  updateInstrument(
+    id: string,
+    name: string,
+    stringCount: number,
+    defaultNotes: readonly number[],
+  ): Instrument {
     const instruments = this.customInstrumentsSignal();
     const index = instruments.findIndex((inst) => inst.id === id);
     if (index === -1) throw new RangeError('Custom instrument does not exist.');
@@ -241,7 +245,12 @@ export class InstrumentRegistry {
     const validCount = this.requireStringCount(stringCount);
     const validNotes = this.requireNotes(defaultNotes, validCount);
 
-    const updated: CustomInstrumentRecord = { id, name: validName, stringCount: validCount, defaultNotes: validNotes };
+    const updated: CustomInstrumentRecord = {
+      id,
+      name: validName,
+      stringCount: validCount,
+      defaultNotes: validNotes,
+    };
     const next = [...instruments];
     next[index] = updated;
     this.customInstrumentsSignal.set(next);
@@ -256,10 +265,8 @@ export class InstrumentRegistry {
 
     this.customInstrumentsSignal.set(next);
 
-    // Also remove all custom tunings for this instrument.
     this.customTuningsSignal.update((tunings) => tunings.filter((t) => t.instrumentId !== id));
 
-    // If the deleted instrument was selected, fall back to guitar/standard.
     if (this.selectedInstrumentSignal() === id) {
       this.selectedInstrumentSignal.set('guitar');
       this.selectedTuningSignal.set('standard');
@@ -319,7 +326,6 @@ export class InstrumentRegistry {
 
     this.customTuningsSignal.set(next);
 
-    // If the deleted tuning was selected, fall back to the first built-in.
     if (this.selectedTuningSignal() === id) {
       const instrument = this.selectedInstrument();
       this.selectedTuningSignal.set(instrument.tunings[0]?.id ?? 'standard');
@@ -385,17 +391,15 @@ export class InstrumentRegistry {
 
   private requireStringCount(count: number): number {
     if (!Number.isInteger(count) || count < MIN_STRING_COUNT || count > MAX_STRING_COUNT) {
-      throw new RangeError(`String count must be between ${MIN_STRING_COUNT} and ${MAX_STRING_COUNT}.`);
+      throw new RangeError(
+        `String count must be between ${MIN_STRING_COUNT} and ${MAX_STRING_COUNT}.`,
+      );
     }
     return count;
   }
 
   private requireNotes(notes: readonly number[], expectedCount: number): readonly number[] {
-    if (
-      !Array.isArray(notes) ||
-      notes.length !== expectedCount ||
-      !notes.every(isMidiNote)
-    ) {
+    if (!Array.isArray(notes) || notes.length !== expectedCount || !notes.every(isMidiNote)) {
       throw new RangeError(
         `Tuning requires ${expectedCount} MIDI notes from ${MIN_TUNER_MIDI_NOTE} to ${MAX_TUNER_MIDI_NOTE}.`,
       );
@@ -440,9 +444,7 @@ export class InstrumentRegistry {
       const customInstruments = readCustomInstruments(parsed['customInstruments']);
       const customTunings = readCustomTunings(parsed['customTunings']);
 
-      // Validate persisted selection ids against the actual universe so a
-      // stale id (deleted instrument/tuning, old version) falls back to a
-      // real one instead of being re-persisted forever.
+      // Stale persisted selection ids fall back to a real one.
       const rawInstrumentId =
         typeof parsed['selectedInstrumentId'] === 'string'
           ? parsed['selectedInstrumentId']

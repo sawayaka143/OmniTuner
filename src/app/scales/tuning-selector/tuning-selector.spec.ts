@@ -40,7 +40,9 @@ describe('TuningSelector', () => {
     fixture.componentRef.setInput('open', true);
     await fixture.whenStable();
     let selectedId: string | null = null;
-    component.select.subscribe((value) => { selectedId = value; });
+    component.select.subscribe((value) => {
+      selectedId = value;
+    });
 
     const options = fixture.nativeElement.querySelectorAll('.selector-option');
     // Second preset option (Drop D).
@@ -55,10 +57,16 @@ describe('TuningSelector', () => {
     await fixture.whenStable();
     let selection: string | null = null;
     let editedId: string | null = null;
-    component.select.subscribe((value) => { selection = value; });
-    component.edit.subscribe((value) => { editedId = value; });
+    component.select.subscribe((value) => {
+      selection = value;
+    });
+    component.edit.subscribe((value) => {
+      editedId = value;
+    });
 
-    const editButton = fixture.nativeElement.querySelector('[aria-label="Edit Open E tuning"]') as HTMLButtonElement;
+    const editButton = fixture.nativeElement.querySelector(
+      '[aria-label="Edit Open E tuning"]',
+    ) as HTMLButtonElement;
     editButton.click();
 
     expect(editButton.getAttribute('aria-label')).toBe('Edit Open E tuning');
@@ -72,10 +80,16 @@ describe('TuningSelector', () => {
     await fixture.whenStable();
     let selection: string | null = null;
     let deletedId: string | null = null;
-    component.select.subscribe((value) => { selection = value; });
-    component.delete.subscribe((value) => { deletedId = value; });
+    component.select.subscribe((value) => {
+      selection = value;
+    });
+    component.delete.subscribe((value) => {
+      deletedId = value;
+    });
 
-    const deleteButton = fixture.nativeElement.querySelector('[aria-label="Delete Open E tuning"]') as HTMLButtonElement;
+    const deleteButton = fixture.nativeElement.querySelector(
+      '[aria-label="Delete Open E tuning"]',
+    ) as HTMLButtonElement;
     deleteButton.click();
 
     expect(deletedId).toBe(SAVED_TUNING.id);
@@ -87,8 +101,12 @@ describe('TuningSelector', () => {
     await fixture.whenStable();
     let createCount = 0;
     let editedId: string | null = null;
-    component.create.subscribe(() => { createCount += 1; });
-    component.edit.subscribe((value) => { editedId = value; });
+    component.create.subscribe(() => {
+      createCount += 1;
+    });
+    component.edit.subscribe((value) => {
+      editedId = value;
+    });
 
     const createButton = fixture.nativeElement.querySelector('.create-option') as HTMLButtonElement;
     createButton.click();

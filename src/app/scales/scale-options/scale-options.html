@@ -2,19 +2,23 @@
   <div class="option-group">
     <span class="option-label">Accidentals</span>
     <div
-      class="segmented"
+      class="segmented indicator-accent"
       role="radiogroup"
-      aria-label="Note accidental spelling">
+      aria-label="Note accidental spelling"
+      [appRovingRadioGroup]="true"
+    >
       <span
         class="segment-indicator"
         [class.second]="accidental() === 'flat'"
-        aria-hidden="true"></span>
+        aria-hidden="true"
+      ></span>
       <button
         type="button"
         role="radio"
         [class.active]="accidental() === 'sharp'"
         [attr.aria-checked]="accidental() === 'sharp'"
-        (click)="chooseAccidental('sharp')">
+        (click)="chooseAccidental('sharp')"
+      >
         ♯ Sharp
       </button>
       <button
@@ -22,7 +26,8 @@
         role="radio"
         [class.active]="accidental() === 'flat'"
         [attr.aria-checked]="accidental() === 'flat'"
-        (click)="chooseAccidental('flat')">
+        (click)="chooseAccidental('flat')"
+      >
         ♭ Flat
       </button>
     </div>
@@ -31,20 +36,30 @@
   <div class="option-group">
     <span class="option-label">Frets</span>
     <div
-      class="segmented frets"
+      class="segmented frets indicator-accent"
       role="radiogroup"
-      aria-label="Number of frets">
+      aria-label="Number of frets"
+      [appRovingRadioGroup]="true"
+    >
       <span
         class="segment-indicator"
-        [style.transform]="fretCount() === 12 ? 'translateX(0%)' : fretCount() === 15 ? 'translateX(100%)' : 'translateX(200%)'"
-        aria-hidden="true"></span>
+        [style.transform]="
+          fretCount() === 12
+            ? 'translateX(0%)'
+            : fretCount() === 15
+              ? 'translateX(100%)'
+              : 'translateX(200%)'
+        "
+        aria-hidden="true"
+      ></span>
       @for (count of fretChoices; track count) {
         <button
           type="button"
           role="radio"
           [class.active]="fretCount() === count"
           [attr.aria-checked]="fretCount() === count"
-          (click)="chooseFretCount(count)">
+          (click)="chooseFretCount(count)"
+        >
           {{ count }}
         </button>
       }
@@ -62,7 +77,8 @@
       aria-haspopup="menu"
       [attr.aria-expanded]="labelOpen()"
       (click)="toggleLabelDropdown()"
-      (keydown)="onLabelKeydown($event)">
+      (keydown)="onLabelKeydown($event)"
+    >
       {{ currentLabel }}
       <span class="material-symbols-outlined chevron" aria-hidden="true">expand_more</span>
     </button>
@@ -72,15 +88,21 @@
         class="label-menu"
         role="menu"
         aria-label="Label display mode"
-        (keydown)="onLabelKeydown($event)">
+        (keydown)="onLabelKeydown($event)"
+      >
         @for (opt of labelOptions; track opt.value) {
           <button
             type="button"
             role="menuitemradio"
             [attr.aria-checked]="labelMode() === opt.value"
             [class.active]="labelMode() === opt.value"
-            (click)="selectLabel(opt.value)">
-            <span class="menu-lamp" [class.on]="labelMode() === opt.value" aria-hidden="true"></span>
+            (click)="selectLabel(opt.value)"
+          >
+            <span
+              class="menu-lamp"
+              [class.on]="labelMode() === opt.value"
+              aria-hidden="true"
+            ></span>
             {{ opt.label }}
           </button>
         }

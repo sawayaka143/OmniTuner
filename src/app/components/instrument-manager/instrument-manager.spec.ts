@@ -107,7 +107,9 @@ describe('InstrumentManager', () => {
   it('emits dismiss when the close button is clicked', () => {
     host.open.set(true);
     fixture.detectChanges();
-    const close = fixture.nativeElement.querySelector('[aria-label="Close instrument manager"]') as HTMLButtonElement;
+    const close = fixture.nativeElement.querySelector(
+      '[aria-label="Close instrument manager"]',
+    ) as HTMLButtonElement;
     close.click();
     fixture.detectChanges();
     expect(host.dismissCount()).toBe(1);

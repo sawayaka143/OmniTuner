@@ -2,6 +2,7 @@ import { Component, computed, input, output } from '@angular/core';
 import { Instrument, Tuning } from '../../models/instrument.model';
 import { TunerMode } from '../../models/tuner-preferences.model';
 import { IconButton } from '../../ui/icon-button/icon-button';
+import { RovingRadioGroup } from '../../ui/keyboard-nav';
 
 interface ModeOption {
   readonly value: TunerMode;
@@ -12,7 +13,7 @@ interface ModeOption {
   selector: 'app-instrument-selector',
   templateUrl: './instrument-selector.html',
   styleUrl: './instrument-selector.scss',
-  imports: [IconButton],
+  imports: [IconButton, RovingRadioGroup],
 })
 export class InstrumentSelector {
   readonly instruments = input.required<readonly Instrument[]>();

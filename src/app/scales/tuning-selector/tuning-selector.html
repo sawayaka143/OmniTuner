@@ -1,51 +1,67 @@
 <div class="tuning-selector">
   <button
+    #trigger
     class="selector-button"
     type="button"
-    aria-haspopup="dialog"
-    aria-controls="tuning-selector-menu"
+    aria-haspopup="listbox"
+    [attr.aria-controls]="open() ? menuId : null"
     [attr.aria-expanded]="open()"
-    (click)="toggle.emit(); $event.stopPropagation()">
+    (click)="toggle.emit(); $event.stopPropagation()"
+    (keydown)="onTriggerKeydown($event)"
+  >
     <span class="selector-copy">
       <span class="selector-kicker">Tuning</span>
       <span class="value-wrap">
         <strong>{{ selectedName() }}</strong>
       </span>
     </span>
-    <span class="material-symbols-outlined selector-icon" [class.rotated]="open()" aria-hidden="true">
+    <span
+      class="material-symbols-outlined selector-icon"
+      [class.rotated]="open()"
+      aria-hidden="true"
+    >
       expand_more
     </span>
   </button>
 
   @if (open()) {
     <div
-      id="tuning-selector-menu"
+      #menu
+      [id]="menuId"
       class="selector-menu"
-      role="dialog"
+      role="listbox"
       aria-label="Choose or manage guitar tuning"
-      (click)="$event.stopPropagation()">
-      <div class="selector-group">Presets</div>
+      (click)="$event.stopPropagation()"
+      (keydown)="onMenuKeydown($event)"
+    >
+      <div class="selector-group" role="presentation">Presets</div>
       @for (preset of presets(); track preset.id) {
         <button
           class="selector-option"
           type="button"
+          role="option"
+          data-nav-item
           [class.selected]="isSelected(preset.id)"
-          [attr.aria-pressed]="isSelected(preset.id)"
-          (click)="select.emit(preset.id)">
+          [attr.aria-selected]="isSelected(preset.id)"
+          (click)="select.emit(preset.id)"
+        >
           <span>{{ preset.name }}</span>
           <span class="note-summary">{{ notesLabel(preset.notes) }}</span>
         </button>
       }
 
       @if (savedTunings().length) {
-        <div class="selector-group">Saved</div>
+        <div class="selector-group" role="presentation">Saved</div>
         @for (tuning of savedTunings(); track tuning.id) {
           <div class="saved-option" [class.selected]="isSelected(tuning.id)">
             <button
               class="selector-option saved-main"
               type="button"
-              [attr.aria-pressed]="isSelected(tuning.id)"
-              (click)="select.emit(tuning.id)">
+              role="option"
+              data-nav-item
+              [attr.aria-selected]="isSelected(tuning.id)"
+              (click)="select.emit(tuning.id)"
+            >
               <span>{{ tuning.name }}</span>
               <span class="note-summary">{{ notesLabel(tuning.notes) }}</span>
             </button>
@@ -70,11 +86,15 @@
         }
       }
 
-      <div class="selector-group">Custom</div>
+      <div class="selector-group" role="presentation">Custom</div>
       <button
         class="selector-option create-option"
         type="button"
-        (click)="create.emit(); $event.stopPropagation()">
+        role="option"
+        data-nav-item
+        aria-selected="false"
+        (click)="create.emit(); $event.stopPropagation()"
+      >
         <span>New custom tuning…</span>
         <span class="note-summary">Start from current</span>
       </button>

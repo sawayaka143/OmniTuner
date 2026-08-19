@@ -31,7 +31,7 @@ interface PersistedScalePreferences {
 const FRET_COUNTS: readonly ScaleFretCount[] = [12, 15, 21];
 const HEX_COLOR = /^#[0-9a-f]{6}$/i;
 const WORKBENCH_SCALE_MIN = 0.75;
-const WORKBENCH_SCALE_MAX = 1.30;
+const WORKBENCH_SCALE_MAX = 1.3;
 const WORKBENCH_SCALE_STEP = 0.05;
 const WORKBENCH_SCALE_STEPS_PER_UNIT = 1 / WORKBENCH_SCALE_STEP;
 const clampWorkbenchScale = (v: number): number =>
@@ -54,36 +54,47 @@ const parseState = (value: unknown): ScalePreferencesState | null => {
 
   return {
     rootPitchClass:
-      typeof rootPitchClass === 'number' && Number.isInteger(rootPitchClass) && rootPitchClass >= 0 && rootPitchClass <= 11
+      typeof rootPitchClass === 'number' &&
+      Number.isInteger(rootPitchClass) &&
+      rootPitchClass >= 0 &&
+      rootPitchClass <= 11
         ? rootPitchClass
         : DEFAULT_SCALE_PREFERENCES.rootPitchClass,
     scaleId:
       typeof scaleId === 'string' && SCALES.some((scale) => scale.id === scaleId)
         ? scaleId
         : DEFAULT_SCALE_PREFERENCES.scaleId,
-    accidental: accidental === 'flat' || accidental === 'sharp'
-      ? accidental
-      : DEFAULT_SCALE_PREFERENCES.accidental,
+    accidental:
+      accidental === 'flat' || accidental === 'sharp'
+        ? accidental
+        : DEFAULT_SCALE_PREFERENCES.accidental,
     fretCount: FRET_COUNTS.includes(fretCount as ScaleFretCount)
       ? (fretCount as ScaleFretCount)
       : DEFAULT_SCALE_PREFERENCES.fretCount,
     labelMode:
       state['labelMode'] === 'note-names' || state['labelMode'] === 'scale-degrees'
-        ? (state['labelMode'] as LabelMode)
+        ? state['labelMode']
         : DEFAULT_SCALE_PREFERENCES.labelMode,
     showOutsideScale:
       typeof state['showOutsideScale'] === 'boolean'
         ? state['showOutsideScale']
         : DEFAULT_SCALE_PREFERENCES.showOutsideScale,
-    accent: typeof accent === 'string' && HEX_COLOR.test(accent)
-      ? accent.toLowerCase()
-      : DEFAULT_SCALE_PREFERENCES.accent,
-    rootNoteColor: typeof rootNoteColor === 'string' && HEX_COLOR.test(rootNoteColor)
-      ? rootNoteColor.toLowerCase()
-      : DEFAULT_SCALE_PREFERENCES.rootNoteColor,
-    noteColor: typeof noteColor === 'string' && HEX_COLOR.test(noteColor)
-      ? noteColor.toLowerCase()
-      : DEFAULT_SCALE_PREFERENCES.noteColor,
+    accent:
+      typeof accent === 'string' && HEX_COLOR.test(accent)
+        ? accent.toLowerCase()
+        : DEFAULT_SCALE_PREFERENCES.accent,
+    rootNoteColor:
+      typeof rootNoteColor === 'string' && HEX_COLOR.test(rootNoteColor)
+        ? rootNoteColor.toLowerCase()
+        : DEFAULT_SCALE_PREFERENCES.rootNoteColor,
+    noteColor:
+      typeof noteColor === 'string' && HEX_COLOR.test(noteColor)
+        ? noteColor.toLowerCase()
+        : DEFAULT_SCALE_PREFERENCES.noteColor,
+    chordRandomProgression:
+      typeof state['chordRandomProgression'] === 'boolean'
+        ? state['chordRandomProgression']
+        : DEFAULT_SCALE_PREFERENCES.chordRandomProgression,
     workbenchScale:
       typeof state['workbenchScale'] === 'number' && Number.isFinite(state['workbenchScale'])
         ? clampWorkbenchScale(state['workbenchScale'])
@@ -104,7 +115,6 @@ export class ScalePreferences {
   }
 
   setScaleId(scaleId: string): void {
-    // Validation deferred to parseState on reload; accept any non-empty string.
     if (!scaleId) return;
     this.update({ scaleId });
   }
@@ -143,8 +153,14 @@ export class ScalePreferences {
 
   setWorkbenchScale(scale: number): void {
     if (!isFinite(scale)) return;
-    const snapped = Math.round(clampWorkbenchScale(scale) * WORKBENCH_SCALE_STEPS_PER_UNIT) / WORKBENCH_SCALE_STEPS_PER_UNIT;
+    const snapped =
+      Math.round(clampWorkbenchScale(scale) * WORKBENCH_SCALE_STEPS_PER_UNIT) /
+      WORKBENCH_SCALE_STEPS_PER_UNIT;
     this.update({ workbenchScale: snapped });
+  }
+
+  setChordRandomProgression(chordRandomProgression: boolean): void {
+    this.update({ chordRandomProgression });
   }
 
   resetWorkbenchScale(): void {
@@ -160,7 +176,9 @@ export class ScalePreferences {
     if (!this.storage) return DEFAULT_SCALE_PREFERENCES;
     try {
       const raw = this.storage.getItem(SCALE_PREFERENCES_STORAGE_KEY);
-      return raw ? parseState(JSON.parse(raw) as unknown) ?? DEFAULT_SCALE_PREFERENCES : DEFAULT_SCALE_PREFERENCES;
+      return raw
+        ? (parseState(JSON.parse(raw) as unknown) ?? DEFAULT_SCALE_PREFERENCES)
+        : DEFAULT_SCALE_PREFERENCES;
     } catch {
       return DEFAULT_SCALE_PREFERENCES;
     }

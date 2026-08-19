@@ -22,7 +22,9 @@
     font-weight: var(--fw-normal);
     color: var(--text);
     padding-bottom: var(--space-1);
-    transition: color var(--dur-slow) ease, text-shadow var(--dur-slow) ease;
+    transition:
+      color var(--dur-slow) ease,
+      text-shadow var(--dur-slow) ease;
 
     &.in-tune {
       color: var(--in-tune-color);
@@ -46,7 +48,17 @@
     font-weight: var(--fw-normal);
     color: var(--text-muted);
     margin-bottom: var(--space-3);
-    transition: color var(--dur-slow) ease;
+    min-width: 1ch;
+    visibility: hidden;
+    opacity: 0;
+    transition:
+      color var(--dur-slow) ease,
+      opacity var(--dur-fast) ease;
+
+    &.visible {
+      visibility: visible;
+      opacity: 1;
+    }
 
     &.in-tune {
       color: var(--in-tune-color);
@@ -62,23 +74,6 @@
     margin-top: var(--space-1);
     letter-spacing: var(--tracking-narrow);
     font-variant-numeric: tabular-nums;
-  }
-
-  .pitch-cents {
-    font-family: var(--mono);
-    font-size: var(--text-sm);
-    line-height: var(--leading-snug);
-    letter-spacing: var(--tracking-wide);
-    font-weight: var(--fw-medium);
-    color: var(--text-muted);
-    margin-top: var(--space-2);
-    transition: color var(--dur-med) ease;
-    font-variant-numeric: tabular-nums;
-
-    &.in-tune-text {
-      color: var(--in-tune-color);
-      font-weight: var(--fw-semibold);
-    }
   }
 
   .pitch-status {

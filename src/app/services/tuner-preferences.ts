@@ -14,7 +14,7 @@ import {
 } from '../models/tuner-preferences.model';
 
 export const TUNER_PREFERENCES_STORAGE_KEY = 'omnituner.tuner-preferences.v1';
-export const TUNER_PREFERENCES_VERSION = 3;
+export const TUNER_PREFERENCES_VERSION = 4;
 
 export const TUNER_PREFERENCES_STORAGE = new InjectionToken<Storage | null>(
   'Tuner preferences storage',
@@ -66,6 +66,10 @@ const readTunerSettings = (value: unknown): TunerSettings => {
     typeof rawInTune['color'] === 'string' && HEX_COLOR.test(rawInTune['color'])
       ? rawInTune['color'].toLowerCase()
       : defaults.inTune.color;
+  const outOfTuneColor =
+    typeof rawInTune['outOfTuneColor'] === 'string' && HEX_COLOR.test(rawInTune['outOfTuneColor'])
+      ? rawInTune['outOfTuneColor'].toLowerCase()
+      : defaults.inTune.outOfTuneColor;
   const tolerance =
     typeof rawInTune['tolerance'] === 'number' && Number.isFinite(rawInTune['tolerance'])
       ? clampTolerance(rawInTune['tolerance'])
@@ -88,6 +92,7 @@ const readTunerSettings = (value: unknown): TunerSettings => {
       sound: typeof rawInTune['sound'] === 'boolean' ? rawInTune['sound'] : defaults.inTune.sound,
       glow: typeof rawInTune['glow'] === 'boolean' ? rawInTune['glow'] : defaults.inTune.glow,
       color,
+      outOfTuneColor,
       tolerance,
       holdMs,
     },
@@ -132,6 +137,11 @@ export class TunerPreferences {
   setInTuneColor(color: string): void {
     if (!HEX_COLOR.test(color)) return;
     this.updateInTune({ color: color.toLowerCase() });
+  }
+
+  setOutOfTuneColor(color: string): void {
+    if (!HEX_COLOR.test(color)) return;
+    this.updateInTune({ outOfTuneColor: color.toLowerCase() });
   }
 
   setInTuneTolerance(tolerance: number): void {

@@ -1,4 +1,3 @@
-
 You are an expert in TypeScript, Angular, and scalable web application development. You write functional, maintainable, performant, and accessible code following Angular and TypeScript best practices.
 
 ## TypeScript Best Practices
@@ -56,20 +55,22 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Prefer the `@Service` decorator over `@Injectable({providedIn: 'root'})` for new singleton services (Angular v22+)
 - Use the `inject()` function instead of constructor injection
 
-
 # AGENTS.md
 
 ## Project context
+
 This is a **guitar/acoustic instrument tuner** built with Angular (standalone components, signals, Dependency Injection).  
 The app captures microphone audio, runs pitch detection in a Web Worker, and displays the frequency, nearest note, and cents deviation in real time.
 
 ## Tech stack
+
 - **Angular** (latest, with signals, `inject`, `DestroyRef`)
 - **TypeScript** (strict mode)
 - **Web Workers** (for pitch detection off the main thread)
 - **Web Audio API** (`AudioContext`, `AnalyserNode`, `getFloatTimeDomainData`)
 
 ### DO NOT:
+
 - Replace the pitch detection algorithm unless explicitly asked and given a clear, specific reason
 - Remove or alter the window function (Hann) – it is essential for peak sharpness
 - Change the search frequency range (60–1200 Hz) unless instructed
@@ -78,26 +79,29 @@ The app captures microphone audio, runs pitch detection in a Web Worker, and dis
 - Refactor the service or worker structure without permission
 
 ### DO:
+
 - Focus on the **specific task** described in the prompt
 - Keep the existing code style and patterns (signals, `private readonly`, explicit types)
 - Prefer minimal, surgical changes
-- Explain *why* a change is being made, referencing the existing design decisions
+- Explain _why_ a change is being made, referencing the existing design decisions
 - Respect the confidence + smoothing pipeline when handling frequency display
 - Test with realistic audio scenarios (e.g., a guitar note decaying) before proposing a change
 
 ## Common issues & their resolution
-| Symptom | Likely cause | Fix |
-|---------|-------------|-----|
-| Frequency disappears after half a second | Pitch algorithm lost lock (YIN dip vanished) | Use robust autocorrelation that searches for highest peak |
-| Jittery display even with correct frequency | No smoothing or too high smoothing factor | Exponential moving average with factor ~0.1 |
-| Needle drops to 0 in silence | Confidence threshold not applied | Use `CONFIDENCE_THRESHOLD` to gate low-confidence estimates |
-| Erratic readings when not playing | RMS silence gate too low or missing | Keep RMS check before analysis |
+
+| Symptom                                     | Likely cause                                 | Fix                                                         |
+| ------------------------------------------- | -------------------------------------------- | ----------------------------------------------------------- |
+| Frequency disappears after half a second    | Pitch algorithm lost lock (YIN dip vanished) | Use robust autocorrelation that searches for highest peak   |
+| Jittery display even with correct frequency | No smoothing or too high smoothing factor    | Exponential moving average with factor ~0.1                 |
+| Needle drops to 0 in silence                | Confidence threshold not applied             | Use `CONFIDENCE_THRESHOLD` to gate low-confidence estimates |
+| Erratic readings when not playing           | RMS silence gate too low or missing          | Keep RMS check before analysis                              |
 
 ## Testing notes
+
 - The `requestAnimationFrame` loop runs at ~60 fps; expect ~60 pitch estimates per second
 - Worker buffer length equals `fftSize` (4096 samples), which at 48 kHz yields ~85 ms of audio
 - The autocorrelation search is limited to lags corresponding to 60–1200 Hz – suitable for guitar (low E ~82 Hz) up to flute/mandolin
 
 ---
 
-*When in doubt, ask before modifying core pitch detection logic.*
+_When in doubt, ask before modifying core pitch detection logic._

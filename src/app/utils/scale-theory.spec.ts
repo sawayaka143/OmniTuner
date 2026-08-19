@@ -1,12 +1,7 @@
 import { describe, it, expect } from 'vitest';
 
 import { IntervalEntry } from '../models/scale.model';
-import {
-  parseNote,
-  noteName,
-  intervalByPitchClass,
-  computeFretboard,
-} from './scale-theory';
+import { parseNote, noteName, intervalByPitchClass, computeFretboard } from './scale-theory';
 
 describe('parseNote', () => {
   it('parses natural notes', () => {

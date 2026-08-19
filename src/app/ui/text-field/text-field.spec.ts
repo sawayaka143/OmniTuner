@@ -117,7 +117,7 @@ describe('TextField', () => {
     host.hintTone.set('good');
     fixture.detectChanges();
     const hint = fixture.nativeElement.querySelector('.hint') as HTMLElement;
-    expect(hint.textContent).toBe('Looking good');
+    expect(hint.textContent?.trim()).toBe('Looking good');
     expect(hint.classList.contains('good')).toBe(true);
     expect(input.getAttribute('aria-describedby')).toBe(hint.id);
   });

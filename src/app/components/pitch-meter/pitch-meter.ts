@@ -5,6 +5,12 @@ export interface Tick {
   type: 'normal' | 'major' | 'center';
 }
 
+interface MeterLabel {
+  leftPos: string;
+  text: string;
+  center: boolean;
+}
+
 @Component({
   selector: 'app-pitch-meter',
   templateUrl: './pitch-meter.html',
@@ -17,8 +23,14 @@ export class PitchMeter {
   /** Unclamped cents deviation; null while no pitch is detected. */
   readonly cents = input<number | null>(null);
 
+  protected readonly labels: readonly MeterLabel[] = [
+    { leftPos: '0%', text: '-50', center: false },
+    { leftPos: '25%', text: '-25', center: false },
+    { leftPos: '50%', text: '0', center: true },
+    { leftPos: '75%', text: '+25', center: false },
+    { leftPos: '100%', text: '+50', center: false },
+  ];
+
   /** Clamped to the meter's ±50¢ scale so aria-valuenow stays in range. */
-  protected readonly ariaNow = computed(() =>
-    Math.max(-50, Math.min(50, this.cents() ?? 0)),
-  );
+  protected readonly ariaNow = computed(() => Math.max(-50, Math.min(50, this.cents() ?? 0)));
 }

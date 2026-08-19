@@ -8,12 +8,8 @@
     "strict": true
   },
   "angularCompilerOptions": {
-    "strictTemplates": true,
+    "strictTemplates": true
   },
-  "include": [
-    "src/**/*.ts"
-  ],
-  "exclude": [
-    "src/**/*.spec.ts"
-  ]
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.spec.ts"]
 }

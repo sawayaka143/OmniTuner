@@ -1,47 +1,46 @@
-import { Component, computed, input, output } from '@angular/core';
+import { Component, computed, ElementRef, input, output, signal, viewChild } from '@angular/core';
 
 /**
- * Segmented radiogroup with a sliding indicator. Renders one button per option
- * inside a `role="radiogroup"` container; the selected option uses `role="radio"`
- * with `aria-checked`, and the indicator slides to its position via
- * `translateX(selectedIndex * 100%)` — collapsing the three legacy indicator
- * mechanisms (index transform, `[class.second]` flip, nested ternary) into one.
- *
- * Defaults to the mixin's `inline-flex` layout; pass `[gridColumns]` (a CSS
- * `grid-template-columns` value) to switch to a grid layout (used by scale-options'
- * Accidentals/Frets groups).
- *
- * Excluded call sites: `instrument-seg` keeps its bespoke implementation because
- * it interleaves a "+" action segment that hides the indicator when active —
- * forcing that through `<app-segmented>` would muddy both.
+ * Segmented control component (radio group) with a sliding active indicator.
+ * Supports both inline-flex (default) and grid layouts via the `gridColumns` input.
  */
 @Component({
   selector: 'app-segmented',
   template: `
     <div
+      #group
       class="segmented"
       [class.is-grid]="!!gridColumns()"
+      [class.compact]="compact()"
       [class.indicator-accent]="indicator() === 'accent'"
       [style.--seg-count]="options().length"
       [style.grid-template-columns]="gridColumns() || null"
       role="radiogroup"
       [attr.aria-label]="ariaLabel()"
+      (keydown)="onKeydown($event)"
     >
       <span
         class="segment-indicator"
-        [style.transform]="'translateX(' + selectedIndex() * 100 + '%)'"
         [class.hidden]="selectedIndex() === -1"
+        [style.transform]="
+          selectedIndex() === -1
+            ? 'translateX(-100%)'
+            : 'translateX(' + selectedIndex() * 100 + '%)'
+        "
         aria-hidden="true"
       ></span>
-      @for (option of options(); track trackByFn()(option)) {
+      @for (option of options(); track trackByFn()(option); let i = $index) {
         <button
           type="button"
           role="radio"
           [class.active]="isSelected(option)"
           [attr.aria-checked]="isSelected(option)"
+          [disabled]="disabled()"
+          [tabindex]="tabIndexFor(i)"
           (click)="select.emit(option)"
+          (focus)="onFocus(i)"
         >
-          {{ optionLabel()(option) }}
+          <span class="seg-label">{{ optionLabel()(option) }}</span>
         </button>
       }
     </div>
@@ -57,9 +56,13 @@ export class Segmented<T> {
   readonly trackByFn = input.required<(o: T) => unknown>();
   readonly compareWith = input((a: T, b: T) => a === b);
   readonly gridColumns = input<string>();
+  readonly compact = input(false);
   readonly disabled = input(false);
 
   readonly select = output<T>();
+
+  protected readonly group = viewChild<ElementRef<HTMLElement>>('group');
+  private readonly focusIndex = signal<number | null>(null);
 
   protected readonly selectedIndex = computed(() => {
     const value = this.value();
@@ -73,5 +76,41 @@ export class Segmented<T> {
 
   protected isSelected(option: T): boolean {
     return this.compareWith()(this.value(), option);
+  }
+
+  protected tabIndexFor(index: number): number {
+    const focused = this.focusIndex();
+    if (focused !== null) return focused === index ? 0 : -1;
+    const sel = this.selectedIndex();
+    return (sel === -1 ? 0 : sel) === index ? 0 : -1;
+  }
+
+  protected onFocus(index: number): void {
+    this.focusIndex.set(index);
+  }
+
+  protected onKeydown(event: KeyboardEvent): void {
+    if (this.disabled()) return;
+    const btns = [
+      ...(this.group()?.nativeElement.querySelectorAll<HTMLButtonElement>('button[role="radio"]') ??
+        []),
+    ].filter((b) => !b.disabled);
+    if (btns.length === 0) return;
+    const currentIdx = btns.indexOf(event.target as HTMLButtonElement);
+    const lastIdx = btns.length - 1;
+
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+      event.preventDefault();
+      btns[Math.min(currentIdx + 1, lastIdx)]?.focus();
+    } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      btns[Math.max(currentIdx - 1, 0)]?.focus();
+    } else if (event.key === 'Home') {
+      event.preventDefault();
+      btns[0]?.focus();
+    } else if (event.key === 'End') {
+      event.preventDefault();
+      btns[lastIdx]?.focus();
+    }
   }
 }

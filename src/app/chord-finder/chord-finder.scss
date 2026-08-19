@@ -9,188 +9,43 @@
 /* ════════════════ Columns ════════════════ */
 
 .finder-columns {
+  --controls-w: 300px;
   display: grid;
-  grid-template-columns: 360px minmax(0, 1fr);
-  gap: var(--space-3);
+  grid-template-columns: var(--controls-w) 8px minmax(0, 1fr);
+  gap: 0;
   padding: var(--space-3);
   border-top: 1px solid var(--border-subtle);
   background: var(--canvas);
+  align-items: start;
 }
 
-/* Pane surfaces come from the global `.pane` class (styles.scss). */
-
-/* ════════════════ Controls pane ════════════════ */
-
-.finder-title {
-  min-width: 0;
-}
-
-.controls-pane {
-  padding: var(--space-3) var(--space-3) var(--space-4);
-}
-
-.control-section {
-  display: block;
-  padding: 2px 0 var(--space-3);
-
-  + .control-section {
-    margin-top: var(--space-1);
-  }
-
-  > .section-label {
-    display: block;
-    padding: 6px 0;
-    margin-bottom: var(--space-2);
-    border-bottom: 1px solid var(--border-subtle);
-  }
-}
-
-.label-sub {
-  color: var(--text-dim);
-  font-size: var(--text-3xs);
-  font-weight: var(--fw-normal);
-  letter-spacing: var(--tracking-wide);
-  text-transform: none;
-}
-
-.field-label {
-  @include field-label(
-    $color: var(--text-dim),
-    $size: var(--text-3xs),
-    $weight: var(--fw-semibold),
-    $tracking: var(--tracking-extra-wide)
-  );
-  margin: var(--space-2) 0 var(--space-1);
-  line-height: 1;
-}
-
-.field {
-  @include form-field($radius: var(--r-sm), $border: var(--border-subtle));
-
-  &::placeholder {
-    color: var(--text-dim);
-  }
-}
-
-select.field {
-  appearance: none;
-  -webkit-appearance: none;
-  cursor: pointer;
-  padding-right: 28px;
-  background-image: linear-gradient(45deg, transparent 50%, var(--text-muted) 50%),
-    linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
-  background-position: calc(100% - 16px) 55%, calc(100% - 11px) 55%;
-  background-size: 5px 5px;
-  background-repeat: no-repeat;
-
-  option {
-    background: var(--surface-container);
-    color: var(--text);
-  }
-}
-
-.row-2 {
-  display: flex;
-  gap: var(--space-2);
-
-  > div {
-    flex: 1;
-  }
-}
-
-.hint {
-  margin: var(--space-1) 0 0;
-  min-height: var(--space-3);
-  color: var(--text-dim);
-  font-family: var(--mono);
-  font-size: var(--text-2xs);
-  letter-spacing: var(--tracking-narrow);
-
-  &.good {
-    color: var(--good);
-  }
-
-  &.bad {
-    color: var(--warn);
-  }
-}
-
-.segmented {
-  @include seg-control('accent', 'segment-indicator');
-
-  button {
-    min-width: unset;
-    padding: 0 var(--space-2);
-    font-size: var(--text-xs);
-    border-radius: var(--r-pill);
-  }
-}
-
-.open-mode {
-  --seg-count: 4;
+.resize-handle {
+  width: 8px;
+  align-self: stretch;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  width: 100%;
+  place-items: center;
+  cursor: col-resize;
+  background: transparent;
+  border: 0;
+  touch-action: none;
 
-  button {
-    padding: 0 var(--space-1);
-    font-size: var(--text-2xs);
+  &::after {
+    content: '';
+    width: 1px;
+    height: 24px;
+    border-radius: 999px;
+    background: var(--text-dim);
+    opacity: 0.5;
+  }
+
+  &:hover::after,
+  &:active::after {
+    opacity: 1;
   }
 }
+/* ════════════════ Stage (hero output) ════════════════ */
 
-.rule-description {
-  margin: var(--space-1) 0 var(--space-2);
-  color: var(--text-dim);
-  font-family: var(--mono);
-  font-size: var(--text-2xs);
-  letter-spacing: var(--tracking-narrow);
-}
-
-.toggle-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: var(--space-2) var(--space-3);
-  margin-top: var(--space-2);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--r-md);
-  background: var(--surface-container);
-}
-
-.toggle-label {
-  color: var(--text-muted);
-  font-family: var(--mono);
-  font-size: var(--text-xs);
-}
-
-.tiny-note {
-  margin: var(--space-2) 0 0;
-  color: var(--text-dim);
-  font-family: var(--mono);
-  font-size: var(--text-3xs);
-  letter-spacing: var(--tracking-wide);
-}
-
-.generate {
-  width: 100%;
-  margin-top: var(--space-2);
-  padding: var(--space-2) var(--space-4);
-  letter-spacing: var(--tracking-label);
-}
-
-.keynote {
-  margin: var(--space-1) 0 0;
-  color: var(--text-dim);
-  font-family: var(--mono);
-  font-size: var(--text-3xs);
-  letter-spacing: var(--tracking-wide);
-  text-align: right;
-}
-
-/* ════════════════ Output pane ════════════════ */
-
-.output-pane {
+.stage {
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -231,41 +86,23 @@ select.field {
   letter-spacing: var(--tracking-wide);
 }
 
-.segmented.view {
-  --seg-count: 3;
-  display: grid;
-  grid-template-columns: repeat(3, 56px);
-}
-
-.segmented.label {
-  --seg-count: 2;
-  display: grid;
-  grid-template-columns: repeat(2, 56px);
-
-  .segment-indicator.second {
-    transform: translateX(100%);
-  }
-}
-
 .btn.small {
   min-height: var(--ctrl-h-sm);
   padding: var(--space-1) var(--space-3);
   font-size: var(--text-xs);
 }
 
-.output-scroll {
+/* The machined recess the voicing plate sits in. */
+.stage-well {
   flex: 1;
   min-height: 320px;
   max-height: 720px;
   margin: var(--space-2) var(--space-3) 0;
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-4);
   overflow: auto;
   border: 1px solid var(--border-subtle);
-  border-radius: var(--r-sm);
-  background: var(--surface-container);
-  font-family: var(--mono);
-  font-size: var(--text-2sm);
-  color: var(--text);
+  background: var(--workbench-inset);
+  box-shadow: var(--shadow-inset-panel);
 
   &:focus-visible {
     outline: 2px solid var(--border-active);
@@ -273,17 +110,22 @@ select.field {
   }
 }
 
-.line {
-  min-height: var(--space-4);
-  line-height: var(--leading-normal);
-  white-space: pre;
+/* ── Chord cards ─────────────────────────────── */
+
+.chord-card {
+  --card-in-delay: calc(var(--card-in-index) * 75ms);
+
+  animation: card-in var(--dur-med) ease both;
+  animation-delay: var(--card-in-delay);
+  padding: var(--space-4);
+  margin-bottom: var(--space-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-md);
+  background: var(--surface-container-low);
+  box-shadow: var(--shadow-flat);
 }
 
-.chord-block {
-  animation: block-in var(--dur-med) ease both;
-}
-
-@keyframes block-in {
+@keyframes card-in {
   from {
     opacity: 0;
     transform: translateY(2px);
@@ -295,42 +137,37 @@ select.field {
   }
 }
 
-.line.head {
-  color: var(--scale-accent);
-  font-size: var(--text-sm);
-  font-weight: var(--fw-semibold);
+.card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-2);
+
+  h3 {
+    font-family: var(--serif);
+    font-size: var(--text-lg);
+    font-weight: var(--fw-normal);
+    letter-spacing: var(--tracking-tight);
+    color: var(--scale-accent);
+  }
 }
 
-.line.subhead {
-  color: var(--good);
-  font-size: var(--text-2sm);
-  font-weight: var(--fw-semibold);
-}
-
-.line.context,
-.context {
+.card-subhead {
   color: var(--info);
+  font-family: var(--mono);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-narrow);
 }
 
-.line.info {
+.card-note {
+  margin: 0 0 var(--space-2);
   color: var(--text-muted);
-}
+  font-family: var(--mono);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-narrow);
 
-.line.dim {
-  color: var(--text-dim);
-}
-
-.line.error {
-  color: var(--warn);
-  font-size: var(--text-2sm);
-  font-weight: var(--fw-semibold);
-}
-
-.line.warn {
-  color: var(--scale-accent);
-}
-
-.line.badge {
   &.good {
     color: var(--good);
   }
@@ -342,14 +179,34 @@ select.field {
   &.bad {
     color: var(--warn);
   }
+
+  &.error {
+    color: var(--warn);
+    font-weight: var(--fw-semibold);
+  }
 }
 
-.fingering {
-  margin: var(--space-1) 0;
+.card-shapes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-3);
+}
 
-  app-neck-diagram {
-    margin: var(--space-1) 0 2px;
-  }
+.card-rank {
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: var(--text-3xs);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-extra-wide);
+}
+
+/* The raised "plate" the neck diagram sits on — the focal point. */
+.card-shape app-neck-diagram {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--r-md);
+  background: var(--surface-container-low);
+  box-shadow: var(--shadow-flat);
+  filter: drop-shadow(var(--chord-stage-glow));
 }
 
 .tab-block {
@@ -363,12 +220,10 @@ select.field {
 
 .tab-label {
   color: var(--good);
-  opacity: 0.75;
 }
 
 .tab-rail {
   color: var(--text-dim);
-  opacity: 0.5;
 }
 
 .tab-symbol {
@@ -386,11 +241,45 @@ select.field {
   }
 }
 
-.rule-line {
-  height: 1px;
-  margin: var(--space-2) 0;
-  background: var(--border-subtle);
+/* ── Welcome / empty state ───────────────────── */
+
+.welcome {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: center;
+  text-align: center;
+  padding: var(--space-7) var(--space-4);
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: var(--text-sm);
+  letter-spacing: var(--tracking-narrow);
+
+  p {
+    margin: 0;
+  }
+
+  p.dim {
+    color: var(--text-dim);
+    font-size: var(--text-3xs);
+    letter-spacing: var(--tracking-wide);
+  }
+
+  strong {
+    color: var(--scale-accent);
+    font-weight: var(--fw-semibold);
+  }
 }
+
+.welcome-mark {
+  width: var(--space-7);
+  height: var(--space-7);
+  border: 1px solid var(--border-medium);
+  border-radius: 50%;
+  background: var(--surface-container);
+  box-shadow: var(--chord-stage-glow);
+}
+
+/* ── Legend (hardware caption) ───────────────── */
 
 .legend {
   padding: var(--space-2) var(--space-4);
@@ -398,6 +287,11 @@ select.field {
   font-family: var(--mono);
   font-size: var(--text-2xs);
   letter-spacing: var(--tracking-narrow);
+}
+
+.legend-caption {
+  color: var(--text-dim);
+  text-transform: uppercase;
 }
 
 .legend-item {
@@ -429,23 +323,141 @@ select.field {
   color: var(--text-dim);
 }
 
-/* ════════════════ Footer ════════════════ */
+/* ════════════════ Controls panel ════════════════ */
 
-.workbench-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-6);
-  padding: var(--space-3) var(--space-7) var(--space-4);
-  border-top: 1px solid var(--border-subtle);
-  background: var(--canvas);
+.controls-panel {
+  min-width: 0;
+  overflow: hidden;
+  padding: var(--space-3) var(--space-3) var(--space-4);
 }
 
-.run-stats {
-  color: var(--good);
+.control-section {
+  min-width: 0;
+  display: block;
+  padding: 2px 0 var(--space-3);
+
+  + .control-section {
+    margin-top: var(--space-1);
+  }
+
+  > .section-label {
+    display: block;
+    padding: 6px 0;
+    margin-bottom: var(--space-2);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+}
+
+.field-label {
+  @include field-label(
+    $color: var(--text-dim),
+    $size: var(--text-3xs),
+    $weight: var(--fw-semibold),
+    $tracking: var(--tracking-extra-wide)
+  );
+  margin: var(--space-2) 0 var(--space-1);
+  line-height: 1;
+}
+
+.row-2 {
+  display: flex;
+  gap: var(--space-2);
+
+  > * {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &.compact {
+    justify-content: flex-start;
+
+    > * {
+      flex: 0 0 112px;
+      max-width: 112px;
+    }
+  }
+}
+
+/* Dropdown menus inside the control rail span their trigger width so they
+   align with the two-column rows (mirrors RootNotePicker). */
+.controls-panel app-segmented {
+  display: block;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.controls-panel .segmented {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.controls-panel .segmented button {
+  min-width: 0;
+  flex: 1 1 0;
+  padding: var(--space-1);
+  font-size: var(--text-2xs);
+  overflow: hidden;
+}
+
+.control-section .dropdown-menu {
+  left: 0;
+  width: 100%;
+}
+
+.rule-description {
+  margin: var(--space-1) 0 var(--space-2);
+  color: var(--text-dim);
   font-family: var(--mono);
   font-size: var(--text-2xs);
   letter-spacing: var(--tracking-narrow);
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  margin-top: var(--space-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-md);
+  background: var(--surface-container);
+}
+
+.toggle-label {
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+}
+
+.tiny-note {
+  margin: var(--space-2) 0 0;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: var(--text-3xs);
+  letter-spacing: var(--tracking-wide);
+
+  code {
+    color: var(--text-muted);
+    font-size: var(--text-2xs);
+  }
+}
+
+.generate {
+  width: 100%;
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  letter-spacing: var(--tracking-label);
+}
+
+.keynote {
+  margin: var(--space-1) 0 0;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: var(--text-3xs);
+  letter-spacing: var(--tracking-wide);
+  text-align: right;
 }
 
 /* ════════════════ Responsive ════════════════ */
@@ -453,9 +465,24 @@ select.field {
 @media (max-width: 980px) {
   .finder-columns {
     grid-template-columns: 1fr;
+    grid-template-areas:
+      'controls'
+      'stage';
   }
 
-  .output-scroll {
+  .stage {
+    grid-area: stage;
+  }
+
+  .controls-panel {
+    grid-area: controls;
+  }
+
+  .resize-handle {
+    display: none;
+  }
+
+  .stage-well {
     max-height: none;
   }
 }
@@ -483,21 +510,18 @@ select.field {
     padding: var(--space-3) var(--space-4);
   }
 
-  .output-scroll {
+  .stage-well {
     margin: var(--space-2) var(--space-2) 0;
     padding: var(--space-2);
   }
 
-  .workbench-footer {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-2);
-    padding: var(--space-3) var(--space-5) var(--space-4);
+  .card-shape {
+    padding: var(--space-2);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .chord-block {
-    animation-duration: 0.01ms;
+  .chord-card {
+    animation: none;
   }
 }

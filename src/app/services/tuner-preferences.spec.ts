@@ -76,6 +76,7 @@ describe('TunerPreferences', () => {
             sound: false,
             glow: true,
             color: '#EE6600',
+            outOfTuneColor: '#3366AA',
             tolerance: 900,
             holdMs: -42,
           },
@@ -92,6 +93,7 @@ describe('TunerPreferences', () => {
         sound: false,
         glow: true,
         color: '#ee6600',
+        outOfTuneColor: '#3366aa',
         tolerance: 15,
         holdMs: 0,
       },
@@ -106,6 +108,7 @@ describe('TunerPreferences', () => {
     service.setInTuneSound(false);
     service.setInTuneGlow(true);
     service.setInTuneColor('#ff9900');
+    service.setOutOfTuneColor('#00aacc');
     service.setInTuneTolerance(12);
     service.setInTuneHoldMs(800);
     service.setReferencePitch(442);
@@ -122,6 +125,7 @@ describe('TunerPreferences', () => {
         sound: false,
         glow: true,
         color: '#ff9900',
+        outOfTuneColor: '#00aacc',
         tolerance: 12,
         holdMs: 800,
       },
@@ -133,6 +137,11 @@ describe('TunerPreferences', () => {
 
     service.setInTuneColor('not-a-color');
     expect(service.tunerSettings().inTune.color).toBe(DEFAULT_TUNER_SETTINGS.inTune.color);
+
+    service.setOutOfTuneColor('not-a-color');
+    expect(service.tunerSettings().inTune.outOfTuneColor).toBe(
+      DEFAULT_TUNER_SETTINGS.inTune.outOfTuneColor,
+    );
 
     service.setMode('magic' as never);
     expect(service.tunerSettings().mode).toBe('auto');

@@ -16,14 +16,14 @@
           {{ mode() === 'edit' ? 'Edit custom tuning' : 'New custom tuning' }}
         </h2>
         <p id="tuning-editor-subtitle">
-          {{ mode() === 'edit' ? 'Update the name or string pitches' : 'Set each string one semitone at a time' }}
+          {{
+            mode() === 'edit'
+              ? 'Update the name or string pitches'
+              : 'Set each string one semitone at a time'
+          }}
         </p>
       </div>
-      <app-icon-button
-        icon="close"
-        label="Close tuning editor"
-        (activate)="requestDismiss()"
-      />
+      <app-icon-button icon="close" label="Close tuning editor" (activate)="requestDismiss()" />
     </header>
 
     <app-string-editor

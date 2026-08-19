@@ -29,7 +29,9 @@
                 <strong>{{ instrument.label }}</strong>
                 <span class="instrument-meta">
                   {{ instrument.stringCount }} strings
-                  @if (!isCustom(instrument)) { · built-in }
+                  @if (!isCustom(instrument)) {
+                    · built-in
+                  }
                 </span>
               </div>
               @if (isCustom(instrument)) {

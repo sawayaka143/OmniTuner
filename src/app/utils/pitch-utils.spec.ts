@@ -2,25 +2,69 @@ import {
   centsFromMidiFloat,
   frequencyToMidiFloat,
   frequencyToMidiNote,
-  manualCentsOffset,
+  interpolateColor,
   midiNoteLabel,
   midiNoteToFrequency,
+  nearestSemitone,
+  nearestStringTarget,
   needlePercentFromCents,
-  noteFromFrequency,
   shouldConfirm,
+  tuneCentsText,
+  tuneColorProgress,
+  tuneDirectionText,
 } from './pitch-utils';
 
-describe('noteFromFrequency', () => {
-  it('keeps the previous note until the pitch crosses the 60-cent hysteresis boundary', () => {
-    const fiftyFiveCentsSharp = 440 * 2 ** (0.55 / 12);
-    const heldNote = noteFromFrequency(fiftyFiveCentsSharp, 0);
+const GUITAR_STANDARD = [
+  { name: 'E2', freq: 82.41 },
+  { name: 'A2', freq: 110.0 },
+  { name: 'D3', freq: 146.83 },
+  { name: 'G3', freq: 196.0 },
+  { name: 'B3', freq: 246.94 },
+  { name: 'E4', freq: 329.63 },
+];
 
-    expect(heldNote).toMatchObject({ noteName: 'A', octave: 4, cents: 55, semitone: 0 });
+describe('nearestStringTarget', () => {
+  it('picks the nearest string and measures signed unclamped cents against it', () => {
+    expect(nearestStringTarget(40, GUITAR_STANDARD)).toMatchObject({
+      name: 'E2',
+      midi: 40,
+      cents: 0,
+    });
 
-    const sixtyOneCentsSharp = 440 * 2 ** (0.61 / 12);
-    const advancedNote = noteFromFrequency(sixtyOneCentsSharp, 0);
+    const sixtyCentsSharpE2 = 40 + 0.6;
+    const sharp = nearestStringTarget(sixtyCentsSharpE2, GUITAR_STANDARD);
 
-    expect(advancedNote).toMatchObject({ noteName: 'A#', octave: 4, cents: -39, semitone: 1 });
+    expect(sharp).toMatchObject({ name: 'E2', midi: 40 });
+    expect(sharp?.cents).toBeCloseTo(60, 6);
+  });
+
+  it('is octave-aware: E4 is targeted for a high E, not E2', () => {
+    const target = nearestStringTarget(64, GUITAR_STANDARD);
+
+    expect(target).toMatchObject({ name: 'E4', midi: 64, cents: 0 });
+  });
+
+  it('keeps the previous target within the hysteresis margin and switches beyond it', () => {
+    // 42.55 is 5 cents past the E2–A2 midpoint: A2 is the strict winner.
+    expect(nearestStringTarget(42.55, GUITAR_STANDARD)).toMatchObject({ name: 'A2' });
+
+    // Previous E2 is within HYSTERESIS_CENTS of the winner, so it holds.
+    expect(nearestStringTarget(42.55, GUITAR_STANDARD, 'E2')).toMatchObject({ name: 'E2' });
+
+    // Once the previous target is more than HYSTERESIS_CENTS farther, it moves.
+    expect(nearestStringTarget(42.6, GUITAR_STANDARD, 'E2')).toMatchObject({ name: 'A2' });
+  });
+
+  it('ignores a previous name that is not part of the tuning', () => {
+    const target = nearestStringTarget(45, GUITAR_STANDARD, 'C3');
+
+    expect(target).toMatchObject({ name: 'A2' });
+  });
+
+  it('returns null for invalid input or an empty tuning', () => {
+    expect(nearestStringTarget(null, GUITAR_STANDARD)).toBeNull();
+    expect(nearestStringTarget(Number.NaN, GUITAR_STANDARD)).toBeNull();
+    expect(nearestStringTarget(40, [])).toBeNull();
   });
 });
 
@@ -67,15 +111,9 @@ describe('A4 calibration (ref parameter)', () => {
     expect(frequencyToMidiFloat(442, 442)).toBe(69);
     expect(frequencyToMidiFloat(440, 442)).toBeCloseTo(68.92, 1);
   });
-
-  it('noteFromFrequency passes ref through to cents calculation', () => {
-    // 442 Hz with ref=442 should be perfectly in tune (0 cents).
-    const note = noteFromFrequency(442, undefined, 442);
-    expect(note).toMatchObject({ noteName: 'A', octave: 4, cents: 0, semitone: 0 });
-  });
 });
 
-describe('manual-mode cents helpers', () => {
+describe('cents offset readout', () => {
   it('measures unclamped cents against a target MIDI note', () => {
     expect(centsFromMidiFloat(69, 69)).toBe(0);
     expect(centsFromMidiFloat(69.1, 69)).toBeCloseTo(10, 2);
@@ -83,13 +121,64 @@ describe('manual-mode cents helpers', () => {
     expect(centsFromMidiFloat(null, 64)).toBeNull();
   });
 
-  it('renders manual cents without clamping', () => {
-    expect(manualCentsOffset(0)).toBe('IN TUNE');
-    expect(manualCentsOffset(-3.2)).toBe('IN TUNE');
-    expect(manualCentsOffset(12.4)).toBe('12¢ SHARP');
-    expect(manualCentsOffset(-187.7)).toBe('188¢ FLAT');
-    expect(manualCentsOffset(null)).toBe('\u2014');
-    expect(manualCentsOffset(Number.NaN)).toBe('\u2014');
+  it('renders the direction prompt without cents', () => {
+    expect(tuneDirectionText(0)).toBe('IN TUNE');
+    expect(tuneDirectionText(-3.2)).toBe('IN TUNE');
+    expect(tuneDirectionText(12.4)).toBe('TUNE DOWN');
+    expect(tuneDirectionText(-187.7)).toBe('TUNE UP');
+    expect(tuneDirectionText(null)).toBe('\u2014');
+    expect(tuneDirectionText(Number.NaN)).toBe('\u2014');
+  });
+
+  it('renders the cents magnitude under the prompt', () => {
+    expect(tuneCentsText(0)).toBe('');
+    expect(tuneCentsText(-3.2)).toBe('');
+    expect(tuneCentsText(12.4)).toBe('12¢');
+    expect(tuneCentsText(-187.7)).toBe('188¢');
+    expect(tuneCentsText(null)).toBe('');
+    expect(tuneCentsText(Number.NaN)).toBe('');
+  });
+});
+
+describe('nearestSemitone', () => {
+  it('rounds the played MIDI float to the nearest chromatic semitone', () => {
+    expect(nearestSemitone(69)).toEqual({ midi: 69 });
+    expect(nearestSemitone(69.1)).toEqual({ midi: 69 });
+    expect(nearestSemitone(69.6)).toEqual({ midi: 70 });
+    expect(nearestSemitone(null)).toBeNull();
+    expect(nearestSemitone(Number.NaN)).toBeNull();
+  });
+});
+
+describe('interpolateColor', () => {
+  it('blends two hex colors linearly per channel', () => {
+    expect(interpolateColor('#000000', '#ffffff', 0.5)).toBe('#808080');
+    expect(interpolateColor('#000000', '#ffffff', 0.25)).toBe('#404040');
+    expect(interpolateColor('#ff0000', '#00ff00', 0.5)).toBe('#808000');
+  });
+
+  it('clamps t to [0, 1]', () => {
+    expect(interpolateColor('#000000', '#ffffff', -1)).toBe('#000000');
+    expect(interpolateColor('#000000', '#ffffff', 2)).toBe('#ffffff');
+  });
+
+  it('returns null for invalid colors', () => {
+    expect(interpolateColor('red', '#ffffff', 0.5)).toBeNull();
+    expect(interpolateColor('#000000', 'blue', 0.5)).toBeNull();
+    expect(interpolateColor('#123', '#ffffff', 0.5)).toBeNull();
+  });
+});
+
+describe('tuneColorProgress', () => {
+  it('maps cents distance onto the 50→5 cent blend window', () => {
+    expect(tuneColorProgress(50)).toBe(0);
+    expect(tuneColorProgress(-50)).toBe(0);
+    expect(tuneColorProgress(5)).toBe(1);
+    expect(tuneColorProgress(-5)).toBe(1);
+    expect(tuneColorProgress(27.5)).toBeCloseTo(0.5, 5);
+    expect(tuneColorProgress(3)).toBe(1);
+    expect(tuneColorProgress(null)).toBe(0);
+    expect(tuneColorProgress(Number.NaN)).toBe(0);
   });
 });
 

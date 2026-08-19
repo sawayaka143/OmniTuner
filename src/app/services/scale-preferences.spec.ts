@@ -91,20 +91,23 @@ describe('ScalePreferences', () => {
   });
 
   it('sanitizes invalid persisted fields independently', () => {
-    storage.setItem(SCALE_PREFERENCES_STORAGE_KEY, JSON.stringify({
-      version: 1,
-      state: {
-        rootPitchClass: 99,
-        scaleId: 'unknown',
-        accidental: 'natural',
-        fretCount: 18,
-        labelMode: 'invalid',
-        showOutsideScale: null,
-        accent: 'red',
-        rootNoteColor: 'white',
-        noteColor: '#12345',
-      },
-    }));
+    storage.setItem(
+      SCALE_PREFERENCES_STORAGE_KEY,
+      JSON.stringify({
+        version: 1,
+        state: {
+          rootPitchClass: 99,
+          scaleId: 'unknown',
+          accidental: 'natural',
+          fretCount: 18,
+          labelMode: 'invalid',
+          showOutsideScale: null,
+          accent: 'red',
+          rootNoteColor: 'white',
+          noteColor: '#12345',
+        },
+      }),
+    );
 
     expect(createService().state()).toEqual(DEFAULT_SCALE_PREFERENCES);
   });
@@ -128,7 +131,7 @@ describe('ScalePreferences', () => {
       expect(service.state().workbenchScale).toBe(0.75);
 
       service.setWorkbenchScale(2);
-      expect(service.state().workbenchScale).toBe(1.30);
+      expect(service.state().workbenchScale).toBe(1.3);
     });
 
     it('rejects non-finite values', () => {
@@ -147,29 +150,38 @@ describe('ScalePreferences', () => {
       expect(service.state().workbenchScale).toBe(0.75);
 
       service.setWorkbenchScale(1.22);
-      expect(service.state().workbenchScale).toBe(1.20);
+      expect(service.state().workbenchScale).toBe(1.2);
     });
 
     it('falls back to defaults for missing/invalid stored workbenchScale and clamps out-of-range values', () => {
-      storage.setItem(SCALE_PREFERENCES_STORAGE_KEY, JSON.stringify({
-        version: 1,
-        state: { /* no workbenchScale field */ },
-      }));
+      storage.setItem(
+        SCALE_PREFERENCES_STORAGE_KEY,
+        JSON.stringify({
+          version: 1,
+          state: {/* no workbenchScale field */},
+        }),
+      );
       expect(createService().state().workbenchScale).toBe(1);
 
       TestBed.resetTestingModule();
-      storage.setItem(SCALE_PREFERENCES_STORAGE_KEY, JSON.stringify({
-        version: 1,
-        state: { workbenchScale: 'invalid' },
-      }));
+      storage.setItem(
+        SCALE_PREFERENCES_STORAGE_KEY,
+        JSON.stringify({
+          version: 1,
+          state: { workbenchScale: 'invalid' },
+        }),
+      );
       expect(createService().state().workbenchScale).toBe(1);
 
       TestBed.resetTestingModule();
-      storage.setItem(SCALE_PREFERENCES_STORAGE_KEY, JSON.stringify({
-        version: 1,
-        state: { workbenchScale: 5 },
-      }));
-      expect(createService().state().workbenchScale).toBe(1.30);
+      storage.setItem(
+        SCALE_PREFERENCES_STORAGE_KEY,
+        JSON.stringify({
+          version: 1,
+          state: { workbenchScale: 5 },
+        }),
+      );
+      expect(createService().state().workbenchScale).toBe(1.3);
     });
 
     it('resetWorkbenchScale returns to 1', () => {

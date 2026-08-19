@@ -23,12 +23,9 @@ const FLAT_INDEX: Readonly<Record<string, number>> = Object.fromEntries(
 );
 
 /**
- * Parse a user-supplied note name to an absolute pitch class (0–11, C = 0).
- *
- * Accepts both spellings ('D#' and 'Eb'), Unicode accidentals ('♭'/'♯'), and any
- * case. Octave digits are ignored — the Scales feature is pitch-class based.
- * Returns `null` for anything that is not a valid chromatic note, **never
- * throws**, so invalid custom-tuning input cannot break the UI.
+ * Parse a user-supplied note name to a pitch class (0–11, C = 0). Accepts both
+ * spellings, Unicode accidentals, and any case; octave digits are ignored.
+ * Returns `null` for anything invalid — never throws.
  */
 export const parseNote = (input: string): number | null => {
   if (!input) return null;
@@ -68,17 +65,11 @@ export const intervalByPitchClass = (
 };
 
 /**
- * The core, UI-agnostic fretboard engine.
- *
- * Given the open-string pitch classes (already oriented **high-string-first**,
- * so index 0 is the top row), a fret count, and a generic list of intervals, it
- * returns a `strings × (fretCount + 1)` matrix of fully-resolved, display-ready
- * cells. Every cell knows whether it is in the scale (and if so, its interval,
- * color and note name) — the template only renders.
- *
- * This intentionally takes a plain `IntervalEntry[]` rather than a `Scale`, so
- * the **same engine** can later drive a Chord Builder with a different set of
- * intervals and no logic changes.
+ * The core, UI-agnostic fretboard engine: given open-string pitch classes
+ * (high-string-first), a fret count, and a generic list of intervals, returns
+ * a `strings × (fretCount + 1)` matrix of display-ready cells. Takes plain
+ * `IntervalEntry[]` rather than a `Scale` so the same engine can drive other
+ * interval sets (e.g. a future chord builder).
  */
 export const computeFretboard = (
   openPitchClasses: readonly number[],
@@ -100,9 +91,7 @@ export const computeFretboard = (
         stringIndex,
         fret,
         pitchClass,
-        midi: openMidiNotes?.[stringIndex] !== undefined
-          ? openMidiNotes[stringIndex] + fret
-          : null,
+        midi: openMidiNotes?.[stringIndex] !== undefined ? openMidiNotes[stringIndex] + fret : null,
         interval,
         noteName: noteName(pitchClass, preferFlats),
         color: interval ? colorForLabel(interval.label) : '',

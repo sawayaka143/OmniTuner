@@ -1,13 +1,4 @@
-import {
-  Component,
-  computed,
-  effect,
-  ElementRef,
-  input,
-  output,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { Component, computed, effect, ElementRef, input, output, viewChild } from '@angular/core';
 import {
   DEFAULT_TUNER_SETTINGS,
   REFERENCE_PITCH_MAX,
@@ -22,11 +13,7 @@ import {
 } from '../../models/tuner-preferences.model';
 import { Toggle } from '../../ui/toggle/toggle';
 import { IconButton } from '../../ui/icon-button/icon-button';
-
-interface AccentOption {
-  readonly name: string;
-  readonly value: string;
-}
+import { RovingRadioGroup } from '../../ui/keyboard-nav';
 
 interface StartupModeOption {
   readonly value: TunerStartupMode;
@@ -37,7 +24,7 @@ interface StartupModeOption {
   selector: 'app-settings-panel',
   templateUrl: './settings-panel.html',
   styleUrl: './settings-panel.scss',
-  imports: [Toggle, IconButton],
+  imports: [Toggle, IconButton, RovingRadioGroup],
 })
 export class SettingsPanel {
   readonly open = input(false);
@@ -45,18 +32,21 @@ export class SettingsPanel {
   readonly rootNoteColor = input('#ffffff');
   readonly noteColor = input('#2e2e28');
   readonly workbenchScale = input(1);
+  readonly chordRandomProgression = input(true);
   readonly tunerSettings = input<TunerSettings>(DEFAULT_TUNER_SETTINGS);
 
   readonly accentChange = output<string>();
   readonly rootNoteColorChange = output<string>();
   readonly noteColorChange = output<string>();
   readonly workbenchScaleChange = output<number>();
+  readonly chordRandomProgressionChange = output<boolean>();
   readonly workbenchScaleReset = output<void>();
   readonly startupModeChange = output<TunerStartupMode>();
   readonly inTuneEnabledChange = output<boolean>();
   readonly inTuneSoundChange = output<boolean>();
   readonly inTuneGlowChange = output<boolean>();
   readonly inTuneColorChange = output<string>();
+  readonly outOfTuneColorChange = output<string>();
   readonly inTuneToleranceChange = output<number>();
   readonly inTuneHoldMsChange = output<number>();
   readonly referencePitchChange = output<number>();
@@ -69,24 +59,6 @@ export class SettingsPanel {
   protected readonly holdStep = TUNER_HOLD_STEP;
   protected readonly refPitchMin = REFERENCE_PITCH_MIN;
   protected readonly refPitchMax = REFERENCE_PITCH_MAX;
-
-  protected readonly accentOptions: readonly AccentOption[] = [
-    { name: 'Root green', value: '#779900' },
-    { name: 'Third amber', value: '#ff9900' },
-    { name: 'Fifth blue', value: '#227799' },
-    { name: 'Seventh orange', value: '#ee6600' },
-    { name: 'Extension red', value: '#ee0000' },
-    { name: 'Altered magenta', value: '#bb3366' },
-  ];
-
-  protected readonly inTuneColorOptions: readonly AccentOption[] = [
-    { name: 'Mint', value: '#7ecba8' },
-    { name: 'Root green', value: '#779900' },
-    { name: 'Third amber', value: '#ff9900' },
-    { name: 'Fifth blue', value: '#227799' },
-    { name: 'Seventh orange', value: '#ee6600' },
-    { name: 'Altered magenta', value: '#bb3366' },
-  ];
 
   protected readonly startupModeOptions: readonly StartupModeOption[] = [
     { value: 'remember', label: 'Remember last' },
@@ -148,6 +120,11 @@ export class SettingsPanel {
   protected onCustomInTuneColor(event: Event): void {
     const target = event.target;
     if (target instanceof HTMLInputElement) this.chooseInTuneColor(target.value);
+  }
+
+  protected onCustomOutOfTuneColor(event: Event): void {
+    const target = event.target;
+    if (target instanceof HTMLInputElement) this.outOfTuneColorChange.emit(target.value);
   }
 
   protected onTolerance(event: Event): void {

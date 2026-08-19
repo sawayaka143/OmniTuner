@@ -3,7 +3,8 @@
   [style.--scale-accent]="preferencesState().accent"
   [style.--scale-accent-ink]="accentInk()"
   [style.--workbench-scale]="preferencesState().workbenchScale"
-  (click)="closePickers()">
+  (click)="closePickers()"
+>
   <section class="studio-intro" aria-label="Scale selection">
     <div class="scales-controls">
       <app-root-note-picker
@@ -12,7 +13,8 @@
         [open]="rootPickerOpen()"
         (select)="selectRoot($event)"
         (toggle)="toggleRootPicker()"
-        (close)="closePickers()" />
+        (close)="closePickers()"
+      />
 
       <app-scale-picker
         [scales]="scales"
@@ -20,7 +22,8 @@
         [open]="scalePickerOpen()"
         (select)="selectScale($event)"
         (toggle)="toggleScalePicker()"
-        (close)="closePickers()" />
+        (close)="closePickers()"
+      />
 
       <app-tuning-selector
         [presets]="tuningPresets()"
@@ -33,7 +36,8 @@
         (delete)="deleteTuning($event)"
         (edit)="openTuningEditor($event)"
         (create)="openTuningEditor()"
-        (toggle)="toggleTuningPicker()" />
+        (toggle)="toggleTuningPicker()"
+      />
     </div>
   </section>
 
@@ -49,9 +53,18 @@
         <button
           class="play-tuning"
           type="button"
-          [attr.aria-label]="playbackSource() === 'tuning' ? 'Stop tuning playback' : 'Play open strings of current tuning'"
-          [title]="playbackSource() === 'tuning' ? 'Stop tuning playback' : 'Play open strings of current tuning'"
-          (click)="playTuning()">
+          [attr.aria-label]="
+            playbackSource() === 'tuning'
+              ? 'Stop tuning playback'
+              : 'Play open strings of current tuning'
+          "
+          [title]="
+            playbackSource() === 'tuning'
+              ? 'Stop tuning playback'
+              : 'Play open strings of current tuning'
+          "
+          (click)="playTuning()"
+        >
           <span class="material-symbols-outlined" aria-hidden="true">
             {{ playbackSource() === 'tuning' ? 'graphic_eq' : 'play_arrow' }}
           </span>
@@ -61,9 +74,14 @@
         <button
           class="play-scale"
           type="button"
-          [attr.aria-label]="playbackSource() === 'scale' ? 'Stop scale playback' : 'Play ' + rootNote() + ' ' + currentScale().label + ' scale'"
+          [attr.aria-label]="
+            playbackSource() === 'scale'
+              ? 'Stop scale playback'
+              : 'Play ' + rootNote() + ' ' + currentScale().label + ' scale'
+          "
           [title]="playbackSource() === 'scale' ? 'Stop scale playback' : ''"
-          (click)="playScale()">
+          (click)="playScale()"
+        >
           <span class="material-symbols-outlined" aria-hidden="true">
             {{ playbackSource() === 'scale' ? 'graphic_eq' : 'play_arrow' }}
           </span>
@@ -81,7 +99,8 @@
         (accidentalChange)="setAccidental($event)"
         (fretCountChange)="setFretCount($event)"
         (labelModeChange)="setLabelMode($event)"
-        (showOutsideScaleChange)="setShowOutsideScale($event)" />
+        (showOutsideScaleChange)="setShowOutsideScale($event)"
+      />
     </div>
 
     <div class="fretboard-stage">
@@ -94,18 +113,28 @@
         [showOutsideScale]="preferencesState().showOutsideScale"
         [activeCell]="activeCell()"
         (play)="playCell($event)"
-        (inspect)="inspectCell($event)" />
+        (inspect)="inspectCell($event)"
+      />
     </div>
 
     <footer class="workbench-footer">
       <div class="readout">
         <span class="section-label">Position</span>
         <p>{{ readout() }}</p>
+        <p class="playback-error" role="alert" aria-live="assertive">
+          @if (playbackError(); as err) {
+            {{ err }}
+            <button type="button" class="playback-error-dismiss" (click)="dismissPlaybackError()">
+              Dismiss
+            </button>
+          }
+        </p>
       </div>
       <app-scale-notes
         [tones]="scaleTones()"
         [activePitchClass]="activePitchClass()"
-        (play)="playTone($event)" />
+        (play)="playTone($event)"
+      />
     </footer>
   </section>
 
@@ -123,5 +152,6 @@
     [maxNameLength]="maxTuningNameLength"
     (preview)="previewCustomTuning($event)"
     (save)="saveCustomTuning($event)"
-    (dismiss)="dismissTuningEditor()" />
+    (dismiss)="dismissTuningEditor()"
+  />
 </main>

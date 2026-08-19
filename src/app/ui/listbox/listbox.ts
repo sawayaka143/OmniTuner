@@ -1,25 +1,30 @@
-import { Component, computed, input, output } from '@angular/core';
+import { Component, computed, ElementRef, input, output, viewChild } from '@angular/core';
+
+let nextListboxId = 0;
 
 /**
  * Accessible listbox dropdown: a pill trigger that opens a floating
  * `role="listbox"` menu of `role="option"` items. The parent owns the `open`
- * signal (matching the previous bespoke implementations); the primitive emits
- * `toggle` (trigger clicked) and `select` (an option chosen).
+ * signal; the primitive emits `toggle` (trigger clicked) and `select` (option
+ * chosen). Items may be grouped via `optionGroup` (first-seen order).
  *
- * Items may be grouped: pass an `optionGroup` accessor that returns a label
- * string for items that should sit under a group header, or `null` for ungrouped
- * items. Groups render in first-seen insertion order.
+ * Keyboard: Enter/Space/ArrowDown on the trigger opens the menu; Arrow keys
+ * move between options, Enter/Space selects, Escape or Tab closes and returns
+ * focus to the trigger.
  */
 @Component({
   selector: 'app-listbox',
   template: `
     <div class="dropdown-wrapper">
       <button
+        #trigger
         type="button"
         class="btn"
         [attr.aria-expanded]="open()"
         aria-haspopup="listbox"
+        [attr.aria-controls]="open() ? menuId : null"
         (click)="toggle.emit(); $event.stopPropagation()"
+        (keydown)="onTriggerKeydown($event)"
       >
         <span class="button-copy">
           @if (triggerKicker()) {
@@ -40,10 +45,13 @@ import { Component, computed, input, output } from '@angular/core';
 
       @if (open()) {
         <div
+          #menu
+          [id]="menuId"
           class="dropdown-menu card"
           role="listbox"
           [attr.aria-label]="ariaLabel()"
           (click)="$event.stopPropagation()"
+          (keydown)="onMenuKeydown($event)"
         >
           @for (group of grouped(); track group.label ?? '') {
             @if (group.label) {
@@ -86,6 +94,10 @@ export class Listbox<T> {
   readonly toggle = output<void>();
   readonly select = output<T>();
 
+  protected readonly menuId = `app-listbox-menu-${nextListboxId++}`;
+  protected readonly triggerBtn = viewChild<ElementRef<HTMLElement>>('trigger');
+  protected readonly menu = viewChild<ElementRef<HTMLElement>>('menu');
+
   protected readonly grouped = computed(() => {
     const items = this.options();
     const groupOf = this.optionGroup();
@@ -102,6 +114,52 @@ export class Listbox<T> {
     }
     return order.map((label) => ({ label: label || null, items: buckets.get(label)! }));
   });
+
+  protected onTriggerKeydown(event: KeyboardEvent): void {
+    if (this.open()) return;
+    if (event.key === 'Enter' || event.key === ' ' || event.key === 'ArrowDown') {
+      event.preventDefault();
+      this.toggle.emit();
+    }
+  }
+
+  protected onMenuKeydown(event: KeyboardEvent): void {
+    const options =
+      this.menu()?.nativeElement.querySelectorAll<HTMLButtonElement>('[role="option"]');
+    if (!options || options.length === 0) return;
+    const currentIdx = [...options].indexOf(event.target as HTMLButtonElement);
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      const next = options[(currentIdx + 1) % options.length];
+      next?.focus();
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      const next = options[(currentIdx - 1 + options.length) % options.length];
+      next?.focus();
+    } else if (event.key === 'Home') {
+      event.preventDefault();
+      options[0]?.focus();
+    } else if (event.key === 'End') {
+      event.preventDefault();
+      options[options.length - 1]?.focus();
+    } else if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      (event.target as HTMLButtonElement).click();
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      this.closeMenu();
+    } else if (event.key === 'Tab') {
+      this.closeMenu();
+    }
+  }
+
+  protected closeMenu(): void {
+    if (this.open()) {
+      this.toggle.emit();
+      this.triggerBtn()?.nativeElement.focus();
+    }
+  }
 
   protected isSelected(option: T): boolean {
     return this.value() === option;

@@ -13,4 +13,5 @@ export interface ScalePreferencesState {
   readonly rootNoteColor: string;
   readonly noteColor: string;
   readonly workbenchScale: number;
+  readonly chordRandomProgression: boolean;
 }

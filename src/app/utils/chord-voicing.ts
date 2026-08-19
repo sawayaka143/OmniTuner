@@ -1,13 +1,8 @@
-/**
- * Chord voicing search engine: enumerates playable shapes for a chord in an
- * arbitrary tuning (custom / re-entrant supported) under voicing rules, then
- * ranks them by ergonomics. Pure functions only.
- */
-
 import { ParsedChord, ParsedTuning } from './chord-theory';
+import { isPhysicallyPlayable, scoreErgonomics } from './ergonomics';
 
 export const MAX_FRET = 12;
-export const RESULTS_PER_CHORD = 5;
+export const RESULTS_PER_CHORD = 6;
 
 const RAW_CAP = 5000;
 
@@ -31,8 +26,29 @@ export interface VoicingOptions {
   readonly openMode: OpenStringMode;
   readonly allowInversions: boolean;
   readonly allowGaps: boolean;
+  /** Maximum fret span of a voicing (max fretted fret − min fretted fret). */
   readonly maxStretch: number;
   readonly minNotes: number;
+  /**
+   * Reject shapes whose fretted strings can only be covered by impossible
+   * barres (e.g. same fret on non-adjacent strings). Defaults to false.
+   */
+  readonly rejectUnbarrable?: boolean;
+  /**
+   * How many top shapes to return (defaults to `RESULTS_PER_CHORD`). Callers
+   * that randomize may want a wider candidate pool (e.g. 12) and then jitter
+   * the ranking so fresh-but-still-good voicings surface.
+   */
+  readonly candidateCount?: number;
+}
+
+/** Optional per-shape feedback applied during search: adjusts the cost and
+ *  lets the caller veto disliked shapes before ranking. */
+export interface VoicingFeedbackHook {
+  /** Adjust the ergonomics cost for a shape (e.g. user likes/dislikes). */
+  readonly adjustCost?: (shape: VoicingShape, baseCost: number) => number;
+  /** Return true to drop the shape entirely (e.g. user disliked it). */
+  readonly excludeShape?: (shape: VoicingShape) => boolean;
 }
 
 export interface SoundingNote {
@@ -50,6 +66,8 @@ export interface VoicingShape {
   readonly bassIsRoot: boolean;
   readonly position: number;
   readonly openCount: number;
+  /** Ergonomics cost of the shape (lower = easier). Populated after search. */
+  readonly cost: number;
 }
 
 const mod12 = (value: number): number => ((value % 12) + 12) % 12;
@@ -73,29 +91,26 @@ function makeShape(
   const bassIsRoot = mod12(bass - chord.rootPc) === 0;
   const position = frettedOnly.length ? Math.min(...frettedOnly) : 0;
   const openCount = frets.filter((f) => f === 0).length;
-  return { frets, sounding, span, bassMidi: bass, bassIsRoot, position, openCount };
-}
-
-function compareRanks(a: readonly number[], b: readonly number[]): number {
-  for (let i = 0; i < a.length; i++) {
-    if (a[i] !== b[i]) return a[i] - b[i];
-  }
-  return 0;
+  return { frets, sounding, span, bassMidi: bass, bassIsRoot, position, openCount, cost: 0 };
 }
 
 /**
  * Depth-first search over strings × candidate frets with suffix pruning
  * (coverage, open availability). Returns the top shapes, best ergonomics
- * first: tightest span, root in the bass, more notes, lower position,
- * then (for the open-friendly modes) more open strings.
+ * first. Physically impossible shapes are rejected by `isPhysicallyPlayable`
+ * before scoring.
  */
 export function searchChord(
   tuning: ParsedTuning,
   chord: ParsedChord,
   options: VoicingOptions,
+  feedback?: VoicingFeedbackHook,
 ): VoicingShape[] {
   const n = tuning.midi.length;
   const pcs = new Set(chord.pcs);
+  // Optional tones (11ths/13ths) may ring but needn't be covered.
+  const optional = new Set(chord.optionalPcs);
+  const required = new Set(chord.pcs.filter((pc) => !optional.has(pc)));
 
   // Candidate frets per string that produce a chord tone.
   const candidates: number[][] = [];
@@ -126,13 +141,14 @@ export function searchChord(
   const minNotes = Math.max(1, Math.min(options.minNotes, n));
   const mostlyNeed = options.openMode === 'mostly' ? Math.floor(minNotes / 2) + 1 : 0;
 
+  const allowOpens = options.openMode !== 'exclude';
   const results: VoicingShape[] = [];
   const frets: (number | null)[] = new Array(n).fill(null);
   const covered = new Set<number>();
 
   const dfs = (s: number, voiced: number, gapClosed: boolean, openCount: number): void => {
     if (results.length >= RAW_CAP) return;
-    for (const pc of pcs) {
+    for (const pc of required) {
       if (!covered.has(pc) && !suffixCover[s].has(pc)) return;
     }
     if (voiced + (n - s) < minNotes) return;
@@ -140,13 +156,25 @@ export function searchChord(
     if (options.openMode === 'mostly' && openCount + suffixOpenCount[s] < mostlyNeed) return;
 
     if (s === n) {
-      if (voiced >= minNotes && covered.size === pcs.size) {
+      if (voiced >= minNotes && covered.size === required.size) {
         if (options.openMode === 'require' && openCount === 0) return;
         if (options.openMode === 'mostly' && openCount * 2 <= voiced) return;
         const shape = makeShape(frets.slice(), tuning, chord);
-        if (shape.span > options.maxStretch) return;
+        // The Bouncer: reject physically impossible shapes before ranking.
+        if (
+          !isPhysicallyPlayable(shape, tuning, {
+            maxSpan: options.maxStretch,
+            rejectUnbarrable: options.rejectUnbarrable,
+          })
+        )
+          return;
         if (!options.allowInversions && !shape.bassIsRoot) return;
-        results.push(shape);
+        if (feedback?.excludeShape?.(shape)) return;
+        const baseCost = scoreErgonomics(shape, tuning, chord, allowOpens).cost;
+        results.push({
+          ...shape,
+          cost: feedback?.adjustCost ? feedback.adjustCost(shape, baseCost) : baseCost,
+        });
       }
       return;
     }
@@ -161,7 +189,7 @@ export function searchChord(
         if (options.openMode === 'exclude' && fret === 0) continue;
         frets[s] = fret;
         const pc = mod12(tuning.midi[s] + fret);
-        const newlyCovered = !covered.has(pc);
+        const newlyCovered = required.has(pc) && !covered.has(pc);
         if (newlyCovered) covered.add(pc);
         dfs(s + 1, voiced + 1, gapClosed, openCount + (fret === 0 ? 1 : 0));
         if (newlyCovered) covered.delete(pc);
@@ -171,17 +199,16 @@ export function searchChord(
   };
   dfs(0, 0, false, 0);
 
-  const rankOf = (shape: VoicingShape): number[] => [
-    shape.span,
-    shape.bassIsRoot ? 0 : 1,
-    -shape.sounding.length,
-    shape.position,
-    -shape.openCount,
-  ];
-  results.sort((a, b) =>
-    options.openMode === 'mostly'
-      ? compareRanks([-a.openCount, ...rankOf(a)], [-b.openCount, ...rankOf(b)])
-      : compareRanks(rankOf(a), rankOf(b)),
-  );
-  return results.slice(0, RESULTS_PER_CHORD);
+  const epsilon = 0.5;
+  results.sort((a, b) => {
+    if (options.openMode === 'mostly' && a.openCount !== b.openCount)
+      return b.openCount - a.openCount;
+    const costDiff = a.cost - b.cost;
+    if (Math.abs(costDiff) > epsilon) return costDiff;
+    if (a.span !== b.span) return a.span - b.span;
+    if (a.position !== b.position) return a.position - b.position;
+    return costDiff;
+  });
+  const candidateCount = options.candidateCount ?? RESULTS_PER_CHORD;
+  return results.slice(0, candidateCount);
 }

@@ -4,18 +4,15 @@
   class="settings-dialog"
   aria-labelledby="settings-title"
   (cancel)="requestDismiss($event)"
-  (click)="onDialogClick($event)">
+  (click)="onDialogClick($event)"
+>
   <section class="settings-sheet">
     <header class="settings-header">
       <div>
         <span class="settings-kicker">OmniTuner</span>
         <h2 id="settings-title">Settings</h2>
       </div>
-      <app-icon-button
-        icon="close"
-        label="Close settings"
-        (activate)="requestDismiss()"
-      />
+      <app-icon-button icon="close" label="Close settings" (activate)="requestDismiss()" />
     </header>
 
     <div class="settings-content">
@@ -25,26 +22,6 @@
             <span class="settings-kicker">Appearance</span>
             <h3 id="tweaks-title">Tweaks</h3>
           </div>
-          <span class="current-accent">{{ accent() }}</span>
-        </div>
-
-        <p>Choose the accent used for selected controls and active states.</p>
-
-        <div class="swatches" role="radiogroup" aria-label="Accent color">
-          @for (option of accentOptions; track option.value) {
-            <button
-              class="swatch"
-              type="button"
-              role="radio"
-              [class.selected]="accent().toLowerCase() === option.value"
-              [attr.aria-checked]="accent().toLowerCase() === option.value"
-              [attr.aria-label]="option.name"
-              [title]="option.name"
-              [style.--swatch-color]="option.value"
-              (click)="chooseAccent(option.value)">
-              <span aria-hidden="true"></span>
-            </button>
-          }
         </div>
 
         <label class="custom-accent">
@@ -57,15 +34,19 @@
             type="color"
             [value]="accent()"
             aria-label="Choose a custom accent color"
-            (input)="onCustomAccent($event)" />
+            (input)="onCustomAccent($event)"
+          />
         </label>
 
         <section class="note-colors" aria-labelledby="note-colors-title">
           <h4 id="note-colors-title">Scale notes</h4>
-          <p>Set the root and other-note colors used on the fretboard and note controls.</p>
 
           <label class="custom-accent">
-            <span class="color-preview" [style.background-color]="rootNoteColor()" aria-hidden="true"></span>
+            <span
+              class="color-preview"
+              [style.background-color]="rootNoteColor()"
+              aria-hidden="true"
+            ></span>
             <span class="custom-copy">
               <strong>Root note</strong>
               <span>{{ rootNoteColor() }}</span>
@@ -74,11 +55,16 @@
               type="color"
               [value]="rootNoteColor()"
               aria-label="Choose the root note color"
-              (input)="onRootNoteColor($event)" />
+              (input)="onRootNoteColor($event)"
+            />
           </label>
 
           <label class="custom-accent">
-            <span class="color-preview" [style.background-color]="noteColor()" aria-hidden="true"></span>
+            <span
+              class="color-preview"
+              [style.background-color]="noteColor()"
+              aria-hidden="true"
+            ></span>
             <span class="custom-copy">
               <strong>Other notes</strong>
               <span>{{ noteColor() }}</span>
@@ -87,13 +73,13 @@
               type="color"
               [value]="noteColor()"
               aria-label="Choose the color for other scale notes"
-              (input)="onNoteColor($event)" />
+              (input)="onNoteColor($event)"
+            />
           </label>
         </section>
 
         <section class="workbench-size" aria-labelledby="workbench-size-title">
           <h4 id="workbench-size-title">Workbench</h4>
-          <p>Scale the workbench card to fit your screen.</p>
 
           <label class="workbench-size-control">
             <span class="custom-copy">
@@ -107,7 +93,8 @@
               step="0.05"
               [value]="workbenchScale()"
               aria-label="Workbench size"
-              (input)="onWorkbenchScale($event)" />
+              (input)="onWorkbenchScale($event)"
+            />
             <app-icon-button
               icon="restart_alt"
               label="Reset workbench size"
@@ -125,14 +112,8 @@
           </div>
         </div>
 
-        <p>
-          When a played pitch holds inside the tolerance window, the tuner confirms it with a
-          tinted glow, a soft chime, and a one-shot pulse.
-        </p>
-
         <section class="reference-pitch" aria-labelledby="reference-pitch-title">
           <h4 id="reference-pitch-title">Reference pitch (A4)</h4>
-          <p>Shift the concert reference from the default 440 Hz.</p>
 
           <label class="workbench-size-control">
             <span class="custom-copy">
@@ -146,28 +127,33 @@
               step="1"
               [value]="tunerSettings().referencePitch"
               aria-label="Reference pitch A4 in Hz"
-              (input)="onReferencePitch($event)" />
+              (input)="onReferencePitch($event)"
+            />
           </label>
         </section>
 
         <div class="startup-mode">
           <h4 id="startup-mode-title">Mode on startup</h4>
           <div
-            class="seg"
+            class="seg indicator-accent"
             role="radiogroup"
             aria-label="Tuner mode on startup"
-            [style.--seg-count]="3">
+            [style.--seg-count]="3"
+            [appRovingRadioGroup]="true"
+          >
             <div
               class="seg-indicator"
               [style.transform]="startupIndicatorTransform()"
-              aria-hidden="true"></div>
+              aria-hidden="true"
+            ></div>
             @for (option of startupModeOptions; track option.value) {
               <button
                 type="button"
                 role="radio"
                 [attr.aria-checked]="tunerSettings().startupMode === option.value"
                 [class.active]="tunerSettings().startupMode === option.value"
-                (click)="chooseStartupMode(option.value)">
+                (click)="chooseStartupMode(option.value)"
+              >
                 {{ option.label }}
               </button>
             }
@@ -189,12 +175,12 @@
 
           <div class="toggle-row">
             <div class="custom-copy">
-              <strong>Confirmation sound</strong>
-              <span>Play a soft chime when the note locks</span>
+              <strong>In-tune chime (ping)</strong>
+              <span>Play a soft chime when the note locks — turn off to mute the ping</span>
             </div>
             <app-toggle
               [checked]="tunerSettings().inTune.sound"
-              label="Confirmation sound"
+              label="In-tune chime (ping)"
               (change)="inTuneSoundChange.emit($event)"
             />
           </div>
@@ -213,31 +199,14 @@
         </div>
 
         <section class="in-tune-color" aria-labelledby="in-tune-color-title">
-          <h4 id="in-tune-color-title">In-tune color</h4>
-          <p>One color drives every cue — the note, the needle, the status, the string, and the glow.</p>
-
-          <div class="swatches" role="radiogroup" aria-label="In-tune color">
-            @for (option of inTuneColorOptions; track option.value) {
-              <button
-                class="swatch"
-                type="button"
-                role="radio"
-                [class.selected]="tunerSettings().inTune.color === option.value"
-                [attr.aria-checked]="tunerSettings().inTune.color === option.value"
-                [attr.aria-label]="option.name"
-                [title]="option.name"
-                [style.--swatch-color]="option.value"
-                (click)="chooseInTuneColor(option.value)">
-                <span aria-hidden="true"></span>
-              </button>
-            }
-          </div>
+          <h4 id="in-tune-color-title">Tuner colors</h4>
 
           <label class="custom-accent">
             <span
               class="color-preview"
               [style.background-color]="tunerSettings().inTune.color"
-              aria-hidden="true"></span>
+              aria-hidden="true"
+            ></span>
             <span class="custom-copy">
               <strong>Custom in-tune color</strong>
               <span>Use any six-digit color</span>
@@ -246,13 +215,31 @@
               type="color"
               [value]="tunerSettings().inTune.color"
               aria-label="Choose a custom in-tune color"
-              (input)="onCustomInTuneColor($event)" />
+              (input)="onCustomInTuneColor($event)"
+            />
+          </label>
+
+          <label class="custom-accent">
+            <span
+              class="color-preview"
+              [style.background-color]="tunerSettings().inTune.outOfTuneColor"
+              aria-hidden="true"
+            ></span>
+            <span class="custom-copy">
+              <strong>Custom out-of-tune color</strong>
+              <span>Use any six-digit color</span>
+            </span>
+            <input
+              type="color"
+              [value]="tunerSettings().inTune.outOfTuneColor"
+              aria-label="Choose a custom out-of-tune color"
+              (input)="onCustomOutOfTuneColor($event)"
+            />
           </label>
         </section>
 
         <section class="in-tune-ranges" aria-labelledby="in-tune-ranges-title">
           <h4 id="in-tune-ranges-title">Confirmation window</h4>
-          <p>Tune how strict the lock is and how long a pitch must hold before it confirms.</p>
 
           <label class="workbench-size-control">
             <span class="custom-copy">
@@ -266,7 +253,8 @@
               step="1"
               [value]="tunerSettings().inTune.tolerance"
               aria-label="In-tune tolerance in cents"
-              (input)="onTolerance($event)" />
+              (input)="onTolerance($event)"
+            />
           </label>
 
           <label class="workbench-size-control">
@@ -281,7 +269,8 @@
               [step]="holdStep"
               [value]="tunerSettings().inTune.holdMs"
               aria-label="In-tune hold time in milliseconds"
-              (input)="onHoldMs($event)" />
+              (input)="onHoldMs($event)"
+            />
           </label>
         </section>
       </section>

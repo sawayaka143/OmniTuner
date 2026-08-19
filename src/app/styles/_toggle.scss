@@ -1,6 +1,3 @@
-/// Shared switch look (reference: Tweaks panel toggles).
-/// Icon-only pill (40x24) by default; pass $with-label: true to render text + lamp.
-/// Active state lights the lamp dot with the accent color + soft glow.
 /// @param {Boolean} $with-label - render a text label alongside the lamp.
 @mixin toggle-switch($with-label: false) {
   flex-shrink: 0;
@@ -16,10 +13,14 @@
   font-family: var(--mono);
   font-size: var(--text-xs);
   cursor: pointer;
-  transition: background-color var(--dur-med) ease, border-color var(--dur-med) ease,
+  transition:
+    background-color var(--dur-med) ease,
+    border-color var(--dur-med) ease,
     color var(--dur-med) ease;
 
   @if $with-label {
+    width: auto;
+    height: auto;
     padding: 0 var(--space-3);
   } @else {
     width: var(--ctrl-switch-w);
@@ -34,16 +35,11 @@
     height: var(--space-2);
     border-radius: 50%;
     background: var(--text-dim);
-    box-shadow: 0 0 0 3px transparent;
-    transition: background-color var(--dur-med) ease, box-shadow var(--dur-med) ease;
+    transition: background-color var(--dur-med) ease;
   }
 
   &:hover {
     border-color: var(--border-medium);
-  }
-
-  &:active {
-    transform: scale(0.97);
   }
 
   &.active {
@@ -53,7 +49,6 @@
 
     .toggle-lamp {
       background: var(--scale-accent);
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--scale-accent) 18%, transparent);
     }
   }
 

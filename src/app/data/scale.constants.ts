@@ -6,11 +6,33 @@ import { Scale } from '../models/scale.model';
  * the chosen root's accidental preference.
  */
 export const SHARP_NAMES: readonly string[] = [
-  'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B',
+  'C',
+  'C#',
+  'D',
+  'D#',
+  'E',
+  'F',
+  'F#',
+  'G',
+  'G#',
+  'A',
+  'A#',
+  'B',
 ];
 
 export const FLAT_NAMES: readonly string[] = [
-  'C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B',
+  'C',
+  'Db',
+  'D',
+  'Eb',
+  'E',
+  'F',
+  'Gb',
+  'G',
+  'Ab',
+  'A',
+  'Bb',
+  'B',
 ];
 
 /**
@@ -185,6 +207,6 @@ export const SCALES: readonly Scale[] = [
       { semitones: 6, label: '♭5' },
       { semitones: 7, label: '5' },
       { semitones: 10, label: '♭7' },
-    ]
+    ],
   },
 ];

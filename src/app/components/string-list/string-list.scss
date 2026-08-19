@@ -25,10 +25,14 @@
     align-items: center;
     justify-content: center;
     gap: 2px;
+    /* WCAG exempt: inactive affordance — hover/active restores full opacity */
     opacity: 0.7;
     cursor: pointer;
-    transition: opacity var(--dur-med) ease, border-color var(--dur-med) ease,
-      background-color var(--dur-med) ease, transform var(--dur-fast) ease;
+    transition:
+      opacity var(--dur-med) ease,
+      border-color var(--dur-med) ease,
+      background-color var(--dur-med) ease,
+      transform var(--dur-fast) ease;
 
     &:hover {
       opacity: 1;
@@ -46,12 +50,9 @@
       opacity: 1;
     }
 
-    &.active.in-tune {
-      background-color: color-mix(
-        in srgb,
-        var(--in-tune-color) 12%,
-        var(--surface-container-high)
-      );
+    &.active.in-tune,
+    &.tuned {
+      background-color: color-mix(in srgb, var(--in-tune-color) 12%, var(--surface-container-high));
       border-color: color-mix(in srgb, var(--in-tune-color) 65%, transparent);
       box-shadow: var(--string-glow);
     }
@@ -72,12 +73,13 @@
     transition: color var(--dur-med) ease;
 
     .string-btn.active & {
-      color: var(--in-tune-color);
-      font-weight: var(--fw-semibold);
+      color: var(--text);
     }
 
-    .string-btn.active.in-tune & {
+    .string-btn.active.in-tune &,
+    .string-btn.tuned & {
       color: var(--in-tune-color);
+      font-weight: var(--fw-semibold);
     }
   }
 }

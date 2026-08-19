@@ -17,13 +17,10 @@ import { LabelMode } from '../../models/scale-preferences.model';
 import { textColorOn } from '../../data/interval-colors';
 
 /**
- * Presentational fretboard visualizer.
- *
- * Renders a pre-computed `FretCell[][]` matrix (rows = strings, already oriented
- * high-string-first so row 0 is the top of the board) as a CSS grid of frets.
- * In-scale cells show a colored dot whose color comes from the cell's resolved
- * interval label; the root is rendered larger with a halo. The component performs
- * no music-theory math — every value it needs is already on each `FretCell`.
+ * Presentational fretboard visualizer: renders a pre-computed `FretCell[][]`
+ * (rows = strings, high-string-first) as a CSS grid. In-scale cells show a
+ * colored dot from the resolved interval label; the root is larger with a
+ * halo. No music-theory math — every value is already on each `FretCell`.
  */
 @Component({
   selector: 'app-fretboard',

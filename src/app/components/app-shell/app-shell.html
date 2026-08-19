@@ -2,8 +2,8 @@
   <div class="header-inner">
     <app-brand class="app-title" />
     <nav class="nav-desktop" aria-label="Primary navigation">
-      <a class="nav-link" routerLink="/tuner" routerLinkActive="active">Tuner</a>
       <a class="nav-link" routerLink="/scales" routerLinkActive="active">Scales</a>
+      <a class="nav-link" routerLink="/tuner" routerLinkActive="active">Tuner</a>
       <a class="nav-link" routerLink="/chords" routerLinkActive="active">Chords</a>
     </nav>
     <div class="header-actions">
@@ -14,7 +14,8 @@
         aria-controls="settings-dialog"
         [class.active]="settingsOpen()"
         [attr.aria-expanded]="settingsOpen()"
-        (click)="settingsOpen.set(true)">
+        (click)="settingsOpen.set(true)"
+      >
         <span class="material-symbols-outlined" aria-hidden="true">settings</span>
       </button>
     </div>
@@ -29,18 +30,22 @@
   [rootNoteColor]="preferencesState().rootNoteColor"
   [noteColor]="preferencesState().noteColor"
   [workbenchScale]="preferencesState().workbenchScale"
+  [chordRandomProgression]="preferencesState().chordRandomProgression"
   [tunerSettings]="tunerSettings()"
   (accentChange)="setAccent($event)"
   (rootNoteColorChange)="setRootNoteColor($event)"
   (noteColorChange)="setNoteColor($event)"
   (workbenchScaleChange)="setWorkbenchScale($event)"
+  (chordRandomProgressionChange)="setChordRandomProgression($event)"
   (workbenchScaleReset)="resetWorkbenchScale()"
   (startupModeChange)="setTunerStartupMode($event)"
   (inTuneEnabledChange)="setInTuneEnabled($event)"
   (inTuneSoundChange)="setInTuneSound($event)"
   (inTuneGlowChange)="setInTuneGlow($event)"
   (inTuneColorChange)="setInTuneColor($event)"
+  (outOfTuneColorChange)="setOutOfTuneColor($event)"
   (inTuneToleranceChange)="setInTuneTolerance($event)"
   (inTuneHoldMsChange)="setInTuneHoldMs($event)"
   (referencePitchChange)="setReferencePitch($event)"
-  (dismiss)="settingsOpen.set(false)" />
+  (dismiss)="settingsOpen.set(false)"
+/>

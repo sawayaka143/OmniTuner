@@ -1,12 +1,17 @@
 import { Component, ElementRef, inject, input, output, signal, viewChild } from '@angular/core';
-import { AccidentalPreference, LabelMode, ScaleFretCount } from '../../models/scale-preferences.model';
+import {
+  AccidentalPreference,
+  LabelMode,
+  ScaleFretCount,
+} from '../../models/scale-preferences.model';
 import { Toggle } from '../../ui/toggle/toggle';
+import { RovingRadioGroup } from '../../ui/keyboard-nav';
 
 @Component({
   selector: 'app-scale-options',
   templateUrl: './scale-options.html',
   styleUrl: './scale-options.scss',
-  imports: [Toggle],
+  imports: [Toggle, RovingRadioGroup],
   host: {
     '(document:mousedown)': 'onDocumentMouseDown($event)',
   },
@@ -89,7 +94,7 @@ export class ScaleOptions {
   }
 
   protected onDocumentMouseDown(event: MouseEvent): void {
-    if (this.labelOpen() && !this.elementRef.nativeElement.contains(event.target as Node)) {
+    if (this.labelOpen() && !this.elementRef.nativeElement.contains(event.target)) {
       this.labelOpen.set(false);
     }
   }
