@@ -51,6 +51,7 @@ lerna-debug.log*
 /screenshots/
 *.lcov
 serve-dist.cjs*
+/tests/
 
 # ------------------------------------------------------------------------------
 # 5. IDEs & Code Editors
