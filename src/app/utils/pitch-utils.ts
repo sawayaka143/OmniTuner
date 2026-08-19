@@ -93,6 +93,16 @@ export function shouldConfirm(options: {
   return options.inRange && options.elapsedMs >= options.holdMs;
 }
 
+/**
+ * Release-hysteresis rule for the in-tune lock: an already-confirmed pitch
+ * unconfirms only after `required` consecutive out-of-range frames, so a
+ * single-frame breach at the tolerance edge cannot flicker the state or
+ * retrigger the chime. Pure so it gets a real unit test.
+ */
+export function shouldUnconfirm(streak: number, required: number): boolean {
+  return streak >= required;
+}
+
 export function midiNoteLabel(midiNote: number): string {
   const semitoneFromA = midiNote - 69;
   const noteIndex = ((semitoneFromA % 12) + 12) % 12;
@@ -110,17 +120,25 @@ export function nearestSemitone(playedMidiFloat: number | null): { midi: number 
   return { midi: Math.round(playedMidiFloat) };
 }
 
-/** Direction-only prompt readout, e.g. TUNE UP / TUNE DOWN / IN TUNE. */
-export function tuneDirectionText(cents: number | null): string {
+/**
+ * Direction-only prompt readout, e.g. TUNE UP / TUNE DOWN / IN TUNE.
+ * Threshold defaults to 5¢ for backward compat; the tuner passes its
+ * configured tolerance so the text and the in-tune confirmation agree.
+ */
+export function tuneDirectionText(cents: number | null, threshold = 5): string {
   if (cents === null || !Number.isFinite(cents)) return '\u2014';
-  if (Math.abs(cents) < 5) return 'IN TUNE';
+  if (Math.abs(cents) < threshold) return 'IN TUNE';
   return cents < 0 ? 'TUNE UP' : 'TUNE DOWN';
 }
 
-/** Cents-magnitude readout shown under the direction prompt. */
-export function tuneCentsText(cents: number | null): string {
+/**
+ * Cents-magnitude readout shown under the direction prompt.
+ * Threshold defaults to 5¢ for backward compat; the tuner passes its
+ * configured tolerance so the readout and the confirmation agree.
+ */
+export function tuneCentsText(cents: number | null, threshold = 5): string {
   if (cents === null || !Number.isFinite(cents)) return '';
-  if (Math.abs(cents) < 5) return '';
+  if (Math.abs(cents) < threshold) return '';
   return `${Math.abs(Math.round(cents))}\u00a2`;
 }
 
@@ -149,10 +167,14 @@ export function interpolateColor(from: string, to: string, t: number): string | 
 
 /**
  * Color-blend progress for the tune prompt: 0 when far off-pitch (≥ 50¢),
- * 1 at the ±5¢ in-tune boundary, linear between.
+ * 1 at the in-tune boundary. The boundary is `max(5, threshold)` so the
+ * color fully reaches the in-tune color exactly at the confirm threshold
+ * (the tuner passes its configured tolerance), while never narrowing the
+ * ramp below the classic ±5¢ for tight tolerances.
  */
-export function tuneColorProgress(cents: number | null): number {
+export function tuneColorProgress(cents: number | null, threshold = 5): number {
   if (cents === null || !Number.isFinite(cents)) return 0;
   const magnitude = Math.abs(cents);
-  return Math.max(0, Math.min(1, (50 - magnitude) / 45));
+  const endpoint = Math.max(5, threshold);
+  return Math.max(0, Math.min(1, (50 - magnitude) / (50 - endpoint)));
 }

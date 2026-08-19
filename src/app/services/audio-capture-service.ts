@@ -15,6 +15,12 @@ const SMOOTHING_WINDOW = 3;
 const EMA_ALPHA = 0.12;
 const MAX_SMOOTHING_JUMP_CENTS = 380;
 
+// Adaptive EMA: each 100¢ of innovation adds 1.0 to the smoothing alpha
+// (clamped at 1), so peg turns converge quickly while a stable note keeps
+// the gentle base alpha. 30¢ innovation → α ≈ 0.42 instead of the fixed
+// 0.12, cutting the ~0.34 s steady-state lag to ~0.1 s.
+const ADAPTIVE_ALPHA_CENTS = 100;
+
 /**
  * When the worker returns "no pitch" for a silent input, we keep
  * displaying the last good pitch for this many frames before dropping
@@ -37,8 +43,6 @@ const AUDIBLE_HOLD_FRAMES = 60;
  * than a decaying note.
  */
 const SILENCE_RMS = 0.004;
-
-const RELEASE_FRAME_COUNT = 10;
 
 /**
  * Safety-net timeout (ms). If the worker hasn't replied within this
@@ -88,11 +92,14 @@ export class AudioCaptureService {
   private onUnlockClick: (() => void) | null = null;
 
   // ── Smoothing / tracking state ────────────────────────────────
-  private recentFrequencies: number[] = [];
+  // All smoothing state lives in log2(Hz): a fixed cents distance maps to
+  // a fixed log2 distance, so the EMA tightness and the jump gate behave
+  // identically on the low E (~82 Hz) and the high E (~330 Hz).
+  private recentLogFreqs: number[] = [];
   private smoothedFrequency: number | null = null;
-  private emaFrequency: number | null = null;
+  private emaLogFreq: number | null = null;
   private missedFrames = 0;
-  private pendingNoteFrequency: number | null = null;
+  private pendingLogFreq: number | null = null;
 
   constructor() {
     this.worker = new Worker(new URL('./pitch-detector.worker', import.meta.url));
@@ -298,11 +305,11 @@ export class AudioCaptureService {
   }
 
   private resetTracking(): void {
-    this.recentFrequencies = [];
+    this.recentLogFreqs = [];
     this.smoothedFrequency = null;
-    this.emaFrequency = null;
+    this.emaLogFreq = null;
     this.missedFrames = 0;
-    this.pendingNoteFrequency = null;
+    this.pendingLogFreq = null;
   }
 
   // ── Analysis loop ─────────────────────────────────────────────
@@ -352,13 +359,19 @@ export class AudioCaptureService {
 
     const smoothed = this.smoothFrequency(rawFrequency);
 
-    if (this.recentFrequencies.length >= 3) {
+    // Provisional display: publish the smoothed pitch from the very first
+    // accepted frame so the needle moves ~140 ms sooner (the old code waited
+    // for the 3-frame consensus). The state machine still waits for the
+    // consensus before 'locked' — only the display is provisional.
+    this.frequency.set(smoothed);
+
+    if (this.recentLogFreqs.length >= 3) {
       this.smoothedFrequency = smoothed;
-      this.frequency.set(smoothed);
       this.trackingState.set('locked');
     } else {
-      this.smoothedFrequency = null;
-      this.frequency.set(null);
+      // Keep smoothedFrequency seeded so the dropout hold works during
+      // the provisional window too.
+      this.smoothedFrequency = smoothed;
       this.trackingState.set('listening');
     }
   }
@@ -377,65 +390,75 @@ export class AudioCaptureService {
       return;
     }
 
-    // Sustained silence / untrusted input → release and reset tracking.
-    if (this.missedFrames >= RELEASE_FRAME_COUNT) {
-      this.resetTracking();
-      this.frequency.set(null);
-      this.trackingState.set('listening');
-      return;
-    }
-
-    // Past the hold window: hide the frequency while tracking remains active.
-    this.smoothedFrequency = null;
-    this.emaFrequency = null;
+    // Hold budget exhausted → release atomically in this same frame: reset
+    // tracking, null the frequency, and drop to 'listening' together. The
+    // old code hid the frequency for a further RELEASE_FRAME_COUNT frames
+    // while staying 'locked' — a dead zone where the needle sat at center
+    // while the status still claimed "TUNING …".
+    this.resetTracking();
     this.frequency.set(null);
+    this.trackingState.set('listening');
   }
 
-  // ── Hybrid Median + EMA Smoothing ──────────────────────────────
+  // ── Hybrid Median + EMA Smoothing (log2 domain) ─────────────────
 
   private smoothFrequency(frequency: number): number {
-    if (this.recentFrequencies.length > 0) {
-      const med = this.median(this.recentFrequencies);
-      const jump = Math.abs(this.cents(frequency, med));
+    // Guard non-positive or non-finite input: log2 would yield NaN/±Infinity.
+    if (!Number.isFinite(frequency) || frequency <= 0) {
+      return this.emaLogFreq !== null ? 2 ** this.emaLogFreq : frequency;
+    }
+    const candidateLog = Math.log2(frequency);
+
+    if (this.recentLogFreqs.length > 0) {
+      const medianLog = this.median(this.recentLogFreqs);
+      // Log-difference × 1200 = cents, so the jump gate is pitch-independent.
+      const jumpCents = Math.abs((candidateLog - medianLog) * 1200);
 
       // Far frame: a single octave slip or transient blip must not move
       // the needle. Commit to a note change only after two consecutive
       // far frames that also agree with each other.
-      if (jump > MAX_SMOOTHING_JUMP_CENTS) {
+      if (jumpCents > MAX_SMOOTHING_JUMP_CENTS) {
         const coherent =
-          this.pendingNoteFrequency !== null &&
-          Math.abs(this.cents(frequency, this.pendingNoteFrequency)) <= MAX_SMOOTHING_JUMP_CENTS;
-        this.pendingNoteFrequency = frequency;
+          this.pendingLogFreq !== null &&
+          Math.abs((candidateLog - this.pendingLogFreq) * 1200) <= MAX_SMOOTHING_JUMP_CENTS;
+        this.pendingLogFreq = candidateLog;
 
         if (!coherent) {
-          return this.emaFrequency ?? this.median(this.recentFrequencies);
+          return this.emaLogFreq !== null
+            ? 2 ** this.emaLogFreq
+            : 2 ** this.median(this.recentLogFreqs);
         }
 
         // Confirmed note change: seed a fresh consensus on the new note.
-        this.pendingNoteFrequency = null;
-        this.recentFrequencies = [frequency, frequency, frequency];
-        this.emaFrequency = frequency;
+        this.pendingLogFreq = null;
+        this.recentLogFreqs = [candidateLog, candidateLog, candidateLog];
+        this.emaLogFreq = candidateLog;
         return frequency;
       }
-      this.pendingNoteFrequency = null;
+      this.pendingLogFreq = null;
     }
 
-    this.recentFrequencies.push(frequency);
-    if (this.recentFrequencies.length > SMOOTHING_WINDOW) {
-      this.recentFrequencies.shift();
+    this.recentLogFreqs.push(candidateLog);
+    if (this.recentLogFreqs.length > SMOOTHING_WINDOW) {
+      this.recentLogFreqs.shift();
     }
 
-    const currentMedian = this.median(this.recentFrequencies);
+    const currentMedianLog = this.median(this.recentLogFreqs);
 
     // Initial lock: seed the EMA directly from the initial consensus median.
-    // Sustained tracking: blend via Exponential Moving Average (EMA) for rock-solid stability.
-    if (this.emaFrequency === null || this.recentFrequencies.length < 3) {
-      this.emaFrequency = currentMedian;
+    // Sustained tracking: blend via Exponential Moving Average (EMA) for
+    // rock-solid stability, with an adaptive alpha — the further the new
+    // median is from the current EMA (in cents), the faster we converge, so
+    // a peg turn tracks closely instead of lagging ~0.34 s behind.
+    if (this.emaLogFreq === null || this.recentLogFreqs.length < 3) {
+      this.emaLogFreq = currentMedianLog;
     } else {
-      this.emaFrequency = EMA_ALPHA * currentMedian + (1 - EMA_ALPHA) * this.emaFrequency;
+      const innovationCents = Math.abs((currentMedianLog - this.emaLogFreq) * 1200);
+      const alpha = Math.min(1, EMA_ALPHA + innovationCents / ADAPTIVE_ALPHA_CENTS);
+      this.emaLogFreq = alpha * currentMedianLog + (1 - alpha) * this.emaLogFreq;
     }
 
-    return this.emaFrequency;
+    return 2 ** this.emaLogFreq;
   }
 
   // ── Math helpers ──────────────────────────────────────────────
@@ -444,11 +467,5 @@ export class AudioCaptureService {
     const sorted = [...values].sort((a, b) => a - b);
     const mid = Math.floor(sorted.length / 2);
     return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
-  }
-
-  // Guard against non-positive inputs (would yield NaN/±Infinity).
-  private cents(a: number, b: number): number {
-    if (a <= 0 || b <= 0) return 0;
-    return 1200 * Math.log2(a / b);
   }
 }

@@ -9,6 +9,7 @@ import {
   nearestStringTarget,
   needlePercentFromCents,
   shouldConfirm,
+  shouldUnconfirm,
   tuneCentsText,
   tuneColorProgress,
   tuneDirectionText,
@@ -130,6 +131,15 @@ describe('cents offset readout', () => {
     expect(tuneDirectionText(Number.NaN)).toBe('\u2014');
   });
 
+  it('honors a custom in-tune threshold for the direction prompt', () => {
+    expect(tuneDirectionText(6, 8)).toBe('IN TUNE');
+    expect(tuneDirectionText(-6, 8)).toBe('IN TUNE');
+    expect(tuneDirectionText(9, 8)).toBe('TUNE DOWN');
+    expect(tuneDirectionText(-9, 8)).toBe('TUNE UP');
+    // Default remains 5¢.
+    expect(tuneDirectionText(6)).toBe('TUNE DOWN');
+  });
+
   it('renders the cents magnitude under the prompt', () => {
     expect(tuneCentsText(0)).toBe('');
     expect(tuneCentsText(-3.2)).toBe('');
@@ -137,6 +147,15 @@ describe('cents offset readout', () => {
     expect(tuneCentsText(-187.7)).toBe('188¢');
     expect(tuneCentsText(null)).toBe('');
     expect(tuneCentsText(Number.NaN)).toBe('');
+  });
+
+  it('honors a custom in-tune threshold for the cents readout', () => {
+    expect(tuneCentsText(6, 8)).toBe('');
+    expect(tuneCentsText(-6, 8)).toBe('');
+    expect(tuneCentsText(9, 8)).toBe('9¢');
+    expect(tuneCentsText(-9, 8)).toBe('9¢');
+    // Default remains 5¢.
+    expect(tuneCentsText(6)).toBe('6¢');
   });
 });
 
@@ -180,6 +199,16 @@ describe('tuneColorProgress', () => {
     expect(tuneColorProgress(null)).toBe(0);
     expect(tuneColorProgress(Number.NaN)).toBe(0);
   });
+
+  it('ends the ramp at the custom threshold when it exceeds 5¢', () => {
+    // With threshold 8 the ramp spans 50 → 8, so 8¢ is the full in-tune color.
+    expect(tuneColorProgress(8, 8)).toBe(1);
+    expect(tuneColorProgress(-8, 8)).toBe(1);
+    expect(tuneColorProgress(29, 8)).toBeCloseTo(0.5, 5);
+    expect(tuneColorProgress(50, 8)).toBe(0);
+    // Thresholds below 5 keep the classic 5¢ endpoint.
+    expect(tuneColorProgress(3, 1)).toBe(1);
+  });
 });
 
 describe('needle helpers', () => {
@@ -202,5 +231,14 @@ describe('shouldConfirm', () => {
 
   it('never confirms while out of range, however long the hold', () => {
     expect(shouldConfirm({ inRange: false, elapsedMs: 5000, holdMs: 0 })).toBe(false);
+  });
+});
+
+describe('shouldUnconfirm', () => {
+  it('unconfirms only after the required consecutive out-of-range frames', () => {
+    expect(shouldUnconfirm(0, 3)).toBe(false);
+    expect(shouldUnconfirm(2, 3)).toBe(false);
+    expect(shouldUnconfirm(3, 3)).toBe(true);
+    expect(shouldUnconfirm(5, 3)).toBe(true);
   });
 });

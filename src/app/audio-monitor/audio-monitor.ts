@@ -36,6 +36,7 @@ import {
   nearestSemitone,
   needlePercentFromCents,
   shouldConfirm,
+  shouldUnconfirm,
   tuneCentsText,
   tuneColorProgress,
   tuneDirectionText,
@@ -45,6 +46,14 @@ import {
 
 /** How long the one-shot lock pulse stays visible. */
 const LOCK_PULSE_DURATION_MS = 900;
+
+/**
+ * Release hysteresis: an already-confirmed pitch unconfirms only after this
+ * many consecutive out-of-range frames (~150 ms at the analysis cadence), so
+ * a single-frame breach at the tolerance edge cannot flicker the state or
+ * retrigger the chime. 3 frames ≈ 135-150 ms of sustained breach.
+ */
+const RELEASE_HYSTERESIS_FRAMES = 3;
 
 @Component({
   selector: 'app-audio-monitor',
@@ -104,6 +113,12 @@ export class AudioMonitor implements OnInit {
   private pulseTimeout: ReturnType<typeof setTimeout> | null = null;
 
   /**
+   * Consecutive out-of-range frames while confirmed. Reset on confirm, on
+   * an in-range frame, and whenever the tuning/mode context is reset.
+   */
+  private outOfRangeStreak = 0;
+
+  /**
    * Last string the auto mode resolved as target. Fed back into
    * nearestStringTarget as the hysteresis "previous" name so a pitch
    * hovering at a string midpoint cannot flicker between two targets.
@@ -144,8 +159,11 @@ export class AudioMonitor implements OnInit {
   // Highlight strings that differ from the instrument's default tuning.
   readonly referenceNotes = computed(() => this.editorPresets()[0]?.notes ?? null);
 
+  // Provisional pitch: resolved from the displayed frequency regardless of
+  // lock state, so the needle and labels respond on the first accepted
+  // frame. Confirmation itself still requires 'locked' (see the hold effect).
   readonly autoTarget = computed<StringTarget | null>(() => {
-    if (this.trackingState() !== 'locked' || !this.isCapturing()) return null;
+    if (!this.isCapturing()) return null;
     const freq = this.frequency();
     if (!freq || freq <= 0) return null;
     const played = frequencyToMidiFloat(freq, this.refPitch());
@@ -195,16 +213,17 @@ export class AudioMonitor implements OnInit {
    * Cents of the played pitch against the displayed target, per frame:
    * auto → the nearest string of the current tuning;
    * manual → unclamped cents against the pinned string. Null while no pitch.
+   * Provisional: any displayed frequency counts, not only locked ones.
    */
   readonly frameCents = computed<number | null>(() => {
     if (this.mode() === 'auto') return this.autoTarget()?.cents ?? null;
 
-    const valid = this.trackingState() === 'locked' && (this.frequency() ?? 0) > 0;
-    if (!valid) return null;
+    const freq = this.frequency();
+    if (freq === null || freq <= 0) return null;
     const target = this.manualTarget();
     if (!target) return null;
     return centsFromMidiFloat(
-      frequencyToMidiFloat(this.frequency()!, this.refPitch()),
+      frequencyToMidiFloat(freq, this.refPitch()),
       this.targetMidi(target),
     );
   });
@@ -219,24 +238,24 @@ export class AudioMonitor implements OnInit {
 
   /**
    * Visual "in tune" flag handed to the display components: hold-gated
-   * confirmation while the master switch is ON; instantaneous |cents| < 5
-   * fallback when it's OFF.
+   * confirmation while the master switch is ON; instantaneous |cents| <
+   * tolerance fallback when it's OFF (same threshold as the text helpers).
    */
   readonly isTuned = computed(() => {
     if (this.tunerSettings().inTune.enabled) return this.showTuned();
     const cents = this.frameCents();
-    return cents !== null && Math.abs(cents) < 5;
+    return cents !== null && Math.abs(cents) < this.tolerance();
   });
 
   readonly needleLeft = computed(() => needlePercentFromCents(this.frameCents()));
 
   /** Big direction prompt above the meter. */
   readonly tunePrompt = computed(() => {
-    return tuneDirectionText(this.frameCents());
+    return tuneDirectionText(this.frameCents(), this.tolerance());
   });
 
   /** Small cents readout under the direction prompt. */
-  readonly tuneCents = computed(() => tuneCentsText(this.frameCents()));
+  readonly tuneCents = computed(() => tuneCentsText(this.frameCents(), this.tolerance()));
 
   /**
    * Off-pitch accent blended from the user's out-of-tune color toward the
@@ -245,9 +264,13 @@ export class AudioMonitor implements OnInit {
    */
   readonly tuneColorHex = computed(() => {
     const cents = this.frameCents();
-    if (cents === null || Math.abs(cents) < 5) return null;
+    if (cents === null || Math.abs(cents) < this.tolerance()) return null;
     const settings = this.tunerSettings().inTune;
-    return interpolateColor(settings.outOfTuneColor, settings.color, tuneColorProgress(cents));
+    return interpolateColor(
+      settings.outOfTuneColor,
+      settings.color,
+      tuneColorProgress(cents, this.tolerance()),
+    );
   });
 
   /** Green chips only once the target actually confirms. */
@@ -263,8 +286,9 @@ export class AudioMonitor implements OnInit {
 
   /** Label for the nearest chromatic semitone of the played pitch. */
   private readonly playedNoteLabel = computed(() => {
-    if (this.trackingState() !== 'locked') return null;
-    const played = frequencyToMidiFloat(this.frequency() ?? 0, this.refPitch());
+    const freq = this.frequency();
+    if (freq === null || freq <= 0 || !Number.isFinite(freq)) return null;
+    const played = frequencyToMidiFloat(freq, this.refPitch());
     const nearest = nearestSemitone(played);
     return nearest ? midiNoteLabel(nearest.midi) : null;
   });
@@ -284,7 +308,6 @@ export class AudioMonitor implements OnInit {
       return this.playedNoteLabel();
     }
 
-    if (this.trackingState() !== 'locked') return null;
     const target = this.autoTarget();
     if (!target) return this.playedNoteLabel();
 
@@ -325,6 +348,7 @@ export class AudioMonitor implements OnInit {
       untracked(() => {
         this.autoTuned.set([]);
         this.confirmed.set(false);
+        this.outOfRangeStreak = 0;
         this.lastAutoTargetName.set(null);
         this.clearHoldTimer();
       });
@@ -345,6 +369,41 @@ export class AudioMonitor implements OnInit {
       const inRange = this.inRange();
       const holdMs = this.tunerSettings().inTune.holdMs;
 
+      // Provisional pitch: while not locked, no confirmation may start or
+      // complete — a 1-frame blip must never run the hold timer. Release
+      // hysteresis below still owns unconfirming an already-confirmed pitch.
+      if (this.trackingState() !== 'locked') {
+        this.clearHoldTimer();
+        if (this.confirmed()) {
+          // Was confirmed and the pitch dropped out of lock: count this frame
+          // toward the release streak.
+          this.outOfRangeStreak += 1;
+          if (shouldUnconfirm(this.outOfRangeStreak, RELEASE_HYSTERESIS_FRAMES)) {
+            this.outOfRangeStreak = 0;
+            this.confirmed.set(false);
+          }
+        }
+        return;
+      }
+
+      // Release hysteresis: a confirmed pitch unconfirms only after
+      // RELEASE_HYSTERESIS_FRAMES consecutive out-of-range frames (null
+      // frameCents — dropout — counts toward the streak). In-range frames
+      // reset the streak.
+      if (this.confirmed()) {
+        if (inRange) {
+          this.outOfRangeStreak = 0;
+        } else {
+          this.outOfRangeStreak += 1;
+          if (shouldUnconfirm(this.outOfRangeStreak, RELEASE_HYSTERESIS_FRAMES)) {
+            this.clearHoldTimer();
+            this.outOfRangeStreak = 0;
+            this.confirmed.set(false);
+          }
+        }
+        return;
+      }
+
       if (!inRange) {
         const frameCents = this.frameCents();
         const holding = this.holdTimer !== null;
@@ -353,17 +412,15 @@ export class AudioMonitor implements OnInit {
 
         if (!withinHysteresis) {
           this.clearHoldTimer();
-          this.confirmed.set(false);
           return;
         }
       }
-
-      if (this.confirmed()) return;
 
       const now = performance.now();
       const elapsed = this.holdTimer !== null ? now - this.holdStartedAt : 0;
       if (shouldConfirm({ inRange, elapsedMs: elapsed, holdMs })) {
         this.confirmLock();
+        this.outOfRangeStreak = 0;
         return;
       }
 
@@ -546,6 +603,7 @@ export class AudioMonitor implements OnInit {
 
   private confirmLock(): void {
     this.clearHoldTimer();
+    this.outOfRangeStreak = 0;
     if (this.confirmed()) return;
 
     this.confirmed.set(true);
