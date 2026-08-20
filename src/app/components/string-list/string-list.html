@@ -16,6 +16,7 @@
       role="radio"
       [attr.aria-checked]="activeString() === str.name"
       [tabindex]="tabIndexFor(i)"
+      [attr.aria-label]="'Target ' + str.name"
       [title]="'Target ' + str.name"
       (click)="select.emit(i)"
       (focus)="onFocus(i)"

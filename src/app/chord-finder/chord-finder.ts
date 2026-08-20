@@ -30,8 +30,6 @@ interface TuningOption {
   readonly text: string;
 }
 
-const OPEN_MODES = [] as const;
-const OPEN_MODE_SHORT_LABELS: Readonly<Record<string, string>> = {};
 
 export interface ChordEntry {
   readonly token: string;
@@ -89,13 +87,9 @@ export class ChordFinder {
   protected readonly tuningLabelFn = (o: TuningOption): string => o.label;
   protected readonly tuningAltFn = (o: TuningOption): string | null => o.text;
   protected readonly tuningTrackFn = (o: TuningOption): string => o.id;
-  protected readonly openModeLabelFn = (o: string): string => OPEN_MODE_SHORT_LABELS[o] ?? o;
   protected readonly viewLabelFn = (o: 'tab' | 'dots' | 'lines'): string => o;
   protected readonly labelChoiceLabelFn = (o: 'notes' | 'func'): string =>
     o === 'notes' ? 'notes' : 'R b3';
-
-  protected readonly openModes = OPEN_MODES;
-  protected readonly openModeShortLabels = OPEN_MODE_SHORT_LABELS;
 
   protected readonly tuningText = signal(
     this.registry
@@ -241,11 +235,6 @@ export class ChordFinder {
   }
 
   protected readonly parsedTuning = computed(() => parseTuning(this.tuningText()));
-
-  protected readonly parsedTuningValue = computed<ParsedTuning | null>(() => {
-    const parsed = this.parsedTuning();
-    return parsed.ok ? parsed.tuning : null;
-  });
 
   protected readonly tuningError = computed<string>(() => {
     const parsed = this.parsedTuning();

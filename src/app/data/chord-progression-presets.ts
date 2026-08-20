@@ -434,12 +434,6 @@ export const PROGRESSION_PRESETS: readonly ProgressionPreset[] = [
   },
 
   {
-    id: 'chrom-bvii-iv-i',
-    name: 'Borrowed — I-bVII-IV-I',
-    degrees: ['I', 'bVII', 'IV', 'I'],
-    tonality: 'major',
-  },
-  {
     id: 'chrom-bvi-iv-v',
     name: 'Borrowed — I-bVI-IV-V',
     degrees: ['I', 'bVI', 'IV', 'V'],
@@ -495,12 +489,6 @@ export const PROGRESSION_PRESETS: readonly ProgressionPreset[] = [
     tonality: 'major',
   },
 
-  {
-    id: 'top-10-1',
-    name: 'Top 10 — I-V-vi-IV',
-    degrees: ['I', 'V', 'vi', 'IV'],
-    tonality: 'major',
-  },
   {
     id: 'top-10-4',
     name: 'Top 10 — I-IV-iv-I',

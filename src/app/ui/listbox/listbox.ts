@@ -101,9 +101,8 @@ export class Listbox<T> {
   protected readonly grouped = computed(() => {
     const items = this.options();
     const groupOf = this.optionGroup();
-    if (!groupOf) return [{ label: null as string | null, items }];
-    const order: string[] = [];
     const buckets = new Map<string, T[]>();
+    const order: string[] = [];
     for (const item of items) {
       const label = groupOf(item) ?? '';
       if (!buckets.has(label)) {
@@ -111,6 +110,9 @@ export class Listbox<T> {
         buckets.set(label, []);
       }
       buckets.get(label)!.push(item);
+    }
+    if (order.length <= 1 && (order[0] ?? '') === '') {
+      return [{ label: null as string | null, items }];
     }
     return order.map((label) => ({ label: label || null, items: buckets.get(label)! }));
   });

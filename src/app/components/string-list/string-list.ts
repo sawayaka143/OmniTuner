@@ -11,7 +11,6 @@ export class StringList {
   readonly activeString = input<string | null>(null);
   readonly inTune = input(false);
   readonly tunedStrings = input<readonly string[]>([]);
-  readonly autoMode = input(false);
   readonly select = output<number>();
 
   protected readonly focusIndex = signal<number | null>(null);

@@ -18,19 +18,21 @@
         <div class="control-section">
           <span class="section-label">01 · Tuning</span>
 
-          <app-listbox
-            [options]="tuningOptions()"
-            [value]="selectedTuningOption()!"
-            ariaLabel="Tuning preset"
-            triggerLabel="Standard"
-            triggerKicker="preset"
-            [optionLabel]="tuningLabelFn"
-            [optionAlt]="tuningAltFn"
-            [trackByFn]="tuningTrackFn"
-            [open]="tuningListOpen()"
-            (toggle)="toggleTuningList()"
-            (select)="onTuningSelect($event)"
-          />
+          @if (selectedTuningOption(); as selectedTuning) {
+            <app-listbox
+              [options]="tuningOptions()"
+              [value]="selectedTuning"
+              ariaLabel="Tuning preset"
+              [triggerLabel]="selectedTuning.label"
+              triggerKicker="preset"
+              [optionLabel]="tuningLabelFn"
+              [optionAlt]="tuningAltFn"
+              [trackByFn]="tuningTrackFn"
+              [open]="tuningListOpen()"
+              (toggle)="toggleTuningList()"
+              (select)="onTuningSelect($event)"
+            />
+          }
 
           <app-text-field
             label="custom"

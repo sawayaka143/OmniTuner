@@ -146,8 +146,7 @@ const TEMPLATE_BONUSES: Readonly<Record<string, Readonly<Record<string, number>>
   D7: { 'x,x,0,2,1,2': 250 },
 };
 
-const GUIDE_INTERVALS = new Set([2, 3, 4, 5, 6, 8, 9, 10, 11, 13, 14, 15, 18, 20, 21]);
-const JAZZ_QUALITIES = new Set(['maj7', 'dom7', 'm7', 'm7b5', 'dim7', '7']);
+const JAZZ_QUALITIES = new Set(['maj7', 'm7', 'm7b5', 'dim7', '7']);
 
 const resolveStyle = (chord: ParsedChord): ChordOptions => {
   const q = chord.quality;

@@ -99,18 +99,23 @@ export class Segmented<T> {
     const currentIdx = btns.indexOf(event.target as HTMLButtonElement);
     const lastIdx = btns.length - 1;
 
+    let next: HTMLButtonElement | null = null;
     if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
       event.preventDefault();
-      btns[Math.min(currentIdx + 1, lastIdx)]?.focus();
+      next = btns[Math.min(currentIdx + 1, lastIdx)] ?? null;
     } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
       event.preventDefault();
-      btns[Math.max(currentIdx - 1, 0)]?.focus();
+      next = btns[Math.max(currentIdx - 1, 0)] ?? null;
     } else if (event.key === 'Home') {
       event.preventDefault();
-      btns[0]?.focus();
+      next = btns[0] ?? null;
     } else if (event.key === 'End') {
       event.preventDefault();
-      btns[lastIdx]?.focus();
+      next = btns[lastIdx] ?? null;
+    }
+    if (next) {
+      next.focus();
+      next.click();
     }
   }
 }

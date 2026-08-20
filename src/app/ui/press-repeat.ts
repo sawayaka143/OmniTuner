@@ -26,7 +26,6 @@ export class PressRepeat {
 
   private delayTimer: ReturnType<typeof setTimeout> | null = null;
   private intervalTimer: ReturnType<typeof setInterval> | null = null;
-  private pointerPressed = false;
 
   constructor() {
     inject(DestroyRef).onDestroy(() => this.stop());
@@ -34,7 +33,6 @@ export class PressRepeat {
 
   protected onPointerDown(event: PointerEvent): void {
     event.preventDefault();
-    this.pointerPressed = true;
     this.stop();
     this.fire();
     this.delayTimer = setTimeout(() => {
@@ -59,7 +57,6 @@ export class PressRepeat {
       clearInterval(this.intervalTimer);
       this.intervalTimer = null;
     }
-    this.pointerPressed = false;
   }
 
   private fire(): void {
