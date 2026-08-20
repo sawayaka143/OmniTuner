@@ -69,6 +69,7 @@
   font-size: var(--text-xs);
 
   .chevron {
+    flex-shrink: 0;
     font-size: var(--text-md);
     margin-left: 2px;
     transition: transform var(--dur-slow) var(--ease-spring);

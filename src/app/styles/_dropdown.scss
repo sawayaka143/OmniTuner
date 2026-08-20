@@ -9,7 +9,7 @@
   }
 }
 
-/// Pill-shaped dropdown trigger button.
+/// Pill-shaped dropdown trigger button — mirrors seg-control recessed shell.
 @mixin dropdown-trigger() {
   width: 100%;
   min-height: var(--ctrl-h-lg);
@@ -18,21 +18,30 @@
   justify-content: space-between;
   gap: var(--space-2);
   padding: var(--space-2) var(--space-3) var(--space-2) var(--space-4);
-  border: 1px solid var(--border-subtle);
+  border: 0;
   border-radius: var(--r-pill);
   background: var(--surface-container-low);
+  box-shadow:
+    inset 0 0 0 1px var(--border-subtle),
+    inset 0 2px 4px rgba(0, 0, 0, 0.4);
   color: var(--text);
   font-family: var(--mono);
   font-size: var(--text-sm);
   cursor: pointer;
   transition:
-    background-color var(--dur-med) ease,
-    border-color var(--dur-med) ease,
+    box-shadow var(--dur-med) ease,
     transform var(--dur-fast) ease;
 
   &:hover {
-    border-color: var(--border-medium);
-    background: var(--surface-container);
+    box-shadow:
+      inset 0 0 0 1px var(--border-medium),
+      inset 0 2px 4px rgba(0, 0, 0, 0.4);
+  }
+
+  &[aria-expanded='true'] {
+    box-shadow:
+      inset 0 0 0 1px var(--border-medium),
+      inset 0 2px 4px rgba(0, 0, 0, 0.4);
   }
 
   &:active {
