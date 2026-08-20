@@ -1,36 +1,50 @@
-/// Standard text form field (name input, chord-finder fields).
-/// @param {String} $radius - corner radius.
-/// @param {String} $border - resting border color.
-/// @param {String} $padding - inner padding.
+/// Standard text form field (name input, chord-finder fields) — unified with
+/// segmented + dropdown + .btn pill system: recessed shell + pill radius.
 @mixin form-field(
-  $radius: var(--r-md),
-  $border: var(--border-medium),
-  $padding: var(--space-2) var(--space-3)
+  $radius: var(--r-pill),
+  $border: var(--border-subtle),
+  $padding: var(--space-2) var(--space-4)
 ) {
   width: 100%;
   min-height: var(--ctrl-h-xl);
   padding: $padding;
-  border: 1px solid $border;
+  border: 0;
   border-radius: $radius;
   outline: 0;
-  background: var(--surface-container);
+  background: var(--surface-container-low);
+  box-shadow:
+    inset 0 0 0 1px $border,
+    inset 0 2px 4px rgba(0, 0, 0, 0.4);
   color: var(--text);
   font-family: var(--mono);
   font-size: var(--text-sm);
+  transition:
+    box-shadow var(--dur-med) ease,
+    filter var(--dur-med) ease;
+
+  &::placeholder {
+    color: var(--text-dim);
+  }
 
   &:hover {
-    border-color: var(--border-active);
+    box-shadow:
+      inset 0 0 0 1px var(--border-medium),
+      inset 0 2px 4px rgba(0, 0, 0, 0.4);
   }
 
   &:focus,
   &:focus-visible {
-    border-color: var(--border-active);
+    box-shadow:
+      inset 0 0 0 1px var(--border-active),
+      inset 0 2px 4px rgba(0, 0, 0, 0.4);
     outline: 2px solid var(--border-active);
     outline-offset: 2px;
   }
 
   &[aria-invalid='true'] {
-    border-color: var(--danger);
+    box-shadow:
+      inset 0 0 0 1px var(--danger),
+      inset 0 2px 4px rgba(0, 0, 0, 0.4);
   }
 
   &.compact {

@@ -116,29 +116,20 @@
   border-top: 1px solid var(--border-subtle);
 }
 
-.cancel-button,
-.save-button {
-  @include pill-action();
-  border-radius: var(--r-md);
-}
-
 .cancel-button {
-  background: var(--surface-container);
+  @include pill-action();
 }
 
 .save-button {
   @include pill-action('primary');
-  border-radius: var(--r-md);
-
-  &:hover:not(:disabled) {
-    filter: brightness(1.08);
-  }
 
   &:disabled {
     cursor: not-allowed;
-    border-color: var(--border-subtle);
     background: var(--surface-container-high);
     color: var(--text-muted);
+    box-shadow:
+      inset 0 0 0 1px var(--border-subtle),
+      inset 0 2px 4px rgba(0, 0, 0, 0.4);
     filter: none;
   }
 }

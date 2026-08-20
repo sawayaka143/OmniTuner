@@ -1,5 +1,5 @@
-/// Pill-shaped action button (Play, Capture, etc.).
-/// @param {String} $variant - 'ghost' (transparent) or 'primary' (accent-filled).
+/// Pill-shaped action button — unified with .btn + dropdown + segmented + form-field
+/// recessed pill system. Ghost is the recessed shell; primary is the filled pill.
 @mixin pill-action($variant: 'ghost') {
   min-height: var(--ctrl-h-lg);
   display: inline-flex;
@@ -7,6 +7,7 @@
   justify-content: center;
   gap: var(--space-2);
   padding: 0 var(--space-4);
+  border: 0;
   border-radius: var(--r-pill);
   font-family: var(--mono);
   font-size: var(--text-xs);
@@ -15,51 +16,64 @@
   cursor: pointer;
   transition:
     filter var(--dur-med) ease,
+    box-shadow var(--dur-med) ease,
     transform var(--dur-fast) ease,
     opacity var(--dur-med) ease;
 
   &:hover {
-    filter: brightness(1.1);
-    transform: translateY(-1px);
+    filter: brightness(1.08);
   }
 
   &:active {
-    transform: translateY(0) scale(0.97);
+    transform: scale(0.97);
   }
 
   &:focus-visible {
-    outline: 2px solid var(--text);
-    outline-offset: 3px;
+    outline: 2px solid var(--border-active);
+    outline-offset: 2px;
   }
 
   @if $variant == 'primary' {
-    border: 1px solid var(--scale-accent);
     background: var(--scale-accent);
     color: var(--scale-accent-ink);
+    box-shadow:
+      inset 0 0 0 1px var(--scale-accent),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    letter-spacing: var(--tracking-label);
   } @else {
-    border: 1px solid var(--border-subtle);
-    background: transparent;
-    color: var(--text-muted);
+    background: var(--surface-container-low);
+    color: var(--text);
+    box-shadow:
+      inset 0 0 0 1px var(--border-subtle),
+      inset 0 2px 4px rgba(0, 0, 0, 0.4);
+
+    &:hover {
+      box-shadow:
+        inset 0 0 0 1px var(--border-medium),
+        inset 0 2px 4px rgba(0, 0, 0, 0.4);
+    }
   }
 }
 
-/// Small square icon button (close, reset, edit, delete).
-/// @param {Number} $size - width and height of the button.
+/// Small square icon button — unified with pill recessed shell.
 @mixin icon-button($size: var(--ctrl-h-md)) {
   width: $size;
   height: $size;
   display: grid;
   place-items: center;
   padding: 0;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--r-md);
-  background: var(--surface-container);
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--surface-container-low);
+  box-shadow:
+    inset 0 0 0 1px var(--border-subtle),
+    inset 0 2px 4px rgba(0, 0, 0, 0.4);
   color: var(--text-muted);
   font-family: var(--mono);
   cursor: pointer;
   transition:
-    background-color var(--dur-med) ease,
-    border-color var(--dur-med) ease,
+    filter var(--dur-med) ease,
+    box-shadow var(--dur-med) ease,
     color var(--dur-med) ease,
     transform var(--dur-fast) ease;
 
@@ -68,8 +82,9 @@
   }
 
   &:hover {
-    border-color: var(--border-medium);
-    background: var(--surface-container-high);
+    box-shadow:
+      inset 0 0 0 1px var(--border-medium),
+      inset 0 2px 4px rgba(0, 0, 0, 0.4);
     color: var(--text);
   }
 

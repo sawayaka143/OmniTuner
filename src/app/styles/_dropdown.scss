@@ -66,6 +66,10 @@
   background: var(--surface-container-low);
   box-shadow: var(--shadow-flat);
   animation: dropdown-appear var(--dur-med) ease-out;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 }
 
 /// Individual dropdown menu item / option row.
