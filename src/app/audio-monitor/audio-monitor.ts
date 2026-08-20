@@ -36,7 +36,6 @@ import {
   nearestSemitone,
   needlePercentFromCents,
   shouldConfirm,
-  shouldUnconfirm,
   tuneCentsText,
   tuneColorProgress,
   tuneDirectionText,
@@ -47,13 +46,12 @@ import {
 /** How long the one-shot lock pulse stays visible. */
 const LOCK_PULSE_DURATION_MS = 900;
 
-/**
- * Release hysteresis: an already-confirmed pitch unconfirms only after this
- * many consecutive out-of-range frames (~150 ms at the analysis cadence), so
- * a single-frame breach at the tolerance edge cannot flicker the state or
- * retrigger the chime. 3 frames ≈ 135-150 ms of sustained breach.
- */
-const RELEASE_HYSTERESIS_FRAMES = 3;
+// While confirmed, an out-of-range or dropped pitch must persist this long
+// (~3 analysis frames) before confirmation clears, so a single-frame breach
+// at the tolerance edge can't flicker the lock or retrigger the chime.
+// Timer-based because the confirm effect does not re-run during sustained
+// silence (value-identical signal writes).
+const RELEASE_HYSTERESIS_MS = 135;
 
 @Component({
   selector: 'app-audio-monitor',
@@ -112,11 +110,7 @@ export class AudioMonitor implements OnInit {
   private holdStartedAt = 0;
   private pulseTimeout: ReturnType<typeof setTimeout> | null = null;
 
-  /**
-   * Consecutive out-of-range frames while confirmed. Reset on confirm, on
-   * an in-range frame, and whenever the tuning/mode context is reset.
-   */
-  private outOfRangeStreak = 0;
+  private releaseTimer: ReturnType<typeof setTimeout> | null = null;
 
   /**
    * Last string the auto mode resolved as target. Fed back into
@@ -238,13 +232,14 @@ export class AudioMonitor implements OnInit {
 
   /**
    * Visual "in tune" flag handed to the display components: hold-gated
-   * confirmation while the master switch is ON; instantaneous |cents| <
+   * confirmation while the master switch is ON; instantaneous |cents| <=
    * tolerance fallback when it's OFF (same threshold as the text helpers).
+   * Gated on 'locked' so a provisional (listening) frame can't flash in tune.
    */
   readonly isTuned = computed(() => {
     if (this.tunerSettings().inTune.enabled) return this.showTuned();
     const cents = this.frameCents();
-    return cents !== null && Math.abs(cents) < this.tolerance();
+    return cents !== null && this.trackingState() === 'locked' && Math.abs(cents) <= this.tolerance();
   });
 
   readonly needleLeft = computed(() => needlePercentFromCents(this.frameCents()));
@@ -264,7 +259,7 @@ export class AudioMonitor implements OnInit {
    */
   readonly tuneColorHex = computed(() => {
     const cents = this.frameCents();
-    if (cents === null || Math.abs(cents) < this.tolerance()) return null;
+    if (cents === null || Math.abs(cents) <= this.tolerance()) return null;
     const settings = this.tunerSettings().inTune;
     return interpolateColor(
       settings.outOfTuneColor,
@@ -348,7 +343,7 @@ export class AudioMonitor implements OnInit {
       untracked(() => {
         this.autoTuned.set([]);
         this.confirmed.set(false);
-        this.outOfRangeStreak = 0;
+        this.clearReleaseTimer();
         this.lastAutoTargetName.set(null);
         this.clearHoldTimer();
       });
@@ -357,53 +352,41 @@ export class AudioMonitor implements OnInit {
     // Hysteresis feedback: record the resolved target so the next
     // evaluation keeps it while the pitch stays within the margin.
     // Writing the same value is a no-op, so this settles after one
-    // recompute instead of looping.
+    // recompute instead of looping. Only latch while locked so an
+    // attack transient can't anchor the wrong string.
     effect(() => {
       const target = this.autoTarget();
-      if (target && target.name !== this.lastAutoTargetName()) {
+      if (target && this.trackingState() === 'locked' && target.name !== this.lastAutoTargetName()) {
         this.lastAutoTargetName.set(target.name);
       }
     });
 
     effect(() => {
-      const inRange = this.inRange();
-      const holdMs = this.tunerSettings().inTune.holdMs;
-
-      // Provisional pitch: while not locked, no confirmation may start or
-      // complete — a 1-frame blip must never run the hold timer. Release
-      // hysteresis below still owns unconfirming an already-confirmed pitch.
+      // Provisional pitch must never start or complete the hold timer.
       if (this.trackingState() !== 'locked') {
         this.clearHoldTimer();
-        if (this.confirmed()) {
-          // Was confirmed and the pitch dropped out of lock: count this frame
-          // toward the release streak.
-          this.outOfRangeStreak += 1;
-          if (shouldUnconfirm(this.outOfRangeStreak, RELEASE_HYSTERESIS_FRAMES)) {
-            this.outOfRangeStreak = 0;
-            this.confirmed.set(false);
-          }
+        if (this.trackingState() === 'idle') {
+          // Not tracking anything — drop confirmation at once.
+          this.clearReleaseTimer();
+          this.confirmed.set(false);
+        } else if (this.confirmed() && this.releaseTimer === null) {
+          // Listening + dropout: begin the release countdown.
+          this.scheduleReleaseTimer();
         }
         return;
       }
 
-      // Release hysteresis: a confirmed pitch unconfirms only after
-      // RELEASE_HYSTERESIS_FRAMES consecutive out-of-range frames (null
-      // frameCents — dropout — counts toward the streak). In-range frames
-      // reset the streak.
+      const inRange = this.inRange();
       if (this.confirmed()) {
-        if (inRange) {
-          this.outOfRangeStreak = 0;
-        } else {
-          this.outOfRangeStreak += 1;
-          if (shouldUnconfirm(this.outOfRangeStreak, RELEASE_HYSTERESIS_FRAMES)) {
-            this.clearHoldTimer();
-            this.outOfRangeStreak = 0;
-            this.confirmed.set(false);
-          }
-        }
+        // Release hysteresis: null frameCents counts as out-of-range.
+        if (inRange) this.clearReleaseTimer();
+        else if (this.releaseTimer === null) this.scheduleReleaseTimer();
         return;
       }
 
+      this.clearReleaseTimer();
+
+      // Pre-confirm path: unchanged grace logic.
       if (!inRange) {
         const frameCents = this.frameCents();
         const holding = this.holdTimer !== null;
@@ -418,9 +401,9 @@ export class AudioMonitor implements OnInit {
 
       const now = performance.now();
       const elapsed = this.holdTimer !== null ? now - this.holdStartedAt : 0;
+      const holdMs = this.tunerSettings().inTune.holdMs;
       if (shouldConfirm({ inRange, elapsedMs: elapsed, holdMs })) {
         this.confirmLock();
-        this.outOfRangeStreak = 0;
         return;
       }
 
@@ -440,6 +423,7 @@ export class AudioMonitor implements OnInit {
     }
 
     this.destroyRef.onDestroy(() => {
+      this.clearReleaseTimer();
       this.clearHoldTimer();
       if (this.pulseTimeout !== null) {
         clearTimeout(this.pulseTimeout);
@@ -603,7 +587,7 @@ export class AudioMonitor implements OnInit {
 
   private confirmLock(): void {
     this.clearHoldTimer();
-    this.outOfRangeStreak = 0;
+    this.clearReleaseTimer();
     if (this.confirmed()) return;
 
     this.confirmed.set(true);
@@ -636,6 +620,20 @@ export class AudioMonitor implements OnInit {
     if (this.holdTimer !== null) {
       clearTimeout(this.holdTimer);
       this.holdTimer = null;
+    }
+  }
+
+  private scheduleReleaseTimer(): void {
+    this.releaseTimer = setTimeout(() => {
+      this.releaseTimer = null;
+      if (this.confirmed() && !this.inRange()) this.confirmed.set(false);
+    }, RELEASE_HYSTERESIS_MS);
+  }
+
+  private clearReleaseTimer(): void {
+    if (this.releaseTimer !== null) {
+      clearTimeout(this.releaseTimer);
+      this.releaseTimer = null;
     }
   }
 

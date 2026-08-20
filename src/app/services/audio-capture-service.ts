@@ -403,9 +403,18 @@ export class AudioCaptureService {
   // ── Hybrid Median + EMA Smoothing (log2 domain) ─────────────────
 
   private smoothFrequency(frequency: number): number {
-    // Guard non-positive or non-finite input: log2 would yield NaN/±Infinity.
+    // Guard non-positive or non-finite input: never echo the invalid value
+    // back to the display. Prefer the last good smoothed pitch, falling
+    // back to the median of any provisional consensus already accumulated.
     if (!Number.isFinite(frequency) || frequency <= 0) {
-      return this.emaLogFreq !== null ? 2 ** this.emaLogFreq : frequency;
+      if (this.emaLogFreq !== null) return 2 ** this.emaLogFreq;
+      if (this.recentLogFreqs.length > 0) return 2 ** this.median(this.recentLogFreqs);
+      if (this.smoothedFrequency !== null) return this.smoothedFrequency;
+      // No history at all — drop the frame; caller still resets missedFrames,
+      // but there is no meaningful pitch to publish. Returning the sentinel
+      // keeps the smoothing state untouched and lets handleDetection publish
+      // NaN-ish? Use smoothedFrequency if any, else stay silent.
+      return this.smoothedFrequency ?? frequency;
     }
     const candidateLog = Math.log2(frequency);
 

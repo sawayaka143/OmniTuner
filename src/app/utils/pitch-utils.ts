@@ -93,16 +93,6 @@ export function shouldConfirm(options: {
   return options.inRange && options.elapsedMs >= options.holdMs;
 }
 
-/**
- * Release-hysteresis rule for the in-tune lock: an already-confirmed pitch
- * unconfirms only after `required` consecutive out-of-range frames, so a
- * single-frame breach at the tolerance edge cannot flicker the state or
- * retrigger the chime. Pure so it gets a real unit test.
- */
-export function shouldUnconfirm(streak: number, required: number): boolean {
-  return streak >= required;
-}
-
 export function midiNoteLabel(midiNote: number): string {
   const semitoneFromA = midiNote - 69;
   const noteIndex = ((semitoneFromA % 12) + 12) % 12;
@@ -124,10 +114,12 @@ export function nearestSemitone(playedMidiFloat: number | null): { midi: number 
  * Direction-only prompt readout, e.g. TUNE UP / TUNE DOWN / IN TUNE.
  * Threshold defaults to 5¢ for backward compat; the tuner passes its
  * configured tolerance so the text and the in-tune confirmation agree.
+ * At exactly threshold cents the pitch counts as in tune (<=), matching
+ * the confirm gate's <= tolerance.
  */
 export function tuneDirectionText(cents: number | null, threshold = 5): string {
   if (cents === null || !Number.isFinite(cents)) return '\u2014';
-  if (Math.abs(cents) < threshold) return 'IN TUNE';
+  if (Math.abs(cents) <= threshold) return 'IN TUNE';
   return cents < 0 ? 'TUNE UP' : 'TUNE DOWN';
 }
 
@@ -135,10 +127,11 @@ export function tuneDirectionText(cents: number | null, threshold = 5): string {
  * Cents-magnitude readout shown under the direction prompt.
  * Threshold defaults to 5¢ for backward compat; the tuner passes its
  * configured tolerance so the readout and the confirmation agree.
+ * At exactly threshold cents the pitch counts as in tune (<=).
  */
 export function tuneCentsText(cents: number | null, threshold = 5): string {
   if (cents === null || !Number.isFinite(cents)) return '';
-  if (Math.abs(cents) < threshold) return '';
+  if (Math.abs(cents) <= threshold) return '';
   return `${Math.abs(Math.round(cents))}\u00a2`;
 }
 

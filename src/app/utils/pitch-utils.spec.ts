@@ -9,7 +9,6 @@ import {
   nearestStringTarget,
   needlePercentFromCents,
   shouldConfirm,
-  shouldUnconfirm,
   tuneCentsText,
   tuneColorProgress,
   tuneDirectionText,
@@ -131,6 +130,12 @@ describe('cents offset readout', () => {
     expect(tuneDirectionText(Number.NaN)).toBe('\u2014');
   });
 
+  it('treats the threshold boundary as in tune (<=)', () => {
+    expect(tuneDirectionText(5)).toBe('IN TUNE');
+    expect(tuneDirectionText(8, 8)).toBe('IN TUNE');
+    expect(tuneDirectionText(-8, 8)).toBe('IN TUNE');
+  });
+
   it('honors a custom in-tune threshold for the direction prompt', () => {
     expect(tuneDirectionText(6, 8)).toBe('IN TUNE');
     expect(tuneDirectionText(-6, 8)).toBe('IN TUNE');
@@ -147,6 +152,12 @@ describe('cents offset readout', () => {
     expect(tuneCentsText(-187.7)).toBe('188¢');
     expect(tuneCentsText(null)).toBe('');
     expect(tuneCentsText(Number.NaN)).toBe('');
+  });
+
+  it('treats the threshold boundary as in tune for the cents readout (<=)', () => {
+    expect(tuneCentsText(5)).toBe('');
+    expect(tuneCentsText(8, 8)).toBe('');
+    expect(tuneCentsText(-8, 8)).toBe('');
   });
 
   it('honors a custom in-tune threshold for the cents readout', () => {
@@ -231,14 +242,5 @@ describe('shouldConfirm', () => {
 
   it('never confirms while out of range, however long the hold', () => {
     expect(shouldConfirm({ inRange: false, elapsedMs: 5000, holdMs: 0 })).toBe(false);
-  });
-});
-
-describe('shouldUnconfirm', () => {
-  it('unconfirms only after the required consecutive out-of-range frames', () => {
-    expect(shouldUnconfirm(0, 3)).toBe(false);
-    expect(shouldUnconfirm(2, 3)).toBe(false);
-    expect(shouldUnconfirm(3, 3)).toBe(true);
-    expect(shouldUnconfirm(5, 3)).toBe(true);
   });
 });
