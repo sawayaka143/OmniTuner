@@ -468,9 +468,11 @@ export class InstrumentRegistry {
       ]);
       const rawTuningId =
         typeof parsed['selectedTuningId'] === 'string' ? parsed['selectedTuningId'] : 'standard';
-      const selectedTuningId = validTuningIds.has(rawTuningId)
-        ? rawTuningId
-        : (builtInTunings[0]?.id ?? 'standard');
+      const resolvedFallback =
+        builtInTunings[0]?.id ??
+        [...customTunings.filter((t) => t.instrumentId === selectedInstrumentId).map((t) => t.id), ...validTuningIds][0] ??
+        'standard';
+      const selectedTuningId = validTuningIds.has(rawTuningId) ? rawTuningId : resolvedFallback;
 
       return {
         version: 1,

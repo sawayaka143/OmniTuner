@@ -324,14 +324,16 @@ export function parseTuning(raw: string): TuningParseResult {
   if (tokens.length > 12) return { ok: false, error: 'max 12 strings' };
   const midi: number[] = [];
   const labels: string[] = [];
-  let flats = false;
+  const parsedNotes: ParsedNote[] = [];
   for (let i = 0; i < tokens.length; i++) {
     const parsed = parseNoteToken(tokens[i]);
     if (!parsed) return { ok: false, error: `bad note '${tokens[i]}'` };
     midi.push(parsed.midi);
     labels.push(midiName(parsed.midi, parsed.flats));
-    if (i === 0) flats = parsed.flats;
+    parsedNotes.push(parsed);
   }
+  const flatCount = parsedNotes.filter((n) => n.flats).length;
+  const flats = flatCount > parsedNotes.length / 2;
   return { ok: true, tuning: { midi, labels, flats } };
 }
 
@@ -374,9 +376,10 @@ function composeQuality(raw: string): ComposedQuality | null {
   let baseKey: string | null = null;
   let prefixLength = 0;
   for (const key of Object.keys(CHORD_FORMULAS)) {
-    if (normalized.startsWith(key) && (baseKey === null || key.length > baseKey.length)) {
+    const lowerKey = key.toLowerCase();
+    if (normalized.startsWith(lowerKey) && (baseKey === null || key.length > baseKey.length)) {
       baseKey = key;
-      prefixLength = key.length;
+      prefixLength = lowerKey.length;
     }
   }
   if (baseKey === null && normalized.startsWith('m')) {
@@ -531,11 +534,12 @@ export function parseChord(raw: string): ChordParseResult {
  */
 export function tokenizeProgression(raw: string): string[] {
   const trimmed = String(raw).trim();
+  if (!trimmed) return [];
   const tokens = trimmed
     .split(/(?:->|→|—|–|,|;|\|)|\/(?![0-9])/)
+    .flatMap((part) => part.split(/\s+/))
     .map((t) => t.trim())
     .filter(Boolean);
-  if (tokens.length <= 1 && /\s/.test(trimmed)) return trimmed.split(/\s+/).filter(Boolean);
   return tokens;
 }
 

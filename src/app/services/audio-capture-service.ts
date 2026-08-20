@@ -358,6 +358,7 @@ export class AudioCaptureService {
     this.missedFrames = 0;
 
     const smoothed = this.smoothFrequency(rawFrequency);
+    if (smoothed === null) return;
 
     // Provisional display: publish the smoothed pitch from the very first
     // accepted frame so the needle moves ~140 ms sooner (the old code waited
@@ -402,7 +403,7 @@ export class AudioCaptureService {
 
   // ── Hybrid Median + EMA Smoothing (log2 domain) ─────────────────
 
-  private smoothFrequency(frequency: number): number {
+  private smoothFrequency(frequency: number): number | null {
     // Guard non-positive or non-finite input: never echo the invalid value
     // back to the display. Prefer the last good smoothed pitch, falling
     // back to the median of any provisional consensus already accumulated.
@@ -410,11 +411,8 @@ export class AudioCaptureService {
       if (this.emaLogFreq !== null) return 2 ** this.emaLogFreq;
       if (this.recentLogFreqs.length > 0) return 2 ** this.median(this.recentLogFreqs);
       if (this.smoothedFrequency !== null) return this.smoothedFrequency;
-      // No history at all — drop the frame; caller still resets missedFrames,
-      // but there is no meaningful pitch to publish. Returning the sentinel
-      // keeps the smoothing state untouched and lets handleDetection publish
-      // NaN-ish? Use smoothedFrequency if any, else stay silent.
-      return this.smoothedFrequency ?? frequency;
+      // No history at all — no meaningful pitch to publish.
+      return null;
     }
     const candidateLog = Math.log2(frequency);
 

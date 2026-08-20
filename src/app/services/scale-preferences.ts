@@ -115,7 +115,7 @@ export class ScalePreferences {
   }
 
   setScaleId(scaleId: string): void {
-    if (!scaleId) return;
+    if (!scaleId || !SCALES.some((scale) => scale.id === scaleId)) return;
     this.update({ scaleId });
   }
 

@@ -7,12 +7,11 @@ import { colorForLabel } from '../data/interval-colors';
  * Only the letter is uppercased — the flat suffix 'b' must stay lowercase to
  * match `FLAT_NAMES` (e.g. 'db' -> 'Db', not 'DB').
  */
-const normalizeNote = (input: string): string =>
-  input
-    .trim()
-    .replace(/♭/g, 'b')
-    .replace(/♯/g, '#')
-    .replace(/^([a-gA-G])/, (_, letter: string) => letter.toUpperCase());
+const normalizeNote = (input: string): string => {
+  const trimmed = input.trim().replace(/♭/g, 'b').replace(/♯/g, '#');
+  if (!trimmed) return trimmed;
+  return trimmed[0].toUpperCase() + trimmed.slice(1);
+};
 
 // Build the flat/sharp lookup tables once.
 const SHARP_INDEX: Readonly<Record<string, number>> = Object.fromEntries(

@@ -24,7 +24,9 @@ const DEGREE_RE = /^(b|#)?(VII|VI|IV|V|III|II|I)(.*)$/i;
 export function parseDegree(raw: string): ParsedDegree | null {
   const m = raw.trim().match(DEGREE_RE);
   if (!m) return null;
-  const accidental: -1 | 0 | 1 = m[1] === 'b' ? -1 : m[1] === '#' ? 1 : 0;
+  const rawAcc = m[1] ?? '';
+  if (rawAcc === 'B') return null;
+  const accidental: -1 | 0 | 1 = rawAcc.toLowerCase() === 'b' ? -1 : rawAcc === '#' ? 1 : 0;
   const core = m[2];
   const suffixRaw = (m[3] ?? '').trim();
   const romanUpper = core.toUpperCase();
@@ -45,7 +47,10 @@ export function degreeToChordSymbol(
   const rootName = pcName(rootPc, useFlats);
   const suffixLower = parsed.suffix.toLowerCase();
   const suffixAlreadyHasQuality =
-    suffixLower.startsWith('m') ||
+    suffixLower.startsWith('maj') ||
+    suffixLower === 'm' ||
+    suffixLower.startsWith('m ') ||
+    suffixLower.startsWith('m(') ||
     suffixLower.startsWith('dim') ||
     suffixLower.startsWith('°') ||
     suffixLower.startsWith('ø') ||

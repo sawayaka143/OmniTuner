@@ -169,5 +169,6 @@ export function tuneColorProgress(cents: number | null, threshold = 5): number {
   if (cents === null || !Number.isFinite(cents)) return 0;
   const magnitude = Math.abs(cents);
   const endpoint = Math.max(5, threshold);
+  if (endpoint >= 50) return magnitude <= endpoint ? 1 : 0;
   return Math.max(0, Math.min(1, (50 - magnitude) / (50 - endpoint)));
 }
