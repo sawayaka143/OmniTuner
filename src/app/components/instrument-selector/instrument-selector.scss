@@ -14,6 +14,7 @@
 }
 
 .selectors {
+  --selector-width: 232px;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -23,8 +24,12 @@
   padding-top: var(--space-5);
 }
 
-/* Desktop: controls hug the navbar. The freed space flows into the
-   tuner stage's auto margin, which pushes the meter group down. */
+.selectors .seg {
+  width: var(--selector-width);
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
 @media (min-width: 641px) {
   .selectors {
     padding-top: 0;
@@ -36,26 +41,10 @@
 }
 
 .instrument-seg {
-  --plus-width: var(--ctrl-h-lg);
-  /* Width of one instrument slot (excludes the pill padding each side
-     and the fixed "+" slot). Shared by the buttons and the indicator so the
-     sliding highlight always lands on the exact slot. */
+  --plus-width: var(--ctrl-h-sm);
   --slot-width: calc((100% - var(--space-2) - var(--plus-width)) / var(--seg-count));
-
-  /* The "+" segment sits inside the pill; keep it fully visible instead of
-     clipping at the rounded container edge. */
   overflow: visible;
 
-  /* Equal-width instrument slots fill the pill left of the fixed "+" slot.
-     `flex-grow` redistributes the same share to each slot regardless of label
-     length, so the indicator (sized to one slot) always lines up. */
-  > button:not(.add-instrument-segment) {
-    flex: 1 1 0;
-    min-width: 0;
-  }
-
-  /* The indicator must cover only the instrument slots, not the fixed
-     "+" segment appended after them. */
   .seg-indicator {
     width: var(--slot-width);
 
@@ -65,10 +54,13 @@
   }
 }
 
-/* Make the "+" segment a true circle so hover/active/focus highlights are round,
-   not square (the parent segmented control otherwise imposes a sharper radius). */
+.mode-seg > button,
+.instrument-seg > button:not(.add-instrument-segment) {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
 .instrument-seg .add-instrument-segment {
-  --plus-width: var(--ctrl-h-lg);
   flex: 0 0 var(--plus-width);
   width: var(--plus-width);
   min-width: unset;
@@ -106,7 +98,6 @@
   outline-offset: -2px;
   border-radius: var(--r-pill);
 }
-
 
 .dropdown-wrapper {
   position: relative;
@@ -249,26 +240,18 @@
 
 @media (max-width: 640px) {
   .selectors {
-    /* Same centered, content-sized look as desktop — just smaller. */
     gap: var(--space-2);
     padding-top: var(--space-3);
   }
 
-  .mode-seg button {
-    min-width: 64px;
-    padding: var(--space-1) var(--space-3);
-    line-height: var(--leading-tight);
-  }
-
-  /* Keep instrument slots equal so the sliding indicator stays aligned. */
+  .mode-seg > button,
   .instrument-seg > button:not(.add-instrument-segment) {
     min-width: 0;
     padding: var(--space-1) var(--space-3);
-    line-height: var(--leading-tight);
+    line-height: 1;
   }
 
   .dropdown-wrapper {
-    /* Nested to match the specificity of the desktop trigger rules. */
     .tuning-trigger {
       min-width: 132px;
       min-height: var(--ctrl-h-sm);

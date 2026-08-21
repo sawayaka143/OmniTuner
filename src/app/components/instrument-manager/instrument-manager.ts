@@ -155,11 +155,14 @@ export class InstrumentManager {
     const editId = this.editingId();
     try {
       if (this.mode() === 'edit' && editId) {
-        this.registry.updateInstrument(editId, value.name, value.notes.length, value.notes);
+        const updated = this.registry.updateInstrument(editId, value.name, value.notes.length, value.notes);
+        this.registry.selectInstrument(updated.id);
+        this.requestDismiss();
       } else {
-        this.registry.createInstrument(value.name, value.notes.length, value.notes);
+        const created = this.registry.createInstrument(value.name, value.notes.length, value.notes);
+        this.registry.selectInstrument(created.id);
+        this.requestDismiss();
       }
-      this.backToList();
     } catch (err) {
       this.externalError.set(err instanceof Error ? err.message : 'Something went wrong.');
     }

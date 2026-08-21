@@ -1,8 +1,8 @@
-export const MIN_TUNER_MIDI_NOTE = 35;
+export const MIN_TUNER_MIDI_NOTE = 23;
 export const MAX_TUNER_MIDI_NOTE = 86;
 export const MAX_CUSTOM_TUNING_NAME_LENGTH = 40;
 export const MAX_CUSTOM_INSTRUMENT_NAME_LENGTH = 30;
-export const MIN_STRING_COUNT = 3;
+export const MIN_STRING_COUNT = 1;
 export const MAX_STRING_COUNT = 12;
 
 export const REFERENCE_PITCH_MIN = 415;

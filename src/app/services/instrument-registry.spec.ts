@@ -158,14 +158,14 @@ describe('InstrumentRegistry', () => {
 
     it('validates string count', () => {
       const service = createService();
-      expect(() => service.createInstrument('Test', 2, [40, 45])).toThrow(RangeError);
+      expect(() => service.createInstrument('Test', 0, [])).toThrow(RangeError);
       expect(() => service.createInstrument('Test', 13, Array(13).fill(40))).toThrow(RangeError);
     });
 
     it('validates notes match string count and range', () => {
       const service = createService();
       expect(() => service.createInstrument('Test', 6, [40, 45])).toThrow(RangeError);
-      expect(() => service.createInstrument('Test', 6, [34, 45, 50, 55, 59, 64])).toThrow(
+      expect(() => service.createInstrument('Test', 6, [22, 45, 50, 55, 59, 64])).toThrow(
         RangeError,
       );
       expect(() => service.createInstrument('Test', 6, [40, 45, 50, 55, 59, 87])).toThrow(
