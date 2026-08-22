@@ -52,10 +52,7 @@
     padding: var(--space-2) 0;
     color: var(--text-muted);
     text-decoration: none;
-    transition:
-      color var(--dur-med) ease,
-      font-size var(--dur-slow) var(--ease-spring),
-      font-weight var(--dur-slow) var(--ease-spring);
+    transition: color var(--dur-med) ease;
     font-size: var(--text-base);
     font-weight: var(--fw-medium);
 
@@ -65,7 +62,6 @@
 
     &.active {
       color: var(--scale-accent);
-      font-size: var(--text-md);
       font-weight: var(--fw-semibold);
     }
 
@@ -105,12 +101,15 @@
     background: color-mix(in srgb, var(--scale-accent) 12%, transparent);
     color: var(--scale-accent);
   }
+
 }
 
 @media (max-width: 640px) {
   .header-inner {
     grid-template-columns: 1fr auto auto;
-    padding: var(--space-2) 0;
+    padding-block: var(--space-2);
+    padding-left: max(var(--space-4), env(safe-area-inset-left));
+    padding-right: max(var(--space-4), env(safe-area-inset-right));
     height: calc(var(--space-7) + var(--space-6));
   }
 

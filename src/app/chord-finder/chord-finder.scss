@@ -284,7 +284,7 @@
 
 .controls-panel {
   min-width: 0;
-  overflow: hidden;
+  overflow: visible;
   padding: var(--space-3) var(--space-3) var(--space-4);
 }
 
@@ -312,7 +312,7 @@
     $weight: var(--fw-semibold),
     $tracking: var(--tracking-extra-wide)
   );
-  margin: var(--space-2) 0 var(--space-1);
+  margin: var(--space-3) 0 var(--space-2);
   line-height: 1;
 }
 
