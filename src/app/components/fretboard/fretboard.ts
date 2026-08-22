@@ -5,11 +5,14 @@ import {
   Component,
   computed,
   DestroyRef,
+  effect,
   ElementRef,
   inject,
   input,
   NgZone,
   output,
+  signal,
+  untracked,
   viewChild,
 } from '@angular/core';
 import { FretCell } from '../../models/scale.model';
@@ -37,7 +40,42 @@ export class Fretboard {
 
   private resizeObserver: ResizeObserver | null = null;
   private resizeFrame: number | null = null;
+  private shrinkTimer: ReturnType<typeof setTimeout> | null = null;
+  private previousFretCount = 0;
   private destroyed = false;
+
+  private readonly SHRINK_DELAY_MS = 250;
+
+  private readonly displayedFretCountInternal = signal<number | null>(null);
+  protected readonly displayedFretCount = computed(() => {
+    const pending = this.displayedFretCountInternal();
+    return pending ?? this.fretCount();
+  });
+
+  protected readonly fretNumbers = computed(() => {
+    const count = this.displayedFretCount();
+    return Array.from({ length: count + 1 }, (_, i) => i);
+  });
+
+  private readonly cachedCells = signal<FretCell[][]>([]);
+
+  protected readonly displayedCells = computed<FretCell[][]>(() => {
+    const current = this.cells();
+    const displayed = this.displayedFretCount();
+    const target = this.fretCount();
+
+    if (displayed <= target) return current;
+
+    const cached = this.cachedCells();
+    if (cached.length === 0) return current;
+
+    return current.map((row, idx) => {
+      const cachedRow = cached[idx];
+      if (!cachedRow) return row;
+      const extra = cachedRow.slice(target + 1, displayed + 1);
+      return [...row, ...extra];
+    });
+  });
 
   /** Rows of cells, high-string-first (index 0 = highest string = top). */
   readonly cells = input.required<FretCell[][]>();
@@ -71,10 +109,59 @@ export class Fretboard {
       this.scheduleScaleUpdate();
     });
 
+    effect(() => {
+      const target = this.fretCount();
+      const displayed = this.displayedFretCount();
+      if (target === displayed) {
+        untracked(() => {
+          this.previousFretCount = displayed;
+          if (this.shrinkTimer) {
+            clearTimeout(this.shrinkTimer);
+            this.shrinkTimer = null;
+          }
+          this.displayedFretCountInternal.set(null);
+        });
+        return;
+      }
+
+      if (target > displayed) {
+        untracked(() => {
+          if (this.shrinkTimer) {
+            clearTimeout(this.shrinkTimer);
+            this.shrinkTimer = null;
+          }
+          this.previousFretCount = displayed;
+          this.displayedFretCountInternal.set(target);
+          this.scheduleScaleUpdate();
+        });
+        return;
+      }
+
+      untracked(() => {
+        this.cachedCells.set(this.cells());
+        this.previousFretCount = displayed;
+        if (this.shrinkTimer) clearTimeout(this.shrinkTimer);
+        if (this.prefersReducedMotion()) {
+          this.displayedFretCountInternal.set(target);
+          this.scheduleScaleUpdate();
+          return;
+        }
+        if (this.displayedFretCountInternal() === null) {
+          this.displayedFretCountInternal.set(displayed);
+        }
+        this.shrinkTimer = setTimeout(() => {
+          this.shrinkTimer = null;
+          this.displayedFretCountInternal.set(target);
+          this.scheduleScaleUpdate();
+        }, this.SHRINK_DELAY_MS);
+      });
+    });
+
     this.destroyRef.onDestroy(() => {
       this.destroyed = true;
       this.resizeObserver?.disconnect();
       this.document.fonts?.removeEventListener('loadingdone', this.handleFontsLoaded);
+      if (this.shrinkTimer) clearTimeout(this.shrinkTimer);
 
       const view = this.document.defaultView;
       if (view && this.resizeFrame !== null) {
@@ -83,18 +170,28 @@ export class Fretboard {
     });
   }
 
-  /** Fret numbers 0..fretCount, used for the header labels. */
-  protected readonly fretNumbers = computed(() => {
-    const count = this.fretCount();
-    return Array.from({ length: count + 1 }, (_, i) => i);
-  });
-
   /** Standard fretboard inlay positions, with paired markers at each octave. */
   protected readonly singleInlays = new Set([3, 5, 7, 9, 15, 17, 19, 21]);
   protected readonly doubleInlays = new Set([12, 24]);
 
   /** Returns a readable text color (AA-safe) for a dot's background color. */
   protected readonly textColorOn = textColorOn;
+
+  protected isFretEntering(fret: number): boolean {
+    return fret > this.previousFretCount && fret <= this.fretCount() && this.fretCount() > this.previousFretCount;
+  }
+
+  protected isFretExiting(fret: number): boolean {
+    return fret > this.fretCount() && fret <= this.displayedFretCount();
+  }
+
+  private prefersReducedMotion(): boolean {
+    try {
+      return !!this.document.defaultView?.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    } catch {
+      return false;
+    }
+  }
 
   private readonly handleFontsLoaded = (): void => {
     this.scheduleScaleUpdate();
@@ -150,6 +247,14 @@ export class Fretboard {
     const naturalHeight = board.offsetHeight;
 
     if (availableWidth <= 0 || naturalWidth <= 0 || naturalHeight <= 0) return;
+
+    const usesFluidGrid = getComputedStyle(board).gridTemplateColumns.includes('1fr');
+    if (usesFluidGrid) {
+      frame.style.width = '100%';
+      frame.style.height = 'auto';
+      board.style.transform = 'none';
+      return;
+    }
 
     const scale = Math.min(1, availableWidth / naturalWidth);
     frame.style.width = `${naturalWidth * scale}px`;

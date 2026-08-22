@@ -55,6 +55,10 @@
       color var(--dur-slow) ease,
       opacity var(--dur-fast) ease;
 
+    &:not(.visible) {
+      display: none;
+    }
+
     &.visible {
       visibility: visible;
       opacity: 1;

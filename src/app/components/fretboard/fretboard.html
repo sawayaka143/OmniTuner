@@ -10,27 +10,40 @@
     <div
       #board
       class="fretboard"
-      [style.--fret-count]="fretCount()"
-      [style.--string-count]="cells().length"
+      [class.is-animating]="displayedFretCount() !== fretCount()"
+      [style.--fret-count]="displayedFretCount()"
+      [style.--string-count]="displayedCells().length"
     >
       <span class="open-heading" aria-hidden="true">open</span>
 
       <div class="board-inlays" aria-hidden="true">
         @for (n of fretNumbers().slice(1); track n) {
           @if (doubleInlays.has(n)) {
-            <span class="board-inlay is-double" [style.grid-column]="n + 1">
+            <span
+              class="board-inlay is-double"
+              [class.is-entering]="isFretEntering(n)"
+              [class.is-exiting]="isFretExiting(n)"
+              [style.grid-column]="n + 1"
+              [style.--fret-index]="n"
+            >
               <span class="inlay-mark"></span>
               <span class="inlay-mark"></span>
             </span>
           } @else if (singleInlays.has(n)) {
-            <span class="board-inlay" [style.grid-column]="n + 1">
+            <span
+              class="board-inlay"
+              [class.is-entering]="isFretEntering(n)"
+              [class.is-exiting]="isFretExiting(n)"
+              [style.grid-column]="n + 1"
+              [style.--fret-index]="n"
+            >
               <span class="inlay-mark"></span>
             </span>
           }
         }
       </div>
 
-      @for (row of cells(); track row[0].stringIndex; let stringIndex = $index) {
+      @for (row of displayedCells(); track row[0].stringIndex; let stringIndex = $index) {
         <div class="string-row">
           <div
             class="open-note fret-cell"
@@ -82,7 +95,13 @@
             }
           </div>
           @for (cell of row.slice(1); track cell.fret) {
-            <div class="fret-cell" [style.--string-weight.px]="0.8 + stringIndex * 0.42">
+            <div
+              class="fret-cell"
+              [class.is-entering]="isFretEntering(cell.fret)"
+              [class.is-exiting]="isFretExiting(cell.fret)"
+              [style.--string-weight.px]="0.8 + stringIndex * 0.42"
+              [style.--fret-index]="cell.fret"
+            >
               @if (cell.interval) {
                 <button
                   type="button"
@@ -138,7 +157,13 @@
       <div class="fret-numbers" aria-hidden="true">
         <span class="fret-number open-label">0</span>
         @for (n of fretNumbers().slice(1); track n) {
-          <span class="fret-number">{{ n }}</span>
+          <span
+            class="fret-number"
+            [class.is-entering]="isFretEntering(n)"
+            [class.is-exiting]="isFretExiting(n)"
+            [style.--fret-index]="n"
+            >{{ n }}</span
+          >
         }
       </div>
     </div>

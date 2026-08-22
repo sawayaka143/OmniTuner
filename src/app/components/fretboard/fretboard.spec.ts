@@ -226,7 +226,7 @@ describe('Fretboard', () => {
     expect(openNote.querySelector('.fret-dot.is-ghost')).toBeTruthy();
   });
 
-  it('scales down to fit without scaling above 100%', async () => {
+  it('fills the available width without transform scaling', async () => {
     const container = fixture!.nativeElement.querySelector('.fretboard-scroll') as HTMLElement;
     const frame = fixture!.nativeElement.querySelector('.fretboard-scale-frame') as HTMLElement;
     const board = fixture!.nativeElement.querySelector('.fretboard') as HTMLElement;
@@ -243,17 +243,17 @@ describe('Fretboard', () => {
     ResizeObserverMock.latest?.trigger();
     await new Promise((resolve) => setTimeout(resolve, 30));
 
-    expect(board.style.transform).toBe('scale(0.5)');
-    expect(frame.style.width).toBe('300px');
-    expect(frame.style.height).toBe('150px');
+    expect(board.style.transform).toBe('none');
+    expect(frame.style.width).toBe('100%');
+    expect(frame.style.height).toBe('auto');
 
     availableWidth = 800;
     ResizeObserverMock.latest?.trigger();
     await new Promise((resolve) => setTimeout(resolve, 30));
 
-    expect(board.style.transform).toBe('scale(1)');
-    expect(frame.style.width).toBe('600px');
-    expect(frame.style.height).toBe('300px');
+    expect(board.style.transform).toBe('none');
+    expect(frame.style.width).toBe('100%');
+    expect(frame.style.height).toBe('auto');
   });
 
   it('disconnects its container observer on destroy', () => {
@@ -313,7 +313,7 @@ describe('Fretboard font loading', () => {
     });
   });
 
-  it('rescales the board when fonts finish loading', async () => {
+  it('keeps the fluid layout when fonts finish loading', async () => {
     const container = fixture!.nativeElement.querySelector('.fretboard-scroll') as HTMLElement;
     const frame = fixture!.nativeElement.querySelector('.fretboard-scale-frame') as HTMLElement;
     const board = fixture!.nativeElement.querySelector('.fretboard') as HTMLElement;
@@ -326,8 +326,8 @@ describe('Fretboard font loading', () => {
     loadingDoneListener?.(new Event('loadingdone'));
     await new Promise((resolve) => setTimeout(resolve, 30));
 
-    expect(board.style.transform).toBe('scale(0.5)');
-    expect(frame.style.width).toBe('300px');
-    expect(frame.style.height).toBe('150px');
+    expect(board.style.transform).toBe('none');
+    expect(frame.style.width).toBe('100%');
+    expect(frame.style.height).toBe('auto');
   });
 });

@@ -66,54 +66,54 @@
     </div>
   </div>
 
-  <span class="divider" aria-hidden="true"></span>
-
-  <div class="label-select">
-    <button
-      #labelTrigger
-      type="button"
-      class="label-trigger"
-      [class.active]="labelOpen()"
-      aria-haspopup="menu"
-      [attr.aria-expanded]="labelOpen()"
-      (click)="toggleLabelDropdown()"
-      (keydown)="onLabelKeydown($event)"
-    >
-      {{ currentLabel }}
-      <span class="material-symbols-outlined chevron" aria-hidden="true">expand_more</span>
-    </button>
-
-    @if (labelOpen()) {
-      <div
-        class="label-menu"
-        role="menu"
-        aria-label="Label display mode"
+  <div class="control-group-right">
+    <div class="label-select">
+      <button
+        #labelTrigger
+        type="button"
+        class="label-trigger"
+        [class.active]="labelOpen()"
+        aria-haspopup="menu"
+        [attr.aria-expanded]="labelOpen()"
+        (click)="toggleLabelDropdown()"
         (keydown)="onLabelKeydown($event)"
       >
-        @for (opt of labelOptions; track opt.value) {
-          <button
-            type="button"
-            role="menuitemradio"
-            [attr.aria-checked]="labelMode() === opt.value"
-            [class.active]="labelMode() === opt.value"
-            (click)="selectLabel(opt.value)"
-          >
-            <span
-              class="menu-lamp"
-              [class.on]="labelMode() === opt.value"
-              aria-hidden="true"
-            ></span>
-            {{ opt.label }}
-          </button>
-        }
-      </div>
-    }
-  </div>
+        {{ currentLabel }}
+        <span class="material-symbols-outlined chevron" aria-hidden="true">expand_more</span>
+      </button>
 
-  <app-toggle
-    [checked]="showOutsideScale()"
-    label="Outside scale"
-    [inline]="true"
-    (change)="showOutsideScaleChange.emit($event)"
-  />
+      @if (labelOpen()) {
+        <div
+          class="label-menu"
+          role="menu"
+          aria-label="Label display mode"
+          (keydown)="onLabelKeydown($event)"
+        >
+          @for (opt of labelOptions; track opt.value) {
+            <button
+              type="button"
+              role="menuitemradio"
+              [attr.aria-checked]="labelMode() === opt.value"
+              [class.active]="labelMode() === opt.value"
+              (click)="selectLabel(opt.value)"
+            >
+              <span
+                class="menu-lamp"
+                [class.on]="labelMode() === opt.value"
+                aria-hidden="true"
+              ></span>
+              {{ opt.label }}
+            </button>
+          }
+        </div>
+      }
+    </div>
+
+    <app-toggle
+      [checked]="showOutsideScale()"
+      label="Outside scale"
+      [inline]="true"
+      (change)="showOutsideScaleChange.emit($event)"
+    />
+  </div>
 </div>
