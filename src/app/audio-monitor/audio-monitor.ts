@@ -4,7 +4,6 @@ import {
   DestroyRef,
   effect,
   inject,
-  isDevMode,
   OnInit,
   signal,
   untracked,
@@ -80,9 +79,6 @@ export class AudioMonitor implements OnInit {
   readonly frequency = this.audioCapture.frequency;
   readonly trackingState = this.audioCapture.trackingState;
   readonly captureError = this.audioCapture.captureError;
-  readonly inputLevel = this.audioCapture.inputLevel; // [debug]
-  readonly debugInfo = this.audioCapture.debugInfo; // [debug]
-  readonly showDebug = isDevMode();
 
   // Instrument/tuning selection lives in the shared registry.
   readonly instruments = this.registry.instruments;
@@ -172,11 +168,6 @@ export class AudioMonitor implements OnInit {
   readonly autoTunedNames = computed(() => (this.mode() === 'auto' ? this.autoTuned() : []));
 
   readonly currentHz = computed(() => hzDisplay(this.frequency()));
-
-  readonly debugCents = computed(() => {
-    const cents = this.frameCents();
-    return cents === null ? '\u2014' : `${Math.round(cents)}\u00a2`;
-  });
 
   readonly isLocked = computed(() => this.trackingState() === 'locked');
 

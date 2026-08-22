@@ -1,4 +1,4 @@
-import { Service, signal, computed, DestroyRef, inject } from '@angular/core';
+import { Service, signal, DestroyRef, inject } from '@angular/core';
 
 export type PitchTrackingState = 'idle' | 'listening' | 'locked';
 
@@ -59,13 +59,6 @@ export class AudioCaptureService {
   readonly isCapturing = signal(false);
   readonly trackingState = signal<PitchTrackingState>('idle');
   readonly captureError = signal<string | null>(null);
-  readonly inputLevel = signal(0);
-  readonly debugInfo = computed(() => {
-    const state = this.trackingState();
-    const freq = this.frequency();
-    const level = this.inputLevel();
-    return `state: ${state} | freq: ${freq !== null ? `${freq.toFixed(1)} Hz` : 'null'} | level: ${level.toFixed(4)}`;
-  });
 
   // ── Audio graph ───────────────────────────────────────────────
   private audioContext: AudioContext | null = null;
@@ -110,7 +103,6 @@ export class AudioCaptureService {
 
       this.analysisInFlight = false;
       this.clearAnalysisTimeout();
-      this.inputLevel.set(inputLevel);
 
       if (frequency === null || confidence <= 0) {
         this.handleDropout(inputLevel);
@@ -257,7 +249,6 @@ export class AudioCaptureService {
     this.startInFlight = false;
     this.releaseAudioResources();
     this.frequency.set(null);
-    this.inputLevel.set(0);
     this.isCapturing.set(false);
     this.trackingState.set('idle');
     this.resetTracking();

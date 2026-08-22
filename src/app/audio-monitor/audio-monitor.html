@@ -95,15 +95,4 @@
   </button>
 
   <span class="sr-only" aria-live="polite" aria-atomic="true">{{ statusMessage() }}</span>
-
-  @if (showDebug) {
-    <pre
-      class="debug-hud"
-      aria-hidden="true"
-    ><span class="debug-hud__dot" [class.active]="isCapturing()"></span
-    ><span class="debug-hud__label">DEBUG · temporary</span>
-lvl {{ inputLevel().toFixed(3) }}
-{{ debugInfo() }}
-mode: {{ mode() }} | tuned: {{ showTuned() ? 'yes' : 'no' }} | cents: {{ debugCents() }}</pre>
-  }
 </main>
