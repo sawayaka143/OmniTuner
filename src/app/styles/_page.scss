@@ -33,17 +33,16 @@
   }
 
   .workbench-header {
-    min-height: 112px;
+    min-height: 84px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--space-6);
-    padding: var(--space-6) var(--space-7) var(--space-5);
+    padding: var(--space-5) var(--space-6);
 
     h2 {
-      margin-top: var(--space-2);
       font-family: var(--serif);
-      font-size: clamp(29px, 3vw, 40px);
+      font-size: clamp(26px, 2.6vw, 34px);
       font-weight: var(--fw-normal);
       letter-spacing: var(--tracking-tight);
       line-height: 1;
