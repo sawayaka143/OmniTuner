@@ -10,7 +10,7 @@ export const DEFAULT_SCALE_PREFERENCES: ScalePreferencesState = {
   fretCount: 12,
   labelMode: 'note-names',
   showOutsideScale: false,
-  accent: '#779900',
+  accent: '#ffffff',
   rootNoteColor: '#ffffff',
   noteColor: '#2e2e28',
   workbenchScale: 1,

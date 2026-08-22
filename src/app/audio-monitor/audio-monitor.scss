@@ -10,8 +10,8 @@
   flex-direction: column;
   align-items: center;
   width: 100%;
-  padding: var(--space-8) var(--space-6) calc(var(--space-7) * 2);
-  gap: var(--space-7);
+  padding: var(--space-6) var(--space-6) var(--space-6);
+  gap: var(--space-5);
   position: relative;
 }
 
@@ -23,8 +23,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-5);
-  margin-top: calc(var(--space-7) * 2);
+  gap: var(--space-4);
+  margin-top: var(--space-6);
 }
 
 .meter-area {
@@ -40,9 +40,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 68px;
-  min-height: 68px;
-  max-height: 68px;
+  height: 56px;
+  min-height: 56px;
+  max-height: 56px;
   gap: var(--space-1);
   font-family: var(--mono);
   text-transform: uppercase;
@@ -57,11 +57,11 @@
   }
 
   .prompt-text {
-    font-size: clamp(24px, 5.5vw, 34px);
+    font-size: clamp(18px, 4vw, 26px);
     line-height: var(--leading-tight);
     font-weight: var(--fw-semibold);
     letter-spacing: var(--tracking-wide);
-    height: 38px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;

@@ -3,7 +3,7 @@
   --glow-note-strong: 0 0 34px color-mix(in srgb, var(--in-tune-color) 55%, transparent);
   --glow-note-static: 0 0 24px color-mix(in srgb, var(--in-tune-color) 45%, transparent);
 
-  margin-top: var(--space-6);
+  margin-top: var(--space-4);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -16,7 +16,7 @@
 
   .pitch-note {
     font-family: var(--serif);
-    font-size: clamp(104px, 20vw, 152px);
+    font-size: clamp(64px, 14vw, 112px);
     line-height: var(--leading-tight);
     letter-spacing: var(--tracking-tight);
     font-weight: var(--fw-normal);
@@ -109,11 +109,11 @@
 /* Short viewports: keep the hero note present but give the Start button room. */
 @media (max-height: 700px) {
   .pitch-note {
-    font-size: clamp(88px, 18vw, 132px);
+    font-size: clamp(56px, 12vw, 84px);
     line-height: 1.05;
   }
 
   .pitch-display {
-    margin-top: var(--space-3);
+    margin-top: var(--space-2);
   }
 }
