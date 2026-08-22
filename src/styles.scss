@@ -1,6 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500;6..72,600&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap');
 
 :root {
   /* --- Core Studio Monochrome Palette --- */
@@ -41,7 +40,7 @@
   /* --- Typography --- */
   --serif: 'Newsreader', Georgia, 'Times New Roman', serif;
   --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-  --brand: 'Bricolage Grotesque', system-ui, sans-serif;
+  --brand: var(--serif);
 
   /* --- Type Scale --- */
   --text-4xs: 8px;
@@ -183,7 +182,7 @@ h1,
 h2,
 h3 {
   font-family: var(--serif);
-  font-weight: 400;
+  font-weight: var(--fw-normal);
   letter-spacing: var(--tracking-tight);
   margin: 0;
 }

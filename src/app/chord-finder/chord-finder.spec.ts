@@ -37,8 +37,8 @@ describe('ChordFinder', () => {
     expect(component).toBeTruthy();
   });
 
-  it('shows the welcome state before generating', () => {
-    expect(el().querySelector('.stage-well')?.textContent).toContain('Chord finder ready.');
+  it('shows an empty stage before generating', () => {
+    expect(el().querySelectorAll('.chord-card').length).toBe(0);
   });
 
   it('starts with a random progression', () => {
@@ -140,7 +140,7 @@ describe('ChordFinder', () => {
     expect(el().textContent).toContain('C');
   });
 
-  it('clears results back to the welcome state', () => {
+  it('clears results back to an empty stage', () => {
     click('.generate');
     expect(el().querySelectorAll('.chord-card').length).toBeGreaterThan(0);
 
@@ -148,7 +148,6 @@ describe('ChordFinder', () => {
     toolbarButtons[toolbarButtons.length - 1].click(); // clear is last
     fixture.detectChanges();
     expect(el().querySelectorAll('.chord-card').length).toBe(0);
-    expect(el().querySelector('.stage-well')?.textContent).toContain('Chord finder ready.');
   });
 
   it('refuses to copy before anything was generated', async () => {

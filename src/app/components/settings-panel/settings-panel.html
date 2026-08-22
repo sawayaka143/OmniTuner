@@ -16,19 +16,15 @@
     </header>
 
     <div class="settings-content">
-      <section class="tweaks" aria-labelledby="tweaks-title">
+      <section class="appearance" aria-labelledby="appearance-title">
         <div class="section-heading">
-          <div>
-            <span class="settings-kicker">Appearance</span>
-            <h3 id="tweaks-title">Tweaks</h3>
-          </div>
+          <h3 id="appearance-title">Appearance</h3>
         </div>
 
         <label class="custom-accent">
           <span class="color-preview" [style.background-color]="accent()" aria-hidden="true"></span>
           <span class="custom-copy">
-            <strong>Custom accent</strong>
-            <span>Use any six-digit color</span>
+            <strong>Accent</strong>
           </span>
           <input
             type="color"
@@ -106,10 +102,7 @@
 
       <section class="tuner-settings" aria-labelledby="tuner-settings-title">
         <div class="section-heading">
-          <div>
-            <span class="settings-kicker">Tuner</span>
-            <h3 id="tuner-settings-title">In-tune feedback</h3>
-          </div>
+          <h3 id="tuner-settings-title">In-tune feedback</h3>
         </div>
 
         <section class="reference-pitch" aria-labelledby="reference-pitch-title">
@@ -164,7 +157,6 @@
           <div class="toggle-row">
             <div class="custom-copy">
               <strong>Highlight when in tune</strong>
-              <span>Master switch — turns off every confirmation cue</span>
             </div>
             <app-toggle
               [checked]="tunerSettings().inTune.enabled"
@@ -175,8 +167,7 @@
 
           <div class="toggle-row">
             <div class="custom-copy">
-              <strong>In-tune chime (ping)</strong>
-              <span>Play a soft chime when the note locks — turn off to mute the ping</span>
+              <strong>In-tune chime</strong>
             </div>
             <app-toggle
               [checked]="tunerSettings().inTune.sound"
@@ -188,7 +179,6 @@
           <div class="toggle-row">
             <div class="custom-copy">
               <strong>Ambient glow</strong>
-              <span>Pulse ring when the note locks</span>
             </div>
             <app-toggle
               [checked]="tunerSettings().inTune.glow"
@@ -208,8 +198,7 @@
               aria-hidden="true"
             ></span>
             <span class="custom-copy">
-              <strong>Custom in-tune color</strong>
-              <span>Use any six-digit color</span>
+              <strong>In-tune color</strong>
             </span>
             <input
               type="color"
@@ -226,8 +215,7 @@
               aria-hidden="true"
             ></span>
             <span class="custom-copy">
-              <strong>Custom out-of-tune color</strong>
-              <span>Use any six-digit color</span>
+              <strong>Out-of-tune color</strong>
             </span>
             <input
               type="color"

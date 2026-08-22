@@ -66,7 +66,7 @@
   padding: var(--space-6) var(--space-5);
 }
 
-.tweaks {
+.appearance {
   display: grid;
   gap: var(--space-5);
 }
@@ -193,7 +193,7 @@ input[type='color'] {
 .tuner-settings {
   display: grid;
   gap: var(--space-5);
-  padding-top: var(--space-6);
+  padding-top: var(--space-5);
   border-top: 1px solid var(--border-subtle);
 }
 

@@ -125,12 +125,7 @@
           aria-label="Generated voicing output"
           aria-live="polite"
         >
-          @if (!results()) {
-            <div class="welcome">
-              <span class="welcome-mark" aria-hidden="true"></span>
-              <p>Chord finder ready.</p>
-            </div>
-          } @else {
+          @if (results()) {
             @if (detectedKey()) {
               <p class="card-note" [class.good]="detectedKey()!.confidence === 'strong'" [class.warn]="detectedKey()!.confidence === 'moderate'">
                 Detected key: {{ detectedKey()!.tonicName }} {{ detectedKey()!.mode }} · {{ detectedKey()!.confidence }}
