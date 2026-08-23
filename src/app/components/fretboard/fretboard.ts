@@ -245,7 +245,7 @@ export class Fretboard {
 
     if (availableWidth <= 0 || naturalWidth <= 0 || naturalHeight <= 0) return;
 
-    const scale = availableWidth / naturalWidth;
+    const scale = Math.min(1, availableWidth / naturalWidth);
     frame.style.width = `${naturalWidth * scale}px`;
     frame.style.height = `${naturalHeight * scale}px`;
     board.style.transform = `scale(${scale})`;

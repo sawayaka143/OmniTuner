@@ -242,7 +242,7 @@ describe('Fretboard', () => {
     expect(frame.style.height).toBe('150px');
   });
 
-  it('scales the board up to fill a wide container', async () => {
+  it('does not scale the board when there is room to spare', async () => {
     const container = fixture!.nativeElement.querySelector('.fretboard-scroll') as HTMLElement;
     const board = fixture!.nativeElement.querySelector('.fretboard') as HTMLElement;
 
@@ -257,7 +257,7 @@ describe('Fretboard', () => {
     ResizeObserverMock.latest?.trigger();
     await new Promise((resolve) => setTimeout(resolve, 30));
 
-    expect(board.style.transform).toBe('scale(1.3333333333333333)');
+    expect(board.style.transform).toBe('scale(1)');
   });
 
   it('disconnects its container observer on destroy', () => {
