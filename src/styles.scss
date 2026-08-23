@@ -179,6 +179,13 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+html {
+  /* Reserve the scrollbar gutter always so the centered header/nav never
+     shifts when a page (e.g. Scales at 21 frets) becomes taller than the
+     viewport and a vertical scrollbar appears. */
+  scrollbar-gutter: stable;
+}
+
 h1,
 h2,
 h3 {

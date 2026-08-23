@@ -1,5 +1,7 @@
 :host {
   display: block;
+  width: 100%;
+  min-width: 0;
 
   /* Function colours for chord-tone markers. */
   --neck-root: var(--scale-accent);
@@ -11,6 +13,9 @@
 
 .neck {
   display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
   transition: filter var(--dur-med) ease;
 
   &:hover {

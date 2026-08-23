@@ -2,8 +2,7 @@
   class="neck"
   role="img"
   [attr.aria-label]="ariaLabel()"
-  [attr.width]="layout().width"
-  [attr.height]="layout().height"
+  [attr.viewBox]="'0 0 ' + layout().width + ' ' + layout().height"
 >
   <rect
     x="0.5"

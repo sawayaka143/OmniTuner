@@ -183,7 +183,7 @@
 
 .card-shapes {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr));
   gap: var(--space-3);
 }
 
@@ -195,8 +195,13 @@
   letter-spacing: var(--tracking-extra-wide);
 }
 
+.card-shape {
+  min-width: 0;
+}
+
 /* The raised "plate" the neck diagram sits on — the focal point. */
 .card-shape app-neck-diagram {
+  display: block;
   padding: var(--space-3) var(--space-4);
   border-radius: var(--r-md);
   background: var(--surface-container-low);

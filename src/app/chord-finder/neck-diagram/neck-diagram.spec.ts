@@ -43,6 +43,11 @@ describe('NeckDiagram', () => {
     expect(el().querySelector('svg.neck')).toBeTruthy();
   });
 
+  it('sets a viewBox so the diagram scales responsively', () => {
+    // C major open shape spans frets 0-3: 66 + 4*30 + 34 + 8 wide, 24 + 6*24 + 18 tall.
+    expect(el().querySelector('svg.neck')?.getAttribute('viewBox')).toBe('0 0 228 186');
+  });
+
   it('labels the diagram for assistive tech', () => {
     expect(el().querySelector('svg.neck')?.getAttribute('aria-label')).toBe('C fingering 1');
   });
