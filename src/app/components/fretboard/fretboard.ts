@@ -102,8 +102,8 @@ export class Fretboard {
     });
 
     afterRenderEffect(() => {
+      this.displayedFretCount();
       this.cells();
-      this.fretCount();
       this.labelMode();
       this.showOutsideScale();
       this.scheduleScaleUpdate();
@@ -132,7 +132,6 @@ export class Fretboard {
           }
           this.previousFretCount = displayed;
           this.displayedFretCountInternal.set(target);
-          this.scheduleScaleUpdate();
         });
         return;
       }
@@ -143,7 +142,6 @@ export class Fretboard {
         if (this.shrinkTimer) clearTimeout(this.shrinkTimer);
         if (this.prefersReducedMotion()) {
           this.displayedFretCountInternal.set(target);
-          this.scheduleScaleUpdate();
           return;
         }
         if (this.displayedFretCountInternal() === null) {
@@ -152,7 +150,6 @@ export class Fretboard {
         this.shrinkTimer = setTimeout(() => {
           this.shrinkTimer = null;
           this.displayedFretCountInternal.set(target);
-          this.scheduleScaleUpdate();
         }, this.SHRINK_DELAY_MS);
       });
     });
@@ -247,14 +244,6 @@ export class Fretboard {
     const naturalHeight = board.offsetHeight;
 
     if (availableWidth <= 0 || naturalWidth <= 0 || naturalHeight <= 0) return;
-
-    const usesFluidGrid = getComputedStyle(board).gridTemplateColumns.includes('1fr');
-    if (usesFluidGrid) {
-      frame.style.width = '100%';
-      frame.style.height = 'auto';
-      board.style.transform = 'none';
-      return;
-    }
 
     const scale = Math.min(1, availableWidth / naturalWidth);
     frame.style.width = `${naturalWidth * scale}px`;

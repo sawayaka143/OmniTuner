@@ -87,12 +87,6 @@ class ResizeObserverMock implements ResizeObserver {
   }
 }
 
-type FontSetMock = {
-  readonly ready: Promise<void>;
-  addEventListener(type: string, listener: (event: Event) => void): void;
-  removeEventListener(type: string, listener: (event: Event) => void): void;
-};
-
 describe('Fretboard', () => {
   let fixture: ComponentFixture<Fretboard> | null;
   const originalResizeObserver = globalThis.ResizeObserver;
@@ -226,11 +220,11 @@ describe('Fretboard', () => {
     expect(openNote.querySelector('.fret-dot.is-ghost')).toBeTruthy();
   });
 
-  it('fills the available width without transform scaling', async () => {
+  it('scales the board down to fit a narrow container', async () => {
     const container = fixture!.nativeElement.querySelector('.fretboard-scroll') as HTMLElement;
     const frame = fixture!.nativeElement.querySelector('.fretboard-scale-frame') as HTMLElement;
     const board = fixture!.nativeElement.querySelector('.fretboard') as HTMLElement;
-    let availableWidth = 300;
+    const availableWidth = 300;
 
     container.style.padding = '0';
     Object.defineProperty(container, 'clientWidth', {
@@ -243,17 +237,27 @@ describe('Fretboard', () => {
     ResizeObserverMock.latest?.trigger();
     await new Promise((resolve) => setTimeout(resolve, 30));
 
-    expect(board.style.transform).toBe('none');
-    expect(frame.style.width).toBe('100%');
-    expect(frame.style.height).toBe('auto');
+    expect(board.style.transform).toBe('scale(0.5)');
+    expect(frame.style.width).toBe('300px');
+    expect(frame.style.height).toBe('150px');
+  });
 
-    availableWidth = 800;
+  it('does not scale the board when there is room to spare', async () => {
+    const container = fixture!.nativeElement.querySelector('.fretboard-scroll') as HTMLElement;
+    const board = fixture!.nativeElement.querySelector('.fretboard') as HTMLElement;
+
+    container.style.padding = '0';
+    Object.defineProperty(container, 'clientWidth', {
+      configurable: true,
+      get: () => 800,
+    });
+    Object.defineProperty(board, 'offsetWidth', { configurable: true, value: 600 });
+    Object.defineProperty(board, 'offsetHeight', { configurable: true, value: 300 });
+
     ResizeObserverMock.latest?.trigger();
     await new Promise((resolve) => setTimeout(resolve, 30));
 
-    expect(board.style.transform).toBe('none');
-    expect(frame.style.width).toBe('100%');
-    expect(frame.style.height).toBe('auto');
+    expect(board.style.transform).toBe('scale(1)');
   });
 
   it('disconnects its container observer on destroy', () => {
@@ -266,68 +270,3 @@ describe('Fretboard', () => {
   });
 });
 
-describe('Fretboard font loading', () => {
-  let fixture: ComponentFixture<Fretboard> | null;
-  const originalResizeObserver = globalThis.ResizeObserver;
-  const originalFonts = (document as unknown as { fonts?: unknown }).fonts;
-  let loadingDoneListener: ((event: Event) => void) | null = null;
-
-  beforeEach(async () => {
-    loadingDoneListener = null;
-    const fontSet: FontSetMock = {
-      ready: Promise.resolve(),
-      addEventListener: (type, listener) => {
-        if (type === 'loadingdone') loadingDoneListener = listener;
-      },
-      removeEventListener: () => {
-        loadingDoneListener = null;
-      },
-    };
-    Object.defineProperty(document, 'fonts', {
-      configurable: true,
-      writable: true,
-      value: fontSet,
-    });
-
-    ResizeObserverMock.latest = null;
-    globalThis.ResizeObserver = ResizeObserverMock;
-
-    await TestBed.configureTestingModule({ imports: [Fretboard] }).compileComponents();
-    fixture = TestBed.createComponent(Fretboard);
-    fixture.componentRef.setInput('cells', [[ACTIVE_CELL, OCTAVE_CELL]]);
-    fixture.componentRef.setInput('fretCount', 1);
-    fixture.componentRef.setInput('scaleLabel', 'Major');
-    fixture.componentRef.setInput('rootLabel', 'E');
-    await fixture.whenStable();
-    // Let the initial font-ready microtask + rAF settle (early-returns with no dimensions).
-    await new Promise((resolve) => setTimeout(resolve, 30));
-  });
-
-  afterEach(() => {
-    fixture?.destroy();
-    globalThis.ResizeObserver = originalResizeObserver;
-    Object.defineProperty(document, 'fonts', {
-      configurable: true,
-      writable: true,
-      value: originalFonts,
-    });
-  });
-
-  it('keeps the fluid layout when fonts finish loading', async () => {
-    const container = fixture!.nativeElement.querySelector('.fretboard-scroll') as HTMLElement;
-    const frame = fixture!.nativeElement.querySelector('.fretboard-scale-frame') as HTMLElement;
-    const board = fixture!.nativeElement.querySelector('.fretboard') as HTMLElement;
-
-    container.style.padding = '0';
-    Object.defineProperty(container, 'clientWidth', { configurable: true, get: () => 300 });
-    Object.defineProperty(board, 'offsetWidth', { configurable: true, value: 600 });
-    Object.defineProperty(board, 'offsetHeight', { configurable: true, value: 300 });
-
-    loadingDoneListener?.(new Event('loadingdone'));
-    await new Promise((resolve) => setTimeout(resolve, 30));
-
-    expect(board.style.transform).toBe('none');
-    expect(frame.style.width).toBe('100%');
-    expect(frame.style.height).toBe('auto');
-  });
-});

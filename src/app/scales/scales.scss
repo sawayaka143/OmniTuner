@@ -155,8 +155,8 @@
     padding: var(--space-4) var(--space-5) var(--space-5);
   }
 
-  /* The fretboard scales itself down via JS; give the stage room to breathe
-     and never let the scaled board clip at the rounded corners. */
+  /* The fretboard uses fluid columns so it always fills the stage; clip here
+     so it never spills past the rounded corners on narrow viewports. */
   .fretboard-stage {
     padding: var(--space-3);
     overflow-x: clip;
