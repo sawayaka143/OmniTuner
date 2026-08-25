@@ -13,7 +13,7 @@ import { Component, computed, input, output } from '@angular/core';
       (click)="activate.emit()"
     >
       @if (displayIcon(); as icon) {
-        <span class="material-symbols-outlined" aria-hidden="true">{{ icon }}</span>
+        <span [class]="'app-icon ti ti-' + icon" aria-hidden="true"></span>
       }
       {{ label() }}
     </button>

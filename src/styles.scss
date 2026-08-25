@@ -1,6 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500;6..72,600&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400..700&display=swap');
+@import url('https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3/dist/tabler-icons.min.css');
 
 :root {
   color-scheme: dark;
@@ -48,9 +47,7 @@
   --out-of-tune-color: #ff8aab;
 
   /* --- Typography --- */
-  --serif: 'Newsreader', Georgia, 'Times New Roman', serif;
-  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-  --brand: 'Bricolage Grotesque', system-ui, sans-serif;
+  --font: 'Instrument Sans', 'Segoe UI', system-ui, sans-serif;
 
   /* --- Type Scale --- */
   --text-4xs: 8px;
@@ -304,7 +301,7 @@ body {
   padding: 0;
   background-color: var(--canvas);
   color: var(--text);
-  font-family: var(--mono);
+  font-family: var(--font);
   font-size: var(--text-base);
   line-height: var(--leading-normal);
   text-rendering: optimizeLegibility;
@@ -322,7 +319,7 @@ html {
 h1,
 h2,
 h3 {
-  font-family: var(--serif);
+  font-family: var(--font);
   font-weight: var(--fw-normal);
   letter-spacing: var(--tracking-tight);
   margin: 0;
@@ -348,7 +345,7 @@ h3 {
     inset 0 0 0 1px var(--border-subtle),
     var(--shadow-recess);
   color: var(--text);
-  font-family: var(--mono);
+  font-family: var(--font);
   font-size: var(--text-xs);
   font-weight: var(--fw-semibold);
   letter-spacing: var(--tracking-narrow);

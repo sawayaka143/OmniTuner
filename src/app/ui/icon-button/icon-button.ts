@@ -14,7 +14,7 @@ import { Component, input, output } from '@angular/core';
       [disabled]="disabled()"
       (click)="onActivate($event)"
     >
-      <span class="material-symbols-outlined" aria-hidden="true">{{ icon() }}</span>
+      <span [class]="'app-icon ti ti-' + icon()" aria-hidden="true"></span>
     </button>
   `,
   styleUrl: './icon-button.scss',

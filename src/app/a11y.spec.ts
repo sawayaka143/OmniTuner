@@ -44,7 +44,7 @@ const ELEMENTS: readonly string[] = ['Peach', 'Plum', 'Lemon', 'Lime'];
       [trackByFn]="identityFn"
       (select)="swatch.set($event)"
     />
-    <app-icon-button icon="close" label="Close" (activate)="closed.set(true)" />
+    <app-icon-button icon="x" label="Close" (activate)="closed.set(true)" />
   `,
   imports: [Listbox, Segmented, Toggle, TextField, SwatchGroup, IconButton],
 })

@@ -15,7 +15,7 @@
   }
 
   .pitch-note {
-    font-family: var(--serif);
+    font-family: var(--font);
     font-size: clamp(64px, 14vw, 112px);
     line-height: var(--leading-tight);
     letter-spacing: var(--tracking-tight);
@@ -42,7 +42,7 @@
   }
 
   .pitch-octave {
-    font-family: var(--mono);
+    font-family: var(--font);
     font-size: var(--text-2xl);
     line-height: var(--leading-snug);
     font-weight: var(--fw-normal);
@@ -70,7 +70,7 @@
   }
 
   .pitch-hz {
-    font-family: var(--mono);
+    font-family: var(--font);
     font-size: var(--text-lg);
     line-height: var(--leading-snug);
     font-weight: var(--fw-medium);
@@ -85,7 +85,7 @@
     min-height: var(--space-5);
     margin: var(--space-2) 0 0;
     color: var(--text-muted);
-    font-family: var(--mono);
+    font-family: var(--font);
     font-size: var(--text-xs);
     font-weight: var(--fw-medium);
     letter-spacing: var(--tracking-wide);

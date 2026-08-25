@@ -65,7 +65,7 @@
 
 .rail-caption {
   color: var(--text-dim);
-  font-family: var(--mono);
+  font-family: var(--font);
   font-size: var(--text-3xs);
   font-weight: var(--fw-semibold);
   letter-spacing: var(--tracking-extra-wide);
@@ -81,7 +81,7 @@
 
 .rail-label {
   color: var(--text-dim);
-  font-family: var(--mono);
+  font-family: var(--font);
   font-size: var(--text-3xs);
   letter-spacing: var(--tracking-wide);
 }
@@ -141,7 +141,7 @@
   margin-bottom: var(--space-2);
 
   h3 {
-    font-family: var(--serif);
+    font-family: var(--font);
     font-size: var(--text-lg);
     font-weight: var(--fw-normal);
     letter-spacing: var(--tracking-tight);
@@ -151,7 +151,7 @@
 
 .card-subhead {
   color: var(--info);
-  font-family: var(--mono);
+  font-family: var(--font);
   font-size: var(--text-2xs);
   letter-spacing: var(--tracking-narrow);
 }
@@ -159,7 +159,7 @@
 .card-note {
   margin: 0 0 var(--space-2);
   color: var(--text-muted);
-  font-family: var(--mono);
+  font-family: var(--font);
   font-size: var(--text-2xs);
   letter-spacing: var(--tracking-narrow);
 
@@ -189,7 +189,7 @@
 
 .card-rank {
   color: var(--text-dim);
-  font-family: var(--mono);
+  font-family: var(--font);
   font-size: var(--text-3xs);
   font-weight: var(--fw-semibold);
   letter-spacing: var(--tracking-extra-wide);
@@ -246,7 +246,7 @@
 .legend {
   padding: var(--space-2) var(--space-4);
   color: var(--text-muted);
-  font-family: var(--mono);
+  font-family: var(--font);
   font-size: var(--text-2xs);
   letter-spacing: var(--tracking-narrow);
 }

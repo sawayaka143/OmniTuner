@@ -31,7 +31,7 @@
       [title]="'New instrument'"
       (click)="requestNewInstrument($event)"
     >
-      <span class="material-symbols-outlined" aria-hidden="true">add</span>
+      <span class="app-icon ti ti-plus" aria-hidden="true"></span>
     </button>
   </div>
 
@@ -73,11 +73,10 @@
         <span class="dropdown-label">{{ currentTuning().label }}</span>
       </span>
       <span
-        class="material-symbols-outlined dropdown-icon"
+        class="app-icon ti ti-chevron-down dropdown-icon"
         [class.rotated]="dropdownOpen()"
         aria-hidden="true"
-        >expand_more</span
-      >
+      ></span>
     </button>
 
     @if (dropdownOpen()) {
@@ -120,7 +119,7 @@
                   </button>
                   <div class="custom-actions" aria-label="Custom tuning actions">
                     <app-icon-button
-                      icon="edit"
+                      icon="pencil"
                       [label]="'Edit ' + tuning.label"
                       [showTitle]="true"
                       [stopClickPropagation]="true"
@@ -129,7 +128,7 @@
                       (activate)="requestEdit(tuning.id)"
                     />
                     <app-icon-button
-                      icon="delete"
+                      icon="trash"
                       [label]="'Delete ' + tuning.label"
                       [showTitle]="true"
                       [stopClickPropagation]="true"
@@ -148,7 +147,7 @@
         </section>
 
         <button class="new-tuning-button" type="button" (click)="requestNewCustomTuning($event)">
-          <span class="material-symbols-outlined" aria-hidden="true">add</span>
+          <span class="app-icon ti ti-plus" aria-hidden="true"></span>
           New custom tuning…
         </button>
 
@@ -157,7 +156,7 @@
           type="button"
           (click)="requestManageInstruments($event)"
         >
-          <span class="material-symbols-outlined" aria-hidden="true">tune</span>
+          <span class="app-icon ti ti-adjustments-horizontal" aria-hidden="true"></span>
           Manage instruments
         </button>
       </div>

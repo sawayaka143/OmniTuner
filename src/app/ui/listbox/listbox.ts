@@ -35,12 +35,10 @@ let nextListboxId = 0;
           </span>
         </span>
         <span
-          class="material-symbols-outlined dropdown-icon"
+          class="app-icon ti ti-chevron-down dropdown-icon"
           [class.rotated]="open()"
           aria-hidden="true"
-        >
-          expand_more
-        </span>
+        ></span>
       </button>
 
       @if (open()) {

@@ -14,7 +14,7 @@
         <p id="manager-subtitle">{{ subtitle() }}</p>
       </div>
       <app-icon-button
-        icon="close"
+        icon="x"
         label="Close instrument manager"
         (activate)="requestDismiss()"
       />
@@ -37,13 +37,13 @@
               @if (isCustom(instrument)) {
                 <div class="instrument-actions">
                   <app-icon-button
-                    icon="edit"
+                    icon="pencil"
                     [label]="'Edit ' + instrument.label"
                     [showTitle]="true"
                     (activate)="startEdit(instrument)"
                   />
                   <app-icon-button
-                    icon="delete"
+                    icon="trash"
                     [label]="'Delete ' + instrument.label"
                     [showTitle]="true"
                     [danger]="true"
@@ -56,7 +56,7 @@
         </ul>
 
         <button class="new-instrument-button" type="button" (click)="startCreate()">
-          <span class="material-symbols-outlined" aria-hidden="true">add</span>
+          <span class="app-icon ti ti-plus" aria-hidden="true"></span>
           New instrument
         </button>
       } @else {

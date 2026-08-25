@@ -27,8 +27,12 @@
   ],
   "dataGroups": [
     {
-      "name": "google-fonts",
-      "urls": ["https://fonts.googleapis.com/**", "https://fonts.gstatic.com/**"],
+      "name": "web-fonts",
+      "urls": [
+        "https://fonts.googleapis.com/**",
+        "https://fonts.gstatic.com/**",
+        "https://cdn.jsdelivr.net/**"
+      ],
       "cacheConfig": {
         "maxSize": 30,
         "maxAge": "30d",

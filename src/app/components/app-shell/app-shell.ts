@@ -36,7 +36,7 @@ export class AppShell {
   protected readonly accentInk = computed(() => textColorOn(this.preferencesState().accent));
   protected readonly tunerSettings = this.tunerPreferences.tunerSettings;
   protected readonly themeIcon = computed(() =>
-    this.themeService.theme() === 'dark' ? 'light_mode' : 'dark_mode',
+    this.themeService.theme() === 'dark' ? 'sun' : 'moon',
   );
   protected readonly themeLabel = computed(() =>
     this.themeService.theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme',

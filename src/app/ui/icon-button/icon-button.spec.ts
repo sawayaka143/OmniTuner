@@ -10,17 +10,17 @@ describe('IconButton', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({ imports: [IconButton] }).compileComponents();
     fixture = TestBed.createComponent(IconButton);
-    fixture.componentRef.setInput('icon', 'close');
+    fixture.componentRef.setInput('icon', 'x');
     fixture.componentRef.setInput('label', 'Close');
     await fixture.whenStable();
     button = fixture.nativeElement.querySelector('button') as HTMLButtonElement;
-    iconSpan = button.querySelector('.material-symbols-outlined') as HTMLSpanElement;
+    iconSpan = button.querySelector('.app-icon') as HTMLSpanElement;
   });
 
   afterEach(() => fixture?.destroy());
 
-  it('renders the icon glyph inside a material-symbols-outlined span', () => {
-    expect(iconSpan.textContent).toBe('close');
+  it('renders the icon glyph inside an app-icon span', () => {
+    expect(iconSpan.classList.contains('ti-x')).toBe(true);
     expect(iconSpan.getAttribute('aria-hidden')).toBe('true');
   });
 

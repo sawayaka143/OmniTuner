@@ -16,7 +16,7 @@
     inset 0 0 0 1px $border,
     var(--shadow-recess);
   color: var(--text);
-  font-family: var(--mono);
+  font-family: var(--font);
   font-size: var(--text-sm);
   transition:
     box-shadow var(--dur-med) ease,
@@ -65,7 +65,7 @@
 ) {
   display: block;
   color: $color;
-  font-family: var(--mono);
+  font-family: var(--font);
   font-size: $size;
   font-weight: $weight;
   letter-spacing: $tracking;

@@ -57,32 +57,32 @@ describe('PillButton', () => {
   });
 
   it('renders no icon when neither iconOn nor iconOff is provided', () => {
-    expect(button.querySelector('.material-symbols-outlined')).toBeNull();
+    expect(button.querySelector('.app-icon')).toBeNull();
   });
 
   it('renders the iconOn glyph when only iconOn is provided', () => {
-    fixture.componentRef.setInput('iconOn', 'play_arrow');
+    fixture.componentRef.setInput('iconOn', 'player-play');
     fixture.detectChanges();
-    const span = button.querySelector('.material-symbols-outlined') as HTMLSpanElement;
-    expect(span.textContent).toBe('play_arrow');
+    const span = button.querySelector('.app-icon') as HTMLSpanElement;
+    expect(span.classList.contains('ti-player-play')).toBe(true);
   });
 
   it('swaps to iconOff when pressed is false and both icons are provided', () => {
-    fixture.componentRef.setInput('iconOn', 'graphic_eq');
-    fixture.componentRef.setInput('iconOff', 'play_arrow');
+    fixture.componentRef.setInput('iconOn', 'activity');
+    fixture.componentRef.setInput('iconOff', 'player-play');
     fixture.componentRef.setInput('pressed', false);
     fixture.detectChanges();
-    const span = button.querySelector('.material-symbols-outlined') as HTMLSpanElement;
-    expect(span.textContent).toBe('play_arrow');
+    const span = button.querySelector('.app-icon') as HTMLSpanElement;
+    expect(span.classList.contains('ti-player-play')).toBe(true);
   });
 
   it('shows iconOn when pressed is true and both icons are provided', () => {
-    fixture.componentRef.setInput('iconOn', 'graphic_eq');
-    fixture.componentRef.setInput('iconOff', 'play_arrow');
+    fixture.componentRef.setInput('iconOn', 'activity');
+    fixture.componentRef.setInput('iconOff', 'player-play');
     fixture.componentRef.setInput('pressed', true);
     fixture.detectChanges();
-    const span = button.querySelector('.material-symbols-outlined') as HTMLSpanElement;
-    expect(span.textContent).toBe('graphic_eq');
+    const span = button.querySelector('.app-icon') as HTMLSpanElement;
+    expect(span.classList.contains('ti-activity')).toBe(true);
   });
 
   it('disables when disabled is true', () => {

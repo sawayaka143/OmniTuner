@@ -9,7 +9,7 @@
   <section class="settings-sheet">
     <header class="settings-header">
       <h2 id="settings-title">Settings</h2>
-      <app-icon-button icon="close" label="Close settings" (activate)="requestDismiss()" />
+      <app-icon-button icon="x" label="Close settings" (activate)="requestDismiss()" />
     </header>
 
     <div class="settings-content">
@@ -89,7 +89,7 @@
               (input)="onWorkbenchScale($event)"
             />
             <app-icon-button
-              icon="restart_alt"
+              icon="refresh"
               label="Reset workbench size"
               (activate)="workbenchScaleReset.emit()"
             />

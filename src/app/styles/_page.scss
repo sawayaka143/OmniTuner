@@ -14,7 +14,7 @@
 
   .section-label {
     color: var(--text-dim);
-    font-family: var(--mono);
+    font-family: var(--font);
     font-size: var(--text-xs);
     font-weight: var(--fw-semibold);
     letter-spacing: var(--tracking-label);
@@ -41,7 +41,7 @@
     padding: var(--space-4) var(--space-5);
 
     h2 {
-      font-family: var(--serif);
+      font-family: var(--font);
       font-size: clamp(26px, 2.6vw, 34px);
       font-weight: var(--fw-normal);
       letter-spacing: var(--tracking-tight);

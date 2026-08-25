@@ -4,7 +4,7 @@
   min-height: 100dvh;
   background-color: var(--canvas);
   color: var(--text);
-  font-family: var(--mono);
+  font-family: var(--font);
 }
 
 .app-header {
@@ -32,7 +32,7 @@
   .app-title {
     grid-column: 1;
     justify-self: start;
-    font-family: var(--brand);
+    font-family: var(--font);
     font-size: var(--text-lg);
     font-weight: var(--fw-semibold);
     letter-spacing: var(--tracking-tight);

@@ -65,9 +65,13 @@
           "
           (click)="playTuning()"
         >
-          <span class="material-symbols-outlined" aria-hidden="true">
-            {{ playbackSource() === 'tuning' ? 'graphic_eq' : 'play_arrow' }}
-          </span>
+          <span
+            [class]="
+              'app-icon ti ' +
+              (playbackSource() === 'tuning' ? 'ti-activity' : 'ti-player-play')
+            "
+            aria-hidden="true"
+          ></span>
           <span>{{ playbackSource() === 'tuning' ? 'Playing' : 'Play tuning' }}</span>
         </button>
 
@@ -82,9 +86,13 @@
           [title]="playbackSource() === 'scale' ? 'Stop scale playback' : ''"
           (click)="playScale()"
         >
-          <span class="material-symbols-outlined" aria-hidden="true">
-            {{ playbackSource() === 'scale' ? 'graphic_eq' : 'play_arrow' }}
-          </span>
+          <span
+            [class]="
+              'app-icon ti ' +
+              (playbackSource() === 'scale' ? 'ti-activity' : 'ti-player-play')
+            "
+            aria-hidden="true"
+          ></span>
           <span>{{ playbackSource() === 'scale' ? 'Playing' : 'Play scale' }}</span>
         </button>
       </div>

@@ -1,7 +1,7 @@
 @use '../../styles' as *;
 
 %dropdown-typography {
-  font-family: var(--mono);
+  font-family: var(--font);
   font-size: var(--text-sm);
   line-height: var(--leading-tight);
   letter-spacing: var(--tracking-narrow);
@@ -71,7 +71,7 @@
   place-items: center;
 }
 
-.instrument-seg .add-instrument-segment .material-symbols-outlined {
+.instrument-seg .add-instrument-segment .app-icon {
   font-size: var(--text-md);
 }
 
@@ -152,7 +152,7 @@
     margin: 0;
     padding: var(--space-2) var(--space-2) var(--space-1);
     color: var(--text-muted);
-    font-family: var(--mono);
+    font-family: var(--font);
     font-size: var(--text-xs);
     font-weight: var(--fw-semibold);
     letter-spacing: var(--tracking-label);

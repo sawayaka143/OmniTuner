@@ -16,11 +16,10 @@
       </span>
     </span>
     <span
-      class="material-symbols-outlined selector-icon"
+      class="app-icon ti ti-chevron-down selector-icon"
       [class.rotated]="open()"
       aria-hidden="true"
     >
-      expand_more
     </span>
   </button>
 
@@ -66,7 +65,7 @@
               <span class="note-summary">{{ notesLabel(tuning.notes) }}</span>
             </button>
             <app-icon-button
-              icon="edit"
+              icon="pencil"
               [label]="'Edit ' + tuning.name + ' tuning'"
               [stopClickPropagation]="true"
               variant="ghost"
@@ -74,7 +73,7 @@
               (activate)="edit.emit(tuning.id)"
             />
             <app-icon-button
-              icon="close"
+              icon="x"
               [label]="'Delete ' + tuning.name + ' tuning'"
               [stopClickPropagation]="true"
               variant="ghost"
