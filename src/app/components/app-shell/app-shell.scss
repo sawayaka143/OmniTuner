@@ -98,6 +98,14 @@
     gap: var(--space-2);
   }
 
+  .settings-trigger {
+    /* Match the theme-toggle icon-button glyph size (--text-lg via the
+       icon-button() mixin) so both header icons render identically. */
+    .app-icon {
+      font-size: var(--text-lg);
+    }
+  }
+
   .settings-trigger.active {
     background: color-mix(in srgb, var(--accent-text) 12%, transparent);
     color: var(--accent-text);

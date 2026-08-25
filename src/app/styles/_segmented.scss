@@ -24,8 +24,8 @@
     border-radius: var(--r-pill);
     z-index: 0;
 
-    // Premium elevated pill appearance (subtle gradient for lighting)
-    background: linear-gradient(180deg, var(--seg-pill-from) 0%, var(--seg-pill-to) 100%);
+    // Solid elevated pill appearance; depth comes from the theme-tuned shadow.
+    background: var(--seg-pill-bg);
 
     // Physical depth: theme-tuned elevation + inner highlights
     box-shadow: var(--seg-pill-shadow);
@@ -41,13 +41,9 @@
     transform: translateX(-100%);
   }
 
-  // Accent variant: glowing and slightly tinted
+  // Accent variant: slightly tinted solid fill
   &.indicator-accent .#{$indicator-class} {
-    background: linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--scale-accent) 22%, var(--seg-pill-from)) 0%,
-      color-mix(in srgb, var(--scale-accent) 12%, var(--seg-pill-to)) 100%
-    );
+    background: color-mix(in srgb, var(--scale-accent) 22%, var(--seg-pill-bg));
     box-shadow:
       var(--seg-pill-shadow),
       inset 0 0 0 1px color-mix(in srgb, var(--scale-accent) 40%, transparent);

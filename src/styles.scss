@@ -108,8 +108,7 @@
      recessed wells (buttons, pills, fields) and the segmented track/pill. */
   --shadow-recess: inset 0 2px 4px rgba(0, 0, 0, 0.4);
   --seg-track-bg: var(--surface-container-low);
-  --seg-pill-from: var(--surface-container-high);
-  --seg-pill-to: var(--surface-container);
+  --seg-pill-bg: var(--surface-container-high);
   --seg-pill-shadow:
     0 1px 2px rgba(0, 0, 0, 0.4),
     0 4px 12px rgba(0, 0, 0, 0.25),
@@ -193,11 +192,10 @@ html[data-theme='light'] {
   --shadow-dialog: 0 18px 48px rgba(0, 0, 0, 0.14);
   --shadow-inset-panel: inset 0 2px 6px rgba(0, 0, 0, 0.08);
   --shadow-recess: inset 0 1px 2px rgba(0, 0, 0, 0.1);
-  /* Mirror the dark control's definition: recessed gray track, crisp white
-     elevated pill — instead of pale-on-pale. */
+  /* Mirror the dark control's definition: recessed gray track and crisp white
+     elevated pill. */
   --seg-track-bg: var(--surface-container);
-  --seg-pill-from: #ffffff;
-  --seg-pill-to: #f7f6f2;
+  --seg-pill-bg: #ffffff;
   --seg-pill-shadow:
     0 1px 2px rgba(0, 0, 0, 0.16),
     0 2px 8px rgba(0, 0, 0, 0.1),
