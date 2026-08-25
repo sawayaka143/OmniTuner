@@ -21,7 +21,7 @@ describe('guitar-samples', () => {
 
   it('returns the nearest root for a MIDI note', () => {
     expect(nearestGuitarSample(37)?.rootMidi).toBe(37);
-    expect(nearestGuitarSample(38)?.rootMidi).toBe(37); // 1 semitone from Db2, 2 from E2
+    expect(nearestGuitarSample(38)?.rootMidi).toBe(37);
     expect(nearestGuitarSample(40)?.rootMidi).toBe(40);
     expect(nearestGuitarSample(61)?.rootMidi).toBe(60);
     expect(nearestGuitarSample(62)?.rootMidi).toBe(63);
