@@ -7,6 +7,13 @@
       <a class="nav-link" routerLink="/chords" routerLinkActive="active">Chords</a>
     </nav>
     <div class="header-actions">
+      <app-icon-button
+        class="theme-trigger"
+        [icon]="themeIcon()"
+        [label]="themeLabel()"
+        variant="ghost"
+        (activate)="toggleTheme()"
+      />
       <button
         class="btn ghost settings-trigger"
         type="button"

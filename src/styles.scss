@@ -3,6 +3,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap');
 
 :root {
+  color-scheme: dark;
+
   /* --- Core Studio Monochrome Palette --- */
   --canvas: #121211;
   --surface-container-low: #181817;
@@ -122,6 +124,37 @@
   --ctrl-h-xl: 44px; /* form fields */
   --ctrl-switch-w: 40px; /* icon-only switch */
   --ctrl-switch-h: 24px;
+}
+
+html[data-theme='light'] {
+  color-scheme: light;
+  --canvas: #f5f5f3;
+  --surface-container-low: #ffffff;
+  --surface-container: #ecece8;
+  --surface-container-high: #e2dfda;
+  --text: #1a1a18;
+  --text-muted: #6b6b67;
+  --text-dim: #8a8a86;
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --border-medium: rgba(0, 0, 0, 0.14);
+  --border-active: rgba(0, 0, 0, 0.28);
+  --meter-tick-minor: rgba(0, 0, 0, 0.12);
+  --meter-tick-major: rgba(0, 0, 0, 0.28);
+  --backdrop: rgba(18, 18, 17, 0.32);
+  --scrollbar-track: var(--surface-container-low);
+  --scrollbar-thumb: #c2c0bb;
+  --scrollbar-thumb-hover: #a8a6a1;
+  --shadow-flat: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-lift: 0 22px 62px rgba(0, 0, 0, 0.12);
+  --shadow-dialog: 0 24px 70px rgba(0, 0, 0, 0.18);
+  --shadow-inset-panel: inset 0 2px 6px rgba(0, 0, 0, 0.08);
+  --chord-stage-glow: 0 0 34px color-mix(in srgb, var(--scale-accent) 18%, transparent);
+  --workbench-inset: var(--surface-container);
+}
+
+html[data-theme='light'] ::selection {
+  background: rgba(0, 0, 0, 0.14);
+  color: #1a1a18;
 }
 
 *,

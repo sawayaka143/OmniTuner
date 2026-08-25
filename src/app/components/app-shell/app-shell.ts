@@ -6,10 +6,12 @@ import { ScalePreferences } from '../../services/scale-preferences';
 import { TunerPreferences } from '../../services/tuner-preferences';
 import { Brand } from '../brand/brand';
 import { SettingsPanel } from '../settings-panel/settings-panel';
+import { ThemeService } from '../../services/theme.service';
+import { IconButton } from '../../ui/icon-button/icon-button';
 
 @Component({
   selector: 'app-app-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, SettingsPanel, Brand],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, SettingsPanel, Brand, IconButton],
   templateUrl: './app-shell.html',
   styleUrl: './app-shell.scss',
   host: {
@@ -22,11 +24,18 @@ import { SettingsPanel } from '../settings-panel/settings-panel';
 export class AppShell {
   private readonly preferences = inject(ScalePreferences);
   private readonly tunerPreferences = inject(TunerPreferences);
+  private readonly themeService = inject(ThemeService);
 
   protected readonly settingsOpen = signal(false);
   protected readonly preferencesState = this.preferences.state;
   protected readonly accentInk = computed(() => textColorOn(this.preferencesState().accent));
   protected readonly tunerSettings = this.tunerPreferences.tunerSettings;
+  protected readonly themeIcon = computed(() =>
+    this.themeService.theme() === 'dark' ? 'light_mode' : 'dark_mode',
+  );
+  protected readonly themeLabel = computed(() =>
+    this.themeService.theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme',
+  );
 
   /** In-tune color as a theme var; unset while the master switch is OFF. */
   protected readonly inTuneColor = computed(() =>
@@ -94,5 +103,9 @@ export class AppShell {
 
   protected setReferencePitch(referencePitch: number): void {
     this.tunerPreferences.setReferencePitch(referencePitch);
+  }
+
+  protected toggleTheme(): void {
+    this.themeService.toggle();
   }
 }

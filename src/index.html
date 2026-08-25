@@ -12,6 +12,28 @@
     />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
     <link rel="manifest" href="manifest.webmanifest" />
+    <script>
+      try {
+        var k = 'omnituner.theme.v1';
+        var s = localStorage.getItem(k);
+        var t = null;
+        if (s) {
+          try {
+            var j = JSON.parse(s);
+            t = j && typeof j === 'object' ? j.theme || j.value : j;
+          } catch (_) {
+            t = s;
+          }
+        }
+        if (t !== 'light' && t !== 'dark') {
+          t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+        }
+        document.documentElement.dataset.theme = t;
+        document.documentElement.style.colorScheme = t;
+        var m = document.querySelector('meta[name="theme-color"]');
+        if (m) m.setAttribute('content', t === 'light' ? '#f5f5f3' : '#121211');
+      } catch (_) {}
+    </script>
   </head>
   <body>
     <app-root></app-root>

@@ -446,6 +446,11 @@ export class AudioMonitor implements OnInit {
     this.manualIndex.set(index);
     this.mode.set('manual');
     this.tunerPreferences.setMode('manual');
+
+    const string = this.currentStrings()[index];
+    if (string) {
+      this.scalePlayback.playSampleNote(frequencyToMidiNote(string.freq) ?? 69);
+    }
   }
 
   protected selectInstrument(instrumentId: string): void {

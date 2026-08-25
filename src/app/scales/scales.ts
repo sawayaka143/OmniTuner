@@ -280,13 +280,13 @@ export class Scales {
 
   protected playCell(cell: FretCell): void {
     if (cell.midi === null) return;
-    this.playback.playNote(cell.midi);
+    this.playback.playSampleNote(cell.midi);
     if (this.playback.error()) return;
     this.pulse(cell.midi, cell);
   }
 
   protected playTone(tone: ScaleTone): void {
-    this.playback.playNote(tone.midi);
+    this.playback.playSampleNote(tone.midi);
     if (this.playback.error()) return;
     this.pulse(tone.midi, this.findCellForMidi(tone.midi));
   }
@@ -344,7 +344,7 @@ export class Scales {
 
     entries.forEach((entry, index) => {
       const delaySeconds = index * 0.16;
-      this.playback.playNote(entry.midi, delaySeconds, 0.6, muteGain);
+      this.playback.playSampleNote(entry.midi, delaySeconds, 0.6, muteGain);
       this.queueTimer(
         () => this.pulse(entry.midi, entry.highlight, source === 'scale'),
         index * 160,
