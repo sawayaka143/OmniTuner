@@ -23,7 +23,7 @@
   background: var(--surface-container-low);
   box-shadow:
     inset 0 0 0 1px var(--border-subtle),
-    inset 0 2px 4px rgba(0, 0, 0, 0.4);
+    var(--shadow-recess);
   color: var(--text);
   font-family: var(--mono);
   font-size: var(--text-sm);
@@ -35,13 +35,13 @@
   &:hover {
     box-shadow:
       inset 0 0 0 1px var(--border-medium),
-      inset 0 2px 4px rgba(0, 0, 0, 0.4);
+      var(--shadow-recess);
   }
 
   &[aria-expanded='true'] {
     box-shadow:
       inset 0 0 0 1px var(--border-medium),
-      inset 0 2px 4px rgba(0, 0, 0, 0.4);
+      var(--shadow-recess);
   }
 
   &:active {
@@ -104,7 +104,7 @@
   }
 
   &.selected {
-    color: var(--scale-accent);
+    color: var(--accent-text);
     font-weight: var(--fw-semibold);
   }
 }

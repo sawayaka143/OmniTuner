@@ -16,9 +16,13 @@
   --text-muted: #9a9a94;
   --text-dim: #94948e;
 
-  /* --- Accent (strictly monochrome: pure white) --- */
-  --scale-accent: #ffffff;
+  /* --- Accent (warm cream) --- */
+  --scale-accent: #ede8d0;
   --scale-accent-ink: #121211;
+  /* Accent re-inked for text/line-work; raw --scale-accent stays the fill,
+     lamp and glow color. Mixing toward the theme's paper keeps any user hue
+     AA-readable on the surfaces text actually sits on. */
+  --accent-text: color-mix(in srgb, var(--scale-accent) 40%, #f5f5f3);
 
   /* --- Semantic status colors --- */
   --good: #7ecba8;
@@ -38,6 +42,9 @@
   --meter-tick-major: rgba(255, 255, 255, 0.35);
   --needle-color: var(--text);
   --in-tune-color: var(--scale-accent);
+  /* Text/needle variant of the in-tune cue: raw on dark planes, re-inked
+     toward ink on light surfaces so pastels stay readable. */
+  --in-tune-text: var(--in-tune-color);
   --out-of-tune-color: #ff8aab;
 
   /* --- Typography --- */
@@ -100,6 +107,23 @@
   /* Machined recessed-panel depth cue (faceplate well/stage). */
   --shadow-inset-panel: inset 0 2px 6px rgba(0, 0, 0, 0.5);
 
+  /* Shared control shadows — tokenized so themes can retune the machining:
+     recessed wells (buttons, pills, fields) and the segmented track/pill. */
+  --shadow-recess: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+  --seg-track-bg: var(--surface-container-low);
+  --seg-pill-from: var(--surface-container-high);
+  --seg-pill-to: var(--surface-container);
+  --seg-pill-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.4),
+    0 4px 12px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+  /* Etched-label effect on the active segmented slot. */
+  --seg-etch: 0 1px 2px rgba(0, 0, 0, 0.6);
+  /* Ring for accent-filled controls; pale accents get a visible hairline
+     in the light theme instead of a white-on-white ring. */
+  --ring-primary: var(--scale-accent);
+
   /* --- Stacking --- */
   --z-float: 10;
   --z-header: 50;
@@ -128,26 +152,61 @@
 
 html[data-theme='light'] {
   color-scheme: light;
-  --canvas: #f5f5f3;
-  --surface-container-low: #ffffff;
-  --surface-container: #ecece8;
-  --surface-container-high: #e2dfda;
+
+  /* Warm paper canvas under white cards: layering comes from tone steps and
+     hairlines, not from stacked shadows. */
+  --canvas: #f1f0ec;
+  --surface-container-low: #fbfaf8;
+  --surface-container: #e9e7e2;
+  --surface-container-high: #dedbd4;
+
   --text: #1a1a18;
-  --text-muted: #6b6b67;
-  --text-dim: #8a8a86;
-  --border-subtle: rgba(0, 0, 0, 0.08);
-  --border-medium: rgba(0, 0, 0, 0.14);
-  --border-active: rgba(0, 0, 0, 0.28);
-  --meter-tick-minor: rgba(0, 0, 0, 0.12);
-  --meter-tick-major: rgba(0, 0, 0, 0.28);
+  --text-muted: #54544f;
+  --text-dim: #5f5f5b;
+
+  /* Semantic status colors — darkened so every hue holds AA on the light
+     surfaces it appears on (canvas → surface-container-high). */
+  --good: #11603c;
+  --warn: #8a4d00;
+  --info: #544a8f;
+  --danger: #b01645;
+  --danger-hover: #8f1138;
+
+  --border-subtle: rgba(0, 0, 0, 0.1);
+  --border-medium: rgba(0, 0, 0, 0.17);
+  --border-active: rgba(0, 0, 0, 0.32);
+  --meter-tick-minor: rgba(0, 0, 0, 0.14);
+  --meter-tick-major: rgba(0, 0, 0, 0.3);
   --backdrop: rgba(18, 18, 17, 0.32);
+
+  /* 30% accent keeps every hue (white, mint, yellow, red, blue, black) at
+     AA contrast against the light surfaces. */
+  --accent-text: color-mix(in srgb, var(--scale-accent) 30%, #1a1a18);
+  --ring-primary: var(--border-medium);
+  /* Pastel in-tune cues wash out on light surfaces — re-ink text and the
+     needle toward ink; fills, tints and glows keep the raw color. */
+  --in-tune-text: color-mix(in srgb, var(--in-tune-color) 70%, #1a1a18);
+
   --scrollbar-track: var(--surface-container-low);
   --scrollbar-thumb: #c2c0bb;
   --scrollbar-thumb-hover: #a8a6a1;
-  --shadow-flat: 0 2px 8px rgba(0, 0, 0, 0.08);
-  --shadow-lift: 0 22px 62px rgba(0, 0, 0, 0.12);
-  --shadow-dialog: 0 24px 70px rgba(0, 0, 0, 0.18);
+
+  --shadow-flat: 0 1px 3px rgba(0, 0, 0, 0.07), 0 4px 14px rgba(0, 0, 0, 0.06);
+  --shadow-lift: 0 12px 34px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.05);
+  --shadow-dialog: 0 18px 48px rgba(0, 0, 0, 0.14);
   --shadow-inset-panel: inset 0 2px 6px rgba(0, 0, 0, 0.08);
+  --shadow-recess: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+  /* Mirror the dark control's definition: recessed gray track, crisp white
+     elevated pill — instead of pale-on-pale. */
+  --seg-track-bg: var(--surface-container);
+  --seg-pill-from: #ffffff;
+  --seg-pill-to: #f7f6f2;
+  --seg-pill-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.16),
+    0 2px 8px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+  --seg-etch: none;
   --chord-stage-glow: 0 0 34px color-mix(in srgb, var(--scale-accent) 18%, transparent);
   --workbench-inset: var(--surface-container);
 }
@@ -155,6 +214,47 @@ html[data-theme='light'] {
 html[data-theme='light'] ::selection {
   background: rgba(0, 0, 0, 0.14);
   color: #1a1a18;
+}
+
+/* ── Theme toggle reveal (View Transitions API) ──────────────────────────
+   AppShell wraps theme flips in document.startViewTransition when supported.
+   The old snapshot stays put while the new theme is revealed as a circle
+   expanding from the toggle button (--theme-reveal-* are set on <html> right
+   before the transition starts; the pseudos inherit them from :root).
+   Browsers without the API fall back to an instant swap in AppShell. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 2;
+  animation: theme-reveal 450ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes theme-reveal {
+  from {
+    clip-path: circle(0px at var(--theme-reveal-x, 50%) var(--theme-reveal-y, 50%));
+  }
+  to {
+    clip-path: circle(
+      var(--theme-reveal-radius, 140%)
+        at var(--theme-reveal-x, 50%)
+        var(--theme-reveal-y, 50%)
+    );
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
 }
 
 *,
@@ -246,7 +346,7 @@ h3 {
   background: var(--surface-container-low);
   box-shadow:
     inset 0 0 0 1px var(--border-subtle),
-    inset 0 2px 4px rgba(0, 0, 0, 0.4);
+    var(--shadow-recess);
   color: var(--text);
   font-family: var(--mono);
   font-size: var(--text-xs);
@@ -264,7 +364,7 @@ h3 {
 .btn:hover {
   box-shadow:
     inset 0 0 0 1px var(--border-medium),
-    inset 0 2px 4px rgba(0, 0, 0, 0.4);
+    var(--shadow-recess);
   filter: brightness(1.08);
 }
 
@@ -288,7 +388,7 @@ h3 {
   background: var(--scale-accent);
   color: var(--scale-accent-ink);
   box-shadow:
-    inset 0 0 0 1px var(--scale-accent),
+    inset 0 0 0 1px var(--ring-primary),
     inset 0 1px 0 rgba(255, 255, 255, 0.12);
   font-weight: var(--fw-semibold);
   letter-spacing: var(--tracking-label);
@@ -297,7 +397,7 @@ h3 {
 .btn.primary:hover {
   filter: brightness(1.1);
   box-shadow:
-    inset 0 0 0 1px var(--scale-accent),
+    inset 0 0 0 1px var(--ring-primary),
     inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
@@ -305,7 +405,7 @@ h3 {
   background: var(--scale-accent);
   color: var(--scale-accent-ink);
   box-shadow:
-    inset 0 0 0 1px var(--scale-accent),
+    inset 0 0 0 1px var(--ring-primary),
     inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
@@ -319,7 +419,7 @@ h3 {
   background: var(--surface-container-low);
   box-shadow:
     inset 0 0 0 1px var(--border-subtle),
-    inset 0 2px 4px rgba(0, 0, 0, 0.4);
+    var(--shadow-recess);
   color: var(--text);
 }
 

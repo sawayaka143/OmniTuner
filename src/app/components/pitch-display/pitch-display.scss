@@ -27,7 +27,7 @@
       text-shadow var(--dur-slow) ease;
 
     &.in-tune {
-      color: var(--in-tune-color);
+      color: var(--in-tune-text);
       animation: note-in-tune-glow 2.4s ease-in-out infinite alternate;
     }
   }
@@ -65,7 +65,7 @@
     }
 
     &.in-tune {
-      color: var(--in-tune-color);
+      color: var(--in-tune-text);
     }
   }
 
@@ -97,7 +97,7 @@
     }
 
     &.in-tune {
-      color: var(--in-tune-color);
+      color: var(--in-tune-text);
       font-weight: var(--fw-semibold);
     }
   }

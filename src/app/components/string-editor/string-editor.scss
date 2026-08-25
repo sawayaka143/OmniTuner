@@ -102,7 +102,7 @@
   text-align: center;
 
   &.changed {
-    color: var(--scale-accent);
+    color: var(--accent-text);
   }
 }
 
@@ -129,7 +129,7 @@
     color: var(--text-muted);
     box-shadow:
       inset 0 0 0 1px var(--border-subtle),
-      inset 0 2px 4px rgba(0, 0, 0, 0.4);
+      var(--shadow-recess);
     filter: none;
   }
 }

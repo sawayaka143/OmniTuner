@@ -40,6 +40,34 @@ const clampWorkbenchScale = (v: number): number =>
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null;
 
+/**
+ * Color values shipped before the warm cream palette. Installs that never
+ * customized colors still carry them in storage; stale defaults are swapped
+ * for the current ones on load so palette changes reach existing users.
+ * Genuine custom choices pass through untouched.
+ */
+const LEGACY_COLOR_DEFAULTS = {
+  accent: '#ffffff',
+  rootNoteColor: '#ffffff',
+  noteColor: '#2e2e28',
+};
+
+const upgradeLegacyColors = (state: ScalePreferencesState): ScalePreferencesState => ({
+  ...state,
+  accent:
+    state.accent === LEGACY_COLOR_DEFAULTS.accent
+      ? DEFAULT_SCALE_PREFERENCES.accent
+      : state.accent,
+  rootNoteColor:
+    state.rootNoteColor === LEGACY_COLOR_DEFAULTS.rootNoteColor
+      ? DEFAULT_SCALE_PREFERENCES.rootNoteColor
+      : state.rootNoteColor,
+  noteColor:
+    state.noteColor === LEGACY_COLOR_DEFAULTS.noteColor
+      ? DEFAULT_SCALE_PREFERENCES.noteColor
+      : state.noteColor,
+});
+
 const parseState = (value: unknown): ScalePreferencesState | null => {
   if (!isRecord(value) || value['version'] !== 1 || !isRecord(value['state'])) return null;
 
@@ -176,9 +204,9 @@ export class ScalePreferences {
     if (!this.storage) return DEFAULT_SCALE_PREFERENCES;
     try {
       const raw = this.storage.getItem(SCALE_PREFERENCES_STORAGE_KEY);
-      return raw
-        ? (parseState(JSON.parse(raw) as unknown) ?? DEFAULT_SCALE_PREFERENCES)
-        : DEFAULT_SCALE_PREFERENCES;
+      if (!raw) return DEFAULT_SCALE_PREFERENCES;
+      const parsed = parseState(JSON.parse(raw) as unknown);
+      return parsed ? upgradeLegacyColors(parsed) : DEFAULT_SCALE_PREFERENCES;
     } catch {
       return DEFAULT_SCALE_PREFERENCES;
     }

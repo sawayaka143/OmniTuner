@@ -53,7 +53,7 @@
   overflow: hidden;
 
   &.in-tune {
-    color: var(--in-tune-color);
+    color: var(--in-tune-text);
   }
 
   .prompt-text {
@@ -86,7 +86,7 @@
     }
 
     .tune-prompt.in-tune & {
-      color: var(--in-tune-color);
+      color: var(--in-tune-text);
     }
   }
 }

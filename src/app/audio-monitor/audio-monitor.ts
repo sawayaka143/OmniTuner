@@ -24,6 +24,7 @@ import {
 import { AudioCaptureService } from '../services/audio-capture-service';
 import { InstrumentRegistry } from '../services/instrument-registry';
 import { ScalePlayback } from '../services/scale-playback';
+import { ThemeService } from '../services/theme.service';
 import { TunerPreferences } from '../services/tuner-preferences';
 import {
   centsFromMidiFloat,
@@ -44,6 +45,9 @@ import {
 
 /** How long the one-shot lock pulse stays visible. */
 const LOCK_PULSE_DURATION_MS = 900;
+
+/** Ink the light theme re-inks tune colors toward so pastels stay readable. */
+const LIGHT_TUNE_INK = '#1a1a18';
 
 // While confirmed, an out-of-range or dropped pitch must persist this long
 // (~3 analysis frames) before confirmation clears, so a single-frame breach
@@ -73,6 +77,7 @@ export class AudioMonitor implements OnInit {
   private readonly registry = inject(InstrumentRegistry);
   private readonly tunerPreferences = inject(TunerPreferences);
   private readonly scalePlayback = inject(ScalePlayback);
+  private readonly themeService = inject(ThemeService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly isCapturing = this.audioCapture.isCapturing;
@@ -246,17 +251,22 @@ export class AudioMonitor implements OnInit {
   /**
    * Off-pitch accent blended from the user's out-of-tune color toward the
    * in-tune color as the pitch approaches the target. Null while in tune
-   * (the .in-tune class takes over) or with no pitch.
+   * (the .in-tune class takes over) or with no pitch. Re-inked 30% toward
+   * ink in the light theme so pastels keep AA-readable contrast.
    */
   readonly tuneColorHex = computed(() => {
     const cents = this.frameCents();
     if (cents === null || Math.abs(cents) <= this.tolerance()) return null;
     const settings = this.tunerSettings().inTune;
-    return interpolateColor(
+    const blended = interpolateColor(
       settings.outOfTuneColor,
       settings.color,
       tuneColorProgress(cents, this.tolerance()),
     );
+    if (blended && this.themeService.theme() === 'light') {
+      return interpolateColor(blended, LIGHT_TUNE_INK, 0.3) ?? blended;
+    }
+    return blended;
   });
 
   /** Green chips only once the target actually confirms. */

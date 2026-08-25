@@ -16,7 +16,7 @@ export const THEME_STORAGE = new InjectionToken<Storage | null>('Theme storage',
 });
 
 const THEME_COLOR: Record<Theme, string> = {
-  light: '#f5f5f3',
+  light: '#f1f0ec',
   dark: '#121211',
 };
 
@@ -64,7 +64,26 @@ export class ThemeService {
   }
 
   toggle(): void {
-    this.setTheme(this.themeSignal() === 'dark' ? 'light' : 'dark');
+    this.setTheme(this.nextTheme());
+  }
+
+  /**
+   * Toggle and apply the DOM change synchronously. The regular toggle()
+   * defers to the effect queue, which flushes too late for the View
+   * Transitions API — the new theme must be on the document before the
+   * transition callback resolves or the new-state snapshot captures the old
+   * look. Applying twice (here + the effect) is harmless; apply() is
+   * idempotent.
+   */
+  toggleSync(): void {
+    const next = this.nextTheme();
+    this.themeSignal.set(next);
+    this.persist(next);
+    this.apply(next);
+  }
+
+  private nextTheme(): Theme {
+    return this.themeSignal() === 'dark' ? 'light' : 'dark';
   }
 
   private load(): Theme {

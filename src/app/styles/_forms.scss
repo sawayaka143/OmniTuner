@@ -14,7 +14,7 @@
   background: var(--surface-container-low);
   box-shadow:
     inset 0 0 0 1px $border,
-    inset 0 2px 4px rgba(0, 0, 0, 0.4);
+    var(--shadow-recess);
   color: var(--text);
   font-family: var(--mono);
   font-size: var(--text-sm);
@@ -29,14 +29,14 @@
   &:hover {
     box-shadow:
       inset 0 0 0 1px var(--border-medium),
-      inset 0 2px 4px rgba(0, 0, 0, 0.4);
+      var(--shadow-recess);
   }
 
   &:focus,
   &:focus-visible {
     box-shadow:
       inset 0 0 0 1px var(--border-active),
-      inset 0 2px 4px rgba(0, 0, 0, 0.4);
+      var(--shadow-recess);
     outline: 2px solid var(--border-active);
     outline-offset: 2px;
   }
@@ -44,7 +44,7 @@
   &[aria-invalid='true'] {
     box-shadow:
       inset 0 0 0 1px var(--danger),
-      inset 0 2px 4px rgba(0, 0, 0, 0.4);
+      var(--shadow-recess);
   }
 
   &.compact {

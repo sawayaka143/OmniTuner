@@ -97,6 +97,21 @@
   }
 }
 
+/* Light theme: the board sits on a pale card — flip the hardware cues to
+   dark ink so strings, inlays and the nut keep their contrast, and soften
+   the shadows that were calibrated against the dark canvas. */
+:host-context(html[data-theme='light']) .fretboard {
+  --open-shadow: 6px 0 14px rgba(0, 0, 0, 0.1);
+  --inlay-color: rgba(26, 26, 24, 0.16);
+  --string-color: rgba(26, 26, 24, 0.42);
+  --nut-color: rgba(26, 26, 24, 0.6);
+  --dot-ring: rgba(26, 26, 24, 0.45);
+  --string-shadow: 0 1px 1px rgba(255, 255, 255, 0.65);
+  --dot-shadow: 0 2px 5px rgba(0, 0, 0, 0.22);
+  --root-shadow: 0 3px 7px rgba(0, 0, 0, 0.26);
+  --sounding-shadow: 0 8px 20px rgba(0, 0, 0, 0.24);
+}
+
 .fret-numbers,
 .string-row {
   display: contents;

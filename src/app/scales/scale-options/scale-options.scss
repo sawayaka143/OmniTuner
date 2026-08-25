@@ -114,8 +114,8 @@
   transition: background-color var(--dur-med) ease;
 
   &.on {
-    background: var(--scale-accent);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--scale-accent) 18%, transparent);
+    background: var(--accent-text);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-text) 18%, transparent);
   }
 }
 

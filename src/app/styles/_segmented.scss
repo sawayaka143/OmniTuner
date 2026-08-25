@@ -6,11 +6,11 @@
   padding: var(--space-1);
   border: 0;
   border-radius: var(--r-pill);
-  background: var(--surface-container-low);
+  background: var(--seg-track-bg);
 
   box-shadow:
     inset 0 0 0 1px var(--border-subtle),
-    inset 0 2px 4px rgba(0, 0, 0, 0.4);
+    var(--shadow-recess);
 
   overflow: hidden;
   white-space: nowrap;
@@ -25,18 +25,10 @@
     z-index: 0;
 
     // Premium elevated pill appearance (subtle gradient for lighting)
-    background: linear-gradient(
-      180deg,
-      var(--surface-container-high) 0%,
-      var(--surface-container) 100%
-    );
+    background: linear-gradient(180deg, var(--seg-pill-from) 0%, var(--seg-pill-to) 100%);
 
-    // Physical depth: elevated shadow + inner highlight + bottom shade
-    box-shadow:
-      0 1px 2px rgba(0, 0, 0, 0.4),
-      0 4px 12px rgba(0, 0, 0, 0.25),
-      inset 0 1px 0 rgba(255, 255, 255, 0.08),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+    // Physical depth: theme-tuned elevation + inner highlights
+    box-shadow: var(--seg-pill-shadow);
 
     transition: transform 500ms var(--ease-spring);
     will-change: transform;
@@ -53,12 +45,11 @@
   &.indicator-accent .#{$indicator-class} {
     background: linear-gradient(
       180deg,
-      color-mix(in srgb, var(--scale-accent) 22%, var(--surface-container-high)) 0%,
-      color-mix(in srgb, var(--scale-accent) 12%, var(--surface-container)) 100%
+      color-mix(in srgb, var(--scale-accent) 22%, var(--seg-pill-from)) 0%,
+      color-mix(in srgb, var(--scale-accent) 12%, var(--seg-pill-to)) 100%
     );
     box-shadow:
-      0 4px 12px rgba(0, 0, 0, 0.4),
-      inset 0 1px 0 rgba(255, 255, 255, 0.15),
+      var(--seg-pill-shadow),
       inset 0 0 0 1px color-mix(in srgb, var(--scale-accent) 40%, transparent);
   }
 
@@ -100,7 +91,7 @@
     &.active {
       color: var(--text);
       // Subtle debossed/etched text effect instead of bolding
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+      text-shadow: var(--seg-etch);
     }
 
     &:focus-visible {

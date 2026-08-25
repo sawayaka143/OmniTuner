@@ -112,6 +112,46 @@ describe('ScalePreferences', () => {
     expect(createService().state()).toEqual(DEFAULT_SCALE_PREFERENCES);
   });
 
+  it('upgrades persisted legacy default colors to the current palette', () => {
+    storage.setItem(
+      SCALE_PREFERENCES_STORAGE_KEY,
+      JSON.stringify({
+        version: 1,
+        state: {
+          accent: '#ffffff',
+          rootNoteColor: '#ffffff',
+          noteColor: '#2e2e28',
+        },
+      }),
+    );
+
+    expect(createService().state()).toMatchObject({
+      accent: DEFAULT_SCALE_PREFERENCES.accent,
+      rootNoteColor: DEFAULT_SCALE_PREFERENCES.rootNoteColor,
+      noteColor: DEFAULT_SCALE_PREFERENCES.noteColor,
+    });
+  });
+
+  it('leaves customized colors untouched while upgrading stale defaults', () => {
+    storage.setItem(
+      SCALE_PREFERENCES_STORAGE_KEY,
+      JSON.stringify({
+        version: 1,
+        state: {
+          accent: '#123456',
+          rootNoteColor: '#ffffff',
+          noteColor: '#3b3b3b',
+        },
+      }),
+    );
+
+    expect(createService().state()).toMatchObject({
+      accent: '#123456',
+      rootNoteColor: DEFAULT_SCALE_PREFERENCES.rootNoteColor,
+      noteColor: '#3b3b3b',
+    });
+  });
+
   describe('workbenchScale', () => {
     it('defaults to 1', () => {
       expect(createService().state().workbenchScale).toBe(1);

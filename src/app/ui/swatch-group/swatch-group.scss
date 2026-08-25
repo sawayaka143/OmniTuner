@@ -7,6 +7,10 @@
 .swatch {
   --swatch-shadow: 0 2px 7px rgba(0, 0, 0, 0.35);
 
+  :host-context(html[data-theme='light']) & {
+    --swatch-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  }
+
   aspect-ratio: 1;
   display: grid;
   place-items: center;

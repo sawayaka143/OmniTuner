@@ -37,7 +37,7 @@
     background: var(--scale-accent);
     color: var(--scale-accent-ink);
     box-shadow:
-      inset 0 0 0 1px var(--scale-accent),
+      inset 0 0 0 1px var(--ring-primary),
       inset 0 1px 0 rgba(255, 255, 255, 0.12);
     letter-spacing: var(--tracking-label);
   } @else {
@@ -45,12 +45,12 @@
     color: var(--text);
     box-shadow:
       inset 0 0 0 1px var(--border-subtle),
-      inset 0 2px 4px rgba(0, 0, 0, 0.4);
+      var(--shadow-recess);
 
     &:hover {
       box-shadow:
         inset 0 0 0 1px var(--border-medium),
-        inset 0 2px 4px rgba(0, 0, 0, 0.4);
+        var(--shadow-recess);
     }
   }
 }
@@ -67,7 +67,7 @@
   background: var(--surface-container-low);
   box-shadow:
     inset 0 0 0 1px var(--border-subtle),
-    inset 0 2px 4px rgba(0, 0, 0, 0.4);
+    var(--shadow-recess);
   color: var(--text-muted);
   font-family: var(--mono);
   cursor: pointer;
@@ -84,7 +84,7 @@
   &:hover {
     box-shadow:
       inset 0 0 0 1px var(--border-medium),
-      inset 0 2px 4px rgba(0, 0, 0, 0.4);
+      var(--shadow-recess);
     color: var(--text);
   }
 

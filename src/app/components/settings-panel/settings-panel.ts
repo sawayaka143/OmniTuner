@@ -28,9 +28,9 @@ interface StartupModeOption {
 })
 export class SettingsPanel {
   readonly open = input(false);
-  readonly accent = input('#779900');
-  readonly rootNoteColor = input('#ffffff');
-  readonly noteColor = input('#2e2e28');
+  readonly accent = input('#ede8d0');
+  readonly rootNoteColor = input('#ede8d0');
+  readonly noteColor = input('#3b3b3b');
   readonly workbenchScale = input(1);
   readonly chordRandomProgression = input(true);
   readonly tunerSettings = input<TunerSettings>(DEFAULT_TUNER_SETTINGS);

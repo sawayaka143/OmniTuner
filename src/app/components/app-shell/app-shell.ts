@@ -1,4 +1,5 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { textColorOn } from '../../data/interval-colors';
 import { TunerStartupMode } from '../../models/tuner-preferences.model';
@@ -22,9 +23,13 @@ import { IconButton } from '../../ui/icon-button/icon-button';
   },
 })
 export class AppShell {
+  private readonly document = inject(DOCUMENT);
   private readonly preferences = inject(ScalePreferences);
   private readonly tunerPreferences = inject(TunerPreferences);
   private readonly themeService = inject(ThemeService);
+
+  /** The header theme toggle — the origin of the switch reveal animation. */
+  private readonly themeTrigger = viewChild('themeTrigger', { read: ElementRef });
 
   protected readonly settingsOpen = signal(false);
   protected readonly preferencesState = this.preferences.state;
@@ -106,6 +111,40 @@ export class AppShell {
   }
 
   protected toggleTheme(): void {
-    this.themeService.toggle();
+    const doc = this.document;
+    if (typeof doc.startViewTransition !== 'function' || this.prefersReducedMotion()) {
+      this.themeService.toggle();
+      return;
+    }
+
+    this.updateRevealOrigin();
+    doc.startViewTransition(() => this.themeService.toggleSync());
+  }
+
+  private prefersReducedMotion(): boolean {
+    try {
+      return !!this.document.defaultView?.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    } catch {
+      return false;
+    }
+  }
+
+  /** Aim the circular reveal at the theme toggle button. */
+  private updateRevealOrigin(): void {
+    const trigger = this.themeTrigger()?.nativeElement as HTMLElement | undefined;
+    if (!trigger) return;
+
+    const rect = trigger.getBoundingClientRect();
+    const x = Math.round(rect.left + rect.width / 2);
+    const y = Math.round(rect.top + rect.height / 2);
+    const root = this.document.documentElement;
+    const radius = Math.hypot(
+      Math.max(x, root.clientWidth - x),
+      Math.max(y, root.clientHeight - y),
+    );
+
+    root.style.setProperty('--theme-reveal-x', `${x}px`);
+    root.style.setProperty('--theme-reveal-y', `${y}px`);
+    root.style.setProperty('--theme-reveal-radius', `${radius}px`);
   }
 }

@@ -145,7 +145,7 @@
     font-size: var(--text-lg);
     font-weight: var(--fw-normal);
     letter-spacing: var(--tracking-tight);
-    color: var(--scale-accent);
+    color: var(--accent-text);
   }
 }
 
@@ -168,7 +168,7 @@
   }
 
   &.warn {
-    color: var(--scale-accent);
+    color: var(--accent-text);
   }
 
   &.bad {
@@ -261,7 +261,7 @@
   font-weight: var(--fw-semibold);
 
   &.root {
-    color: var(--scale-accent);
+    color: var(--accent-text);
   }
 
   &.third {

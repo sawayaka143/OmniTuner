@@ -188,7 +188,7 @@ input[type='color'] {
     border: 0;
     border-radius: var(--r-pill);
     background: var(--border-medium);
-    accent-color: var(--scale-accent);
+    accent-color: var(--accent-text);
     cursor: pointer;
 
     &:focus-visible {

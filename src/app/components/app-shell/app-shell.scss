@@ -62,7 +62,7 @@
     }
 
     &.active {
-      color: var(--scale-accent);
+      color: var(--accent-text);
       font-weight: var(--fw-semibold);
     }
 
@@ -74,7 +74,7 @@
       left: 0;
       height: 2px;
       border-radius: var(--r-pill);
-      background: var(--scale-accent);
+      background: var(--accent-text);
       transform: scaleX(0);
       transition: transform var(--dur-slow) var(--ease-spring);
     }
@@ -99,8 +99,8 @@
   }
 
   .settings-trigger.active {
-    background: color-mix(in srgb, var(--scale-accent) 12%, transparent);
-    color: var(--scale-accent);
+    background: color-mix(in srgb, var(--accent-text) 12%, transparent);
+    color: var(--accent-text);
   }
 
 }
