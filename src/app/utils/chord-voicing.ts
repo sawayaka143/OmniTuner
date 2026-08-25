@@ -41,21 +41,6 @@ export const OPEN_MODE_SUMMARIES: Readonly<Record<OpenStringMode, string>> = {
   exclude: 'no open strings',
 };
 
-export interface VoicingOptions {
-  readonly openMode: OpenStringMode;
-  readonly allowInversions: boolean;
-  readonly allowGaps: boolean;
-  readonly maxStretch: number;
-  readonly minNotes: number;
-  readonly rejectUnbarrable?: boolean;
-  readonly candidateCount?: number;
-}
-
-export interface VoicingFeedbackHook {
-  readonly adjustCost?: (shape: VoicingShape, baseCost: number) => number;
-  readonly excludeShape?: (shape: VoicingShape) => boolean;
-}
-
 const mod12 = (value: number): number => ((value % 12) + 12) % 12;
 
 type Diagram = (number | null)[];
@@ -265,7 +250,7 @@ class BiomechanicalEngine {
         const va = ka[i] as number | number[];
         const vb = kb[i] as number | number[];
         if (Array.isArray(va) && Array.isArray(vb)) {
-          for (let j = 0; j < va.length; j++) if (va[j] !== vb[j]) return (va[j] as number) - (vb[j] as number);
+          for (let j = 0; j < va.length; j++) if (va[j] !== vb[j]) return va[j] - vb[j];
         } else if (va !== vb) return (va as number) - (vb as number);
       }
       return 0;
@@ -337,7 +322,7 @@ class BiomechanicalEngine {
             adjIdx >= 0 &&
             adjIdx < diagram.length &&
             diagram[adjIdx] !== null &&
-            diagram[adjIdx]! > 0
+            diagram[adjIdx] > 0
           );
         });
         if (!ok) return false;
@@ -347,7 +332,7 @@ class BiomechanicalEngine {
   }
 
   private spanOk(diagram: Diagram): boolean {
-    const positives = diagram.filter((f): f is number => f !== null && f > 0) as number[];
+    const positives = diagram.filter((f): f is number => f !== null && f > 0);
     if (!positives.length) return true;
     if (Math.max(...positives) - Math.min(...positives) <= MAX_SPAN) return true;
     const thumbF = diagram[0];
@@ -415,7 +400,7 @@ class BiomechanicalEngine {
     const hiPrev = diagram.length - 2;
     if (hasExtension && diagram.length >= 2) {
       if (diagram[hi] === null) score += 60;
-      else if (diagram[hi] !== null && diagram[hi] === diagram[hiPrev] && diagram[hi]! > 0) score -= 70;
+      else if (diagram[hi] !== null && diagram[hi] === diagram[hiPrev] && diagram[hi] > 0) score -= 70;
     }
 
     for (let i = 0; i < diagram.length - 1; i++) {
@@ -428,7 +413,7 @@ class BiomechanicalEngine {
       }
     }
 
-    const positives = diagram.filter((f): f is number => f !== null && f > 0) as number[];
+    const positives = diagram.filter((f): f is number => f !== null && f > 0);
     const maxFret = positives.length ? Math.max(...positives) : 0;
     const openCount = diagram.filter((f) => f === 0).length;
     if (maxFret >= style.open_penalty_threshold) score -= openCount * style.open_penalty_per;
@@ -447,7 +432,7 @@ class BiomechanicalEngine {
 
   private sortKey(score: number, diagram: Diagram): unknown[] {
     const played = this.playedIndices(diagram);
-    const positives = diagram.filter((f): f is number => f !== null && f > 0) as number[];
+    const positives = diagram.filter((f): f is number => f !== null && f > 0);
     const maxF = positives.length ? Math.max(...positives) : 0;
     const minF = positives.length ? Math.min(...positives) : 0;
     const span = maxF ? maxF - minF : 0;
@@ -458,8 +443,6 @@ class BiomechanicalEngine {
 export function searchChord(
   tuning: ParsedTuning,
   chord: ParsedChord,
-  _options?: VoicingOptions,
-  _feedback?: VoicingFeedbackHook,
 ): VoicingShape[] {
   const engine = new BiomechanicalEngine(tuning, chord);
   const ranked = engine.generate(RESULTS_PER_CHORD);

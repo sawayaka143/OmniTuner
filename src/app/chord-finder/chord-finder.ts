@@ -2,7 +2,6 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { ScalePreferences } from '../services/scale-preferences';
 import { InstrumentRegistry } from '../services/instrument-registry';
 import { textColorOn } from '../data/interval-colors';
-import { SHARP_NAMES, FLAT_NAMES } from '../data/scale.constants';
 import { PROGRESSION_PRESETS } from '../data/chord-progression-presets';
 import { degreesToProgression } from '../utils/degree-to-chord';
 import {

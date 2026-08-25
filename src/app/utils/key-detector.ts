@@ -1,4 +1,4 @@
-import { flatsForPc, MODE_NAMES, ModeName, MODES, ParsedChord, pcName } from './chord-theory';
+import { flatsForPc, MODE_NAMES, ModeName, ParsedChord, pcName } from './chord-theory';
 import { computeBadgeForPc } from './chord-theory';
 
 export interface DetectedKey {
