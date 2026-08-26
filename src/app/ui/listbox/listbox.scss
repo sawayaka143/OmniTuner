@@ -11,6 +11,11 @@
 
 .dropdown-menu {
   @include dropdown-menu();
+  left: 0;
+  right: 0;
+  top: var(--dropdown-menu-top, calc(100% + var(--space-2)));
+  bottom: var(--dropdown-menu-bottom, auto);
+  max-height: var(--dropdown-menu-max-height, 45vh);
 }
 
 .dropdown-group {

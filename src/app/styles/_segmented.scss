@@ -20,7 +20,7 @@
     top: var(--space-1);
     bottom: var(--space-1);
     left: var(--space-1);
-    width: calc((100% - var(--space-2)) / var(--seg-count, 1));
+    width: calc((100% - var(--space-2) - var(--seg-gap, 0px) * (var(--seg-count, 1) - 1)) / var(--seg-count, 1));
     border-radius: var(--r-pill);
     z-index: 0;
 

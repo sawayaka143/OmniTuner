@@ -1,7 +1,7 @@
 import { Component, computed, DestroyRef, effect, inject, signal, untracked } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
-import { PressRepeat } from '../ui/press-repeat';
 import { Listbox } from '../ui/listbox/listbox';
+import { Toggle } from '../ui/toggle/toggle';
 import { BpmDial } from './components/bpm-dial/bpm-dial';
 import {
   DENOMINATORS,
@@ -14,7 +14,7 @@ import {
 import { MetronomePreferences } from './services/metronome-preferences';
 import { MetronomeAudio } from './services/metronome-audio.service';
 import { SoundBank } from './utils/metronome-sounds';
-import { describeMeter, meterModel, tapBpm } from './utils/metronome-timing';
+import { getTempoMarking, meterModel, tapBpm } from './utils/metronome-timing';
 
 interface SelectOption<T> {
   readonly value: T;
@@ -23,7 +23,7 @@ interface SelectOption<T> {
 
 @Component({
   selector: 'app-metronome',
-  imports: [PressRepeat, DecimalPipe, Listbox, BpmDial],
+  imports: [DecimalPipe, Listbox, BpmDial, Toggle],
   providers: [MetronomeAudio],
   templateUrl: './metronome.html',
   styleUrl: './metronome.scss',
@@ -39,10 +39,8 @@ export class Metronome {
   readonly state = this.prefs.state;
   readonly isPlaying = this.audio.isPlaying;
   readonly currentBar = this.audio.currentBar;
-  readonly currentTick = this.audio.currentTickInBar;
   readonly transport = this.audio.transport;
   readonly audioError = this.audio.error;
-  readonly uiQueue = this.audio.getUiQueue.bind(this.audio);
 
   readonly bpm = computed(() => this.state().bpm);
   readonly timeSig = computed(() => this.state().timeSignature);
@@ -52,7 +50,6 @@ export class Metronome {
   readonly sounds = computed(() => this.state().sounds);
   readonly masterVol = computed(() => this.state().masterVol);
 
-  readonly denominators = DENOMINATORS;
   readonly meterPresets = METER_PRESETS;
   readonly subdivisions = SUBDIVISIONS;
   readonly patternPresets = PATTERN_PRESETS;
@@ -86,6 +83,44 @@ export class Metronome {
   readonly soundLabel = (o: SelectOption<string>): string => o.label;
   readonly trackSound = (o: SelectOption<string>): unknown => o.value;
 
+  /** Selected denominator option or a fallback when the stored value is invalid. */
+  readonly denomValue = computed(
+    () => this.denomOptions.find((o) => o.value === this.timeSig().denominator) ?? this.denomOptions[1],
+  );
+  /** Matching meter preset, or the closest preset when the current meter is not a preset. */
+  readonly meterValue = computed(
+    () =>
+      this.meterOptions.find((o) => o.value === `${this.timeSig().numerator}/${this.timeSig().denominator}`) ??
+      this.meterOptions[2],
+  );
+  /** Selected subdivision option or a fallback when the stored value is invalid. */
+  readonly subdivValue = computed(
+    () => this.subdivOptions.find((o) => o.value === this.divisions()) ?? this.subdivOptions[0],
+  );
+
+  readonly patternPresetOptions: readonly SelectOption<string>[] = PATTERN_PRESETS.map((p) => ({
+    value: p.label,
+    label: p.label,
+  }));
+  readonly polyPresetOptions: readonly SelectOption<string>[] = POLY_PRESETS.map((p) => ({
+    value: `${p[0]}:${p[1]}`,
+    label: `${p[0]}:${p[1]}`,
+  }));
+
+  /// Selected bar pattern preset option (or a synthetic "Custom" entry).
+  readonly barPresetValue = computed((): SelectOption<string> => {
+    const label = this.barPreset();
+    return this.patternPresetOptions.find((o) => o.value === label) ?? { value: 'Custom', label: 'Custom' };
+  });
+  /// Selected polyrhythm ratio option (or a synthetic entry when not a preset).
+  readonly polyPresetValue = computed((): SelectOption<string> => {
+    const label = `${this.timeSig().numerator}:${this.poly().events}`;
+    return this.polyPresetOptions.find((o) => o.value === label) ?? { value: label, label };
+  });
+
+  readonly identityOption = (o: SelectOption<string>): string => o.label;
+  readonly trackPatternOption = (o: SelectOption<string>): unknown => o.value;
+
   readonly soundRoles: readonly { key: 'downbeat' | 'beat' | 'subdivision' | 'poly'; label: string }[] = [
     { key: 'downbeat', label: 'Downbeat' },
     { key: 'beat', label: 'Beat' },
@@ -113,28 +148,20 @@ export class Metronome {
   }
 
   readonly meterModel = computed(() => meterModel(this.timeSig().numerator, this.timeSig().denominator));
-  readonly meterDesc = computed(() => describeMeter(this.meterModel()));
-  readonly barDurationLabel = computed(() => {
-    const m = this.meterModel();
-    const ms = (60 / this.bpm()) * m.barQuarters * 1000;
-    return ms < 1000 ? `${Math.round(ms)} ms` : `${(ms / 1000).toFixed(2)} s`;
-  });
 
-  readonly showAccent = signal(false);
-  readonly activeTab = signal<'pattern' | 'poly' | 'sounds'>('pattern');
+  readonly tempoMarking = computed(() => getTempoMarking(this.bpm()));
+
   readonly denomOpen = signal(false);
   readonly meterPresetOpen = signal(false);
   readonly subdivOpen = signal(false);
+  readonly barPresetOpen = signal(false);
+  readonly polyPresetOpen = signal(false);
   readonly soundDownbeatOpen = signal(false);
   readonly soundBeatOpen = signal(false);
   readonly soundSubdivOpen = signal(false);
   readonly soundPolyOpen = signal(false);
 
   private tapTimes: number[] = [];
-  readonly tapCount = signal(0);
-
-  readonly decBpm = (): void => this.nudgeBpm(-1);
-  readonly incBpm = (): void => this.nudgeBpm(1);
 
   private barPresetLabel = computed(() => {
     const pat = this.barPattern();
@@ -145,23 +172,19 @@ export class Metronome {
   });
   readonly barPreset = this.barPresetLabel;
 
-  readonly ticksArray = computed(() => {
-    const m = this.meterModel();
-    return Array.from({ length: m.beatsPerBar * this.divisions() }, (_, i) => i);
-  });
-  readonly beatsArray = computed(() => Array.from({ length: this.meterModel().beatsPerBar }, (_, i) => i));
+  /** Beat cells for the console beat row. */
+  readonly beatCells = computed(() => Array.from({ length: this.meterModel().beatsPerBar }, (_, i) => i));
   readonly polyAArray = computed(() => Array.from({ length: this.meterModel().beatsPerBar }, (_, i) => i));
   readonly polyBArray = computed(() => Array.from({ length: this.poly().events }, (_, i) => i));
 
-  subdivTicks = (): readonly number[] => this.ticksArray().slice(1).map((_, i) => ((i + 1) / this.divisions()) * 100);
-
-  private resizeState: { startX: number; startW: number } | null = null;
-  private onResizeMove = (event: PointerEvent): void => this.handleResizeMove(event);
-  private onResizeUp = (): void => this.handleResizeEnd();
+  /** Index of the beat currently sounding, or -1 when stopped. */
+  readonly activeBeat = computed(() => {
+    const t = this.transport();
+    if (!t) return -1;
+    return Math.min(Math.floor(t.progress * t.beatsPerBar), t.beatsPerBar - 1);
+  });
 
   constructor() {
-    const saved = this.readControlsWidth();
-    if (saved !== null) this.applyControlsWidth(saved);
     this.audio.configure(this.state());
     effect(() => {
       const state = this.state();
@@ -179,6 +202,7 @@ export class Metronome {
   }
 
   setBpm(value: number): void {
+    if (!Number.isFinite(value)) return;
     this.prefs.setBpm(Math.round(value));
   }
 
@@ -187,7 +211,6 @@ export class Metronome {
     if (this.tapTimes.length > 0 && now - this.tapTimes[this.tapTimes.length - 1] > 2000) this.tapTimes = [];
     this.tapTimes.push(now);
     if (this.tapTimes.length > 6) this.tapTimes.shift();
-    this.tapCount.set(this.tapTimes.length);
     if (this.tapTimes.length >= 2) {
       const intervals: number[] = [];
       for (let i = 1; i < this.tapTimes.length; i++) intervals.push(this.tapTimes[i] - this.tapTimes[i - 1]);
@@ -195,10 +218,7 @@ export class Metronome {
       if (bpm !== null) this.prefs.setBpm(bpm);
     }
     window.setTimeout(() => {
-      if (performance.now() - (this.tapTimes[this.tapTimes.length - 1] ?? 0) > 2000) {
-        this.tapTimes = [];
-        this.tapCount.set(0);
-      }
+      if (performance.now() - (this.tapTimes[this.tapTimes.length - 1] ?? 0) > 2000) this.tapTimes = [];
     }, 2100);
   }
 
@@ -225,6 +245,12 @@ export class Metronome {
 
   applyBarPreset(bars: readonly number[]): void {
     this.prefs.setBarPattern(bars);
+  }
+
+  applyBarPresetOption(option: SelectOption<string>): void {
+    const preset = PATTERN_PRESETS.find((p) => p.label === option.value);
+    if (preset) this.applyBarPreset(preset.bars);
+    this.barPresetOpen.set(false);
   }
 
   setCustomBarLength(length: number): void {
@@ -260,6 +286,12 @@ export class Metronome {
     this.prefs.setPoly({ enabled: true, events: b });
   }
 
+  applyPolyPresetOption(option: SelectOption<string>): void {
+    const [a, b] = option.value.split(':').map(Number) as [number, number];
+    this.applyPolyPreset([a, b]);
+    this.polyPresetOpen.set(false);
+  }
+
   setSoundRole(role: 'downbeat' | 'beat' | 'subdivision' | 'poly', option: SelectOption<string>): void {
     this.prefs.setSoundRole(role, option.value);
     if (role === 'downbeat') this.soundDownbeatOpen.set(false);
@@ -287,81 +319,6 @@ export class Metronome {
 
   clearAudioError(): void {
     this.audio.clearError();
-  }
-
-  onResizeStart(event: PointerEvent): void {
-    event.preventDefault();
-    const el = document.querySelector('.finder-columns');
-    if (!el) return;
-    const width = parseFloat(getComputedStyle(el).getPropertyValue('--controls-w')) || 340;
-    this.resizeState = { startX: event.clientX, startW: width };
-    (event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId);
-    window.addEventListener('pointermove', this.onResizeMove);
-    window.addEventListener('pointerup', this.onResizeUp);
-    window.addEventListener('pointercancel', this.onResizeUp);
-    document.body.style.userSelect = 'none';
-    document.body.style.cursor = 'col-resize';
-  }
-
-  onResizeKeydown(event: KeyboardEvent): void {
-    const el = document.querySelector('.finder-columns');
-    if (!el) return;
-    const width = parseFloat(getComputedStyle(el).getPropertyValue('--controls-w')) || 340;
-    if (event.key === 'ArrowLeft') {
-      event.preventDefault();
-      this.applyControlsWidth(Math.max(240, width - 20));
-    } else if (event.key === 'ArrowRight') {
-      event.preventDefault();
-      this.applyControlsWidth(Math.min(420, width + 20));
-    } else if (event.key === 'Home') {
-      event.preventDefault();
-      this.applyControlsWidth(240);
-    } else if (event.key === 'End') {
-      event.preventDefault();
-      this.applyControlsWidth(420);
-    } else return;
-    this.persistControlsWidth(parseFloat(getComputedStyle(el).getPropertyValue('--controls-w')) || 340);
-  }
-
-  private handleResizeMove(event: PointerEvent): void {
-    if (!this.resizeState) return;
-    const dx = event.clientX - this.resizeState.startX;
-    this.applyControlsWidth(Math.min(420, Math.max(240, this.resizeState.startW + dx)));
-  }
-
-  private handleResizeEnd(): void {
-    if (!this.resizeState) return;
-    const el = document.querySelector('.finder-columns');
-    const width = el ? parseFloat(getComputedStyle(el).getPropertyValue('--controls-w')) || 0 : 0;
-    if (width) this.persistControlsWidth(width);
-    window.removeEventListener('pointermove', this.onResizeMove);
-    window.removeEventListener('pointerup', this.onResizeUp);
-    window.removeEventListener('pointercancel', this.onResizeUp);
-    document.body.style.userSelect = '';
-    document.body.style.cursor = '';
-    this.resizeState = null;
-  }
-
-  private applyControlsWidth(px: number): void {
-    const el = document.querySelector('.finder-columns');
-    if (el) (el as HTMLElement).style.setProperty('--controls-w', `${px}px`);
-  }
-
-  private persistControlsWidth(px: number): void {
-    try {
-      localStorage.setItem('omnituner.metronome.controlsWidth', String(Math.round(px)));
-    } catch {}
-  }
-
-  private readControlsWidth(): number | null {
-    try {
-      const raw = localStorage.getItem('omnituner.metronome.controlsWidth');
-      if (!raw) return null;
-      const num = parseInt(raw, 10);
-      return Number.isFinite(num) ? Math.min(420, Math.max(240, num)) : null;
-    } catch {
-      return null;
-    }
   }
 
   protected onWindowKeydown(event: KeyboardEvent): void {

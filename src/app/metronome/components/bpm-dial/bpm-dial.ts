@@ -1,32 +1,49 @@
 import { Component, ElementRef, computed, input, output, signal, viewChild } from '@angular/core';
 import { BPM_MAX, BPM_MIN } from '../../models/metronome.model';
 
-const SWEEP_DEG = 270;
-const START_DEG = -135;
+/** Tick marks per full rotation — one rotation = 55 BPM, one tick = 1 BPM. */
+const TICKS_PER_ROTATION = 55;
+const DEG_PER_TICK = 360 / TICKS_PER_ROTATION;
+/** Pointer sits at 12 o'clock in SVG coordinates (0° = 3 o'clock, positive = clockwise). */
+const POINTER_DEG = 270;
+const CX = 150;
+const CY = 150;
+const TICK_INNER = 116;
+const TICK_OUTER = 124;
 
 function clampBpm(value: number): number {
   return Math.min(BPM_MAX, Math.max(BPM_MIN, Math.round(value)));
 }
 
-function bpmToAngle(bpm: number): number {
-  const t = (clampBpm(bpm) - BPM_MIN) / (BPM_MAX - BPM_MIN);
-  return START_DEG + t * SWEEP_DEG;
+/** Rotating face position for a BPM value; positive rotation = clockwise. */
+function rotationFor(bpm: number): number {
+  return (bpm - 1) * DEG_PER_TICK;
 }
 
-function angleToBpm(angle: number): number {
-  const t = (angle - START_DEG) / SWEEP_DEG;
-  return clampBpm(BPM_MIN + t * (BPM_MAX - BPM_MIN));
+/** BPM for a face rotation, clamped to the dial range. */
+function bpmFor(rotation: number): number {
+  return clampBpm(rotation / DEG_PER_TICK + 1);
 }
 
-function describeArc(cx: number, cy: number, r: number, startDeg: number, endDeg: number): string {
-  const toRad = (d: number): number => (d * Math.PI) / 180;
-  const sx = cx + r * Math.cos(toRad(startDeg));
-  const sy = cy + r * Math.sin(toRad(startDeg));
-  const ex = cx + r * Math.cos(toRad(endDeg));
-  const ey = cy + r * Math.sin(toRad(endDeg));
-  const large = endDeg - startDeg > 180 ? 1 : 0;
-  return `M ${sx} ${sy} A ${r} ${r} 0 ${large} 1 ${ex} ${ey}`;
+interface TickMark {
+  readonly x1: number;
+  readonly y1: number;
+  readonly x2: number;
+  readonly y2: number;
 }
+
+/** 55 tick marks laid out clockwise starting at the pointer (12 o'clock). */
+const TICK_MARKS: readonly TickMark[] = Array.from({ length: TICKS_PER_ROTATION }, (_, i) => {
+  const a = ((POINTER_DEG + i * DEG_PER_TICK) * Math.PI) / 180;
+  const cos = Math.cos(a);
+  const sin = Math.sin(a);
+  return {
+    x1: CX + TICK_INNER * cos,
+    y1: CY + TICK_INNER * sin,
+    x2: CX + TICK_OUTER * cos,
+    y2: CY + TICK_OUTER * sin,
+  };
+});
 
 @Component({
   selector: 'app-bpm-dial',
@@ -36,32 +53,52 @@ function describeArc(cx: number, cy: number, r: number, startDeg: number, endDeg
 export class BpmDial {
   readonly bpm = input.required<number>();
   readonly bpmChange = output<number>();
+  readonly tap = output<void>();
+
+  protected readonly ticks = TICK_MARKS;
+  /**
+   * Face rotation. null means "ride the bpm input" — the dial is not being
+   * dragged and always shows the external value; a number means a drag is in
+   * progress and the face is free to accumulate its own rotation.
+   */
+  private readonly dragRotation = signal<number | null>(null);
+  protected readonly rotation = computed(() => this.dragRotation() ?? rotationFor(this.bpm()));
+  protected readonly faceTransform = computed(() => `rotate(${this.rotation()} ${CX} ${CY})`);
 
   private readonly dialRef = viewChild<ElementRef<HTMLElement>>('dial');
-  private dragging = signal(false);
-
-  protected angle = computed(() => bpmToAngle(this.bpm()));
-  protected trackPath = describeArc(60, 60, 48, START_DEG, START_DEG + SWEEP_DEG);
-  protected valuePath = computed(() => describeArc(60, 60, 48, START_DEG, this.angle()));
-  protected handlePos = computed(() => {
-    const a = (this.angle() * Math.PI) / 180;
-    return { x: 60 + 48 * Math.cos(a), y: 60 + 48 * Math.sin(a) };
-  });
+  private dragging = false;
+  private lastAngle: number | null = null;
 
   protected onPointerDown(event: PointerEvent): void {
-    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
-    this.dragging.set(true);
-    this.updateFromEvent(event);
+    (event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId);
+    this.dragging = true;
+    this.lastAngle = this.angleFromEvent(event);
+    event.preventDefault();
   }
 
   protected onPointerMove(event: PointerEvent): void {
-    if (!this.dragging()) return;
-    this.updateFromEvent(event);
+    if (!this.dragging || this.lastAngle === null) return;
+    const angle = this.angleFromEvent(event);
+    let delta = angle - this.lastAngle;
+    if (delta > 180) delta -= 360;
+    if (delta < -180) delta += 360;
+    this.lastAngle = angle;
+
+    this.dragRotation.update((r) => (r ?? rotationFor(this.bpm())) + delta);
+    this.bpmChange.emit(bpmFor(this.dragRotation() ?? rotationFor(this.bpm())));
+    event.preventDefault();
   }
 
   protected onPointerUp(event: PointerEvent): void {
-    (event.currentTarget as HTMLElement).releasePointerCapture(event.pointerId);
-    this.dragging.set(false);
+    if (!this.dragging) return;
+    (event.currentTarget as HTMLElement).releasePointerCapture?.(event.pointerId);
+    this.dragging = false;
+    this.lastAngle = null;
+    // Settle onto the exact tick for the clamped value, then hand control
+    // back to the bpm input.
+    const settled = rotationFor(bpmFor(this.dragRotation() ?? rotationFor(this.bpm())));
+    this.dragRotation.set(null);
+    this.bpmChange.emit(bpmFor(settled));
   }
 
   protected onKeydown(event: KeyboardEvent): void {
@@ -81,20 +118,17 @@ export class BpmDial {
     }
   }
 
-  private updateFromEvent(event: PointerEvent): void {
+  protected onTapClick(): void {
+    this.tap.emit();
+  }
+
+  private angleFromEvent(event: PointerEvent): number {
     const el = this.dialRef()?.nativeElement;
-    if (!el) return;
+    if (!el) return 0;
     const rect = el.getBoundingClientRect();
     const cx = rect.left + rect.width / 2;
     const cy = rect.top + rect.height / 2;
-    let deg = (Math.atan2(event.clientY - cy, event.clientX - cx) * 180) / Math.PI;
-    while (deg < START_DEG) deg += 360;
-    while (deg > START_DEG + 360) deg -= 360;
-    if (deg > START_DEG + SWEEP_DEG) {
-      const distToStart = Math.abs(deg - (START_DEG + SWEEP_DEG));
-      const distToEnd = Math.abs(deg - 360 - START_DEG);
-      deg = distToStart < distToEnd ? START_DEG + SWEEP_DEG : START_DEG;
-    }
-    this.bpmChange.emit(angleToBpm(deg));
+    const deg = (Math.atan2(event.clientY - cy, event.clientX - cx) * 180) / Math.PI;
+    return deg < 0 ? deg + 360 : deg;
   }
 }

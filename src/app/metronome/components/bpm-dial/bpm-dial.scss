@@ -1,66 +1,114 @@
+.dial-shell {
+  position: relative;
+  width: 208px;
+  height: 208px;
+}
+
 .dial {
-  width: 168px;
-  height: 168px;
+  position: relative;
+  width: 100%;
+  height: 100%;
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: var(--surface-container-high);
-  border: 1px solid var(--border-subtle);
-  box-shadow: var(--shadow-inset-panel);
   cursor: grab;
   user-select: none;
   touch-action: none;
-  position: relative;
   outline: none;
   &:active { cursor: grabbing; }
   &:focus-visible { outline: 2px solid var(--border-active); outline-offset: 2px; }
-
-  svg { width: 120px; height: 120px; overflow: visible; }
 }
 
-.dial-track {
+.dial-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+}
+
+.dial-plate {
+  fill: var(--surface-container-low);
+}
+
+.dial-rim {
+  fill: none;
+  stroke: var(--surface-container-high);
+  stroke-width: 22;
+}
+
+.dial-tick {
+  stroke: var(--text-dim);
+  stroke-width: 1;
+  stroke-linecap: round;
+}
+
+.dial-center {
+  fill: var(--surface-container);
+}
+
+.dial-center-line {
   fill: none;
   stroke: var(--border-subtle);
-  stroke-width: 6;
-  stroke-linecap: round;
+  stroke-width: 2;
 }
 
-.dial-value {
-  fill: none;
-  stroke: var(--scale-accent);
-  stroke-width: 6;
-  stroke-linecap: round;
-}
-
-.dial-handle {
-  fill: var(--scale-accent);
-  stroke: var(--surface-container-low);
-  stroke-width: 1.5;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
-}
-
-.dial-number {
+.dial-pointer {
   fill: var(--text);
-  font-family: var(--font);
-  font-size: 18px;
-  font-weight: var(--fw-bold);
-  text-anchor: middle;
-  dominant-baseline: middle;
 }
 
-.dial-label {
-  fill: var(--text-muted);
-  font-family: var(--font);
-  font-size: 7px;
-  letter-spacing: var(--tracking-wide);
-  text-anchor: middle;
-}
-
-.dial-hint {
+.tap-btn {
   position: absolute;
-  bottom: 14px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 44%;
+  height: 44%;
+  border-radius: 50%;
+  background: linear-gradient(145deg, var(--surface-container-high), var(--surface-container));
+  border: none;
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.5),
+    -1px -1px 4px rgba(255, 255, 255, 0.05),
+    1px 1px 4px rgba(0, 0, 0, 0.4),
+    inset 0 1px 2px rgba(255, 255, 255, 0.08),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2;
+  padding: 10px;
+}
+
+.tap-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: linear-gradient(145deg, var(--surface-container), var(--surface-container-low));
   color: var(--text-dim);
-  font-size: var(--text-3xs);
+  font-size: var(--text-2sm);
+  font-weight: var(--fw-medium);
   letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow:
+    inset 2px 2px 6px rgba(0, 0, 0, 0.5),
+    inset -1px -1px 3px rgba(255, 255, 255, 0.03),
+    0 1px 0 rgba(255, 255, 255, 0.03);
+  transition: box-shadow var(--dur-med) ease, transform var(--dur-fast) ease;
+  border: none;
+}
+
+.tap-btn:active .tap-inner {
+  box-shadow:
+    inset 3px 3px 8px rgba(0, 0, 0, 0.6),
+    inset -1px -1px 2px rgba(255, 255, 255, 0.02);
+  transform: scale(0.97);
+}
+
+.tap-btn:focus-visible {
+  outline: 2px solid var(--border-active);
+  outline-offset: 3px;
 }

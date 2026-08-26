@@ -1,24 +1,41 @@
-<div
-  #dial
-  class="dial"
-  role="slider"
-  tabindex="0"
-  [attr.aria-valuenow]="bpm()"
-  [attr.aria-valuemin]="1"
-  [attr.aria-valuemax]="800"
-  aria-label="Tempo"
-  aria-valuetext="{{ bpm() }} beats per minute"
-  (pointerdown)="onPointerDown($event)"
-  (pointermove)="onPointerMove($event)"
-  (pointerup)="onPointerUp($event)"
-  (keydown)="onKeydown($event)"
->
-  <svg viewBox="0 0 120 120" aria-hidden="true">
-    <path class="dial-track" [attr.d]="trackPath" />
-    <path class="dial-value" [attr.d]="valuePath()" />
-    <circle class="dial-handle" [attr.cx]="handlePos().x" [attr.cy]="handlePos().y" r="5" />
-    <text x="60" y="56" class="dial-number">{{ bpm() }}</text>
-    <text x="60" y="70" class="dial-label">BPM</text>
-  </svg>
-  <span class="dial-hint">Tap</span>
+<div class="dial-shell">
+  <div
+    #dial
+    class="dial"
+    role="slider"
+    tabindex="0"
+    [attr.aria-valuenow]="bpm()"
+    [attr.aria-valuemin]="1"
+    [attr.aria-valuemax]="800"
+    aria-label="Tempo"
+    [attr.aria-valuetext]="bpm() + ' beats per minute'"
+    (pointerdown)="onPointerDown($event)"
+    (pointermove)="onPointerMove($event)"
+    (pointerup)="onPointerUp($event)"
+    (pointercancel)="onPointerUp($event)"
+    (keydown)="onKeydown($event)"
+  >
+    <svg class="dial-svg" viewBox="0 0 300 300" aria-hidden="true">
+      <g class="dial-face" [attr.transform]="faceTransform()">
+        <circle cx="150" cy="150" r="140" class="dial-plate" />
+        <circle cx="150" cy="150" r="128" class="dial-rim" />
+        @for (t of ticks; track $index) {
+          <line
+            class="dial-tick"
+            [attr.x1]="t.x1"
+            [attr.y1]="t.y1"
+            [attr.x2]="t.x2"
+            [attr.y2]="t.y2"
+          />
+        }
+      </g>
+      <circle cx="150" cy="150" r="92" class="dial-center" />
+      <circle cx="150" cy="150" r="92" class="dial-center-line" />
+      <polygon class="dial-pointer" points="150,12 143,26 157,26" />
+    </svg>
+  </div>
+
+  <button type="button" class="tap-btn" (click)="onTapClick()" aria-label="Tap tempo">
+    <span class="tap-inner">Tap</span>
+  </button>
 </div>

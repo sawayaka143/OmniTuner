@@ -14,6 +14,7 @@ import { Component, computed, ElementRef, input, output, signal, viewChild } fro
       [class.compact]="compact()"
       [class.indicator-accent]="indicator() === 'accent'"
       [style.--seg-count]="options().length"
+      [style.--seg-gap]="compact() ? '2px' : null"
       [style.grid-template-columns]="gridColumns() || null"
       role="radiogroup"
       [attr.aria-label]="ariaLabel()"
@@ -25,7 +26,7 @@ import { Component, computed, ElementRef, input, output, signal, viewChild } fro
         [style.transform]="
           selectedIndex() === -1
             ? 'translateX(-100%)'
-            : 'translateX(' + selectedIndex() * 100 + '%)'
+            : 'translateX(calc(' + selectedIndex() + ' * 100% + ' + selectedIndex() + ' * var(--seg-gap, 0px)))'
         "
         aria-hidden="true"
       ></span>
