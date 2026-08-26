@@ -1,0 +1,24 @@
+<div
+  #dial
+  class="dial"
+  role="slider"
+  tabindex="0"
+  [attr.aria-valuenow]="bpm()"
+  [attr.aria-valuemin]="1"
+  [attr.aria-valuemax]="800"
+  aria-label="Tempo"
+  aria-valuetext="{{ bpm() }} beats per minute"
+  (pointerdown)="onPointerDown($event)"
+  (pointermove)="onPointerMove($event)"
+  (pointerup)="onPointerUp($event)"
+  (keydown)="onKeydown($event)"
+>
+  <svg viewBox="0 0 120 120" aria-hidden="true">
+    <path class="dial-track" [attr.d]="trackPath" />
+    <path class="dial-value" [attr.d]="valuePath()" />
+    <circle class="dial-handle" [attr.cx]="handlePos().x" [attr.cy]="handlePos().y" r="5" />
+    <text x="60" y="56" class="dial-number">{{ bpm() }}</text>
+    <text x="60" y="70" class="dial-label">BPM</text>
+  </svg>
+  <span class="dial-hint">Tap</span>
+</div>

@@ -1,0 +1,253 @@
+<main class="app-main">
+  <section class="workbench" aria-labelledby="metro-title">
+    <header class="workbench-header">
+      <div>
+        <span class="section-label">Practice tools</span>
+        <h2 id="metro-title">Metronome</h2>
+        <p>Tempo → Time Signature → Subdivision → Bar Pattern → Polyrhythm → Sound &amp; Volume</p>
+      </div>
+      <button class="btn primary metro-play" type="button" [class.active]="isPlaying()" [attr.aria-pressed]="isPlaying()" (click)="togglePlay()">
+        <span class="app-icon ti" [class.ti-player-pause]="isPlaying()" [class.ti-player-play]="!isPlaying()" aria-hidden="true"></span>
+        {{ isPlaying() ? 'Stop' : 'Play' }}
+        <span class="kbd-hint" aria-hidden="true">Space</span>
+      </button>
+    </header>
+
+    @if (audioError(); as err) {
+      <div class="metro-error" role="alert">
+        <span>{{ err }}</span>
+        <button type="button" class="btn small ghost" (click)="clearAudioError()">Dismiss</button>
+      </div>
+    }
+
+    <div class="finder-columns">
+      <aside class="controls-panel" aria-label="Metronome controls">
+        <div class="control-section">
+          <span class="section-label">01 · Tempo</span>
+          <div class="tempo-block">
+            <app-bpm-dial [bpm]="bpm()" (bpmChange)="setBpm($event)" />
+            <div class="tempo-side">
+              <div class="bpm-row">
+                <button type="button" class="step-btn" aria-label="Decrease tempo" [appPressRepeat]="decBpm">−</button>
+                <label class="bpm-input-wrap">
+                  <input type="number" min="1" max="800" step="1" [value]="bpm()" (change)="setBpm($any($event.target).valueAsNumber)" aria-label="Tempo BPM" />
+                  <span>BPM</span>
+                </label>
+                <button type="button" class="step-btn" aria-label="Increase tempo" [appPressRepeat]="incBpm">+</button>
+              </div>
+              <button type="button" class="btn tap-btn" (click)="onTap()" aria-label="Tap tempo">
+                TAP <span>tempo</span>
+              </button>
+              <span class="field-hint">T · ↑↓ · Shift ×5 · dial drag</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="control-section">
+          <span class="section-label">02 · Time signature</span>
+          <div class="ts-row">
+            <button type="button" class="step-btn sm" aria-label="Fewer beats" (click)="setTimeSigNumerator(timeSig().numerator - 1)">−</button>
+            <input class="ts-num" type="number" min="1" max="32" [value]="timeSig().numerator" (change)="setTimeSigNumerator($any($event.target).valueAsNumber)" aria-label="Beats per bar" />
+            <button type="button" class="step-btn sm" aria-label="More beats" (click)="setTimeSigNumerator(timeSig().numerator + 1)">+</button>
+            <span class="ts-slash">/</span>
+            <app-listbox
+              [options]="denomOptions"
+              [value]="denomOptions[denominators.indexOf(timeSig().denominator)] ?? denomOptions[1]"
+              ariaLabel="Denominator"
+              [triggerLabel]="'' + timeSig().denominator"
+              [optionLabel]="denomLabel"
+              [trackByFn]="trackDenom"
+              [open]="denomOpen()"
+              (toggle)="denomOpen.update(v => !v)"
+              (select)="setDenom($event)"
+            />
+          </div>
+          <app-listbox
+            [options]="meterOptions"
+            [value]="meterOptions[meterOptions.findIndex(o => o.value === timeSig().numerator + '/' + timeSig().denominator)] ?? meterOptions[2]"
+            ariaLabel="Time signature preset"
+            triggerKicker="preset"
+            [triggerLabel]="timeSig().numerator + '/' + timeSig().denominator"
+            [optionLabel]="meterLabel"
+            [trackByFn]="trackMeter"
+            [open]="meterPresetOpen()"
+            (toggle)="meterPresetOpen.update(v => !v)"
+            (select)="applyMeterPreset($event)"
+          />
+          <p class="field-hint">{{ meterDesc() }} · {{ barDurationLabel() }}/bar</p>
+        </div>
+
+        <div class="control-section">
+          <span class="section-label">03 · Subdivision</span>
+          <app-listbox
+            [options]="subdivOptions"
+            [value]="subdivOptions[subdivOptions.findIndex(o => o.value === divisions())] ?? subdivOptions[0]"
+            ariaLabel="Subdivision"
+            triggerKicker="per beat"
+            [triggerLabel]="subdivLabelFor(divisions())"
+            [optionLabel]="subdivOptionLabel"
+            [trackByFn]="trackSubdiv"
+            [open]="subdivOpen()"
+            (toggle)="subdivOpen.update(v => !v)"
+            (select)="setDivisions($event)"
+          />
+          <p class="field-hint">Evenly spaced events per beat — tuplets are generated, not hard-coded.</p>
+        </div>
+
+        <div class="control-section">
+          <span class="section-label">04 · Bar pattern</span>
+          <div class="pill-row" role="group" aria-label="Bar pattern presets">
+            @for (p of patternPresets; track p.label) {
+              <button type="button" class="pill" [class.active]="barPreset()===p.label" (click)="applyBarPreset(p.bars)">{{ p.label }}</button>
+            }
+          </div>
+          <div class="pat-edit">
+            <div class="pat-cells">
+              @for (v of barPattern(); track $index) {
+                <button type="button" class="pat-cell" [class.off]="!v" [attr.aria-pressed]="!!v" (click)="toggleBarIndex($index)">{{ $index + 1 }}</button>
+              }
+            </div>
+            <div class="pat-btns">
+              <button type="button" class="btn small ghost" (click)="setCustomBarLength(barPattern().length - 1)">− bar</button>
+              <button type="button" class="btn small ghost" (click)="setCustomBarLength(barPattern().length + 1)">+ bar</button>
+            </div>
+          </div>
+          <p class="field-hint">Click a bar to toggle sounding / silent. Silent bars keep exact internal time — the click drops out, the pulse doesn’t.</p>
+        </div>
+
+        <div class="control-section">
+          <span class="section-label">05 · Polyrhythm</span>
+          <label class="switch">
+            <input type="checkbox" [checked]="poly().enabled" (change)="setPolyEnabled($any($event.target).checked)" aria-label="Enable polyrhythm" />
+            <span class="track"></span> Polyrhythm layer
+          </label>
+          @if (poly().enabled) {
+            <div class="poly-row">
+              <div class="mini-step">
+                <button type="button" class="step-btn sm" (click)="setPolyEvents(poly().events - 1)">−</button>
+                <input type="number" min="1" max="32" [value]="poly().events" (change)="setPolyEvents($any($event.target).valueAsNumber)" aria-label="Poly events per bar" />
+                <button type="button" class="step-btn sm" (click)="setPolyEvents(poly().events + 1)">+</button>
+              </div>
+              <span class="field-hint">events per bar · meter {{ meterModel().beatsPerBar }} : poly {{ poly().events }}</span>
+            </div>
+            <div class="pill-row" role="group" aria-label="Polyrhythm presets">
+              @for (r of polyPresets; track r[0] + ':' + r[1]) {
+                <button type="button" class="pill" [class.active]="timeSig().numerator===r[0] && poly().events===r[1] && poly().enabled" (click)="applyPolyPreset(r)">{{ r[0] }}:{{ r[1] }}</button>
+              }
+            </div>
+          } @else {
+            <p class="field-hint">Enable to layer a second pulse over the same bar.</p>
+          }
+        </div>
+
+        <div class="control-section">
+          <span class="section-label">06 · Sound &amp; Volume</span>
+          <label class="range-field">
+            <span>Master</span>
+            <input type="range" min="0" max="100" step="1" [value]="masterVol() * 100" (input)="setMasterVol($any($event.target).valueAsNumber / 100)" aria-label="Master volume" />
+            <span class="range-val">{{ (masterVol() * 100) | number:'1.0-0' }}%</span>
+          </label>
+          @for (role of soundRoles; track role.key) {
+            <div class="sound-row">
+              <span class="sound-role">{{ role.label }}</span>
+              <app-listbox
+                [options]="soundSelectOptions"
+                [value]="soundOptionFor(role.key)"
+                [ariaLabel]="role.label + ' sound'"
+                [triggerLabel]="sounds()[role.key].id"
+                [optionLabel]="soundLabel"
+                [trackByFn]="trackSound"
+                [open]="soundOpenFor(role.key)()"
+                (toggle)="toggleSoundOpen(role.key)"
+                (select)="setSoundRole(role.key, $event)"
+              />
+              <input type="range" min="0" max="100" step="1" [value]="sounds()[role.key].vol * 100" (input)="setRoleVol(role.key, $any($event.target).valueAsNumber)" [attr.aria-label]="role.label + ' volume'" />
+              <span class="range-val">{{ (sounds()[role.key].vol * 100) | number:'1.0-0' }}%</span>
+            </div>
+          }
+          <div class="sound-actions">
+            <button type="button" class="btn small ghost" (click)="previewMain()">Preview meter</button>
+            <button type="button" class="btn small ghost" (click)="previewPoly()">Preview poly</button>
+          </div>
+        </div>
+      </aside>
+
+      <button class="resize-handle" type="button" aria-label="Resize controls panel" title="Drag to resize, or use Left/Right arrow keys" (pointerdown)="onResizeStart($event)" (keydown)="onResizeKeydown($event)"></button>
+
+      <section class="stage" aria-label="Metronome stage">
+        <div class="control-rail">
+          <span class="rail-caption">STAGE</span>
+          <div class="rail-group">
+            <span class="rail-label" id="viz-bar-info">{{ timeSig().numerator }}/{{ timeSig().denominator }} · bar {{ currentBar() + 1 }}</span>
+            <span class="rail-label">{{ divisions() > 1 ? divisions() + ' per beat' : 'beats only' }}</span>
+            <span class="legend"><i class="sw amber"></i>meter <i class="sw teal"></i>poly</span>
+          </div>
+        </div>
+        <div class="stage-well">
+          <div class="bar-strip" id="bar-strip">
+            @for (v of barPattern(); track $index) {
+              <div class="pbar" [class.off]="!v" [class.cur]="isPlaying() && (currentBar() % barPattern().length) === $index"></div>
+            }
+          </div>
+          <div class="beat-strip" id="beat-strip" [class.silent]="transport()?.barActive === false">
+            <div class="playhead" id="playhead"></div>
+            @for (b of beatsArray(); track $index) {
+              <div class="cell" [class.down]="$index===0">
+                <span class="bnum">{{ $index + 1 }}</span>
+                <div class="ticks">
+                  @for (s of subdivTicks(); track $index) {
+                    <span class="tick" [style.left]="s + '%'"></span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+          @if (poly().enabled) {
+            <div class="poly-timeline" id="poly-timeline">
+              <div class="tl-row">
+                <span class="tl-label">meter</span>
+                <div class="tl-track amber">
+                  @for (p of polyAArray(); track $index) { <span class="tl-tick" [style.left]="(p / polyAArray().length * 100) + '%'"></span> }
+                </div>
+              </div>
+              <div class="tl-row">
+                <span class="tl-label">poly</span>
+                <div class="tl-track teal">
+                  @for (p of polyBArray(); track $index) { <span class="tl-tick" [style.left]="(p / polyBArray().length * 100) + '%'"></span> }
+                </div>
+              </div>
+            </div>
+            <p class="field-hint">Cycle = one bar. Both layers anchor to the same bar start, so they align every cycle.</p>
+          }
+        </div>
+        <div class="stage-tabs" role="tablist" aria-label="Advanced settings">
+          <button role="tab" type="button" [attr.aria-selected]="activeTab()==='pattern'" (click)="activeTab.set('pattern')">Bar pattern</button>
+          <button role="tab" type="button" [attr.aria-selected]="activeTab()==='poly'" (click)="activeTab.set('poly')">Polyrhythm</button>
+          <button role="tab" type="button" [attr.aria-selected]="activeTab()==='sounds'" (click)="activeTab.set('sounds')">Sounds</button>
+        </div>
+        @if (activeTab()==='pattern') {
+          <div class="tab-panel" role="tabpanel">
+            <div class="pill-row" role="group" aria-label="Bar pattern presets">
+              @for (p of patternPresets; track p.label) { <button type="button" class="pill" [class.active]="barPreset()===p.label" (click)="applyBarPreset(p.bars)">{{ p.label }}</button> }
+            </div>
+          </div>
+        }
+        @if (activeTab()==='poly') {
+          <div class="tab-panel" role="tabpanel">
+            <label class="switch"><input type="checkbox" [checked]="poly().enabled" (change)="setPolyEnabled($any($event.target).checked)" /><span class="track"></span> Polyrhythm layer</label>
+          </div>
+        }
+        @if (activeTab()==='sounds') {
+          <div class="tab-panel" role="tabpanel">
+            <span class="field-hint">Sound routing is in the controls panel. Use the master and per-role volumes there.</span>
+          </div>
+        }
+        <footer class="status">
+          <span id="st-state">{{ isPlaying() ? 'Playing' : 'Stopped' }}</span>
+          <span id="st-pos">bar {{ currentBar() + 1 }}/{{ barPattern().length }} · {{ divisions() > 1 ? divisions() + ' per beat' : 'beats only' }}</span>
+          <span id="st-audio"></span>
+        </footer>
+      </section>
+    </div>
+  </section>
+</main>

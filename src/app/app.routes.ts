@@ -14,5 +14,9 @@ export const routes: Routes = [
     path: 'chords',
     loadComponent: () => import('./chord-finder/chord-finder').then((c) => c.ChordFinder),
   },
+  {
+    path: 'metronome',
+    loadComponent: () => import('./metronome/metronome').then((c) => c.Metronome),
+  },
   { path: '**', redirectTo: 'tuner' },
 ];
