@@ -45,13 +45,10 @@ describe('nearestStringTarget', () => {
   });
 
   it('keeps the previous target within the hysteresis margin and switches beyond it', () => {
-    // 42.55 is 5 cents past the E2–A2 midpoint: A2 is the strict winner.
     expect(nearestStringTarget(42.55, GUITAR_STANDARD)).toMatchObject({ name: 'A2' });
 
-    // Previous E2 is within HYSTERESIS_CENTS of the winner, so it holds.
     expect(nearestStringTarget(42.55, GUITAR_STANDARD, 'E2')).toMatchObject({ name: 'E2' });
 
-    // Once the previous target is more than HYSTERESIS_CENTS farther, it moves.
     expect(nearestStringTarget(42.6, GUITAR_STANDARD, 'E2')).toMatchObject({ name: 'A2' });
   });
 
@@ -96,15 +93,14 @@ describe('A4 calibration (ref parameter)', () => {
     expect(midiNoteToFrequency(69, 442)).toBe(442);
     expect(midiNoteToFrequency(69, 415)).toBe(415);
     expect(midiNoteToFrequency(69, 466)).toBe(466);
-    // Default remains 440.
+
     expect(midiNoteToFrequency(69)).toBe(440);
   });
 
   it('frequencyToMidiNote respects the reference pitch', () => {
-    // 442 Hz is exactly A4 when ref=442.
     expect(frequencyToMidiNote(442, 442)).toBe(69);
-    // 440 Hz is slightly flat of A4 when ref=442.
-    expect(frequencyToMidiNote(440, 442)).toBe(69); // still rounds to 69
+
+    expect(frequencyToMidiNote(440, 442)).toBe(69);
   });
 
   it('frequencyToMidiFloat respects the reference pitch', () => {
@@ -141,7 +137,7 @@ describe('cents offset readout', () => {
     expect(tuneDirectionText(-6, 8)).toBe('IN TUNE');
     expect(tuneDirectionText(9, 8)).toBe('TUNE DOWN');
     expect(tuneDirectionText(-9, 8)).toBe('TUNE UP');
-    // Default remains 5¢.
+
     expect(tuneDirectionText(6)).toBe('TUNE DOWN');
   });
 
@@ -165,7 +161,7 @@ describe('cents offset readout', () => {
     expect(tuneCentsText(-6, 8)).toBe('');
     expect(tuneCentsText(9, 8)).toBe('9¢');
     expect(tuneCentsText(-9, 8)).toBe('9¢');
-    // Default remains 5¢.
+
     expect(tuneCentsText(6)).toBe('6¢');
   });
 });
@@ -212,12 +208,11 @@ describe('tuneColorProgress', () => {
   });
 
   it('ends the ramp at the custom threshold when it exceeds 5¢', () => {
-    // With threshold 8 the ramp spans 50 → 8, so 8¢ is the full in-tune color.
     expect(tuneColorProgress(8, 8)).toBe(1);
     expect(tuneColorProgress(-8, 8)).toBe(1);
     expect(tuneColorProgress(29, 8)).toBeCloseTo(0.5, 5);
     expect(tuneColorProgress(50, 8)).toBe(0);
-    // Thresholds below 5 keep the classic 5¢ endpoint.
+
     expect(tuneColorProgress(3, 1)).toBe(1);
   });
 });

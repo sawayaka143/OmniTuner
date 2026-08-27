@@ -1,19 +1,18 @@
 @use '../styles' as *;
 
-:host { display: contents; }
+:host {
+  display: contents;
+}
 
 @include page-chrome();
 
 .workbench {
-  /* Dropdown menus float, so they must escape the workbench card instead of
-     being clipped at its edge. The grid below keeps the rounded corners. */
   overflow: visible;
 }
 
 .metro-grid {
   display: grid;
-  /* Three equal cards: rails and console share width; items stretch to the
-     tallest card, so the row hugs its content — no giant empty space. */
+
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-5);
   padding: var(--space-4) var(--space-5) var(--space-6);
@@ -21,7 +20,6 @@
   background: var(--canvas);
   border-radius: 0 0 var(--r-md) var(--r-md);
 }
-
 
 .meter-rail {
   min-width: 0;
@@ -48,7 +46,10 @@
     letter-spacing: var(--tracking-label);
     text-transform: uppercase;
   }
-  .dropdown-menu { left: 0; right: 0; }
+  .dropdown-menu {
+    left: 0;
+    right: 0;
+  }
 }
 
 .metro-console {
@@ -132,8 +133,13 @@
   background: var(--surface-container-high);
   border: 1px solid var(--border-subtle);
   animation: beat-pop var(--dur-slow) var(--ease-spring) both;
-  transition: background var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease;
-  &.first { border-color: var(--ring-primary); }
+  transition:
+    background var(--dur-fast) ease,
+    box-shadow var(--dur-fast) ease,
+    transform var(--dur-fast) ease;
+  &.first {
+    border-color: var(--ring-primary);
+  }
   &.active {
     background: var(--scale-accent);
     border-color: var(--ring-primary);
@@ -161,7 +167,9 @@
   padding-top: var(--space-3);
   border-top: 1px solid var(--border-subtle);
   opacity: 0;
-  transition: grid-template-rows var(--dur-slow) var(--ease-spring), opacity var(--dur-med) ease;
+  transition:
+    grid-template-rows var(--dur-slow) var(--ease-spring),
+    opacity var(--dur-med) ease;
   > .tl-row {
     overflow: hidden;
     min-height: 0;
@@ -171,12 +179,39 @@
     opacity: 1;
   }
 }
-.tl-row { display: grid; grid-template-columns: 54px 1fr; align-items: center; gap: 10px; }
-.tl-label { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-dim); }
-.tl-track { position: relative; height: 26px; background: var(--surface-container); border: 1px solid var(--border-subtle); border-radius: 6px; }
-.tl-tick { position: absolute; top: 4px; bottom: 4px; width: 3px; margin-left: -1.5px; border-radius: 1.5px; }
-.tl-track.amber .tl-tick { background: var(--scale-accent); }
-.tl-track.teal .tl-tick { background: var(--info); }
+.tl-row {
+  display: grid;
+  grid-template-columns: 54px 1fr;
+  align-items: center;
+  gap: 10px;
+}
+.tl-label {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.tl-track {
+  position: relative;
+  height: 26px;
+  background: var(--surface-container);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+}
+.tl-tick {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  width: 3px;
+  margin-left: -1.5px;
+  border-radius: 1.5px;
+}
+.tl-track.amber .tl-tick {
+  background: var(--scale-accent);
+}
+.tl-track.teal .tl-tick {
+  background: var(--info);
+}
 
 .console-status {
   width: 100%;
@@ -188,8 +223,6 @@
   font-size: var(--text-2xs);
   color: var(--text-dim);
 }
-
-/* ── Shared control primitives (tokens only, Settings-style) ───── */
 
 .ts-row {
   display: flex;
@@ -216,21 +249,32 @@
     flex: none;
     width: 72px;
   }
-  .ts-slash { font-size: var(--text-lg); color: var(--text-dim); }
+  .ts-slash {
+    font-size: var(--text-lg);
+    color: var(--text-dim);
+  }
 }
 
 .step-btn {
-  width: var(--ctrl-h-md); height: var(--ctrl-h-md);
+  width: var(--ctrl-h-md);
+  height: var(--ctrl-h-md);
   border-radius: var(--r-pill);
   border: 1px solid var(--border-subtle);
   background: var(--surface-container-low);
   color: var(--text);
   font-size: 16px;
-  display: grid; place-items: center;
+  display: grid;
+  place-items: center;
   cursor: pointer;
   box-shadow: var(--shadow-recess);
-  &:active { transform: scale(0.97); }
-  &.small { width: 30px; height: 30px; font-size: 14px; }
+  &:active {
+    transform: scale(0.97);
+  }
+  &.small {
+    width: 30px;
+    height: 30px;
+    font-size: 14px;
+  }
 }
 
 .pat-edit {
@@ -245,7 +289,8 @@
 }
 
 .pat-cell {
-  width: 40px; height: 30px;
+  width: 40px;
+  height: 30px;
   border-radius: var(--r-sm);
   border: 1px solid var(--border-medium);
   background: var(--surface-container-high);
@@ -254,7 +299,12 @@
   font-weight: var(--fw-semibold);
   font-family: var(--font);
   cursor: pointer;
-  &.off { background: transparent; border-style: dashed; border-color: var(--border-subtle); color: var(--text-dim); }
+  &.off {
+    background: transparent;
+    border-style: dashed;
+    border-color: var(--border-subtle);
+    color: var(--text-dim);
+  }
 }
 
 .pat-btns {
@@ -284,7 +334,9 @@
   display: grid;
   grid-template-rows: 0fr;
   opacity: 0;
-  transition: grid-template-rows var(--dur-slow) var(--ease-spring), opacity var(--dur-med) ease;
+  transition:
+    grid-template-rows var(--dur-slow) var(--ease-spring),
+    opacity var(--dur-med) ease;
   > .poly-row {
     overflow: hidden;
     min-height: 0;
@@ -307,10 +359,23 @@
   grid-template-columns: minmax(0, 1fr) auto;
   gap: var(--space-2);
   align-items: center;
-  .sound-role { font-size: var(--text-xs); color: var(--text); }
-  .range-val { min-width: 40px; text-align: right; font-variant-numeric: tabular-nums; color: var(--text-muted); font-size: var(--text-2xs); }
-  app-listbox { grid-column: 1 / -1; }
-  input[type='range'] { grid-column: 1 / -1; }
+  .sound-role {
+    font-size: var(--text-xs);
+    color: var(--text);
+  }
+  .range-val {
+    min-width: 40px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-muted);
+    font-size: var(--text-2xs);
+  }
+  app-listbox {
+    grid-column: 1 / -1;
+  }
+  input[type='range'] {
+    grid-column: 1 / -1;
+  }
 }
 
 .sound-row input[type='range'] {
@@ -348,17 +413,38 @@
 }
 
 @media (max-width: 1100px) {
-  .metro-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto; }
-  .metro-console { grid-column: 1 / -1; grid-row: 1; }
+  .metro-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto;
+  }
+  .metro-console {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
 }
 
 @media (max-width: 640px) {
-  .metro-grid { grid-template-columns: 1fr; padding: var(--space-2); gap: var(--space-3); grid-template-rows: auto; }
-  .metro-console { grid-column: auto; padding: var(--space-4); }
-  .sound-row { grid-template-columns: 1fr; }
-  .sound-row app-listbox { grid-column: 1; }
+  .metro-grid {
+    grid-template-columns: 1fr;
+    padding: var(--space-2);
+    gap: var(--space-3);
+    grid-template-rows: auto;
+  }
+  .metro-console {
+    grid-column: auto;
+    padding: var(--space-4);
+  }
+  .sound-row {
+    grid-template-columns: 1fr;
+  }
+  .sound-row app-listbox {
+    grid-column: 1;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .beat-dot { animation: none !important; transition-duration: 0.01ms !important; }
+  .beat-dot {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
 }

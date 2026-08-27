@@ -12,8 +12,6 @@ import {
 } from '../models/tuner-preferences.model';
 import { midiNoteLabel, midiNoteToFrequency } from '../utils/pitch-utils';
 
-// ── Storage ──────────────────────────────────────────────────────────
-
 export const INSTRUMENT_REGISTRY_STORAGE_KEY = 'omnituner.instruments.v1';
 
 export const INSTRUMENT_REGISTRY_STORAGE = new InjectionToken<Storage | null>(
@@ -29,8 +27,6 @@ export const INSTRUMENT_REGISTRY_STORAGE = new InjectionToken<Storage | null>(
   },
 );
 
-// ── Persisted shape ──────────────────────────────────────────────────
-
 interface CustomInstrumentRecord {
   readonly id: string;
   readonly name: string;
@@ -45,8 +41,6 @@ interface PersistedRegistry {
   readonly selectedInstrumentId: string;
   readonly selectedTuningId: string;
 }
-
-// ── Validation helpers ───────────────────────────────────────────────
 
 const CUSTOM_INSTRUMENT_ID = /^instr-[a-z0-9-]+$/i;
 const CUSTOM_TUNING_ID = /^custom-[a-z0-9-]+$/i;
@@ -137,8 +131,6 @@ const readCustomTunings = (value: unknown): readonly SavedCustomTuning[] => {
   return result;
 };
 
-// ── Service ──────────────────────────────────────────────────────────
-
 @Service()
 export class InstrumentRegistry {
   private readonly storage = inject(INSTRUMENT_REGISTRY_STORAGE);
@@ -153,13 +145,10 @@ export class InstrumentRegistry {
   private readonly selectedInstrumentSignal = signal(this.persisted.selectedInstrumentId);
   private readonly selectedTuningSignal = signal(this.persisted.selectedTuningId);
 
-  // ── Public read-only signals ─────────────────────────────────────
-
   readonly selectedInstrumentId = this.selectedInstrumentSignal.asReadonly();
   readonly selectedTuningId = this.selectedTuningSignal.asReadonly();
   readonly customTunings = this.customTuningsSignal.asReadonly();
 
-  /** All instruments: built-in first, then user-created. */
   readonly instruments = computed<readonly Instrument[]>(() => [
     ...INSTRUMENTS,
     ...this.customInstrumentsSignal().map((record) => this.toInstrument(record)),
@@ -170,7 +159,6 @@ export class InstrumentRegistry {
     return this.instruments().find((inst) => inst.id === id) ?? INSTRUMENTS[0];
   });
 
-  /** Built-in + custom tunings for the selected instrument. */
   readonly availableTunings = computed<readonly Tuning[]>(() => {
     const instrument = this.selectedInstrument();
     const custom = this.customTuningsSignal()
@@ -184,8 +172,6 @@ export class InstrumentRegistry {
     const id = this.selectedTuningSignal();
     return tunings.find((t) => t.id === id) ?? tunings[0];
   });
-
-  // ── Selection ────────────────────────────────────────────────────
 
   selectInstrument(instrumentId: string): void {
     const instrument = this.instruments().find((inst) => inst.id === instrumentId);
@@ -211,8 +197,6 @@ export class InstrumentRegistry {
     this.selectedTuningSignal.set(tuningId);
     this.persist();
   }
-
-  // ── Instrument CRUD ──────────────────────────────────────────────
 
   createInstrument(name: string, stringCount: number, defaultNotes: readonly number[]): Instrument {
     const validName = this.requireInstrumentName(name);
@@ -275,8 +259,6 @@ export class InstrumentRegistry {
     this.persist();
   }
 
-  // ── Tuning CRUD ──────────────────────────────────────────────────
-
   tuningsForInstrument(instrumentId: string): readonly SavedCustomTuning[] {
     return this.customTuningsSignal().filter((t) => t.instrumentId === instrumentId);
   }
@@ -333,8 +315,6 @@ export class InstrumentRegistry {
 
     this.persist();
   }
-
-  // ── Helpers ──────────────────────────────────────────────────────
 
   private toInstrument(record: CustomInstrumentRecord): Instrument {
     return {
@@ -421,8 +401,6 @@ export class InstrumentRegistry {
     return `custom-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
   }
 
-  // ── Persistence ──────────────────────────────────────────────────
-
   private load(): PersistedRegistry {
     const fallback: PersistedRegistry = {
       version: 1,
@@ -444,7 +422,6 @@ export class InstrumentRegistry {
       const customInstruments = readCustomInstruments(parsed['customInstruments']);
       const customTunings = readCustomTunings(parsed['customTunings']);
 
-      // Stale persisted selection ids fall back to a real one.
       const rawInstrumentId =
         typeof parsed['selectedInstrumentId'] === 'string'
           ? parsed['selectedInstrumentId']
@@ -470,7 +447,10 @@ export class InstrumentRegistry {
         typeof parsed['selectedTuningId'] === 'string' ? parsed['selectedTuningId'] : 'standard';
       const resolvedFallback =
         builtInTunings[0]?.id ??
-        [...customTunings.filter((t) => t.instrumentId === selectedInstrumentId).map((t) => t.id), ...validTuningIds][0] ??
+        [
+          ...customTunings.filter((t) => t.instrumentId === selectedInstrumentId).map((t) => t.id),
+          ...validTuningIds,
+        ][0] ??
         'standard';
       const selectedTuningId = validTuningIds.has(rawTuningId) ? rawTuningId : resolvedFallback;
 
@@ -486,7 +466,6 @@ export class InstrumentRegistry {
     }
   }
 
-  /** One-time migration: import custom tunings from the old TunerPreferences key. */
   private migrateOldTunings(fallback: PersistedRegistry): PersistedRegistry {
     if (!this.storage) return fallback;
 
@@ -501,7 +480,7 @@ export class InstrumentRegistry {
       if (migrated.length === 0) return fallback;
 
       const result: PersistedRegistry = { ...fallback, customTunings: migrated };
-      // Persist immediately so the migration survives even if the app closes.
+
       this.storage.setItem(INSTRUMENT_REGISTRY_STORAGE_KEY, JSON.stringify(result));
       return result;
     } catch {
@@ -520,8 +499,6 @@ export class InstrumentRegistry {
     };
     try {
       this.storage.setItem(INSTRUMENT_REGISTRY_STORAGE_KEY, JSON.stringify(value));
-    } catch {
-      // Storage unavailable or full; session state remains usable.
-    }
+    } catch {}
   }
 }

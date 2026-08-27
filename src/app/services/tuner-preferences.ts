@@ -186,8 +186,6 @@ export class TunerPreferences {
     };
     try {
       this.storage.setItem(TUNER_PREFERENCES_STORAGE_KEY, JSON.stringify(value));
-    } catch {
-      // Storage can be unavailable or full; current-session state remains usable.
-    }
+    } catch {}
   }
 }

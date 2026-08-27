@@ -45,13 +45,10 @@ export class InstrumentManager {
   protected readonly editingId = signal<string | null>(null);
   protected readonly externalError = signal('');
 
-  // Initial values fed to the composite. startCreate/startEdit push new values
-  // here; the composite's effect re-inits its internal state from these.
   protected readonly initialName = signal('');
   protected readonly initialNotes = signal<readonly number[]>([]);
   protected readonly initialStringCount = signal(MIN_STRING_COUNT);
 
-  /** Names already in use by other custom instruments (excludes the one being edited). */
   protected readonly disallowedNames = computed<readonly string[]>(() =>
     this.registry
       .instruments()
@@ -59,7 +56,6 @@ export class InstrumentManager {
       .map((inst) => inst.label),
   );
 
-  /** `'create' | 'edit'` view of the current mode (never `'list'`), for the composite binding. */
   protected readonly editorMode = computed<'create' | 'edit'>(() =>
     this.mode() === 'edit' ? 'edit' : 'create',
   );
@@ -95,8 +91,7 @@ export class InstrumentManager {
 
       if (this.open()) {
         if (!dialog.open) dialog.showModal();
-        // Jump straight into the create form when requested (e.g. via the
-        // tuner's "+" button). Reset so a later list-mode open isn't affected.
+
         if (this.openInCreateMode()) this.startCreate();
       } else if (dialog.open) {
         dialog.close();
@@ -149,13 +144,17 @@ export class InstrumentManager {
     if (event.target === this.dialog()?.nativeElement) this.requestDismiss();
   }
 
-  /** Composite emitted save — push to the registry, surface throws as `[externalError]`. */
   protected saveFromComposite(value: StringEditorValue): void {
     this.externalError.set('');
     const editId = this.editingId();
     try {
       if (this.mode() === 'edit' && editId) {
-        const updated = this.registry.updateInstrument(editId, value.name, value.notes.length, value.notes);
+        const updated = this.registry.updateInstrument(
+          editId,
+          value.name,
+          value.notes.length,
+          value.notes,
+        );
         this.registry.selectInstrument(updated.id);
         this.requestDismiss();
       } else {
@@ -168,9 +167,6 @@ export class InstrumentManager {
     }
   }
 
-  // ── Helpers ──────────────────────────────────────────────────────
-
-  /** Standard-guitar-like spacing: E2 + perfect fourths. Reused by the composite's init. */
   private defaultNotes(count: number): number[] {
     const result: number[] = [];
     for (let i = 0; i < count; i++) {

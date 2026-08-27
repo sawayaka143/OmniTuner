@@ -1,9 +1,5 @@
 import { Component, computed, ElementRef, input, output, signal, viewChild } from '@angular/core';
 
-/**
- * Segmented control component (radio group) with a sliding active indicator.
- * Supports both inline-flex (default) and grid layouts via the `gridColumns` input.
- */
 @Component({
   selector: 'app-segmented',
   template: `
@@ -26,7 +22,11 @@ import { Component, computed, ElementRef, input, output, signal, viewChild } fro
         [style.transform]="
           selectedIndex() === -1
             ? 'translateX(-100%)'
-            : 'translateX(calc(' + selectedIndex() + ' * 100% + ' + selectedIndex() + ' * var(--seg-gap, 0px)))'
+            : 'translateX(calc(' +
+              selectedIndex() +
+              ' * 100% + ' +
+              selectedIndex() +
+              ' * var(--seg-gap, 0px)))'
         "
         aria-hidden="true"
       ></span>

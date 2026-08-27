@@ -9,9 +9,8 @@ interface PitchAnalysisResponse {
   sessionId: number;
 }
 
-/** Audible signal level, above the worker's silence gate. */
 const AUDIBLE = 0.02;
-/** Below the silence gate (0.004): true silence. */
+
 const SILENT = 0.001;
 
 class MockWorker {
@@ -81,15 +80,11 @@ describe('AudioCaptureService', () => {
     expect(service.trackingState()).toBe('listening');
     expect(service.frequency()).toBeCloseTo(110, 2);
 
-    // A single silent frame during the provisional window must not blank the display.
     worker.emit({ frequency: null, confidence: 0, inputLevel: SILENT, sessionId: 0 });
     expect(service.frequency()).toBeCloseTo(110, 2);
   });
 
   it('keeps smoothing tightness constant in cents across the range', () => {
-    // Feed the same ±3¢ wobble around low E2 and high E4; the cents-domain
-    // spread of the smoothed output must be similar (log-domain smoothing).
-    // In linear-Hz smoothing the high E wobbles ~4× harder than the low E.
     const lock = (freq: number): void => {
       worker.emit({ frequency: freq, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
       worker.emit({ frequency: freq, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
@@ -116,7 +111,6 @@ describe('AudioCaptureService', () => {
       if (f !== null) lowSamples.push(f);
     }
 
-    // Two coherent far frames switch the consensus to E4.
     lock(329.63);
     expect(service.trackingState()).toBe('locked');
     const highSamples: number[] = [];
@@ -135,7 +129,6 @@ describe('AudioCaptureService', () => {
     const lowSpread = centsSpread(82.41, lowSamples);
     const highSpread = centsSpread(329.63, highSamples);
 
-    // Same cents wobble should produce a comparable cents spread (within 40%).
     expect(lowSpread).toBeGreaterThan(0);
     expect(highSpread / lowSpread).toBeGreaterThan(0.6);
     expect(highSpread / lowSpread).toBeLessThan(1.4);
@@ -146,9 +139,6 @@ describe('AudioCaptureService', () => {
     worker.emit({ frequency: 146.8, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
     worker.emit({ frequency: 146.8, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
 
-    // ~30¢ step: once the median window catches up (2 frames), the adaptive
-    // alpha (0.12 + 30/100 = 0.42) must pull the display far past what the
-    // fixed 0.12 alpha would (progress ≈ 0.42 vs 0.12).
     const target = 146.8 * 2 ** (30 / 1200);
     worker.emit({ frequency: target, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
     worker.emit({ frequency: target, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
@@ -161,7 +151,6 @@ describe('AudioCaptureService', () => {
   });
 
   it('guards non-positive frequencies without producing NaN', () => {
-    // Even with a bogus frequency the service must not throw or emit NaN.
     worker.emit({ frequency: 0, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
     expect(Number.isNaN(service.frequency())).toBe(false);
 
@@ -175,8 +164,6 @@ describe('AudioCaptureService', () => {
     worker.emit({ frequency: 196, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
     worker.emit({ frequency: 440, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
 
-    // No 3-frame consensus → never 'locked'; the display still tracks the
-    // latest provisional pitch (Change 3), it just cannot confirm.
     expect(service.trackingState()).toBe('listening');
     expect(service.frequency()).not.toBeNull();
   });
@@ -187,7 +174,6 @@ describe('AudioCaptureService', () => {
     worker.emit({ frequency: 146.8, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
     const lockedFrequency = service.frequency();
 
-    // 5 dropped frames should still hold the display
     for (let frame = 0; frame < 5; frame++) {
       worker.emit({ frequency: null, confidence: 0, inputLevel: SILENT, sessionId: 0 });
       expect(service.trackingState()).toBe('locked');
@@ -214,16 +200,12 @@ describe('AudioCaptureService', () => {
     worker.emit({ frequency: 196, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
     expect(service.trackingState()).toBe('locked');
 
-    // Frames 1-6 of true silence hold the display.
     for (let frame = 0; frame < 6; frame++) {
       worker.emit({ frequency: null, confidence: 0, inputLevel: SILENT, sessionId: 0 });
       expect(service.trackingState()).toBe('locked');
       expect(service.frequency()).not.toBeNull();
     }
 
-    // Frame 7: hold budget exhausted — frequency, tracking state, and
-    // smoothing reset together in the same frame (the old code entered a
-    // dead zone here, nulling the frequency while staying 'locked').
     worker.emit({ frequency: null, confidence: 0, inputLevel: SILENT, sessionId: 0 });
     expect(service.trackingState()).toBe('listening');
     expect(service.frequency()).toBeNull();
@@ -236,8 +218,6 @@ describe('AudioCaptureService', () => {
     const lockedFrequency = service.frequency();
     expect(lockedFrequency).not.toBeNull();
 
-    // String still ringing but confidence gone: 40 untrusted audible
-    // frames (~1.8 s) must keep the last good pitch on screen.
     for (let frame = 0; frame < 40; frame++) {
       worker.emit({ frequency: null, confidence: 0, inputLevel: AUDIBLE, sessionId: 0 });
       expect(service.trackingState()).toBe('locked');
@@ -267,7 +247,6 @@ describe('AudioCaptureService', () => {
     worker.emit({ frequency: 82.4, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
     expect(service.frequency()).toBeCloseTo(82.4, 1);
 
-    // One confident sub-octave error must not move the needle.
     worker.emit({ frequency: 41.2, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
     expect(service.trackingState()).toBe('locked');
     expect(service.frequency()).toBeCloseTo(82.4, 1);
@@ -281,31 +260,27 @@ describe('AudioCaptureService', () => {
     worker.emit({ frequency: 82.4, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
     worker.emit({ frequency: 82.4, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
 
-    // First D3 frame: far from E2, unconfirmed → display must not flicker.
     worker.emit({ frequency: 146.83, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
     expect(service.frequency()).toBeCloseTo(82.4, 1);
 
-    // Second coherent D3 frame: confirmed note change → lock D3.
     worker.emit({ frequency: 146.83, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
     expect(service.trackingState()).toBe('locked');
     expect(service.frequency()).toBeCloseTo(146.83, 1);
   });
 
   it('correctly transitions between notes across octaves without subharmonic corruption', () => {
-    // Pluck low E2 (~82.4 Hz)
     worker.emit({ frequency: 82.4, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
     worker.emit({ frequency: 82.4, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
     worker.emit({ frequency: 82.4, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
     expect(service.trackingState()).toBe('locked');
     expect(service.frequency()).toBeCloseTo(82.4, 1);
 
-    // Pluck D3 (~146.83 Hz) immediately
     worker.emit({ frequency: 146.83, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
     worker.emit({ frequency: 146.83, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
     worker.emit({ frequency: 146.83, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
 
     expect(service.trackingState()).toBe('locked');
-    // Must lock to D3 (~146.83 Hz), NOT D2 (~73.4 Hz)
+
     expect(service.frequency()).toBeCloseTo(146.83, 1);
   });
 
@@ -315,7 +290,6 @@ describe('AudioCaptureService', () => {
     worker.emit({ frequency: 146.8, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
     expect(service.frequency()).toBeCloseTo(146.8, 2);
 
-    // Single outlier spike is rejected by median filter
     worker.emit({ frequency: 152.0, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
     expect(service.frequency()).toBeCloseTo(146.8, 2);
   });
@@ -326,7 +300,6 @@ describe('AudioCaptureService', () => {
     worker.emit({ frequency: 146.8, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
     expect(service.frequency()).toBeCloseTo(146.8, 2);
 
-    // Sustained slight shift over consecutive frames
     worker.emit({ frequency: 147.2, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
     worker.emit({ frequency: 147.2, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
     const freq = service.frequency();

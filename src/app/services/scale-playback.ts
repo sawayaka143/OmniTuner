@@ -17,7 +17,6 @@ export const SCALE_AUDIO_CONTEXT_FACTORY = new InjectionToken<AudioContextFactor
   },
 );
 
-/** MIDI → Hz, re-exported from `pitch-utils` to preserve this module's public API. */
 export const midiToFrequency = midiNoteToFrequency;
 
 const GUITAR_SAMPLE_BASE_URL = 'audio/guitar/';
@@ -29,10 +28,8 @@ export class ScalePlayback {
   private context: AudioContext | null = null;
   private readonly sampleCache = new Map<string, AudioBuffer>();
 
-  /** True while a scale/tuning sequence is playing (drives the brand wobble). */
   readonly isPlaying = signal(false);
 
-  /** Set when the AudioContext could not be created (e.g. unsupported browser). */
   readonly error = signal<string | null>(null);
 
   clearError(): void {
@@ -100,11 +97,6 @@ export class ScalePlayback {
     oscillator.stop(startAt + duration + 0.05);
   }
 
-  /**
-   * Soft confirmation chime for the in-tune lock: a low-register perfect
-   * fifth (A4 + E5) with a gentle envelope, so it reads as a confirmation
-   * blip rather than a stray high note.
-   */
   playChime(): void {
     const context = this.getContext();
     if (!context) return;

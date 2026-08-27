@@ -1,5 +1,3 @@
-/// <reference lib="webworker" />
-
 interface AnalyseRequest {
   buffer: Float32Array;
   sampleRate: number;
@@ -16,33 +14,21 @@ interface AnalyseResponse extends PitchEstimate {
   sessionId: number;
 }
 
-// ── Tuning constants ────────────────────────────────────────────────
-// Lower bound set low enough to catch detuned low strings (C2 ≈ 65 Hz,
-// B1 ≈ 62 Hz); the main-thread highpass at 38 Hz handles rumble.
 const MIN_FREQUENCY = 50;
 const MAX_FREQUENCY = 1200;
 
-// YIN dip threshold. Kept at standard 0.15 so the fundamental dip qualifies
-// reliably across the full decay of the string.
 const YIN_THRESHOLD = 0.15;
 
-// Confidence gate. Kept at 0.58 so decaying notes sustain naturally without
-// premature cutoffs while still rejecting unpitched noise.
 const MIN_CONFIDENCE = 0.58;
 
 const SILENCE_RMS = 0.004;
 
-// Reusable buffer to avoid per-frame GC pressure.
 let yinBuffer: Float64Array | null = null;
 let yinBufferSize = 0;
-
-// ── Entry point ─────────────────────────────────────────────────────
 
 self.onmessage = (event: MessageEvent<AnalyseRequest>) => {
   const { buffer, sampleRate, sessionId } = event.data;
 
-  // #6 – if analysis throws, reply "no pitch" instead of leaving the
-  // main thread waiting forever.
   try {
     const inputLevel = computeRMS(buffer);
     if (inputLevel < SILENCE_RMS) {
@@ -74,8 +60,6 @@ self.onmessage = (event: MessageEvent<AnalyseRequest>) => {
   }
 };
 
-// ── DSP helpers ─────────────────────────────────────────────────────
-
 function computeRMS(buffer: Float32Array): number {
   let sum = 0;
   for (let i = 0; i < buffer.length; i++) {
@@ -96,8 +80,6 @@ function removeDCOffset(buffer: Float32Array): void {
   }
 }
 
-// ── YIN core ────────────────────────────────────────────────────────
-
 function yinDetect(buffer: Float32Array, sampleRate: number): PitchEstimate {
   const N = buffer.length;
   const minLag = Math.max(1, Math.floor(sampleRate / MAX_FREQUENCY));
@@ -107,14 +89,12 @@ function yinDetect(buffer: Float32Array, sampleRate: number): PitchEstimate {
     return { frequency: null, confidence: 0, inputLevel: 0 };
   }
 
-  // Reuse the CMNDF buffer across calls.
   if (!yinBuffer || yinBufferSize < maxLag + 1) {
     yinBufferSize = maxLag + 1;
     yinBuffer = new Float64Array(yinBufferSize);
   }
   const yin = yinBuffer;
 
-  // Steps 1 & 2: difference function → CMNDF in one pass.
   const W = N - maxLag;
   yin[0] = 1;
   let runningSum = 0;
@@ -129,7 +109,6 @@ function yinDetect(buffer: Float32Array, sampleRate: number): PitchEstimate {
     yin[lag] = runningSum > 0 ? (sum * lag) / runningSum : 1;
   }
 
-  // Step 3: absolute-threshold dip search.
   let tau = -1;
   for (let lag = minLag; lag <= maxLag; lag++) {
     if (yin[lag] < YIN_THRESHOLD) {
@@ -141,7 +120,6 @@ function yinDetect(buffer: Float32Array, sampleRate: number): PitchEstimate {
     }
   }
 
-  // Fallback: global minimum.
   if (tau === -1) {
     let minVal = Infinity;
     for (let lag = minLag; lag <= maxLag; lag++) {
@@ -156,12 +134,8 @@ function yinDetect(buffer: Float32Array, sampleRate: number): PitchEstimate {
     return { frequency: null, confidence: 0, inputLevel: 0 };
   }
 
-  // Guitar fundamental preference: YIN often locks onto the 2nd
-  // harmonic (one octave up) on low E/A strings; prefer the sub-octave
-  // lag when its CMNDF value is clearly better.
   tau = preferLowerFundamental(tau, yin, maxLag, sampleRate);
 
-  // Step 4: parabolic interpolation for sub-sample accuracy.
   let refinedTau: number = tau;
   if (tau > 0 && tau < maxLag) {
     const y0 = yin[tau - 1];
@@ -195,7 +169,7 @@ function preferLowerFundamental(
   sampleRate: number,
 ): number {
   const frequency = sampleRate / tau;
-  if (frequency < 180) return tau; // already in the bass range
+  if (frequency < 180) return tau;
 
   const candidateTau = tau * 2;
   if (candidateTau > maxLag) return tau;
@@ -203,7 +177,6 @@ function preferLowerFundamental(
   const candidateValue = yin[candidateTau];
   const currentValue = yin[tau];
 
-  // Only switch if the sub-octave is clearly and significantly better.
   if (candidateValue + 0.05 < currentValue) {
     return candidateTau;
   }

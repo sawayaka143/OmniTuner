@@ -46,7 +46,8 @@ export function isPhysicallyPlayable(
       for (let j = i + 1; j < frettedIndexes.length; j++) {
         const b = frettedIndexes[j];
         if (shape.frets[a] === shape.frets[b] && b - a > 1) {
-          for (let m = a + 1; m < b; m++) if (shape.frets[m] === null || shape.frets[m] !== shape.frets[a]) return false;
+          for (let m = a + 1; m < b; m++)
+            if (shape.frets[m] === null || shape.frets[m] !== shape.frets[a]) return false;
         }
       }
     }
@@ -187,7 +188,11 @@ export function ergonomicsFeatures(
   }
   const hasStringSkip = frets.some(
     (fret, index) =>
-      fret === null && index > 0 && index < n - 1 && frets[index - 1] !== null && frets[index + 1] !== null,
+      fret === null &&
+      index > 0 &&
+      index < n - 1 &&
+      frets[index - 1] !== null &&
+      frets[index + 1] !== null,
   );
   let hasThumbFret = false;
   if (frets[0] !== null && frets[0] > 0) {
@@ -260,7 +265,8 @@ export function scoreErgonomics(
   cost += Math.max(0, f.maxBarreWidth - 2) * w.barreWidthPerString;
   if (f.barreAtHighFret) cost += w.barreHighFret;
   if (allowOpens) cost += Math.min(f.openCount, 2) * w.openPerString;
-  const doublingCount = (f.rootDoubled ? 1 : 0) + (f.thirdDoubled ? 1 : 0) + (f.fifthDoubled ? 1 : 0);
+  const doublingCount =
+    (f.rootDoubled ? 1 : 0) + (f.thirdDoubled ? 1 : 0) + (f.fifthDoubled ? 1 : 0);
   cost += Math.min(doublingCount, 1) * w.doublingPerTone;
   if (f.rootDoubled) cost += w.rootDoubleBonus;
   cost += (f.noteCount - 1) * w.noteCountPerNote;
@@ -289,7 +295,9 @@ export function scoreProgressionVoicings(
     dp.push([Infinity]);
     back.push([-1]);
   } else {
-    dp.push(first.map((shape) => scoreErgonomics(shape, tuning, chords[0], true, weights, jitter).cost));
+    dp.push(
+      first.map((shape) => scoreErgonomics(shape, tuning, chords[0], true, weights, jitter).cost),
+    );
     back.push(new Array(first.length).fill(-1));
     choices.push(dp[0].length ? Math.min(...dp[0]) : Infinity);
   }

@@ -17,7 +17,6 @@ const createCell = (fret: number, midi: number): FretCell => ({
 const ACTIVE_CELL = createCell(0, 40);
 const OCTAVE_CELL = createCell(1, 52);
 
-/** A fret-1 cell whose pitch is not part of the current scale. */
 const OUTSIDE_CELL: FretCell = {
   stringIndex: 0,
   fret: 1,
@@ -29,7 +28,6 @@ const OUTSIDE_CELL: FretCell = {
   isRoot: false,
 };
 
-/** An open-string (fret 0) cell outside the scale. */
 const OPEN_OUTSIDE_CELL: FretCell = {
   stringIndex: 0,
   fret: 0,
@@ -41,7 +39,6 @@ const OPEN_OUTSIDE_CELL: FretCell = {
   isRoot: false,
 };
 
-/** An in-scale root cell at fret 1. */
 const IN_SCALE_CELL: FretCell = {
   stringIndex: 0,
   fret: 1,
@@ -53,7 +50,6 @@ const IN_SCALE_CELL: FretCell = {
   isRoot: true,
 };
 
-/** A non-root in-scale cell at fret 1, used to verify label mode. */
 const THIRD_CELL: FretCell = {
   stringIndex: 0,
   fret: 1,
@@ -269,4 +265,3 @@ describe('Fretboard', () => {
     expect(observer?.disconnected).toBe(true);
   });
 });
-

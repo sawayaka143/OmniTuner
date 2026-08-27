@@ -198,7 +198,7 @@ describe('ScalePreferences', () => {
         SCALE_PREFERENCES_STORAGE_KEY,
         JSON.stringify({
           version: 1,
-          state: {/* no workbenchScale field */},
+          state: {},
         }),
       );
       expect(createService().state().workbenchScale).toBe(1);

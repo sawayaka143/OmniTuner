@@ -2,16 +2,6 @@ import { Component, computed, ElementRef, input, output, viewChild } from '@angu
 
 let nextListboxId = 0;
 
-/**
- * Accessible listbox dropdown: a pill trigger that opens a floating
- * `role="listbox"` menu of `role="option"` items. The parent owns the `open`
- * signal; the primitive emits `toggle` (trigger clicked) and `select` (option
- * chosen). Items may be grouped via `optionGroup` (first-seen order).
- *
- * Keyboard: Enter/Space/ArrowDown on the trigger opens the menu; Arrow keys
- * move between options, Enter/Space selects, Escape or Tab closes and returns
- * focus to the trigger.
- */
 @Component({
   selector: 'app-listbox',
   template: `

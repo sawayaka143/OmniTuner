@@ -29,15 +29,8 @@
   box-sizing: border-box;
 }
 
-/* Tuning trigger hugs the right edge of the band. */
 .dropdown-wrapper {
   margin-left: auto;
-}
-
-.mode-seg {
-  /* Fixed width keeps the two slots equal so the sliding indicator lands
-     exactly (see seg-control indicator geometry). */
-  width: 184px;
 }
 
 .seg {
@@ -59,7 +52,6 @@
   }
 }
 
-.mode-seg > button,
 .instrument-seg > button:not(.add-instrument-segment) {
   flex: 1 1 0;
   min-width: 0;
@@ -147,8 +139,7 @@
 
 .dropdown-menu {
   @include dropdown-menu();
-  /* Anchored to the trigger's right edge so the menu opens leftward and
-     stays inside the workbench card. */
+
   right: 0;
   width: min(300px, calc(100vw - var(--space-7)));
   max-height: min(460px, calc(100dvh - 180px));
@@ -250,7 +241,6 @@
     gap: var(--space-2);
   }
 
-  .mode-seg > button,
   .instrument-seg > button:not(.add-instrument-segment) {
     min-width: 0;
     padding: var(--space-1) var(--space-3);

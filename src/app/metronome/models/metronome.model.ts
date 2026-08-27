@@ -104,7 +104,10 @@ export const METER_PRESETS: readonly TimeSignature[] = [
   { numerator: 12, denominator: 8 },
 ];
 
-export const PATTERN_PRESETS: readonly { readonly label: string; readonly bars: readonly number[] }[] = [
+export const PATTERN_PRESETS: readonly {
+  readonly label: string;
+  readonly bars: readonly number[];
+}[] = [
   { label: 'All on', bars: [1] },
   { label: '1 : 1', bars: [1, 0] },
   { label: '2 : 1', bars: [1, 1, 0] },

@@ -60,7 +60,6 @@
   }
 }
 
-/* Small screens: keep the dialog off the home indicator and let it breathe. */
 @media (max-height: 560px) and (max-width: 640px) {
   .tuning-dialog {
     max-height: calc(100dvh - var(--space-6));

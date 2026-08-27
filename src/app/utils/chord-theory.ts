@@ -27,7 +27,6 @@ export const FLAT_PC_NAMES = [
   'B',
 ] as const;
 
-/** Interval degree labels relative to a chord root (index = pitch-class offset). */
 export const DEGREE_LABELS: readonly string[] = [
   'R',
   'b2',
@@ -45,19 +44,12 @@ export const DEGREE_LABELS: readonly string[] = [
 
 const PC_LETTER: Readonly<Record<string, number>> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
 
-/**
- * A chord's interval formula. `intervals` are semitone offsets above the root
- * (9th = 14, 11th = 17, 13th = 21). `optional` tones (11ths/13ths of extended
- * chords) may be omitted from a voicing when there aren't enough strings —
- * guide tones (1, 3, 5, 7, 9) must always ring.
- */
 export interface ChordFormula {
   readonly intervals: readonly number[];
   readonly optional?: readonly number[];
 }
 
 export const CHORD_FORMULAS: Readonly<Record<string, ChordFormula>> = {
-  // Major family
   maj: { intervals: [0, 4, 7] },
   '6': { intervals: [0, 4, 7, 9] },
   '6/9': { intervals: [0, 4, 7, 9, 14] },
@@ -70,7 +62,6 @@ export const CHORD_FORMULAS: Readonly<Record<string, ChordFormula>> = {
   'maj7#5': { intervals: [0, 4, 8, 11] },
   'maj9#5': { intervals: [0, 4, 8, 11, 14] },
 
-  // Dominant family
   '7': { intervals: [0, 4, 7, 10] },
   '9': { intervals: [0, 4, 7, 10, 14] },
   '11': { intervals: [0, 4, 7, 10, 14, 17], optional: [17] },
@@ -85,7 +76,6 @@ export const CHORD_FORMULAS: Readonly<Record<string, ChordFormula>> = {
   '13b9': { intervals: [0, 4, 7, 10, 13, 21], optional: [21] },
   '7#9b13': { intervals: [0, 4, 7, 10, 15, 20], optional: [20] },
 
-  // Minor family
   min: { intervals: [0, 3, 7] },
   m6: { intervals: [0, 3, 7, 9] },
   'm6/9': { intervals: [0, 3, 7, 9, 14] },
@@ -99,7 +89,6 @@ export const CHORD_FORMULAS: Readonly<Record<string, ChordFormula>> = {
   mMaj13: { intervals: [0, 3, 7, 11, 14, 17, 21], optional: [17, 21] },
   m7b5: { intervals: [0, 3, 6, 10] },
 
-  // Diminished / augmented / suspended / add / power
   dim: { intervals: [0, 3, 6] },
   dim7: { intervals: [0, 3, 6, 9] },
   ø9: { intervals: [0, 3, 6, 10, 14] },
@@ -163,7 +152,6 @@ const QUALITY_ALIASES: Readonly<Record<string, string>> = {
   '5': '5',
   pow: '5',
 
-  // Major family
   maj9: 'maj9',
   M9: 'maj9',
   Δ9: 'maj9',
@@ -198,7 +186,6 @@ const QUALITY_ALIASES: Readonly<Record<string, string>> = {
   m69: 'm6/9',
   m6add9: 'm6/9',
 
-  // Dominant family
   '11': '11',
   '13': '13',
   '7b5': '7b5',
@@ -213,7 +200,6 @@ const QUALITY_ALIASES: Readonly<Record<string, string>> = {
   '13b9': '13b9',
   '7#9b13': '7#9b13',
 
-  // Minor family
   m11: 'm11',
   m13: 'm13',
   mMaj9: 'mMaj9',
@@ -230,7 +216,6 @@ const QUALITY_ALIASES: Readonly<Record<string, string>> = {
   'm(maj13)': 'mMaj13',
   mΔ13: 'mMaj13',
 
-  // Diminished / augmented / suspended / add
   ø9: 'ø9',
   halfdim9: 'ø9',
   '7sus2': '7sus2',
@@ -271,17 +256,14 @@ export const MODE_NAMES = Object.keys(MODES) as ModeName[];
 
 const mod12 = (value: number): number => ((value % 12) + 12) % 12;
 
-/** Black-key pitch classes are spelled with flats when no other context exists. */
 export function flatsForPc(pc: number): boolean {
   return [1, 3, 6, 8, 10].includes(mod12(pc));
 }
 
-/** Pitch-class name for a given accidental preference. */
 export function pcName(pc: number, flats: boolean): string {
   return (flats ? FLAT_PC_NAMES : SHARP_PC_NAMES)[mod12(pc)];
 }
 
-/** Full note name (pitch class + octave, MIDI convention: C4 = 60). */
 export function midiName(midi: number, flats: boolean): string {
   return `${pcName(midi, flats)}${Math.floor(midi / 12) - 1}`;
 }
@@ -292,7 +274,6 @@ export interface ParsedNote {
   readonly flats: boolean;
 }
 
-/** Parses a note token like `F#2` or `Bb3` into MIDI + pitch class. */
 export function parseNoteToken(token: string): ParsedNote | null {
   const match = String(token).match(/^([A-Ga-g])\s*([#b♯♭]?)([-+]?\d+)$/);
   if (!match) return null;
@@ -314,7 +295,6 @@ export type TuningParseResult =
   | { readonly ok: true; readonly tuning: ParsedTuning }
   | { readonly ok: false; readonly error: string };
 
-/** Parses a whitespace/comma-separated tuning, low string first. */
 export function parseTuning(raw: string): TuningParseResult {
   const tokens = String(raw)
     .split(/[,\s]+/)
@@ -343,7 +323,7 @@ export interface ParsedChord {
   readonly quality: string;
   readonly intervals: readonly number[];
   readonly pcs: readonly number[];
-  /** Pitch classes that a voicing may omit (11ths/13ths of extended chords). */
+
   readonly optionalPcs: readonly number[];
   readonly flats: boolean;
 }
@@ -363,12 +343,6 @@ interface ComposedQuality {
   readonly optional: number[];
 }
 
-/**
- * Compositional chord-quality parser: resolves symbols not in
- * `QUALITY_ALIASES` by matching the longest `CHORD_FORMULAS` key as a base,
- * then applying alteration/extension tokens (`7b5#9b13`, `m7b9`, …).
- * Returns null when the suffix can't be consumed.
- */
 function composeQuality(raw: string): ComposedQuality | null {
   const normalized = normalizeQuality(raw);
   if (!normalized) return null;
@@ -383,8 +357,6 @@ function composeQuality(raw: string): ComposedQuality | null {
     }
   }
   if (baseKey === null && normalized.startsWith('m')) {
-    // `m` is an alias for `min`, not a formula key — theoretical minor
-    // alterations like `m♭9` (min + b9) still compose.
     baseKey = 'min';
     prefixLength = 1;
   }
@@ -399,11 +371,11 @@ function composeQuality(raw: string): ComposedQuality | null {
   let cursor = 0;
   ALTERATION_RE.lastIndex = 0;
   while ((match = ALTERATION_RE.exec(remainder)) !== null) {
-    if (match.index !== cursor) return null; // unconsumed garbage between tokens
+    if (match.index !== cursor) return null;
     tokens.push(match[0]);
     cursor = ALTERATION_RE.lastIndex;
   }
-  if (cursor !== remainder.length) return null; // trailing garbage
+  if (cursor !== remainder.length) return null;
 
   const drop = (value: number): void => {
     const i = intervals.indexOf(value);
@@ -416,7 +388,7 @@ function composeQuality(raw: string): ComposedQuality | null {
   const add = (value: number): void => {
     if (!intervals.includes(value)) intervals.push(value);
   };
-  /** Add an extension tone that a voicing may omit (11th/13th color tones). */
+
   const addOptional = (value: number): void => {
     add(value);
     if (!optional.includes(value)) optional.push(value);
@@ -477,7 +449,6 @@ function composeQuality(raw: string): ComposedQuality | null {
   };
 }
 
-/** Parses a chord symbol like `Bb7`, `Cm`, `F#m7b5`. */
 export function parseChord(raw: string): ChordParseResult {
   const symbol = String(raw).trim();
   const match = symbol.match(/^([A-Ga-g])\s*([#b♯♭]?)\s*(.*?)\s*$/);
@@ -495,8 +466,6 @@ export function parseChord(raw: string): ChordParseResult {
   let formula: ChordFormula | undefined;
   if (quality) formula = CHORD_FORMULAS[quality];
   if (!formula) {
-    // Fall back to compositional parsing for arbitrary alteration combos
-    // (e.g. `7b5#9b13`), whose key isn't a CHORD_FORMULAS entry.
     const composed = composeQuality(qualityRaw);
     if (composed) {
       quality = composed.key;
@@ -526,12 +495,6 @@ export function parseChord(raw: string): ChordParseResult {
   };
 }
 
-/**
- * Splits a progression string into chord tokens.
- * Separators: `,` `;` `|` `/` (unless followed by a digit, so `C6/9` stays
- * one token), whitespace, and progression arrows/em-dashes (`->` `→` `—` `–`).
- * A `-` glued to a root (`C-`) is a minor-suffix, not a separator.
- */
 export function tokenizeProgression(raw: string): string[] {
   const trimmed = String(raw).trim();
   if (!trimmed) return [];
@@ -606,14 +569,12 @@ export function computeBadgeForPc(
     const lower =
       expectedQuality === 'min' || expectedQuality === 'dim' ? base.toLowerCase() : base;
     const suffix = expectedQuality === 'dim' ? '°' : expectedQuality === 'aug' ? '+' : '';
-    // Accidentals follow the key's own spelling relative to the major scale
-    // (minor keys get bIII/bVI/bVII, Lydian gets #IV, and so on).
+
     const diff = mod12(steps[degreeIndex] - MODES.Ionian[degreeIndex]);
     const prefix = diff === 11 ? 'b' : diff === 1 ? '#' : '';
     return `${prefix}${lower}${suffix}`;
   };
 
-  /** Accidental prefix for a chord whose root lies outside the key scale. */
   const accidentalPrefixFor = (steps: readonly number[]): string => {
     if (chord.rootPc === mod12(tonicPc + steps[0])) return '';
     let flats = 0;
@@ -668,8 +629,6 @@ export function computeBadgeForPc(
     };
   }
 
-  // Root isn't in the selected mode: it may still be borrowed from the
-  // parallel major or minor key (modal mixture) rather than chromatic.
   for (const [steps, label] of [
     [MODES.Ionian, 'major'],
     [MODES.Aeolian, 'minor'],

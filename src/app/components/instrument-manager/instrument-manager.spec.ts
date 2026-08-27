@@ -48,8 +48,6 @@ class ImHost {
   }
 }
 
-// jsdom does not implement <dialog>.showModal()/close(); stub them so the
-// manager's open-effect can run without throwing.
 beforeAll(() => {
   if (typeof HTMLDialogElement !== 'undefined') {
     HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) {
@@ -162,8 +160,6 @@ describe('InstrumentManager', () => {
     editButton.click();
     fixture.detectChanges();
 
-    // Re-saving with the same name (the editing row's own name) should succeed
-    // because the editing row is excluded from disallowedNames.
     stringEditor()!.save.emit({ name: 'My instr', notes: [40, 45, 50, 55, 59, 64] });
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('.instrument-list')).toBeTruthy();
@@ -174,7 +170,6 @@ describe('InstrumentManager', () => {
     stringEditor()!.save.emit({ name: 'First', notes: [40, 45, 50, 55, 59, 64] });
     fixture.detectChanges();
 
-    // Re-open the create editor (toggle open so the host effect re-fires startCreate).
     host.open.set(false);
     fixture.detectChanges();
     host.open.set(true);
@@ -182,7 +177,6 @@ describe('InstrumentManager', () => {
     await fixture.whenStable();
     expect(stringEditor()).toBeTruthy();
 
-    // Drive the composite's real submit path: type "First" and submit the form.
     const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
     input.value = 'First';
     input.dispatchEvent(new Event('input'));
@@ -192,7 +186,6 @@ describe('InstrumentManager', () => {
     formEl.dispatchEvent(new Event('submit'));
     fixture.detectChanges();
 
-    // Composite should reject the duplicate (host fed the disallowed name through).
     expect(stringEditor()).toBeTruthy();
     expect(errorText()).toBe('A name like this already exists.');
   });

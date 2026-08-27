@@ -13,11 +13,7 @@
         <h2 id="manager-title">{{ title() }}</h2>
         <p id="manager-subtitle">{{ subtitle() }}</p>
       </div>
-      <app-icon-button
-        icon="x"
-        label="Close instrument manager"
-        (activate)="requestDismiss()"
-      />
+      <app-icon-button icon="x" label="Close instrument manager" (activate)="requestDismiss()" />
     </header>
 
     <div class="manager-content">

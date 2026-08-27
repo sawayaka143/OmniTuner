@@ -14,6 +14,7 @@ import { TuningEditor, TuningEditorValue } from '../components/tunings-editor/tu
 import { PitchDisplay } from '../components/pitch-display/pitch-display';
 import { PitchMeter, Tick } from '../components/pitch-meter/pitch-meter';
 import { StringList } from '../components/string-list/string-list';
+import { Toggle } from '../ui/toggle/toggle';
 import { Tuning } from '../models/instrument.model';
 import {
   MAX_CUSTOM_TUNING_NAME_LENGTH,
@@ -43,17 +44,10 @@ import {
   StringTarget,
 } from '../utils/pitch-utils';
 
-/** How long the one-shot lock pulse stays visible. */
 const LOCK_PULSE_DURATION_MS = 900;
 
-/** Ink the light theme re-inks tune colors toward so pastels stay readable. */
 const LIGHT_TUNE_INK = '#1a1a18';
 
-// While confirmed, an out-of-range or dropped pitch must persist this long
-// (~3 analysis frames) before confirmation clears, so a single-frame breach
-// at the tolerance edge can't flicker the lock or retrigger the chime.
-// Timer-based because the confirm effect does not re-run during sustained
-// silence (value-identical signal writes).
 const RELEASE_HYSTERESIS_MS = 135;
 
 @Component({
@@ -65,6 +59,7 @@ const RELEASE_HYSTERESIS_MS = 135;
     PitchMeter,
     PitchDisplay,
     StringList,
+    Toggle,
   ],
   templateUrl: './audio-monitor.html',
   styleUrl: './audio-monitor.scss',
@@ -85,7 +80,6 @@ export class AudioMonitor implements OnInit {
   readonly trackingState = this.audioCapture.trackingState;
   readonly captureError = this.audioCapture.captureError;
 
-  // Instrument/tuning selection lives in the shared registry.
   readonly instruments = this.registry.instruments;
   readonly selectedInstrumentId = this.registry.selectedInstrumentId;
   readonly selectedTuningId = this.registry.selectedTuningId;
@@ -99,11 +93,9 @@ export class AudioMonitor implements OnInit {
   readonly editorInitialName = signal('');
   readonly editorInitialNotes = signal<readonly number[]>([]);
 
-  // Session-only mode state: persisted `mode` is restored only when
-  // startupMode is 'remember'; manualIndex is always re-derived per session.
   readonly mode = signal<TunerMode>(this.initialMode());
   readonly manualIndex = signal(0);
-  readonly autoTuned = signal<readonly string[]>([]); // confirmed string names, in order
+  readonly autoTuned = signal<readonly string[]>([]);
   readonly confirmed = signal(false);
   readonly pulseActive = signal(false);
 
@@ -113,11 +105,6 @@ export class AudioMonitor implements OnInit {
 
   private releaseTimer: ReturnType<typeof setTimeout> | null = null;
 
-  /**
-   * Last string the auto mode resolved as target. Fed back into
-   * nearestStringTarget as the hysteresis "previous" name so a pitch
-   * hovering at a string midpoint cannot flicker between two targets.
-   */
   private readonly lastAutoTargetName = signal<string | null>(null);
 
   readonly ticks: Tick[] = [];
@@ -136,7 +123,6 @@ export class AudioMonitor implements OnInit {
 
   readonly currentStrings = computed(() => this.currentTuning().strings);
 
-  /** Space-joined string names for the workbench header readout. */
   readonly tuningSummary = computed(() =>
     this.currentStrings()
       .map((string) => string.name)
@@ -147,9 +133,6 @@ export class AudioMonitor implements OnInit {
   protected readonly maxTunerMidiNote = MAX_TUNER_MIDI_NOTE;
   protected readonly maxCustomTuningNameLength = MAX_CUSTOM_TUNING_NAME_LENGTH;
 
-  // Built-in tunings for the current instrument become the "Start from" presets.
-  // Notes are recovered at A4=440 — the reference the tuning data is defined
-  // at — so a user ref-pitch change can't silently transpose a preset on save.
   readonly editorPresets = computed(() =>
     this.currentInstrument().tunings.map((tuning) => ({
       id: tuning.id,
@@ -158,12 +141,8 @@ export class AudioMonitor implements OnInit {
     })),
   );
 
-  // Highlight strings that differ from the instrument's default tuning.
   readonly referenceNotes = computed(() => this.editorPresets()[0]?.notes ?? null);
 
-  // Provisional pitch: resolved from the displayed frequency regardless of
-  // lock state, so the needle and labels respond on the first accepted
-  // frame. Confirmation itself still requires 'locked' (see the hold effect).
   readonly autoTarget = computed<StringTarget | null>(() => {
     if (!this.isCapturing()) return null;
     const freq = this.frequency();
@@ -183,20 +162,16 @@ export class AudioMonitor implements OnInit {
 
   readonly isLocked = computed(() => this.trackingState() === 'locked');
 
-  /** Target string in manual mode; falls back to the lowest string if the
-   *  session index is out of bounds for the current tuning. */
   readonly manualTarget = computed(() => {
     const strings = this.currentStrings();
     if (strings.length === 0) return null;
     return strings[Math.min(this.manualIndex(), strings.length - 1)];
   });
 
-  /** The manual-mode target rendered with the app's sharp-note convention. */
   readonly manualTargetInfo = computed<{ noteName: string; octave: number } | null>(() => {
     const target = this.manualTarget();
     if (!target) return null;
-    // Recover the nominal note at A4=440; the label identifies the string,
-    // it must not shift when the user changes the reference pitch.
+
     const nominalMidi = frequencyToMidiNote(target.freq);
     if (nominalMidi === null) return null;
     const label = midiNoteLabel(nominalMidi);
@@ -206,12 +181,6 @@ export class AudioMonitor implements OnInit {
     };
   });
 
-  /**
-   * Cents of the played pitch against the displayed target, per frame:
-   * auto → the nearest string of the current tuning;
-   * manual → unclamped cents against the pinned string. Null while no pitch.
-   * Provisional: any displayed frequency counts, not only locked ones.
-   */
   readonly frameCents = computed<number | null>(() => {
     if (this.mode() === 'auto') return this.autoTarget()?.cents ?? null;
 
@@ -222,20 +191,12 @@ export class AudioMonitor implements OnInit {
     return centsFromMidiFloat(frequencyToMidiFloat(freq, this.refPitch()), this.targetMidi(target));
   });
 
-  /** True only while a locked pitch sits inside the tolerance window. */
   readonly inRange = computed(
     () => this.frameCents() !== null && Math.abs(this.frameCents()!) <= this.tolerance(),
   );
 
-  /** Gated confirmation: the master switch removes every cue, not the lock itself. */
   readonly showTuned = computed(() => this.tunerSettings().inTune.enabled && this.confirmed());
 
-  /**
-   * Visual "in tune" flag handed to the display components: hold-gated
-   * confirmation while the master switch is ON; instantaneous |cents| <=
-   * tolerance fallback when it's OFF (same threshold as the text helpers).
-   * Gated on 'locked' so a provisional (listening) frame can't flash in tune.
-   */
   readonly isTuned = computed(() => {
     if (this.tunerSettings().inTune.enabled) return this.showTuned();
     const cents = this.frameCents();
@@ -246,20 +207,12 @@ export class AudioMonitor implements OnInit {
 
   readonly needleLeft = computed(() => needlePercentFromCents(this.frameCents()));
 
-  /** Big direction prompt above the meter. */
   readonly tunePrompt = computed(() => {
     return tuneDirectionText(this.frameCents(), this.tolerance());
   });
 
-  /** Small cents readout under the direction prompt. */
   readonly tuneCents = computed(() => tuneCentsText(this.frameCents(), this.tolerance()));
 
-  /**
-   * Off-pitch accent blended from the user's out-of-tune color toward the
-   * in-tune color as the pitch approaches the target. Null while in tune
-   * (the .in-tune class takes over) or with no pitch. Re-inked 30% toward
-   * ink in the light theme so pastels keep AA-readable contrast.
-   */
   readonly tuneColorHex = computed(() => {
     const cents = this.frameCents();
     if (cents === null || Math.abs(cents) <= this.tolerance()) return null;
@@ -275,18 +228,13 @@ export class AudioMonitor implements OnInit {
     return blended;
   });
 
-  /** Green chips only once the target actually confirms. */
   readonly chipTuned = computed(() => this.isTuned() && this.activeString() !== null);
 
-  /**
-   * Auto: the string the tuner resolved as the target. Manual: the pinned string.
-   */
   readonly activeString = computed(() => {
     if (this.mode() === 'manual') return this.manualTarget()?.name ?? null;
     return this.autoTarget()?.name ?? null;
   });
 
-  /** Label for the nearest chromatic semitone of the played pitch. */
   private readonly playedNoteLabel = computed(() => {
     const freq = this.frequency();
     if (freq === null || freq <= 0 || !Number.isFinite(freq)) return null;
@@ -295,11 +243,6 @@ export class AudioMonitor implements OnInit {
     return nearest ? midiNoteLabel(nearest.midi) : null;
   });
 
-  /**
-   * Big note below the meter. Auto: the nearest chromatic semitone of the
-   * played pitch, snapping to target when close. Manual: the played note
-   * while far from target, snapping to pinned target within ±50¢.
-   */
   readonly targetNoteLabel = computed(() => {
     if (this.mode() === 'manual') {
       const cents = this.frameCents();
@@ -356,11 +299,6 @@ export class AudioMonitor implements OnInit {
       });
     });
 
-    // Hysteresis feedback: record the resolved target so the next
-    // evaluation keeps it while the pitch stays within the margin.
-    // Writing the same value is a no-op, so this settles after one
-    // recompute instead of looping. Only latch while locked so an
-    // attack transient can't anchor the wrong string.
     effect(() => {
       const target = this.autoTarget();
       if (
@@ -373,15 +311,12 @@ export class AudioMonitor implements OnInit {
     });
 
     effect(() => {
-      // Provisional pitch must never start or complete the hold timer.
       if (this.trackingState() !== 'locked') {
         this.clearHoldTimer();
         if (this.trackingState() === 'idle') {
-          // Not tracking anything — drop confirmation at once.
           this.clearReleaseTimer();
           this.confirmed.set(false);
         } else if (this.confirmed() && this.releaseTimer === null) {
-          // Listening + dropout: begin the release countdown.
           this.scheduleReleaseTimer();
         }
         return;
@@ -389,7 +324,6 @@ export class AudioMonitor implements OnInit {
 
       const inRange = this.inRange();
       if (this.confirmed()) {
-        // Release hysteresis: null frameCents counts as out-of-range.
         if (inRange) this.clearReleaseTimer();
         else if (this.releaseTimer === null) this.scheduleReleaseTimer();
         return;
@@ -397,7 +331,6 @@ export class AudioMonitor implements OnInit {
 
       this.clearReleaseTimer();
 
-      // Pre-confirm path: unchanged grace logic.
       if (!inRange) {
         const frameCents = this.frameCents();
         const holding = this.holdTimer !== null;
@@ -450,7 +383,6 @@ export class AudioMonitor implements OnInit {
     if (this.mode() === mode) return;
 
     if (mode === 'manual') {
-      // Re-derive the target from the pitch if it matches a string.
       const targetName = this.autoTarget()?.name;
       if (targetName) {
         const index = this.currentStrings().findIndex((string) => string.name === targetName);
@@ -579,7 +511,6 @@ export class AudioMonitor implements OnInit {
   }
 
   private notesForTuning(tuning: Tuning): readonly number[] {
-    // Same A4=440 recovery as editorPresets; saved tunings are nominal notes.
     return tuning.strings.map((string) => frequencyToMidiNote(string.freq) ?? 69);
   }
 
@@ -595,9 +526,6 @@ export class AudioMonitor implements OnInit {
   }
 
   private targetMidi(target: { readonly freq: number }): number {
-    // Nominal note at A4=440. frameCents compares the played pitch (scaled
-    // by refPitch) against this fixed target, so the target note must not
-    // itself be re-rounded by the user's reference pitch.
     return frequencyToMidiNote(target.freq) ?? 69;
   }
 

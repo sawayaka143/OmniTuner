@@ -49,7 +49,7 @@ describe('noteName', () => {
     expect(noteName(1, true)).toBe('Db');
     expect(noteName(3, true)).toBe('Eb');
     expect(noteName(6, true)).toBe('Gb');
-    expect(noteName(0, true)).toBe('C'); // naturals are unchanged
+    expect(noteName(0, true)).toBe('C');
   });
 
   it('wraps pitch classes outside 0-11', () => {
@@ -99,7 +99,7 @@ describe('computeFretboard', () => {
   ];
 
   it('returns a stringCount x (fretCount+1) matrix', () => {
-    const open = [4, 11, 7, 2, 9, 4]; // standard tuning, high-string-first
+    const open = [4, 11, 7, 2, 9, 4];
     const board = computeFretboard(open, 15, majorIntervals, false);
     expect(board.length).toBe(6);
     for (const row of board) {
@@ -108,16 +108,14 @@ describe('computeFretboard', () => {
   });
 
   it('computes correct pitch classes for standard tuning', () => {
-    // index 5 = lowest string (E2), open = E (pc 4)
     const board = computeFretboard([4, 11, 7, 2, 9, 4], 12, majorIntervals, false);
     const lowE = board[5];
-    expect(lowE[0].pitchClass).toBe(4); // open E
-    expect(lowE[5].pitchClass).toBe(9); // 5th fret = A
-    expect(lowE[12].pitchClass).toBe(4); // 12th fret = E (octave)
+    expect(lowE[0].pitchClass).toBe(4);
+    expect(lowE[5].pitchClass).toBe(9);
+    expect(lowE[12].pitchClass).toBe(4);
   });
 
   it('marks the root distinctly and colors it', () => {
-    // C major on standard tuning: low E (pc4) 8th fret = C (pc0) = root
     const board = computeFretboard([4, 11, 7, 2, 9, 4], 12, majorIntervals, false);
     const lowE8 = board[5][8];
     expect(lowE8.pitchClass).toBe(0);
@@ -127,19 +125,17 @@ describe('computeFretboard', () => {
   });
 
   it('uses enharmonic-correct names with flat spelling for flat roots', () => {
-    // Eb root -> preferFlats. A pitch class of 3 should spell 'Eb'.
     const board = computeFretboard([4, 11, 7, 2, 9, 4], 12, majorIntervals, true);
-    // find a cell with pc 3 and confirm the spelling
+
     const pc3 = board[5].find((c) => c.pitchClass === 3);
     expect(pc3?.noteName).toBe('Eb');
   });
 
   it('leaves non-scale cells with no interval, no color, not root', () => {
-    // Major scale on C excludes pc 1 (C#/Db) etc.
     const board = computeFretboard([4, 11, 7, 2, 9, 4], 12, majorIntervals, false);
-    const openLowE = board[5][0]; // pc 4 = E, which is in C major (3rd)
+    const openLowE = board[5][0];
     expect(openLowE.interval).not.toBeNull();
-    // pc 6 (F#/Gb) is not in C major
+
     const pc6 = board[5].find((c) => c.pitchClass === 6);
     if (pc6?.interval === null) {
       expect(pc6.color).toBe('');

@@ -83,7 +83,7 @@ describe('InstrumentRegistry', () => {
     it('resets tuning when switching to an instrument without the current tuning', () => {
       const service = createService();
       service.selectInstrument('ukulele');
-      // Ukulele doesn't have guitar's 'dadgad' tuning — should pick first available.
+
       const tunings = service.availableTunings();
       expect(tunings.some((t) => t.id === service.selectedTuningId())).toBe(true);
     });

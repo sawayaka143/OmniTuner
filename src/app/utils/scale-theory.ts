@@ -2,18 +2,12 @@ import { FretCell, IntervalEntry } from '../models/scale.model';
 import { FLAT_NAMES, SHARP_NAMES } from '../data/scale.constants';
 import { colorForLabel } from '../data/interval-colors';
 
-/**
- * Normalize a user-typed note so it can be matched against the chromatic arrays.
- * Only the letter is uppercased — the flat suffix 'b' must stay lowercase to
- * match `FLAT_NAMES` (e.g. 'db' -> 'Db', not 'DB').
- */
 const normalizeNote = (input: string): string => {
   const trimmed = input.trim().replace(/♭/g, 'b').replace(/♯/g, '#');
   if (!trimmed) return trimmed;
   return trimmed[0].toUpperCase() + trimmed.slice(1);
 };
 
-// Build the flat/sharp lookup tables once.
 const SHARP_INDEX: Readonly<Record<string, number>> = Object.fromEntries(
   SHARP_NAMES.map((name, index) => [name, index]),
 );
@@ -21,16 +15,10 @@ const FLAT_INDEX: Readonly<Record<string, number>> = Object.fromEntries(
   FLAT_NAMES.map((name, index) => [name, index]),
 );
 
-/**
- * Parse a user-supplied note name to a pitch class (0–11, C = 0). Accepts both
- * spellings, Unicode accidentals, and any case; octave digits are ignored.
- * Returns `null` for anything invalid — never throws.
- */
 export const parseNote = (input: string): number | null => {
   if (!input) return null;
   const normalized = normalizeNote(input);
 
-  // Strip any trailing octave (e.g. 'E2' -> 'E') for matching.
   const withoutOctave = normalized.replace(/[0-9].*$/, '');
 
   if (withoutOctave in SHARP_INDEX) return SHARP_INDEX[withoutOctave];
@@ -38,20 +26,11 @@ export const parseNote = (input: string): number | null => {
   return null;
 };
 
-/**
- * Resolve a display name for a pitch class, honoring the chosen accidental
- * preference so enharmonic spelling follows the root (e.g. Eb roots show flats).
- */
 export const noteName = (pitchClass: number, preferFlats: boolean): string => {
   const index = ((pitchClass % 12) + 12) % 12;
   return (preferFlats ? FLAT_NAMES : SHARP_NAMES)[index];
 };
 
-/**
- * Map each pitch class to the interval that produces it. When two intervals land
- * on the same pitch class (e.g. a b5 and a #11 are enharmonic), the **later**
- * interval in the array wins — callers control precedence by ordering.
- */
 export const intervalByPitchClass = (
   intervals: readonly IntervalEntry[],
 ): Map<number, IntervalEntry> => {
@@ -63,13 +42,6 @@ export const intervalByPitchClass = (
   return map;
 };
 
-/**
- * The core, UI-agnostic fretboard engine: given open-string pitch classes
- * (high-string-first), a fret count, and a generic list of intervals, returns
- * a `strings × (fretCount + 1)` matrix of display-ready cells. Takes plain
- * `IntervalEntry[]` rather than a `Scale` so the same engine can drive other
- * interval sets (e.g. a future chord builder).
- */
 export const computeFretboard = (
   openPitchClasses: readonly number[],
   fretCount: number,

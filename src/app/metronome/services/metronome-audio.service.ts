@@ -60,7 +60,9 @@ export class MetronomeAudio {
     barActive: boolean;
   } | null>(null);
 
-  private config: MetronomeState = JSON.parse(JSON.stringify(DEFAULT_METRONOME_STATE)) as MetronomeState;
+  private config: MetronomeState = JSON.parse(
+    JSON.stringify(DEFAULT_METRONOME_STATE),
+  ) as MetronomeState;
 
   private dirty = false;
   private uiQueue: UiQueueEvent[] = [];
@@ -74,7 +76,10 @@ export class MetronomeAudio {
   private spb = 60 / this.config.bpm;
   private barEvents: ReturnType<typeof buildBarEvents> = [];
   private nextIdx = 0;
-  private model = meterModel(this.config.timeSignature.numerator, this.config.timeSignature.denominator);
+  private model = meterModel(
+    this.config.timeSignature.numerator,
+    this.config.timeSignature.denominator,
+  );
 
   private timer: ReturnType<typeof setInterval> | null = null;
   private muteTimer: ReturnType<typeof setTimeout> | null = null;
@@ -111,7 +116,13 @@ export class MetronomeAudio {
     return this.model;
   }
 
-  getTransport(): { progress: number; barIndex: number; patternPos: number; beatsPerBar: number; barActive: boolean } | null {
+  getTransport(): {
+    progress: number;
+    barIndex: number;
+    patternPos: number;
+    beatsPerBar: number;
+    barActive: boolean;
+  } | null {
     if (!this.isPlaying() || !this.context) return null;
     const barStart = this.anchorT + (this.barBase - this.anchorB) * this.spb;
     const dur = this.model.beatsPerBar * this.spb;
@@ -145,7 +156,13 @@ export class MetronomeAudio {
         }
       } else if (key === 'sounds') {
         this.config = { ...this.config, sounds: value as MetronomeState['sounds'] };
-      } else if (STAGED_KEYS.has(key) || key === 'timeSignature' || key === 'divisionsPerBeat' || key === 'barPattern' || key === 'poly') {
+      } else if (
+        STAGED_KEYS.has(key) ||
+        key === 'timeSignature' ||
+        key === 'divisionsPerBeat' ||
+        key === 'barPattern' ||
+        key === 'poly'
+      ) {
         (this.config as unknown as Record<string, unknown>)[key] = value;
         this.dirty = true;
       } else {
@@ -176,7 +193,10 @@ export class MetronomeAudio {
     this.masterGain.gain.setValueAtTime(this.config.masterVol, now);
 
     this.dirty = false;
-    this.model = meterModel(this.config.timeSignature.numerator, this.config.timeSignature.denominator);
+    this.model = meterModel(
+      this.config.timeSignature.numerator,
+      this.config.timeSignature.denominator,
+    );
     this.spb = 60 / this.config.bpm;
     this.barCount = 0;
     this.patternPos = 0;
@@ -237,7 +257,12 @@ export class MetronomeAudio {
     void this.ensureAudio().then(() => {
       if (!this.context || !this.masterGain || !this.bank) return;
       const t = this.context.currentTime + 0.02;
-      for (const node of this.bank.play(this.config.sounds.beat.id, this.masterGain, t, this.config.sounds.beat.vol)) {
+      for (const node of this.bank.play(
+        this.config.sounds.beat.id,
+        this.masterGain,
+        t,
+        this.config.sounds.beat.vol,
+      )) {
         this.trackSource(node);
       }
     });
@@ -247,7 +272,12 @@ export class MetronomeAudio {
     void this.ensureAudio().then(() => {
       if (!this.context || !this.masterGain || !this.bank) return;
       const t = this.context.currentTime + 0.02;
-      for (const node of this.bank.play(this.config.sounds.poly.id, this.masterGain, t, this.config.sounds.poly.vol)) {
+      for (const node of this.bank.play(
+        this.config.sounds.poly.id,
+        this.masterGain,
+        t,
+        this.config.sounds.poly.vol,
+      )) {
         this.trackSource(node);
       }
     });
@@ -272,7 +302,8 @@ export class MetronomeAudio {
 
   private tick(): void {
     if (!this.isPlaying() || !this.context) return;
-    const horizon = this.context.currentTime + (document.hidden ? LOOKAHEAD_HIDDEN_S : LOOKAHEAD_VISIBLE_S);
+    const horizon =
+      this.context.currentTime + (document.hidden ? LOOKAHEAD_HIDDEN_S : LOOKAHEAD_VISIBLE_S);
     const timeOf = (beat: number): number => this.anchorT + (beat - this.anchorB) * this.spb;
     let guard = 0;
     while (guard++ < 512) {
@@ -286,9 +317,13 @@ export class MetronomeAudio {
       const t = timeOf(this.barBase + event.beats);
       if (t > horizon) break;
       this.nextIdx++;
-      if (t >= this.context.currentTime - 0.01) this.playEvent(event, Math.max(t, this.context.currentTime + 0.001));
+      if (t >= this.context.currentTime - 0.01)
+        this.playEvent(event, Math.max(t, this.context.currentTime + 0.001));
     }
-    if (this.activeSources.length > 600) this.activeSources = this.activeSources.filter((n) => !(n as unknown as { _done?: boolean })._done);
+    if (this.activeSources.length > 600)
+      this.activeSources = this.activeSources.filter(
+        (n) => !(n as unknown as { _done?: boolean })._done,
+      );
     const transport = this.getTransport();
     if (transport) this.transport.set(transport);
   }
@@ -297,7 +332,10 @@ export class MetronomeAudio {
     const finishedBeats = this.model.beatsPerBar;
     if (this.dirty) {
       this.dirty = false;
-      this.model = meterModel(this.config.timeSignature.numerator, this.config.timeSignature.denominator);
+      this.model = meterModel(
+        this.config.timeSignature.numerator,
+        this.config.timeSignature.denominator,
+      );
     }
     this.barBase += finishedBeats;
     this.barCount++;
@@ -309,7 +347,10 @@ export class MetronomeAudio {
   private buildBar(): void {
     const active = this.config.barPattern[this.patternPos] === 1;
     this.barEvents = active
-      ? buildBarEvents(this.model, { subdivision: this.config.divisionsPerBeat, poly: this.config.poly })
+      ? buildBarEvents(this.model, {
+          subdivision: this.config.divisionsPerBeat,
+          poly: this.config.poly,
+        })
       : [];
     this.uiQueue.push({
       t: this.anchorT + (this.barBase - this.anchorB) * this.spb,
@@ -324,18 +365,25 @@ export class MetronomeAudio {
   private playEvent(event: ReturnType<typeof buildBarEvents>[number], t: number): void {
     const spec = this.soundFor(event);
     if (spec && spec.vol > 0.002 && this.masterGain && this.bank) {
-      for (const node of this.bank.play(spec.id, this.masterGain, t, spec.vol)) this.trackSource(node);
+      for (const node of this.bank.play(spec.id, this.masterGain, t, spec.vol))
+        this.trackSource(node);
     }
     this.uiQueue.push({ t, kind: 'hit', layer: event.layer, role: event.role, beats: event.beats });
   }
 
-  private soundFor(event: ReturnType<typeof buildBarEvents>[number]): { id: string; vol: number } | null {
+  private soundFor(
+    event: ReturnType<typeof buildBarEvents>[number],
+  ): { id: string; vol: number } | null {
     const sounds = this.config.sounds;
     if (event.layer === 'poly') {
       const poly = sounds.poly;
-      return { id: poly.id, vol: event.role === 'polyAccent' ? Math.min(1, poly.accentVol) : poly.vol };
+      return {
+        id: poly.id,
+        vol: event.role === 'polyAccent' ? Math.min(1, poly.accentVol) : poly.vol,
+      };
     }
-    const role = sounds[event.role as keyof typeof sounds] as { id: string; vol: number } | undefined;
+    const role = sounds[event.role as keyof typeof sounds] as
+      { id: string; vol: number } | undefined;
     const fallback = sounds.beat;
     return role ? { id: role.id, vol: role.vol } : { id: fallback.id, vol: fallback.vol };
   }
@@ -351,8 +399,13 @@ export class MetronomeAudio {
 
   private async ensureAudio(): Promise<void> {
     if (!this.context) {
-      const Ctx = (globalThis as unknown as { AudioContext?: typeof AudioContext; webkitAudioContext?: typeof AudioContext })
-        .AudioContext ??
+      const Ctx =
+        (
+          globalThis as unknown as {
+            AudioContext?: typeof AudioContext;
+            webkitAudioContext?: typeof AudioContext;
+          }
+        ).AudioContext ??
         (globalThis as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
       if (Ctx) this.context = new Ctx();
     }
@@ -415,7 +468,8 @@ export class MetronomeAudio {
       ctx.addEventListener('statechange', this.onStateChange);
     } catch {}
     this.onVisibility = (): void => {
-      if (document.visibilityState === 'visible' && this.isPlaying()) void ctx.resume().catch(() => {});
+      if (document.visibilityState === 'visible' && this.isPlaying())
+        void ctx.resume().catch(() => {});
     };
     document.addEventListener('visibilitychange', this.onVisibility);
   }

@@ -136,8 +136,10 @@ const JAZZ_QUALITIES = new Set(['maj7', 'm7', 'm7b5', 'dim7', '7']);
 const resolveStyle = (chord: ParsedChord): ChordOptions => {
   const q = chord.quality;
   if (JAZZ_QUALITIES.has(q)) return VOICING_STYLES['jazz_comping'];
-  if (q.includes('maj7') || q.includes('m7b5') || q.includes('ø')) return VOICING_STYLES['jazz_comping'];
-  if (chord.intervals.includes(11) || chord.intervals.includes(10)) return VOICING_STYLES['jazz_comping'];
+  if (q.includes('maj7') || q.includes('m7b5') || q.includes('ø'))
+    return VOICING_STYLES['jazz_comping'];
+  if (chord.intervals.includes(11) || chord.intervals.includes(10))
+    return VOICING_STYLES['jazz_comping'];
   return VOICING_STYLES['open_pop'];
 };
 
@@ -159,7 +161,16 @@ function makeShape(
   const bassIsRoot = sounding.length ? mod12(bass - chord.rootPc) === 0 : false;
   const position = frettedOnly.length ? Math.min(...frettedOnly) : 0;
   const openCount = frets.filter((f) => f === 0).length;
-  return { frets: frets.slice(), sounding, span, bassMidi: bass, bassIsRoot, position, openCount, cost };
+  return {
+    frets: frets.slice(),
+    sounding,
+    span,
+    bassMidi: bass,
+    bassIsRoot,
+    position,
+    openCount,
+    cost,
+  };
 }
 
 class BiomechanicalEngine {
@@ -400,7 +411,8 @@ class BiomechanicalEngine {
     const hiPrev = diagram.length - 2;
     if (hasExtension && diagram.length >= 2) {
       if (diagram[hi] === null) score += 60;
-      else if (diagram[hi] !== null && diagram[hi] === diagram[hiPrev] && diagram[hi] > 0) score -= 70;
+      else if (diagram[hi] !== null && diagram[hi] === diagram[hiPrev] && diagram[hi] > 0)
+        score -= 70;
     }
 
     for (let i = 0; i < diagram.length - 1; i++) {
@@ -440,10 +452,7 @@ class BiomechanicalEngine {
   }
 }
 
-export function searchChord(
-  tuning: ParsedTuning,
-  chord: ParsedChord,
-): VoicingShape[] {
+export function searchChord(tuning: ParsedTuning, chord: ParsedChord): VoicingShape[] {
   const engine = new BiomechanicalEngine(tuning, chord);
   const ranked = engine.generate(RESULTS_PER_CHORD);
   return ranked.map(([score, diagram]) => makeShape(diagram.slice(), tuning, chord, score));

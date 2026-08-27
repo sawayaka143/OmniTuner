@@ -67,14 +67,6 @@ export class ThemeService {
     this.setTheme(this.nextTheme());
   }
 
-  /**
-   * Toggle and apply the DOM change synchronously. The regular toggle()
-   * defers to the effect queue, which flushes too late for the View
-   * Transitions API — the new theme must be on the document before the
-   * transition callback resolves or the new-state snapshot captures the old
-   * look. Applying twice (here + the effect) is harmless; apply() is
-   * idempotent.
-   */
   toggleSync(): void {
     const next = this.nextTheme();
     this.themeSignal.set(next);
@@ -105,9 +97,7 @@ export class ThemeService {
     if (!this.storage) return;
     try {
       this.storage.setItem(THEME_STORAGE_KEY, JSON.stringify(theme));
-    } catch {
-      // Storage can be unavailable or full; in-memory signal remains usable.
-    }
+    } catch {}
   }
 
   private systemPrefersLight(): boolean {
@@ -124,9 +114,7 @@ export class ThemeService {
     root.dataset['theme'] = theme;
     try {
       root.style.setProperty('color-scheme', theme);
-    } catch {
-      // JSDOM or older engines may not support color-scheme style.
-    }
+    } catch {}
     const meta = this.document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute('content', THEME_COLOR[theme]);
   }
@@ -152,12 +140,9 @@ export class ThemeService {
       this.destroyRef.onDestroy(() => {
         try {
           media?.removeEventListener('change', handler);
-        } catch {
-          // Ignore teardown errors.
-        }
+        } catch {}
       });
     } catch {
-      // Safari < 14 uses addListener; silently ignore if unavailable.
       try {
         (
           media as unknown as {
@@ -170,13 +155,9 @@ export class ThemeService {
             (
               media as unknown as { removeListener: (cb: (e: MediaQueryListEvent) => void) => void }
             ).removeListener(handler);
-          } catch {
-            // Ignore teardown errors.
-          }
+          } catch {}
         });
-      } catch {
-        // No system-preference watching available.
-      }
+      } catch {}
     }
   }
 }

@@ -97,9 +97,6 @@
   }
 }
 
-/* Light theme: the board sits on a pale card — flip the hardware cues to
-   dark ink so strings, inlays and the nut keep their contrast, and soften
-   the shadows that were calibrated against the dark canvas. */
 :host-context(html[data-theme='light']) .fretboard {
   --open-shadow: 6px 0 14px rgba(0, 0, 0, 0.1);
   --inlay-color: rgba(26, 26, 24, 0.16);
@@ -287,7 +284,7 @@
     color: var(--text-dim);
     font-size: var(--text-3xs);
     font-weight: var(--fw-medium);
-    /* WCAG exempt: inactive ghost — hover/focus restores AA */
+
     opacity: 0.66;
     box-shadow: none;
 

@@ -1,13 +1,11 @@
 import { Component, computed, input } from '@angular/core';
 import { DEGREE_LABELS, midiName, pcName } from '../../utils/chord-theory';
 
-/** Grid metrics for the neck drawing (px). */
 const NECK = { ROW: 24, COL: 30, LEFT: 40, IND: 26, RIGHT: 34, PAD: 8, TOP: 24, BOT: 18 } as const;
 
 const INLAY_SINGLE = new Set([3, 5, 7, 9, 15, 17, 19, 21]);
 const INLAY_DOUBLE = new Set([12, 24]);
 
-/** Chord-tone function → colour role (mapped in the component stylesheet). */
 const FUNC_COLOR: Readonly<Record<number, string>> = {
   0: 'var(--neck-root)',
   3: 'var(--neck-third)',
@@ -36,9 +34,9 @@ interface Marker {
   readonly y: number;
   readonly color: string;
   readonly isRoot: boolean;
-  /** Text inside the dot (dots view) or inside the ring (lines view). */
+
   readonly inner: string;
-  /** Note/function label at the right edge of the grid. */
+
   readonly edge: string;
 }
 
@@ -47,14 +45,12 @@ interface MutedMarker {
   readonly y: number;
 }
 
-/** Declarative neck diagram for a single voicing. */
 @Component({
   selector: 'app-neck-diagram',
   templateUrl: './neck-diagram.html',
   styleUrl: './neck-diagram.scss',
 })
 export class NeckDiagram {
-  /** Per-string fret, low string first; null = muted. */
   readonly frets = input.required<readonly (number | null)[]>();
   readonly tuningMidi = input.required<readonly number[]>();
   readonly tuningLabels = input.required<readonly string[]>();

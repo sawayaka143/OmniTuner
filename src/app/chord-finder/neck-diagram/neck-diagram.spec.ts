@@ -5,7 +5,6 @@ import { NeckDiagram } from './neck-diagram';
 describe('NeckDiagram', () => {
   let fixture: ComponentFixture<NeckDiagram>;
 
-  // x32010 — open C major shape in standard tuning, low string first.
   const baseInputs = {
     frets: [null, 3, 2, 0, 1, 0] as readonly (number | null)[],
     tuningMidi: [40, 45, 50, 55, 59, 64],
@@ -44,7 +43,6 @@ describe('NeckDiagram', () => {
   });
 
   it('sets a viewBox so the diagram scales responsively', () => {
-    // C major open shape spans frets 0-3: 66 + 4*30 + 34 + 8 wide, 24 + 6*24 + 18 tall.
     expect(el().querySelector('svg.neck')?.getAttribute('viewBox')).toBe('0 0 228 186');
   });
 

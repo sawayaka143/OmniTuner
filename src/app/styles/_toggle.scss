@@ -1,4 +1,3 @@
-/// @param {Boolean} $with-label - render a text label alongside the lamp.
 @mixin toggle-switch($with-label: false) {
   flex-shrink: 0;
   min-height: var(--ctrl-h-lg);

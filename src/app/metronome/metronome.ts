@@ -79,21 +79,23 @@ export class Metronome {
   readonly trackMeter = (o: SelectOption<string>): unknown => o.value;
   readonly subdivOptionLabel = (o: SelectOption<number>): string => o.label;
   readonly trackSubdiv = (o: SelectOption<number>): unknown => o.value;
-  readonly subdivLabelFor = (n: number): string => this.subdivisions.find((s) => s.n === n)?.label ?? `${n}`;
+  readonly subdivLabelFor = (n: number): string =>
+    this.subdivisions.find((s) => s.n === n)?.label ?? `${n}`;
   readonly soundLabel = (o: SelectOption<string>): string => o.label;
   readonly trackSound = (o: SelectOption<string>): unknown => o.value;
 
-  /** Selected denominator option or a fallback when the stored value is invalid. */
   readonly denomValue = computed(
-    () => this.denomOptions.find((o) => o.value === this.timeSig().denominator) ?? this.denomOptions[1],
+    () =>
+      this.denomOptions.find((o) => o.value === this.timeSig().denominator) ?? this.denomOptions[1],
   );
-  /** Matching meter preset, or the closest preset when the current meter is not a preset. */
+
   readonly meterValue = computed(
     () =>
-      this.meterOptions.find((o) => o.value === `${this.timeSig().numerator}/${this.timeSig().denominator}`) ??
-      this.meterOptions[2],
+      this.meterOptions.find(
+        (o) => o.value === `${this.timeSig().numerator}/${this.timeSig().denominator}`,
+      ) ?? this.meterOptions[2],
   );
-  /** Selected subdivision option or a fallback when the stored value is invalid. */
+
   readonly subdivValue = computed(
     () => this.subdivOptions.find((o) => o.value === this.divisions()) ?? this.subdivOptions[0],
   );
@@ -107,12 +109,16 @@ export class Metronome {
     label: `${p[0]}:${p[1]}`,
   }));
 
-  /// Selected bar pattern preset option (or a synthetic "Custom" entry).
   readonly barPresetValue = computed((): SelectOption<string> => {
     const label = this.barPreset();
-    return this.patternPresetOptions.find((o) => o.value === label) ?? { value: 'Custom', label: 'Custom' };
+    return (
+      this.patternPresetOptions.find((o) => o.value === label) ?? {
+        value: 'Custom',
+        label: 'Custom',
+      }
+    );
   });
-  /// Selected polyrhythm ratio option (or a synthetic entry when not a preset).
+
   readonly polyPresetValue = computed((): SelectOption<string> => {
     const label = `${this.timeSig().numerator}:${this.poly().events}`;
     return this.polyPresetOptions.find((o) => o.value === label) ?? { value: label, label };
@@ -121,14 +127,19 @@ export class Metronome {
   readonly identityOption = (o: SelectOption<string>): string => o.label;
   readonly trackPatternOption = (o: SelectOption<string>): unknown => o.value;
 
-  readonly soundRoles: readonly { key: 'downbeat' | 'beat' | 'subdivision' | 'poly'; label: string }[] = [
+  readonly soundRoles: readonly {
+    key: 'downbeat' | 'beat' | 'subdivision' | 'poly';
+    label: string;
+  }[] = [
     { key: 'downbeat', label: 'Downbeat' },
     { key: 'beat', label: 'Beat' },
     { key: 'subdivision', label: 'Subdivision' },
     { key: 'poly', label: 'Polyrhythm' },
   ];
 
-  readonly soundOptionFor = (key: 'downbeat' | 'beat' | 'subdivision' | 'poly'): SelectOption<string> => {
+  readonly soundOptionFor = (
+    key: 'downbeat' | 'beat' | 'subdivision' | 'poly',
+  ): SelectOption<string> => {
     const id = this.sounds()[key].id;
     return this.soundSelectOptions.find((o) => o.value === id) ?? this.soundSelectOptions[0];
   };
@@ -147,7 +158,9 @@ export class Metronome {
     else this.soundPolyOpen.update((v) => !v);
   }
 
-  readonly meterModel = computed(() => meterModel(this.timeSig().numerator, this.timeSig().denominator));
+  readonly meterModel = computed(() =>
+    meterModel(this.timeSig().numerator, this.timeSig().denominator),
+  );
 
   readonly tempoMarking = computed(() => getTempoMarking(this.bpm()));
 
@@ -166,18 +179,21 @@ export class Metronome {
   private barPresetLabel = computed(() => {
     const pat = this.barPattern();
     for (const preset of PATTERN_PRESETS) {
-      if (preset.bars.length === pat.length && preset.bars.every((v, i) => v === pat[i])) return preset.label;
+      if (preset.bars.length === pat.length && preset.bars.every((v, i) => v === pat[i]))
+        return preset.label;
     }
     return 'Custom';
   });
   readonly barPreset = this.barPresetLabel;
 
-  /** Beat cells for the console beat row. */
-  readonly beatCells = computed(() => Array.from({ length: this.meterModel().beatsPerBar }, (_, i) => i));
-  readonly polyAArray = computed(() => Array.from({ length: this.meterModel().beatsPerBar }, (_, i) => i));
+  readonly beatCells = computed(() =>
+    Array.from({ length: this.meterModel().beatsPerBar }, (_, i) => i),
+  );
+  readonly polyAArray = computed(() =>
+    Array.from({ length: this.meterModel().beatsPerBar }, (_, i) => i),
+  );
   readonly polyBArray = computed(() => Array.from({ length: this.poly().events }, (_, i) => i));
 
-  /** Index of the beat currently sounding, or -1 when stopped. */
   readonly activeBeat = computed(() => {
     const t = this.transport();
     if (!t) return -1;
@@ -208,17 +224,20 @@ export class Metronome {
 
   onTap(): void {
     const now = performance.now();
-    if (this.tapTimes.length > 0 && now - this.tapTimes[this.tapTimes.length - 1] > 2000) this.tapTimes = [];
+    if (this.tapTimes.length > 0 && now - this.tapTimes[this.tapTimes.length - 1] > 2000)
+      this.tapTimes = [];
     this.tapTimes.push(now);
     if (this.tapTimes.length > 6) this.tapTimes.shift();
     if (this.tapTimes.length >= 2) {
       const intervals: number[] = [];
-      for (let i = 1; i < this.tapTimes.length; i++) intervals.push(this.tapTimes[i] - this.tapTimes[i - 1]);
+      for (let i = 1; i < this.tapTimes.length; i++)
+        intervals.push(this.tapTimes[i] - this.tapTimes[i - 1]);
       const bpm = tapBpm(intervals);
       if (bpm !== null) this.prefs.setBpm(bpm);
     }
     window.setTimeout(() => {
-      if (performance.now() - (this.tapTimes[this.tapTimes.length - 1] ?? 0) > 2000) this.tapTimes = [];
+      if (performance.now() - (this.tapTimes[this.tapTimes.length - 1] ?? 0) > 2000)
+        this.tapTimes = [];
     }, 2100);
   }
 
@@ -292,7 +311,10 @@ export class Metronome {
     this.polyPresetOpen.set(false);
   }
 
-  setSoundRole(role: 'downbeat' | 'beat' | 'subdivision' | 'poly', option: SelectOption<string>): void {
+  setSoundRole(
+    role: 'downbeat' | 'beat' | 'subdivision' | 'poly',
+    option: SelectOption<string>,
+  ): void {
     this.prefs.setSoundRole(role, option.value);
     if (role === 'downbeat') this.soundDownbeatOpen.set(false);
     if (role === 'beat') this.soundBeatOpen.set(false);
@@ -325,7 +347,10 @@ export class Metronome {
     const target = event.target as HTMLElement | null;
     const isField =
       !!target &&
-      (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable);
+      (target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.tagName === 'SELECT' ||
+        target.isContentEditable);
     if (event.code === 'Space' || event.key === ' ') {
       if (isField) return;
       event.preventDefault();

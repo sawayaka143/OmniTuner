@@ -1,6 +1,3 @@
-/// Workbench page chrome shared by the Chords and Scales sections.
-/// Covers the page shell, section micro-label, workbench card, its header,
-/// and the readout line in the footer.
 @mixin page-chrome() {
   .app-main {
     flex: 1;

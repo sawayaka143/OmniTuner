@@ -8,10 +8,6 @@ interface ScaleGroup {
 
 let nextMenuId = 0;
 
-/**
- * Presentational dropdown for selecting a scale or mode. Mirrors the
- * `.dropdown-wrapper` pattern used by the instrument selector.
- */
 @Component({
   selector: 'app-scale-picker',
   templateUrl: './scale-picker.html',

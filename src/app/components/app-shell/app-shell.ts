@@ -28,7 +28,6 @@ export class AppShell {
   private readonly tunerPreferences = inject(TunerPreferences);
   private readonly themeService = inject(ThemeService);
 
-  /** The header theme toggle — the origin of the switch reveal animation. */
   private readonly themeTrigger = viewChild('themeTrigger', { read: ElementRef });
 
   protected readonly settingsOpen = signal(false);
@@ -42,12 +41,10 @@ export class AppShell {
     this.themeService.theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme',
   );
 
-  /** In-tune color as a theme var; unset while the master switch is OFF. */
   protected readonly inTuneColor = computed(() =>
     this.tunerSettings().inTune.enabled ? this.tunerSettings().inTune.color : null,
   );
 
-  /** Off-pitch color as a theme var; independent of the master switch. */
   protected readonly outOfTuneColor = computed(() => this.tunerSettings().inTune.outOfTuneColor);
 
   protected setAccent(accent: string): void {
@@ -129,7 +126,6 @@ export class AppShell {
     }
   }
 
-  /** Aim the circular reveal at the theme toggle button. */
   private updateRevealOrigin(): void {
     const trigger = this.themeTrigger()?.nativeElement as HTMLElement | undefined;
     if (!trigger) return;

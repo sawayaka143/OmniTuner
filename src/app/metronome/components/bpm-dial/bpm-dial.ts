@@ -1,10 +1,9 @@
 import { Component, ElementRef, computed, input, output, signal, viewChild } from '@angular/core';
 import { BPM_MAX, BPM_MIN } from '../../models/metronome.model';
 
-/** Tick marks per full rotation — one rotation = 55 BPM, one tick = 1 BPM. */
 const TICKS_PER_ROTATION = 55;
 const DEG_PER_TICK = 360 / TICKS_PER_ROTATION;
-/** Pointer sits at 12 o'clock in SVG coordinates (0° = 3 o'clock, positive = clockwise). */
+
 const POINTER_DEG = 270;
 const CX = 150;
 const CY = 150;
@@ -15,12 +14,10 @@ function clampBpm(value: number): number {
   return Math.min(BPM_MAX, Math.max(BPM_MIN, Math.round(value)));
 }
 
-/** Rotating face position for a BPM value; positive rotation = clockwise. */
 function rotationFor(bpm: number): number {
   return (bpm - 1) * DEG_PER_TICK;
 }
 
-/** BPM for a face rotation, clamped to the dial range. */
 function bpmFor(rotation: number): number {
   return clampBpm(rotation / DEG_PER_TICK + 1);
 }
@@ -32,7 +29,6 @@ interface TickMark {
   readonly y2: number;
 }
 
-/** 55 tick marks laid out clockwise starting at the pointer (12 o'clock). */
 const TICK_MARKS: readonly TickMark[] = Array.from({ length: TICKS_PER_ROTATION }, (_, i) => {
   const a = ((POINTER_DEG + i * DEG_PER_TICK) * Math.PI) / 180;
   const cos = Math.cos(a);
@@ -56,11 +52,7 @@ export class BpmDial {
   readonly tap = output<void>();
 
   protected readonly ticks = TICK_MARKS;
-  /**
-   * Face rotation. null means "ride the bpm input" — the dial is not being
-   * dragged and always shows the external value; a number means a drag is in
-   * progress and the face is free to accumulate its own rotation.
-   */
+
   private readonly dragRotation = signal<number | null>(null);
   protected readonly rotation = computed(() => this.dragRotation() ?? rotationFor(this.bpm()));
   protected readonly faceTransform = computed(() => `rotate(${this.rotation()} ${CX} ${CY})`);
@@ -94,8 +86,7 @@ export class BpmDial {
     (event.currentTarget as HTMLElement).releasePointerCapture?.(event.pointerId);
     this.dragging = false;
     this.lastAngle = null;
-    // Settle onto the exact tick for the clamped value, then hand control
-    // back to the bpm input.
+
     const settled = rotationFor(bpmFor(this.dragRotation() ?? rotationFor(this.bpm())));
     this.dragRotation.set(null);
     this.bpmChange.emit(bpmFor(settled));

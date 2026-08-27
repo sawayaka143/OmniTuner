@@ -94,7 +94,7 @@ describe('ChordFinder', () => {
     click('.generate');
     expect(el().querySelectorAll('.chord-card').length).toBe(2);
     expect(el().querySelectorAll('.chord-card .card-note.error').length).toBe(0);
-    // C13's optional 11th/13th show in parentheses (sharp spelling: A# for Bb).
+
     expect(el().textContent).toContain('tones C E G A# D (F) (A)');
   });
 
@@ -145,14 +145,14 @@ describe('ChordFinder', () => {
     expect(el().querySelectorAll('.chord-card').length).toBeGreaterThan(0);
 
     const toolbarButtons = el().querySelectorAll<HTMLButtonElement>('.control-rail .btn');
-    toolbarButtons[toolbarButtons.length - 1].click(); // clear is last
+    toolbarButtons[toolbarButtons.length - 1].click();
     fixture.detectChanges();
     expect(el().querySelectorAll('.chord-card').length).toBe(0);
   });
 
   it('refuses to copy before anything was generated', async () => {
     const toolbarButtons = el().querySelectorAll<HTMLButtonElement>('.control-rail .btn');
-    toolbarButtons[toolbarButtons.length - 2].click(); // copy tab is second-to-last
+    toolbarButtons[toolbarButtons.length - 2].click();
     fixture.detectChanges();
     await fixture.whenStable();
   });
@@ -165,9 +165,8 @@ describe('ChordFinder', () => {
     fixture.detectChanges();
 
     click('.generate');
-    // 3 cards: two valid chords + one invalid token card.
+
     expect(el().querySelectorAll('.chord-card').length).toBe(3);
     expect(el().querySelectorAll('.chord-card .card-note.error').length).toBe(1);
   });
-
 });

@@ -90,7 +90,7 @@ describe('parseChord', () => {
     const thirteen = parseChord('C13');
     expect(thirteen.ok && thirteen.chord.quality).toBe('13');
     expect(thirteen.ok && thirteen.chord.pcs).toEqual([0, 4, 7, 10, 2, 5, 9]);
-    // 11th (F) and 13th (A) are optional; guide tones are required.
+
     expect(thirteen.ok && thirteen.chord.optionalPcs).toEqual([5, 9]);
 
     const b13 = parseChord('C7b13');
@@ -138,8 +138,6 @@ describe('parseChord', () => {
     expect(all.ok && all.chord.intervals).toEqual([0, 4, 6, 10, 15, 18, 20]);
     expect(all.ok && all.chord.optionalPcs).toEqual([6, 8]);
 
-    // Theoretical minor with ♭9 (user's spec: Cm♭9 = C Eb G Bb Db — a
-    // minor triad plus ♭9, no 7th).
     const theoretical = parseChord('Cm♭9');
     expect(theoretical.ok && theoretical.chord.intervals).toEqual([0, 3, 7, 13]);
   });
@@ -214,7 +212,6 @@ describe('computeBadge', () => {
   });
 
   it('labels parallel-major mixture as borrowed in minor keys', () => {
-    // Gm is the vi chord of Bb major — borrowed into Bb Aeolian.
     const gm = parseChord('Gm');
     if (!gm.ok) throw new Error('parse failed');
     const badge = computeBadge(gm.chord, 'Bb', 'Aeolian', true);
@@ -222,7 +219,6 @@ describe('computeBadge', () => {
   });
 
   it('labels parallel-minor mixture as borrowed in major keys', () => {
-    // Bb is the bVII chord of C minor — borrowed into C Ionian.
     const bb = parseChord('Bb');
     if (!bb.ok) throw new Error('parse failed');
     const badge = computeBadge(bb.chord, 'C', 'Ionian', true);
@@ -230,7 +226,6 @@ describe('computeBadge', () => {
   });
 
   it('keeps the parallel-major VI in minor keys chromatic when the quality does not match', () => {
-    // G major is not the VI of Bb major (that is Gm), so it stays chromatic.
     const g = parseChord('G');
     if (!g.ok) throw new Error('parse failed');
     const badge = computeBadge(g.chord, 'Bb', 'Aeolian', true);

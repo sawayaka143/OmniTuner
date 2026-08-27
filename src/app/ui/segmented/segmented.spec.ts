@@ -98,13 +98,17 @@ describe('Segmented', () => {
   });
 
   it('translates the indicator to the selected index', () => {
-    expect(indicator().getAttribute('style')).toContain('translateX(calc(1 * 100% + 1 * var(--seg-gap, 0px)))');
+    expect(indicator().getAttribute('style')).toContain(
+      'translateX(calc(1 * 100% + 1 * var(--seg-gap, 0px)))',
+    );
   });
 
   it('moves the indicator when selection changes', () => {
     host.selected.set(MODES[2]);
     fixture.detectChanges();
-    expect(indicator().getAttribute('style')).toContain('translateX(calc(2 * 100% + 2 * var(--seg-gap, 0px)))');
+    expect(indicator().getAttribute('style')).toContain(
+      'translateX(calc(2 * 100% + 2 * var(--seg-gap, 0px)))',
+    );
   });
 
   it('hides the indicator when no option matches the value', () => {

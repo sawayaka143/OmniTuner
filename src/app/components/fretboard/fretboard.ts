@@ -19,12 +19,6 @@ import { FretCell } from '../../models/scale.model';
 import { LabelMode } from '../../models/scale-preferences.model';
 import { textColorOn } from '../../data/interval-colors';
 
-/**
- * Presentational fretboard visualizer: renders a pre-computed `FretCell[][]`
- * (rows = strings, high-string-first) as a CSS grid. In-scale cells show a
- * colored dot from the resolved interval label; the root is larger with a
- * halo. No music-theory math — every value is already on each `FretCell`.
- */
 @Component({
   selector: 'app-fretboard',
   templateUrl: './fretboard.html',
@@ -77,13 +71,12 @@ export class Fretboard {
     });
   });
 
-  /** Rows of cells, high-string-first (index 0 = highest string = top). */
   readonly cells = input.required<FretCell[][]>();
-  /** Number of frets to render (excluding the open-string column). */
+
   readonly fretCount = input.required<number>();
-  /** Display label for the current scale, used in the aria description. */
+
   readonly scaleLabel = input.required<string>();
-  /** Display label for the current root note, used in the aria description. */
+
   readonly rootLabel = input.required<string>();
   readonly labelMode = input<LabelMode>('note-names');
   readonly showOutsideScale = input(false);
@@ -167,15 +160,17 @@ export class Fretboard {
     });
   }
 
-  /** Standard fretboard inlay positions, with paired markers at each octave. */
   protected readonly singleInlays = new Set([3, 5, 7, 9, 15, 17, 19, 21]);
   protected readonly doubleInlays = new Set([12, 24]);
 
-  /** Returns a readable text color (AA-safe) for a dot's background color. */
   protected readonly textColorOn = textColorOn;
 
   protected isFretEntering(fret: number): boolean {
-    return fret > this.previousFretCount && fret <= this.fretCount() && this.fretCount() > this.previousFretCount;
+    return (
+      fret > this.previousFretCount &&
+      fret <= this.fretCount() &&
+      this.fretCount() > this.previousFretCount
+    );
   }
 
   protected isFretExiting(fret: number): boolean {

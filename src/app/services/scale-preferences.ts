@@ -40,12 +40,6 @@ const clampWorkbenchScale = (v: number): number =>
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null;
 
-/**
- * Color values shipped before the warm cream palette. Installs that never
- * customized colors still carry them in storage; stale defaults are swapped
- * for the current ones on load so palette changes reach existing users.
- * Genuine custom choices pass through untouched.
- */
 const LEGACY_COLOR_DEFAULTS = {
   accent: '#ffffff',
   rootNoteColor: '#ffffff',
@@ -55,9 +49,7 @@ const LEGACY_COLOR_DEFAULTS = {
 const upgradeLegacyColors = (state: ScalePreferencesState): ScalePreferencesState => ({
   ...state,
   accent:
-    state.accent === LEGACY_COLOR_DEFAULTS.accent
-      ? DEFAULT_SCALE_PREFERENCES.accent
-      : state.accent,
+    state.accent === LEGACY_COLOR_DEFAULTS.accent ? DEFAULT_SCALE_PREFERENCES.accent : state.accent,
   rootNoteColor:
     state.rootNoteColor === LEGACY_COLOR_DEFAULTS.rootNoteColor
       ? DEFAULT_SCALE_PREFERENCES.rootNoteColor
@@ -217,8 +209,6 @@ export class ScalePreferences {
     const persisted: PersistedScalePreferences = { version: 1, state: this.stateSignal() };
     try {
       this.storage.setItem(SCALE_PREFERENCES_STORAGE_KEY, JSON.stringify(persisted));
-    } catch {
-      // Storage can be unavailable or full; current-session state remains usable.
-    }
+    } catch {}
   }
 }

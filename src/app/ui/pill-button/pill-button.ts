@@ -25,7 +25,7 @@ export class PillButton {
   readonly label = input.required<string>();
   readonly iconOn = input<string>();
   readonly iconOff = input<string>();
-  /** When non-null, exposes `aria-pressed` and adds `.active` for visual press. */
+
   readonly pressed = input<boolean | null>(null);
   readonly disabled = input(false);
   readonly type = input<'button' | 'submit'>('button');

@@ -18,7 +18,6 @@ describe('parseProgressionMeta', () => {
   });
 
   it('returns null when the text does not match any degree at the tonic', () => {
-    // Dbmaj7 has no degree spelling at G major (Db is not in the key).
     expect(parseProgressionMeta('Dbmaj7, A, E, B', tonicPcOf('G')!, false)).toBeNull();
   });
 

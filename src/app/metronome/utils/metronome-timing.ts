@@ -47,7 +47,10 @@ export interface BarEvent {
 
 export function buildBarEvents(
   model: MeterModel,
-  options: { subdivision?: number; poly?: { enabled: boolean; events: number; accentFirst?: boolean } } = {},
+  options: {
+    subdivision?: number;
+    poly?: { enabled: boolean; events: number; accentFirst?: boolean };
+  } = {},
 ): BarEvent[] {
   const subdivision = options.subdivision ?? 1;
   const poly = options.poly ?? null;
@@ -87,7 +90,11 @@ export function barDuration(bpm: number, model: MeterModel): number {
   return (60 / bpm) * model.barQuarters;
 }
 
-export function subdivisionInterval(bpm: number, model: MeterModel, divisionsPerBeat: number): number {
+export function subdivisionInterval(
+  bpm: number,
+  model: MeterModel,
+  divisionsPerBeat: number,
+): number {
   return beatDuration(bpm, model) / divisionsPerBeat;
 }
 
@@ -129,7 +136,6 @@ export function formatBarDuration(ms: number): string {
   return `${(ms / 1000).toFixed(2)} s`;
 }
 
-/** Standard tempo markings for a BPM value. */
 export function getTempoMarking(bpm: number): string {
   if (bpm < 40) return 'Grave';
   if (bpm < 60) return 'Lento';

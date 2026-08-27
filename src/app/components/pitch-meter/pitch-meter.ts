@@ -20,7 +20,7 @@ export class PitchMeter {
   readonly ticks = input.required<Tick[]>();
   readonly needleLeft = input.required<string>();
   readonly isTuned = input(false);
-  /** Unclamped cents deviation; null while no pitch is detected. */
+
   readonly cents = input<number | null>(null);
 
   protected readonly labels: readonly MeterLabel[] = [
@@ -31,6 +31,5 @@ export class PitchMeter {
     { leftPos: '100%', text: '+50', center: false },
   ];
 
-  /** Clamped to the meter's ±50¢ scale so aria-valuenow stays in range. */
   protected readonly ariaNow = computed(() => Math.max(-50, Math.min(50, this.cents() ?? 0)));
 }

@@ -15,8 +15,13 @@
   user-select: none;
   touch-action: none;
   outline: none;
-  &:active { cursor: grabbing; }
-  &:focus-visible { outline: 2px solid var(--border-active); outline-offset: 2px; }
+  &:active {
+    cursor: grabbing;
+  }
+  &:focus-visible {
+    outline: 2px solid var(--border-active);
+    outline-offset: 2px;
+  }
 }
 
 .dial-svg {
@@ -97,7 +102,9 @@
     inset 2px 2px 6px rgba(0, 0, 0, 0.5),
     inset -1px -1px 3px rgba(255, 255, 255, 0.03),
     0 1px 0 rgba(255, 255, 255, 0.03);
-  transition: box-shadow var(--dur-med) ease, transform var(--dur-fast) ease;
+  transition:
+    box-shadow var(--dur-med) ease,
+    transform var(--dur-fast) ease;
   border: none;
 }
 

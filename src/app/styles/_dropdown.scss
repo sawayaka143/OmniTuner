@@ -9,7 +9,6 @@
   }
 }
 
-/// Pill-shaped dropdown trigger button — mirrors seg-control recessed shell.
 @mixin dropdown-trigger() {
   width: 100%;
   min-height: var(--ctrl-h-lg);
@@ -54,7 +53,6 @@
   }
 }
 
-/// Floating dropdown menu panel.
 @mixin dropdown-menu() {
   position: absolute;
   z-index: var(--z-menu);
@@ -72,7 +70,6 @@
   }
 }
 
-/// Individual dropdown menu item / option row.
 @mixin dropdown-item() {
   width: 100%;
   display: flex;
@@ -109,7 +106,6 @@
   }
 }
 
-/// Micro-label style (dropdown kickers, group headings, secondary text).
 @mixin micro-label() {
   color: var(--text-dim);
   font-size: var(--text-xs);
@@ -119,10 +115,6 @@
   text-transform: uppercase;
 }
 
-/// Dropdown trigger inner scaffolding: value/kicker copy block + chevron icon.
-/// @param {String} $copy - class of the value/kicker copy block.
-/// @param {String} $kicker - class of the micro-label above the value.
-/// @param {String} $icon - class of the chevron icon element.
 @mixin dropdown-trigger-content(
   $copy: '.button-copy',
   $kicker: '.button-kicker',

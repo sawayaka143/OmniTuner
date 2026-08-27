@@ -1,13 +1,5 @@
 import { Component, computed, ElementRef, input, output, signal, viewChild } from '@angular/core';
 
-/**
- * Radiogroup of color swatches. Each option renders as a square button with
- * a colored dot inside; the selected swatch gets a tinted ring. Used by the
- * settings panel for accent color and in-tune color pickers.
- *
- * `compareWith` defaults to identity but can be overridden for case-insensitive
- * comparison (the accent color picker compares `.toLowerCase()`).
- */
 @Component({
   selector: 'app-swatch-group',
   template: `

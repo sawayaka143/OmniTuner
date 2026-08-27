@@ -2,12 +2,6 @@ import { Component, computed, input, output } from '@angular/core';
 
 let nextFieldId = 0;
 
-/**
- * Single-line text or number input with a visible label and optional inline
- * validation messaging. Accessibility is baked in: a generated `id` links the
- * `<label for>`, `aria-invalid` follows `[invalid]`/`[errorMessage]`, and any
- * error/hint becomes `aria-describedby`.
- */
 @Component({
   selector: 'app-text-field',
   template: `
@@ -66,9 +60,9 @@ export class TextField {
   readonly autofocus = input(false);
   readonly spellcheck = input(false);
   readonly autocomplete = input<string>('off');
-  /** Optional extra class applied to the `<label>`. */
+
   readonly labelClass = input('');
-  /** Optional extra class applied to the `<input>`. */
+
   readonly inputClass = input('');
 
   readonly valueChange = output<string>();

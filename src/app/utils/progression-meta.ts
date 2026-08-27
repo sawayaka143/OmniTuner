@@ -6,7 +6,6 @@ export interface ProgressionMeta {
   readonly degrees: readonly string[];
 }
 
-/** All degree spellings the generator can produce (used for lossless recovery). */
 const DEGREE_VOCABULARY: readonly string[] = [
   'I',
   'II',
@@ -55,12 +54,6 @@ const DEGREE_VOCABULARY: readonly string[] = [
   'iim7b5',
 ];
 
-/**
- * Recover a lossless degree source from a raw progression string.
- * A token is accepted only when it is exactly what its own degree produces at
- * the tonic (round-trip), so manually typed or edited progressions return
- * null and are never auto-transposed.
- */
 export function parseProgressionMeta(
   raw: string,
   tonicPc: number,
@@ -83,7 +76,6 @@ export function parseProgressionMeta(
   return { presetId: null, degrees };
 }
 
-/** Renders a meta back into the canonical progression text at a tonic. */
 export function flattenProgression(
   meta: ProgressionMeta,
   tonicPc: number,

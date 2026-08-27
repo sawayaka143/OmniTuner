@@ -25,7 +25,6 @@ describe('degreeToChordSymbol', () => {
   });
 
   it('spells flats when requested', () => {
-    // G minor: i = Gm, bVI = Eb (G=7, bVI is 9-1=8 -> 7+8=15%12=3=Eb/D#)
     const gPc = tonicPcOf('G')!;
     expect(degreeToChordSymbol('i', gPc, true)).toBe('Gm');
     expect(degreeToChordSymbol('bVI', gPc, true)).toBe('Eb');

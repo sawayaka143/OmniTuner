@@ -110,7 +110,6 @@
   }
 }
 
-/* Short viewports: keep the hero note present but give the Start button room. */
 @media (max-height: 700px) {
   .pitch-note {
     font-size: clamp(56px, 12vw, 84px);

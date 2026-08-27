@@ -30,17 +30,6 @@ interface DisplayRow {
   readonly weight: number;
 }
 
-/**
- * Reusable form for editing a named list of MIDI note values (an instrument's
- * default or custom tuning). Owns the name/notes/count state and in-form
- * validation; the host persists and may pass an `[externalError]`.
- *
- * Re-initialises whenever `[initialName]`, `[initialNotes]`,
- * `[initialStringCount]`, or `[mode]` change — no imperative reset needed.
- *
- * `preview` fires on every step/preset change; the host may ignore it or
- * live-preview the tuning on a fretboard.
- */
 @Component({
   selector: 'app-string-editor',
   templateUrl: './string-editor.html',
@@ -104,7 +93,6 @@ export class StringEditor {
   protected readonly nameInvalid = computed(() => !!this.effectiveError());
 
   constructor() {
-    // Host-driven re-init: whenever any "initial*" input flips, reset the form.
     effect(() => {
       const name = this.initialName();
       const notes = this.initialNotes();

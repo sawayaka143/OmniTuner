@@ -65,7 +65,6 @@ export function degreeToChordSymbol(
   return `${rootName}${quality}`;
 }
 
-/** Converts scale degrees (e.g. `i`, `bVII`) into chord symbols at a tonic, capped at 6. */
 export function degreesToProgression(
   degrees: readonly string[],
   tonicPc: number,

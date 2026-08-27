@@ -20,9 +20,31 @@
           <span class="section-label">01 · Time signature</span>
           <div class="ts-row">
             <div class="ts-stepper">
-              <button type="button" class="step-btn small" aria-label="Fewer beats" (click)="setTimeSigNumerator(timeSig().numerator - 1)">−</button>
-              <input class="ts-num" type="number" min="1" max="32" [value]="timeSig().numerator" (change)="setTimeSigNumerator($any($event.target).valueAsNumber)" aria-label="Beats per bar" />
-              <button type="button" class="step-btn small" aria-label="More beats" (click)="setTimeSigNumerator(timeSig().numerator + 1)">+</button>
+              <button
+                type="button"
+                class="step-btn small"
+                aria-label="Fewer beats"
+                (click)="setTimeSigNumerator(timeSig().numerator - 1)"
+              >
+                −
+              </button>
+              <input
+                class="ts-num"
+                type="number"
+                min="1"
+                max="32"
+                [value]="timeSig().numerator"
+                (change)="setTimeSigNumerator($any($event.target).valueAsNumber)"
+                aria-label="Beats per bar"
+              />
+              <button
+                type="button"
+                class="step-btn small"
+                aria-label="More beats"
+                (click)="setTimeSigNumerator(timeSig().numerator + 1)"
+              >
+                +
+              </button>
             </div>
             <span class="ts-slash">/</span>
             <app-listbox
@@ -33,7 +55,7 @@
               [optionLabel]="denomLabel"
               [trackByFn]="trackDenom"
               [open]="denomOpen()"
-              (toggle)="denomOpen.update(v => !v)"
+              (toggle)="denomOpen.update((v) => !v)"
               (select)="setDenom($event)"
             />
           </div>
@@ -46,7 +68,7 @@
             [optionLabel]="meterLabel"
             [trackByFn]="trackMeter"
             [open]="meterPresetOpen()"
-            (toggle)="meterPresetOpen.update(v => !v)"
+            (toggle)="meterPresetOpen.update((v) => !v)"
             (select)="applyMeterPreset($event)"
           />
         </div>
@@ -62,7 +84,7 @@
             [optionLabel]="subdivOptionLabel"
             [trackByFn]="trackSubdiv"
             [open]="subdivOpen()"
-            (toggle)="subdivOpen.update(v => !v)"
+            (toggle)="subdivOpen.update((v) => !v)"
             (select)="setDivisions($event)"
           />
         </div>
@@ -78,19 +100,39 @@
             [optionLabel]="identityOption"
             [trackByFn]="trackPatternOption"
             [open]="barPresetOpen()"
-            (toggle)="barPresetOpen.update(v => !v)"
+            (toggle)="barPresetOpen.update((v) => !v)"
             (select)="applyBarPresetOption($event)"
           />
           <div class="pat-edit">
             <div class="pat-cells">
               @for (v of barPattern(); track $index) {
-                <button type="button" class="pat-cell" [class.off]="!v" [attr.aria-pressed]="!!v" (click)="toggleBarIndex($index)">{{ $index + 1 }}</button>
+                <button
+                  type="button"
+                  class="pat-cell"
+                  [class.off]="!v"
+                  [attr.aria-pressed]="!!v"
+                  (click)="toggleBarIndex($index)"
+                >
+                  {{ $index + 1 }}
+                </button>
               }
             </div>
           </div>
           <div class="pat-btns">
-            <button type="button" class="btn small" (click)="setCustomBarLength(barPattern().length - 1)">− bar</button>
-            <button type="button" class="btn small" (click)="setCustomBarLength(barPattern().length + 1)">+ bar</button>
+            <button
+              type="button"
+              class="btn small"
+              (click)="setCustomBarLength(barPattern().length - 1)"
+            >
+              − bar
+            </button>
+            <button
+              type="button"
+              class="btn small"
+              (click)="setCustomBarLength(barPattern().length + 1)"
+            >
+              + bar
+            </button>
           </div>
         </div>
 
@@ -105,9 +147,20 @@
           <div class="poly-details" [class.open]="poly().enabled">
             <div class="poly-row">
               <div class="mini-step">
-                <button type="button" class="step-btn" (click)="setPolyEvents(poly().events - 1)">−</button>
-                <input type="number" min="1" max="32" [value]="poly().events" (change)="setPolyEvents($any($event.target).valueAsNumber)" aria-label="Poly events per bar" />
-                <button type="button" class="step-btn" (click)="setPolyEvents(poly().events + 1)">+</button>
+                <button type="button" class="step-btn" (click)="setPolyEvents(poly().events - 1)">
+                  −
+                </button>
+                <input
+                  type="number"
+                  min="1"
+                  max="32"
+                  [value]="poly().events"
+                  (change)="setPolyEvents($any($event.target).valueAsNumber)"
+                  aria-label="Poly events per bar"
+                />
+                <button type="button" class="step-btn" (click)="setPolyEvents(poly().events + 1)">
+                  +
+                </button>
               </div>
               <app-listbox
                 [options]="polyPresetOptions"
@@ -118,7 +171,7 @@
                 [optionLabel]="identityOption"
                 [trackByFn]="trackPatternOption"
                 [open]="polyPresetOpen()"
-                (toggle)="polyPresetOpen.update(v => !v)"
+                (toggle)="polyPresetOpen.update((v) => !v)"
                 (select)="applyPolyPresetOption($event)"
               />
             </div>
@@ -130,7 +183,14 @@
         <div class="console-display">
           <span class="tempo-marking">{{ tempoMarking() }}</span>
           <div class="bpm-stepper">
-            <button type="button" class="step-btn" aria-label="Decrease tempo" (click)="nudgeBpm(-1)">−</button>
+            <button
+              type="button"
+              class="step-btn"
+              aria-label="Decrease tempo"
+              (click)="nudgeBpm(-1)"
+            >
+              −
+            </button>
             <input
               class="bpm-input"
               type="number"
@@ -141,21 +201,44 @@
               (change)="setBpm($any($event.target).valueAsNumber)"
               aria-label="Tempo BPM"
             />
-            <button type="button" class="step-btn" aria-label="Increase tempo" (click)="nudgeBpm(1)">+</button>
+            <button
+              type="button"
+              class="step-btn"
+              aria-label="Increase tempo"
+              (click)="nudgeBpm(1)"
+            >
+              +
+            </button>
           </div>
           <span class="console-bpm-unit">BPM</span>
         </div>
 
         <app-bpm-dial [bpm]="bpm()" (bpmChange)="setBpm($event)" (tap)="onTap()" />
 
-        <button class="btn primary metro-play" type="button" [class.active]="isPlaying()" [attr.aria-pressed]="isPlaying()" (click)="togglePlay()">
-          <span class="app-icon ti" [class.ti-player-pause]="isPlaying()" [class.ti-player-play]="!isPlaying()" aria-hidden="true"></span>
+        <button
+          class="btn primary metro-play"
+          type="button"
+          [class.active]="isPlaying()"
+          [attr.aria-pressed]="isPlaying()"
+          (click)="togglePlay()"
+        >
+          <span
+            class="app-icon ti"
+            [class.ti-player-pause]="isPlaying()"
+            [class.ti-player-play]="!isPlaying()"
+            aria-hidden="true"
+          ></span>
           {{ isPlaying() ? 'Stop' : 'Start' }}
         </button>
 
         <div class="beat-row" role="group" aria-label="Beat indicator">
           @for (b of beatCells(); track b; let i = $index) {
-            <span class="beat-dot" [class.first]="b === 0" [class.active]="isPlaying() && b === activeBeat()" [style.animation-delay]="(i % 10) * 30 + 'ms'"></span>
+            <span
+              class="beat-dot"
+              [class.first]="b === 0"
+              [class.active]="isPlaying() && b === activeBeat()"
+              [style.animation-delay]="(i % 10) * 30 + 'ms'"
+            ></span>
           }
         </div>
 
@@ -163,13 +246,17 @@
           <div class="tl-row">
             <span class="tl-label">meter</span>
             <div class="tl-track amber">
-              @for (p of polyAArray(); track $index) { <span class="tl-tick" [style.left]="(p / polyAArray().length * 100) + '%'"></span> }
+              @for (p of polyAArray(); track $index) {
+                <span class="tl-tick" [style.left]="(p / polyAArray().length) * 100 + '%'"></span>
+              }
             </div>
           </div>
           <div class="tl-row">
             <span class="tl-label">poly</span>
             <div class="tl-track teal">
-              @for (p of polyBArray(); track $index) { <span class="tl-tick" [style.left]="(p / polyBArray().length * 100) + '%'"></span> }
+              @for (p of polyBArray(); track $index) {
+                <span class="tl-tick" [style.left]="(p / polyBArray().length) * 100 + '%'"></span>
+              }
             </div>
           </div>
         </div>
@@ -186,13 +273,21 @@
           <span class="section-label">04 · Sound</span>
           <div class="sound-row">
             <span class="sound-role">Master</span>
-            <span class="range-val">{{ (masterVol() * 100) | number:'1.0-0' }}%</span>
-            <input type="range" min="0" max="100" step="1" [value]="masterVol() * 100" (input)="setMasterVol($any($event.target).valueAsNumber / 100)" aria-label="Master volume" />
+            <span class="range-val">{{ masterVol() * 100 | number: '1.0-0' }}%</span>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="1"
+              [value]="masterVol() * 100"
+              (input)="setMasterVol($any($event.target).valueAsNumber / 100)"
+              aria-label="Master volume"
+            />
           </div>
           @for (role of soundRoles; track role.key) {
             <div class="sound-row">
               <span class="sound-role">{{ role.label }}</span>
-              <span class="range-val">{{ (sounds()[role.key].vol * 100) | number:'1.0-0' }}%</span>
+              <span class="range-val">{{ sounds()[role.key].vol * 100 | number: '1.0-0' }}%</span>
               <app-listbox
                 [options]="soundSelectOptions"
                 [value]="soundOptionFor(role.key)"
@@ -204,16 +299,27 @@
                 (toggle)="toggleSoundOpen(role.key)"
                 (select)="setSoundRole(role.key, $event)"
               />
-              <input type="range" min="0" max="100" step="1" [value]="sounds()[role.key].vol * 100" (input)="setRoleVol(role.key, $any($event.target).valueAsNumber)" [attr.aria-label]="role.label + ' volume'" />
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+                [value]="sounds()[role.key].vol * 100"
+                (input)="setRoleVol(role.key, $any($event.target).valueAsNumber)"
+                [attr.aria-label]="role.label + ' volume'"
+              />
             </div>
           }
           <div class="sound-actions">
-            <button type="button" class="btn small ghost" (click)="previewMain()">Preview meter</button>
-            <button type="button" class="btn small ghost" (click)="previewPoly()">Preview poly</button>
+            <button type="button" class="btn small ghost" (click)="previewMain()">
+              Preview meter
+            </button>
+            <button type="button" class="btn small ghost" (click)="previewPoly()">
+              Preview poly
+            </button>
           </div>
         </div>
       </aside>
     </div>
   </section>
 </main>
-

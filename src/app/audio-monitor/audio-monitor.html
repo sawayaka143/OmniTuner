@@ -27,6 +27,14 @@
         <h2 id="tuner-title">{{ currentTuning().label }}</h2>
         <p>{{ currentInstrumentLabel() }} · {{ tuningSummary() }}</p>
       </div>
+      <div class="header-actions">
+        <app-toggle
+          [checked]="mode() === 'auto'"
+          label="Auto detect"
+          [inline]="true"
+          (change)="selectMode($event ? 'auto' : 'manual')"
+        />
+      </div>
     </header>
 
     <div class="tuner-controls">
@@ -38,7 +46,6 @@
         [selectedTuningId]="selectedTuningId()"
         [currentTuning]="currentTuning()"
         [dropdownOpen]="dropdownOpen()"
-        [mode]="mode()"
         [plusActive]="plusActive()"
         (selectInstrument)="selectInstrument($event)"
         (selectTuning)="selectTuning($event)"
@@ -49,7 +56,6 @@
         (manageInstruments)="openInstrumentManager()"
         (toggleDropdown)="toggleDropdown()"
         (closeDropdown)="closeDropdown()"
-        (modeChange)="selectMode($event)"
       />
     </div>
 

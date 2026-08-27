@@ -74,19 +74,19 @@ describe('BpmDial', () => {
     const emitted: number[] = [];
     fixture.componentInstance.bpmChange.subscribe((v) => emitted.push(v));
 
-    // Give the dial a real size so angle math has a center.
     Object.defineProperty(dial, 'getBoundingClientRect', {
       value: () => ({ left: 0, top: 0, width: 200, height: 200, right: 200, bottom: 200 }),
     });
 
     dial.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 1, clientX: 100, clientY: 0 }));
-    // Rotate the pointer 90° clockwise (from 12 o'clock to 3 o'clock).
-    dial.dispatchEvent(new PointerEvent('pointermove', { pointerId: 1, clientX: 200, clientY: 100 }));
+
+    dial.dispatchEvent(
+      new PointerEvent('pointermove', { pointerId: 1, clientX: 200, clientY: 100 }),
+    );
     dial.dispatchEvent(new PointerEvent('pointerup', { pointerId: 1, clientX: 200, clientY: 100 }));
 
     expect(emitted.length).toBeGreaterThan(0);
-    // 90° = 90 / (360/55) ≈ 13.75 ticks → 100 + 14 = 114 (clockwise drag
-    // increases the BPM, matching the meter's natural direction).
+
     expect(emitted[emitted.length - 1]).toBe(114);
   });
 

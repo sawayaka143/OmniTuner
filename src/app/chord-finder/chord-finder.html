@@ -12,7 +12,6 @@
     </header>
 
     <div class="finder-columns">
-      <!-- ══════════ CONTROLS (right rail) ══════════ -->
       <aside class="controls-panel" aria-label="Voicing controls">
         <div class="control-section">
           <span class="section-label">01 · Tuning</span>
@@ -79,7 +78,6 @@
         (keydown)="onResizeKeydown($event)"
       ></button>
 
-      <!-- ══════════ OUTPUT / STAGE (hero) ══════════ -->
       <section class="stage" aria-label="Generated voicings">
         <div class="control-rail">
           <span class="rail-caption">TAB OUTPUT</span>
@@ -126,10 +124,18 @@
         >
           @if (results()) {
             @if (detectedKey()) {
-              <p class="card-note" [class.good]="detectedKey()!.confidence === 'strong'" [class.warn]="detectedKey()!.confidence === 'moderate'">
-                Detected key: {{ detectedKey()!.tonicName }} {{ detectedKey()!.mode }} · {{ detectedKey()!.confidence }}
+              <p
+                class="card-note"
+                [class.good]="detectedKey()!.confidence === 'strong'"
+                [class.warn]="detectedKey()!.confidence === 'moderate'"
+              >
+                Detected key: {{ detectedKey()!.tonicName }} {{ detectedKey()!.mode }} ·
+                {{ detectedKey()!.confidence }}
                 @if (detectedKey()!.alternatives.length) {
-                  <span> · also: {{ detectedKey()!.alternatives[0].tonicName }} {{ detectedKey()!.alternatives[0].mode }}</span>
+                  <span>
+                    · also: {{ detectedKey()!.alternatives[0].tonicName }}
+                    {{ detectedKey()!.alternatives[0].mode }}</span
+                  >
                 }
               </p>
             }
@@ -166,7 +172,9 @@
                     </p>
                   }
                   @if (!entry.shapes.length) {
-                    <p class="card-note warn">no voicings satisfy these rules — try: {{ relaxHints() }}</p>
+                    <p class="card-note warn">
+                      no voicings satisfy these rules — try: {{ relaxHints() }}
+                    </p>
                   } @else {
                     <div class="card-shapes">
                       @for (shape of entry.shapes; track $index) {

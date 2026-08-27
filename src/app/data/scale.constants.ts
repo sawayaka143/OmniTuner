@@ -1,10 +1,5 @@
 import { Scale } from '../models/scale.model';
 
-/**
- * Chromatic note names, **C-rooted** and indexable by absolute pitch class
- * (C = 0, ... B = 11). Two parallel spellings so enharmonic output can follow
- * the chosen root's accidental preference.
- */
 export const SHARP_NAMES: readonly string[] = [
   'C',
   'C#',
@@ -35,11 +30,6 @@ export const FLAT_NAMES: readonly string[] = [
   'B',
 ];
 
-/**
- * Scale / mode catalog. Each interval uses scale-degree notation relative to the
- * tonic, including Unicode accidentals where needed. To add a scale, append an
- * entry here — no other code changes required.
- */
 export const SCALES: readonly Scale[] = [
   {
     id: 'major',

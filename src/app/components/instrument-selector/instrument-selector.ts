@@ -1,13 +1,7 @@
 import { Component, computed, input, output } from '@angular/core';
 import { Instrument, Tuning } from '../../models/instrument.model';
-import { TunerMode } from '../../models/tuner-preferences.model';
 import { IconButton } from '../../ui/icon-button/icon-button';
 import { RovingRadioGroup } from '../../ui/keyboard-nav';
-
-interface ModeOption {
-  readonly value: TunerMode;
-  readonly label: string;
-}
 
 @Component({
   selector: 'app-instrument-selector',
@@ -23,8 +17,7 @@ export class InstrumentSelector {
   readonly selectedTuningId = input.required<string>();
   readonly currentTuning = input.required<Tuning>();
   readonly dropdownOpen = input(false);
-  readonly mode = input<TunerMode>('auto');
-  /** True while the "+" (new instrument) segment holds the active indicator. */
+
   readonly plusActive = input(false);
 
   readonly selectInstrument = output<string>();
@@ -36,17 +29,6 @@ export class InstrumentSelector {
   readonly manageInstruments = output<void>();
   readonly toggleDropdown = output<void>();
   readonly closeDropdown = output<void>();
-  readonly modeChange = output<TunerMode>();
-
-  protected readonly modeOptions: readonly ModeOption[] = [
-    { value: 'auto', label: 'Auto' },
-    { value: 'manual', label: 'Manual' },
-  ];
-
-  protected chooseMode(value: TunerMode): void {
-    if (this.mode() === value) return;
-    this.modeChange.emit(value);
-  }
 
   protected readonly presetTunings = computed(() =>
     this.availableTunings().filter((tuning) => tuning.kind !== 'custom'),

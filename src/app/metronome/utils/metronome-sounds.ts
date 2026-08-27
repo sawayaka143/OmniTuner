@@ -11,7 +11,14 @@ function noiseBuffer(ctx: AudioContext): AudioBuffer {
   return buf;
 }
 
-function envGain(ctx: AudioContext, out: AudioNode, t: number, peak: number, dur: number, attack = 0.002): GainNode {
+function envGain(
+  ctx: AudioContext,
+  out: AudioNode,
+  t: number,
+  peak: number,
+  dur: number,
+  attack = 0.002,
+): GainNode {
   const gain = ctx.createGain();
   gain.gain.setValueAtTime(0.0001, t);
   gain.gain.exponentialRampToValueAtTime(Math.max(peak, 0.0001), t + attack);
@@ -20,7 +27,12 @@ function envGain(ctx: AudioContext, out: AudioNode, t: number, peak: number, dur
   return gain;
 }
 
-type SoundFn = (ctx: AudioContext, out: AudioNode, t: number, vel: number) => AudioScheduledSourceNode[];
+type SoundFn = (
+  ctx: AudioContext,
+  out: AudioNode,
+  t: number,
+  vel: number,
+) => AudioScheduledSourceNode[];
 
 function tone(options: {
   freq: number;
@@ -136,7 +148,10 @@ export const SOUNDS: Record<string, { label: string; play: SoundFn }> = {
       tone({ freq: 196, type: 'triangle', dur: 0.05, gain: 0.6 }),
     ),
   },
-  shaker: { label: 'Shaker', play: noiseHit({ dur: 0.06, type: 'highpass', freq: 5200, attack: 0.006, gain: 0.85 }) },
+  shaker: {
+    label: 'Shaker',
+    play: noiseHit({ dur: 0.06, type: 'highpass', freq: 5200, attack: 0.006, gain: 0.85 }),
+  },
   cowbell: { label: 'Cowbell', play: cowbellSound() },
   click: { label: 'Click', play: tone({ freq: 1200, type: 'square', dur: 0.04, gain: 0.9 }) },
 };

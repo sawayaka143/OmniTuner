@@ -15,7 +15,6 @@ export class Brand {
   private readonly audioCapture = inject(AudioCaptureService);
   private readonly scalePlayback = inject(ScalePlayback);
 
-  /** True while the tuner captures audio or a scale/tuning is being played. */
   protected readonly playing = computed(
     () => this.audioCapture.isCapturing() || this.scalePlayback.isPlaying(),
   );

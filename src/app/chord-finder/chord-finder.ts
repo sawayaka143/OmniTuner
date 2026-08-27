@@ -29,7 +29,6 @@ interface TuningOption {
   readonly text: string;
 }
 
-
 export interface ChordEntry {
   readonly token: string;
   readonly parse: ChordParseResult;
@@ -217,9 +216,7 @@ export class ChordFinder {
   private persistControlsWidth(px: number): void {
     try {
       localStorage.setItem(this.controlsStorageKey, String(Math.round(px)));
-    } catch {
-      /* ignore */
-    }
+    } catch {}
   }
 
   private readControlsWidth(): number | null {
@@ -310,7 +307,9 @@ export class ChordFinder {
       const p = parseChord(token);
       if (p.ok) validChords.push(p.chord);
     }
-    const dk = validChords.length ? detectKey(validChords, { tuningFlats: parsed.tuning.flats }) : null;
+    const dk = validChords.length
+      ? detectKey(validChords, { tuningFlats: parsed.tuning.flats })
+      : null;
 
     const chords: ChordEntry[] = tokens.map((token) => {
       const parse = parseChord(token);
@@ -329,7 +328,10 @@ export class ChordFinder {
       tuning: parsed.tuning,
       options: {},
       detectedKey: dk,
-      chords: chords.map((entry) => ({ ...entry, shapes: entry.shapes.slice(0, RESULTS_PER_CHORD) })),
+      chords: chords.map((entry) => ({
+        ...entry,
+        shapes: entry.shapes.slice(0, RESULTS_PER_CHORD),
+      })),
     });
     this.copyBuffer = this.buildCopyBuffer(parsed.tuning, chords, dk);
   }

@@ -1,5 +1,3 @@
-/// @param {String} $indicator - legacy param kept for call-site compatibility.
-/// @param {String} $indicator-class - class name of the sliding indicator element.
 @mixin seg-control($indicator: 'plain', $indicator-class: 'seg-indicator') {
   position: relative;
   display: inline-flex;
@@ -20,28 +18,27 @@
     top: var(--space-1);
     bottom: var(--space-1);
     left: var(--space-1);
-    width: calc((100% - var(--space-2) - var(--seg-gap, 0px) * (var(--seg-count, 1) - 1)) / var(--seg-count, 1));
+    width: calc(
+      (100% - var(--space-2) - var(--seg-gap, 0px) * (var(--seg-count, 1) - 1)) /
+        var(--seg-count, 1)
+    );
     border-radius: var(--r-pill);
     z-index: 0;
 
-    // Solid elevated pill appearance; depth comes from the theme-tuned shadow.
     background: var(--seg-pill-bg);
 
-    // Physical depth: theme-tuned elevation + inner highlights
     box-shadow: var(--seg-pill-shadow);
 
     transition: transform 500ms var(--ease-spring);
     will-change: transform;
   }
 
-  // Hide smoothly when no option is selected
   .#{$indicator-class}.hidden {
     opacity: 0;
     pointer-events: none;
     transform: translateX(-100%);
   }
 
-  // Accent variant: slightly tinted solid fill
   &.indicator-accent .#{$indicator-class} {
     background: color-mix(in srgb, var(--scale-accent) 22%, var(--seg-pill-bg));
     box-shadow:
@@ -75,7 +72,6 @@
       text-overflow: ellipsis;
     }
 
-    // Smooth color/shadow transition instead of font-weight
     transition:
       color 250ms ease,
       text-shadow 250ms ease;
@@ -86,7 +82,7 @@
 
     &.active {
       color: var(--text);
-      // Subtle debossed/etched text effect instead of bolding
+
       text-shadow: var(--seg-etch);
     }
 

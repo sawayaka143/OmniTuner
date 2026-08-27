@@ -1,15 +1,9 @@
 import { AfterViewInit, Directive, ElementRef, HostListener, inject, input } from '@angular/core';
 
-/**
- * Adds radiogroup keyboard navigation to a host with `role="radiogroup"`:
- * Arrow keys move between radio buttons, Home/End jump to the first/last, and
- * only the checked (or last-focused) button is a Tab stop.
- */
 @Directive({
   selector: '[appRovingRadioGroup]',
 })
 export class RovingRadioGroup implements AfterViewInit {
-  /** Whether navigation is enabled (no-op when disabled). */
   readonly appRovingRadioGroup = input(true);
 
   private readonly hostEl = inject(ElementRef<HTMLElement>);

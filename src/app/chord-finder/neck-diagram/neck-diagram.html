@@ -12,18 +12,15 @@
     rx="6"
   />
 
-  <!-- diagram header: chord symbol + fingering rank -->
   <text class="head-symbol" x="10" y="15">
     {{ symbol() }}
     <tspan class="head-rank" dx="7">#{{ index() + 1 }}</tspan>
   </text>
 
-  <!-- inlay markers -->
   @for (dot of inlays(); track $index) {
     <circle class="inlay" [attr.cx]="dot.cx" [attr.cy]="dot.cy" r="4.5" />
   }
 
-  <!-- fret wires -->
   @for (wire of wires(); track $index) {
     @switch (wire.kind) {
       @case ('nut') {
@@ -48,7 +45,6 @@
     }
   }
 
-  <!-- strings -->
   @for (string of strings(); track $index) {
     <line
       class="string"
@@ -59,7 +55,6 @@
     />
   }
 
-  <!-- open-string note labels -->
   @for (label of stringLabels(); track $index) {
     <text
       class="string-label"
@@ -71,17 +66,14 @@
     </text>
   }
 
-  <!-- fret number axis -->
   @for (label of axisLabels(); track $index) {
     <text class="axis-label" [attr.x]="label.x" [attr.y]="label.y">{{ label.text }}</text>
   }
 
-  <!-- muted strings -->
   @for (marker of markers().muted; track $index) {
     <text class="mute-mark" [attr.x]="marker.x" [attr.y]="marker.y">x</text>
   }
 
-  <!-- sounding notes -->
   @for (dot of markers().dots; track $index) {
     @if (view() === 'dots') {
       <circle

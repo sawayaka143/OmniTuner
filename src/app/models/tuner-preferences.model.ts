@@ -27,28 +27,27 @@ export const TUNER_HOLD_MAX = 1500;
 export const TUNER_HOLD_STEP = 50;
 
 export interface InTunePreferences {
-  /** Master switch: when OFF the tuner behaves exactly as before — no tint, message, chime, or glow. */
   readonly enabled: boolean;
-  /** Confirmation chime on lock. */
+
   readonly sound: boolean;
-  /** Ambient glow / one-shot pulse on lock. */
+
   readonly glow: boolean;
-  /** Single user-configurable color driving every in-tune cue, via --in-tune-color. */
+
   readonly color: string;
-  /** Color driving every off-pitch cue (hero note, tune prompt), via --out-of-tune-color. */
+
   readonly outOfTuneColor: string;
-  /** ± cents window for the lock. */
+
   readonly tolerance: number;
-  /** ms the pitch must stay in range before confirming. */
+
   readonly holdMs: number;
 }
 
 export interface TunerSettings {
   readonly mode: TunerMode;
-  /** Mode applied on startup: remember the last used mode, or force one. */
+
   readonly startupMode: TunerStartupMode;
   readonly inTune: InTunePreferences;
-  /** A4 reference pitch in Hz (default 440). */
+
   readonly referencePitch: number;
 }
 

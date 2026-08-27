@@ -6,8 +6,6 @@
 
 @include page-chrome();
 
-/* ════════════════ Columns ════════════════ */
-
 .finder-columns {
   --controls-w: 300px;
   display: grid;
@@ -43,7 +41,6 @@
     opacity: 1;
   }
 }
-/* ════════════════ Stage (hero output) ════════════════ */
 
 .stage {
   min-width: 0;
@@ -86,8 +83,6 @@
   letter-spacing: var(--tracking-wide);
 }
 
-
-/* The machined recess the voicing plate sits in. */
 .stage-well {
   flex: 1;
   min-height: 320px;
@@ -104,8 +99,6 @@
     outline-offset: 2px;
   }
 }
-
-/* ── Chord cards ─────────────────────────────── */
 
 .chord-card {
   --card-in-delay: calc(var(--card-in-index) * 75ms);
@@ -199,7 +192,6 @@
   min-width: 0;
 }
 
-/* The raised "plate" the neck diagram sits on — the focal point. */
 .card-shape app-neck-diagram {
   display: block;
   padding: var(--space-3) var(--space-4);
@@ -240,8 +232,6 @@
     font-weight: var(--fw-normal);
   }
 }
-
-/* ── Legend (hardware caption) ───────────────── */
 
 .legend {
   padding: var(--space-2) var(--space-4);
@@ -285,8 +275,6 @@
   color: var(--text-dim);
 }
 
-/* ════════════════ Controls panel ════════════════ */
-
 .controls-panel {
   min-width: 0;
   overflow: visible;
@@ -321,8 +309,6 @@
   line-height: 1;
 }
 
-/* Dropdown menus inside the control rail span their trigger width so they
-   align with the two-column rows (mirrors RootNotePicker). */
 .controls-panel app-segmented {
   display: block;
   max-width: 100%;
@@ -354,9 +340,6 @@
   padding: var(--space-2) var(--space-4);
   letter-spacing: var(--tracking-label);
 }
-
-
-/* ════════════════ Responsive ════════════════ */
 
 @media (max-width: 980px) {
   .finder-columns {

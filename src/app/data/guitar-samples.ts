@@ -1,5 +1,3 @@
-/** Samples: Karoryfer Emily Guitar (CC0 1.0), mf_rr1 takes. */
-
 export interface GuitarSample {
   readonly file: string;
   readonly rootMidi: number;

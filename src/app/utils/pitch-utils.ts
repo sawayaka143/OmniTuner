@@ -17,13 +17,11 @@ export function frequencyToMidiNote(frequency: number, ref = 440): number | null
   return Math.round(69 + 12 * Math.log2(frequency / ref));
 }
 
-/** Unrounded MIDI value of a frequency, e.g. 440 Hz → 69, 441 Hz → ~69.0392. */
 export function frequencyToMidiFloat(frequency: number, ref = 440): number | null {
   if (!Number.isFinite(frequency) || frequency <= 0) return null;
   return 69 + 12 * Math.log2(frequency / ref);
 }
 
-/** Cents offset between a (possibly fractional) played MIDI value and a target MIDI note. Unclamped. */
 export function centsFromMidiFloat(
   playedMidiFloat: number | null,
   targetMidi: number,
@@ -32,13 +30,6 @@ export function centsFromMidiFloat(
   return (playedMidiFloat - targetMidi) * 100;
 }
 
-/**
- * String of the tuning closest to the played pitch, with signed unclamped
- * cents against it. String pitches are nominal (A4=440) so the target does
- * not move when the user changes the reference pitch. Hysteresis: while the
- * previous target is still within HYSTERESIS_CENTS of the winner it is kept,
- * so a midpoint pitch cannot flicker between two strings.
- */
 export function nearestStringTarget(
   playedMidiFloat: number | null,
   strings: ReadonlyArray<{ name: string; freq: number }>,
@@ -71,20 +62,11 @@ export function nearestStringTarget(
   return best;
 }
 
-/**
- * Cents → needle position as a CSS `left` percentage. The needle/ruler clamps
- * to ±50¢ while the numeric value stays unclamped elsewhere.
- */
 export function needlePercentFromCents(cents: number | null): string {
   if (cents === null || !Number.isFinite(cents)) return '50%';
   return `${50 + Math.max(-50, Math.min(50, cents))}%`;
 }
 
-/**
- * Hold-timer rule for the in-tune lock: a pitch confirms only after it has
- * stayed inside the tolerance window for at least `holdMs`. Pure so the
- * edge cases get a real unit test.
- */
 export function shouldConfirm(options: {
   inRange: boolean;
   elapsedMs: number;
@@ -104,41 +86,23 @@ export function hzDisplay(frequency: number | null): string {
   return frequency !== null ? `${frequency.toFixed(2)} Hz` : '\u2014 Hz';
 }
 
-/** Nearest chromatic semitone (any octave) for a played MIDI float. */
 export function nearestSemitone(playedMidiFloat: number | null): { midi: number } | null {
   if (playedMidiFloat === null || !Number.isFinite(playedMidiFloat)) return null;
   return { midi: Math.round(playedMidiFloat) };
 }
 
-/**
- * Direction-only prompt readout, e.g. TUNE UP / TUNE DOWN / IN TUNE.
- * Threshold defaults to 5¢ for backward compat; the tuner passes its
- * configured tolerance so the text and the in-tune confirmation agree.
- * At exactly threshold cents the pitch counts as in tune (<=), matching
- * the confirm gate's <= tolerance.
- */
 export function tuneDirectionText(cents: number | null, threshold = 5): string {
   if (cents === null || !Number.isFinite(cents)) return '\u2014';
   if (Math.abs(cents) <= threshold) return 'IN TUNE';
   return cents < 0 ? 'TUNE UP' : 'TUNE DOWN';
 }
 
-/**
- * Cents-magnitude readout shown under the direction prompt.
- * Threshold defaults to 5¢ for backward compat; the tuner passes its
- * configured tolerance so the readout and the confirmation agree.
- * At exactly threshold cents the pitch counts as in tune (<=).
- */
 export function tuneCentsText(cents: number | null, threshold = 5): string {
   if (cents === null || !Number.isFinite(cents)) return '';
   if (Math.abs(cents) <= threshold) return '';
   return `${Math.abs(Math.round(cents))}\u00a2`;
 }
 
-/**
- * Linear blend between two six-digit hex colors. Returns null when either
- * color is invalid; t is clamped to [0, 1].
- */
 export function interpolateColor(from: string, to: string, t: number): string | null {
   const parse = (hex: string): [number, number, number] | null => {
     const match = /^#([0-9a-f]{6})$/i.exec(hex);
@@ -158,13 +122,6 @@ export function interpolateColor(from: string, to: string, t: number): string | 
   return `#${channels.map((channel) => channel.toString(16).padStart(2, '0')).join('')}`;
 }
 
-/**
- * Color-blend progress for the tune prompt: 0 when far off-pitch (≥ 50¢),
- * 1 at the in-tune boundary. The boundary is `max(5, threshold)` so the
- * color fully reaches the in-tune color exactly at the confirm threshold
- * (the tuner passes its configured tolerance), while never narrowing the
- * ramp below the classic ±5¢ for tight tolerances.
- */
 export function tuneColorProgress(cents: number | null, threshold = 5): number {
   if (cents === null || !Number.isFinite(cents)) return 0;
   const magnitude = Math.abs(cents);

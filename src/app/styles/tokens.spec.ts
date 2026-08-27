@@ -1,14 +1,5 @@
-/**
- * Guard: the text color tokens shipped in src/styles.scss must clear 4.5:1
- * (WCAG AA) against every surface token they appear on — in BOTH themes.
- * Values are kept in sync with styles.scss — the guard catches regressions
- * that would silently fail contrast for micro-labels, dropdown groups, rail
- * captions, semantic status text and the theme-derived accent re-inking.
- * KEEP IN SYNC — src/styles.scss (`:root` dark block and light block).
- */
 const AA_MIN = 4.5;
 
-/** Dark theme tokens (`:root`). Also the light-theme tuner faceplate palette. */
 const DARK_TEXT_TOKENS: Record<string, string> = {
   '--text': '#f5f5f3',
   '--text-muted': '#9a9a94',
@@ -22,7 +13,6 @@ const DARK_SURFACE_TOKENS: Record<string, string> = {
   '--surface-container-high': '#2c2c29',
 };
 
-/** Light theme tokens (`html[data-theme='light']`). */
 const LIGHT_TEXT_TOKENS: Record<string, string> = {
   '--text': '#1a1a18',
   '--text-muted': '#54544f',
@@ -36,7 +26,6 @@ const LIGHT_SURFACE_TOKENS: Record<string, string> = {
   '--surface-container-high': '#dedbd4',
 };
 
-/** Semantic status colors, light theme — used as text on canvas and cards. */
 const LIGHT_SEMANTIC_TOKENS: Record<string, string> = {
   '--good': '#11603c',
   '--warn': '#8a4d00',
@@ -45,13 +34,6 @@ const LIGHT_SEMANTIC_TOKENS: Record<string, string> = {
   '--danger-hover': '#8f1138',
 };
 
-/**
- * The themes re-ink the raw user accent into readable text via
- * `color-mix(in srgb, var(--scale-accent) <ratio>%, <base>)` (see --accent-text
- * in styles.scss). Raw accent stays reserved for fills, lamps and glows.
- * The mixes below replicate that math for the accent extremes a user can pick
- * in Settings.
- */
 const ACCENT_TEXT_MIX = {
   light: { ratio: 0.3, base: '#1a1a18' },
   dark: { ratio: 0.4, base: '#f5f5f3' },
@@ -85,7 +67,6 @@ function contrastRatio(a: string, b: string): number {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-/** Replicates `color-mix(in srgb, a ratio%, b)` — gamma-encoded sRGB lerp. */
 function mixHex(a: string, b: string, ratio: number): string {
   const [ra, ga, ba] = hexToRgb(a);
   const [rb, gb, bb] = hexToRgb(b);

@@ -103,8 +103,7 @@ describe('PressRepeat', () => {
     fixture.destroy();
 
     await wait(300);
-    // If the directive failed to clear timers, the interval would have
-    // kept advancing the host signal after destroy.
+
     expect(fixture.componentInstance.count()).toBe(countAtDestroy);
   });
 });

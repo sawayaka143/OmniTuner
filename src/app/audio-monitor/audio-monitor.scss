@@ -7,13 +7,9 @@
 @include page-chrome();
 
 .workbench {
-  /* The tuning dropdown menu floats, so it must escape the workbench card
-     instead of being clipped at its edge. The stage below keeps the rounded
-     corners. (Same approach as the Metronome workbench.) */
   overflow: visible;
 }
 
-/* Selector band: instrument / tuning / mode in one row, centered. */
 .tuner-controls {
   display: flex;
   justify-content: center;

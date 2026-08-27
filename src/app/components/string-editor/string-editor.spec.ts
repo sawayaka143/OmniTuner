@@ -28,13 +28,10 @@ describe('StringEditor', () => {
     fixture.nativeElement.querySelector('input') as HTMLInputElement;
   const stepButtons = (): HTMLButtonElement[] =>
     [...fixture.nativeElement.querySelectorAll('button.step-button')] as HTMLButtonElement[];
-  // First two step-buttons belong to the count stepper (rendered when allowCountChange=true).
-  // After that come pairs per string row (down, up), ordered top (= highest pitch) to bottom.
+
   const countDownButton = (): HTMLButtonElement => stepButtons()[0];
   const countUpButton = (): HTMLButtonElement => stepButtons()[1];
-  // Bottom display row = lowest pitch = noteIndex 0 = INITIAL_NOTES[0] (E2, midi 40).
-  // Each string row contributes 2 step-buttons, so the bottom row's down button sits at
-  // index 2 + 2 * (rowCount - 1) = 2 + 2*5 = 12.
+
   const lowestStringDownButton = (): HTMLButtonElement => stepButtons()[12];
   const saveButton = (): HTMLButtonElement =>
     fixture.nativeElement.querySelector('.save-button') as HTMLButtonElement;
@@ -51,8 +48,8 @@ describe('StringEditor', () => {
 
   it('initialises notes from the input and renders one row per string high-pitch-first', () => {
     expect(noteNameOutputs().length).toBe(INITIAL_NOTES.length);
-    expect(noteNameOutputs()[0].textContent?.trim()).toBe('E4'); // top = highest = midi 64
-    expect(noteNameOutputs()[5].textContent?.trim()).toBe('E2'); // bottom = lowest = midi 40
+    expect(noteNameOutputs()[0].textContent?.trim()).toBe('E4');
+    expect(noteNameOutputs()[5].textContent?.trim()).toBe('E2');
   });
 
   it('uses the createLabel in create mode', () => {
@@ -198,8 +195,7 @@ describe('StringEditor', () => {
     fixture.detectChanges();
 
     expect(nameInput().value).toBe('');
-    // PRESET.notes = [38, 45, 50, 55, 59, 64]; display reverse = high→low.
-    // Top → midi 64 (E4), 59 (B3), 55 (G3), 50 (D3), 45 (A2), 38 (D2).
+
     expect(noteNameOutputs().map((el) => el.textContent?.trim())).toEqual([
       'E4',
       'B3',
@@ -230,8 +226,7 @@ describe('StringEditor', () => {
     fixture.detectChanges();
     expect(countValue().textContent?.trim()).toBe('7');
     expect(noteNameOutputs().length).toBe(7);
-    // New note is appended at notes[6] (= 40 + 6*5 = 70), which becomes the
-    // topmost display row (noteIndex 6 maps to display row 0).
+
     expect(noteNameOutputs()[0].textContent?.trim()).toBe('A♯4');
   });
 
@@ -244,7 +239,7 @@ describe('StringEditor', () => {
 
   it('honours the accidental preference for note display', () => {
     fixture.componentRef.setInput('accidental', 'flat');
-    fixture.componentRef.setInput('initialNotes', [42]); // F♯ / G♭ family
+    fixture.componentRef.setInput('initialNotes', [42]);
     fixture.detectChanges();
     expect(noteNameOutputs()[0].textContent?.trim()).toBe('G♭2');
   });

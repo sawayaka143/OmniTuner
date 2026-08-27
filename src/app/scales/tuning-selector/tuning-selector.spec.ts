@@ -45,7 +45,7 @@ describe('TuningSelector', () => {
     });
 
     const options = fixture.nativeElement.querySelectorAll('.selector-option');
-    // Second preset option (Drop D).
+
     (options[1] as HTMLButtonElement).click();
 
     expect(selectedId).toBe('drop-d');

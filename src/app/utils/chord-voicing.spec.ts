@@ -118,7 +118,9 @@ describe('ranking regression (biomechanical)', () => {
   it('ranks open G [320003] in top 2', () => {
     const shapes = searchChord(tuning, chord('G'));
     const top2 = shapes.slice(0, 2);
-    expect(top2.some((s) => JSON.stringify(s.frets) === JSON.stringify([3, 2, 0, 0, 0, 3]))).toBe(true);
+    expect(top2.some((s) => JSON.stringify(s.frets) === JSON.stringify([3, 2, 0, 0, 0, 3]))).toBe(
+      true,
+    );
   });
 
   it('ranks open Am [x02210] in top 2', () => {

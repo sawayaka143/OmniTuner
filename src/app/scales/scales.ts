@@ -77,9 +77,6 @@ export class Scales {
   private pulseTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly sequenceTimers = new Set<ReturnType<typeof setTimeout>>();
 
-  // ── Tuning data from the shared registry ─────────────────────────
-
-  /** Preset tunings derived from the selected instrument's built-in tunings. */
   protected readonly tuningPresets = computed<readonly TuningOption[]>(() =>
     this.registry.selectedInstrument().tunings.map((tuning) => ({
       id: tuning.id,
@@ -89,7 +86,6 @@ export class Scales {
     })),
   );
 
-  /** Custom tunings for the selected instrument from the registry. */
   protected readonly savedTunings = computed<readonly TuningOption[]>(() =>
     this.registry.tuningsForInstrument(this.registry.selectedInstrumentId()).map((t) => ({
       id: t.id,
@@ -102,20 +98,15 @@ export class Scales {
   protected readonly selectedTuningId = this.registry.selectedTuningId;
   protected readonly selectedTuningName = computed(() => this.registry.selectedTuning().label);
 
-  /** Editor presets: the built-in tunings of the current instrument. */
   protected readonly editorPresets = computed<readonly TuningPresetOption[]>(() =>
     this.tuningPresets().map((p) => ({ id: p.id, name: p.name, notes: p.notes })),
   );
 
-  /** Reference notes for highlighting changes in the editor. */
   protected readonly referenceNotes = computed<readonly number[] | null>(
     () => this.tuningPresets()[0]?.notes ?? null,
   );
 
-  /** The instrument label shown in the editor subtitle. */
   protected readonly instrumentLabel = computed(() => this.registry.selectedInstrument().label);
-
-  // ── Scale / display state ────────────────────────────────────────
 
   protected readonly rootNotes = computed(() =>
     this.preferencesState().accidental === 'flat' ? FLAT_NAMES : SHARP_NAMES,
@@ -145,7 +136,6 @@ export class Scales {
     };
   });
 
-  /** Translate root-relative scale degrees for the generic, absolute-pitch engine. */
   private readonly fretboardIntervals = computed<IntervalEntry[]>(() => {
     const rootPitchClass = this.preferencesState().rootPitchClass;
     return this.intervals().map((interval) => ({
@@ -154,7 +144,6 @@ export class Scales {
     }));
   });
 
-  /** The fretboard is high-string-first; persisted tunings are low-string-first. */
   private readonly openMidiNotes = computed<number[]>(() =>
     [...this.activeTuning().notes].reverse(),
   );
@@ -221,7 +210,6 @@ export class Scales {
     return `${note} · string ${cell.stringIndex + 1} · ${position}`;
   });
 
-  /** Playback failure surfaced to the view (set when AudioContext fails). */
   protected readonly playbackError = computed(() => this.playback.error());
 
   protected dismissPlaybackError(): void {
@@ -319,7 +307,7 @@ export class Scales {
     }
 
     const notes = this.activeTuning().notes;
-    const rows = this.cells(); // high-string-first: rows[0] = 1st string
+    const rows = this.cells();
     const entries = notes.map((midi, index) => ({
       midi,
       highlight: rows[rows.length - 1 - index]?.find((cell) => cell.fret === 0) ?? null,
@@ -371,9 +359,7 @@ export class Scales {
     if (this.muteGain) {
       try {
         this.muteGain.disconnect();
-      } catch {
-        /* ok */
-      }
+      } catch {}
       this.muteGain = null;
     }
   }
@@ -411,7 +397,6 @@ export class Scales {
     this.previewTuning.set(null);
 
     if (id === null) {
-      // Create mode: start from the current tuning's notes.
       this.editingTuningId.set(null);
       this.editorInitialName.set('');
       this.editorInitialNotes.set([...this.activeTuning().notes]);
@@ -419,7 +404,6 @@ export class Scales {
       return;
     }
 
-    // Edit mode: find the custom tuning in the registry.
     const tuning = this.registry
       .tuningsForInstrument(this.registry.selectedInstrumentId())
       .find((t) => t.id === id);
