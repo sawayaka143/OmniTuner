@@ -1,26 +1,4 @@
 <main class="app-main" (click)="closeDropdown()">
-  <app-instrument-selector
-    [instruments]="instruments()"
-    [selectedInstrumentId]="selectedInstrumentId()"
-    [selectedInstrumentIndex]="selectedInstrumentIndex()"
-    [availableTunings]="availableTunings()"
-    [selectedTuningId]="selectedTuningId()"
-    [currentTuning]="currentTuning()"
-    [dropdownOpen]="dropdownOpen()"
-    [mode]="mode()"
-    [plusActive]="plusActive()"
-    (selectInstrument)="selectInstrument($event)"
-    (selectTuning)="selectTuning($event)"
-    (newCustomTuning)="openCreateTuning()"
-    (newInstrument)="openCreateInstrument()"
-    (editCustomTuning)="openEditTuning($event)"
-    (deleteCustomTuning)="deleteCustomTuning($event)"
-    (manageInstruments)="openInstrumentManager()"
-    (toggleDropdown)="toggleDropdown()"
-    (closeDropdown)="closeDropdown()"
-    (modeChange)="selectMode($event)"
-  />
-
   <app-instrument-manager
     [open]="instrumentManagerOpen()"
     [openInCreateMode]="instrumentManagerCreateMode()"
@@ -42,57 +20,91 @@
     (dismiss)="dismissTuningEditor()"
   />
 
-  <div class="tuner-stage">
-    <div class="meter-area">
-      <div class="tune-prompt" [class.in-tune]="isTuned()" [style.color]="tuneColorHex()">
-        <span class="prompt-text">{{ tunePrompt() }}</span>
-        <span class="tune-cents" [class.visible]="!!tuneCents()">{{
-          tuneCents() || '\u00a0'
-        }}</span>
+  <section class="workbench" aria-labelledby="tuner-title">
+    <header class="workbench-header">
+      <div>
+        <span class="section-label">Current tuning</span>
+        <h2 id="tuner-title">{{ currentTuning().label }}</h2>
+        <p>{{ currentInstrumentLabel() }} · {{ tuningSummary() }}</p>
       </div>
+    </header>
 
-      <app-pitch-meter
-        [ticks]="ticks"
-        [needleLeft]="needleLeft()"
-        [cents]="frameCents()"
-        [isTuned]="isTuned()"
-      />
-
-      <div class="pulse-layer" aria-hidden="true">
-        @if (pulseActive()) {
-          <span class="lock-pulse"></span>
-        }
-      </div>
-
-      <app-pitch-display
-        [noteName]="displayNoteName()"
-        [octave]="displayOctave()"
-        [hz]="currentHz()"
-        [statusMessage]="statusMessage()"
-        [isLocked]="isLocked()"
-        [isTuned]="isTuned()"
-        [tuneColor]="tuneColorHex()"
+    <div class="tuner-controls">
+      <app-instrument-selector
+        [instruments]="instruments()"
+        [selectedInstrumentId]="selectedInstrumentId()"
+        [selectedInstrumentIndex]="selectedInstrumentIndex()"
+        [availableTunings]="availableTunings()"
+        [selectedTuningId]="selectedTuningId()"
+        [currentTuning]="currentTuning()"
+        [dropdownOpen]="dropdownOpen()"
+        [mode]="mode()"
+        [plusActive]="plusActive()"
+        (selectInstrument)="selectInstrument($event)"
+        (selectTuning)="selectTuning($event)"
+        (newCustomTuning)="openCreateTuning()"
+        (newInstrument)="openCreateInstrument()"
+        (editCustomTuning)="openEditTuning($event)"
+        (deleteCustomTuning)="deleteCustomTuning($event)"
+        (manageInstruments)="openInstrumentManager()"
+        (toggleDropdown)="toggleDropdown()"
+        (closeDropdown)="closeDropdown()"
+        (modeChange)="selectMode($event)"
       />
     </div>
 
-    <app-string-list
-      [strings]="currentStrings()"
-      [activeString]="activeString()"
-      [inTune]="chipTuned()"
-      [tunedStrings]="autoTunedNames()"
-      (select)="selectString($event)"
-    />
-  </div>
+    <div class="tuner-stage">
+      <div class="meter-area">
+        <div class="tune-prompt" [class.in-tune]="isTuned()" [style.color]="tuneColorHex()">
+          <span class="prompt-text">{{ tunePrompt() }}</span>
+          <span class="tune-cents" [class.visible]="!!tuneCents()">{{
+            tuneCents() || '\u00a0'
+          }}</span>
+        </div>
 
-  <button
-    (click)="toggleCapture()"
-    class="btn primary capture-btn"
-    [class.active]="isCapturing()"
-    type="button"
-    [attr.aria-pressed]="isCapturing()"
-  >
-    {{ isCapturing() ? 'Stop' : 'Start' }}
-  </button>
+        <app-pitch-meter
+          [ticks]="ticks"
+          [needleLeft]="needleLeft()"
+          [cents]="frameCents()"
+          [isTuned]="isTuned()"
+        />
+
+        <div class="pulse-layer" aria-hidden="true">
+          @if (pulseActive()) {
+            <span class="lock-pulse"></span>
+          }
+        </div>
+
+        <app-pitch-display
+          [noteName]="displayNoteName()"
+          [octave]="displayOctave()"
+          [hz]="currentHz()"
+          [statusMessage]="statusMessage()"
+          [isLocked]="isLocked()"
+          [isTuned]="isTuned()"
+          [tuneColor]="tuneColorHex()"
+        />
+      </div>
+
+      <app-string-list
+        [strings]="currentStrings()"
+        [activeString]="activeString()"
+        [inTune]="chipTuned()"
+        [tunedStrings]="autoTunedNames()"
+        (select)="selectString($event)"
+      />
+
+      <button
+        (click)="toggleCapture()"
+        class="btn primary capture-btn"
+        [class.active]="isCapturing()"
+        type="button"
+        [attr.aria-pressed]="isCapturing()"
+      >
+        {{ isCapturing() ? 'Stop' : 'Start' }}
+      </button>
+    </div>
+  </section>
 
   <span class="sr-only" aria-live="polite" aria-atomic="true">{{ statusMessage() }}</span>
 </main>

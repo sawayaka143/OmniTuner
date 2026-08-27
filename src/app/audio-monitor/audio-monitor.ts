@@ -136,6 +136,13 @@ export class AudioMonitor implements OnInit {
 
   readonly currentStrings = computed(() => this.currentTuning().strings);
 
+  /** Space-joined string names for the workbench header readout. */
+  readonly tuningSummary = computed(() =>
+    this.currentStrings()
+      .map((string) => string.name)
+      .join(' '),
+  );
+
   protected readonly minTunerMidiNote = MIN_TUNER_MIDI_NOTE;
   protected readonly maxTunerMidiNote = MAX_TUNER_MIDI_NOTE;
   protected readonly maxCustomTuningNameLength = MAX_CUSTOM_TUNING_NAME_LENGTH;
@@ -212,10 +219,7 @@ export class AudioMonitor implements OnInit {
     if (freq === null || freq <= 0) return null;
     const target = this.manualTarget();
     if (!target) return null;
-    return centsFromMidiFloat(
-      frequencyToMidiFloat(freq, this.refPitch()),
-      this.targetMidi(target),
-    );
+    return centsFromMidiFloat(frequencyToMidiFloat(freq, this.refPitch()), this.targetMidi(target));
   });
 
   /** True only while a locked pitch sits inside the tolerance window. */
@@ -235,7 +239,9 @@ export class AudioMonitor implements OnInit {
   readonly isTuned = computed(() => {
     if (this.tunerSettings().inTune.enabled) return this.showTuned();
     const cents = this.frameCents();
-    return cents !== null && this.trackingState() === 'locked' && Math.abs(cents) <= this.tolerance();
+    return (
+      cents !== null && this.trackingState() === 'locked' && Math.abs(cents) <= this.tolerance()
+    );
   });
 
   readonly needleLeft = computed(() => needlePercentFromCents(this.frameCents()));
@@ -357,7 +363,11 @@ export class AudioMonitor implements OnInit {
     // attack transient can't anchor the wrong string.
     effect(() => {
       const target = this.autoTarget();
-      if (target && this.trackingState() === 'locked' && target.name !== this.lastAutoTargetName()) {
+      if (
+        target &&
+        this.trackingState() === 'locked' &&
+        target.name !== this.lastAutoTargetName()
+      ) {
         this.lastAutoTargetName.set(target.name);
       }
     });

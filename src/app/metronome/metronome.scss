@@ -113,14 +113,6 @@
 .metro-play {
   width: 100%;
   min-height: var(--ctrl-h-xl);
-  .kbd-hint {
-    opacity: 0.7;
-    font-size: var(--text-2xs);
-    border: 1px solid currentColor;
-    border-radius: 4px;
-    padding: 1px 5px;
-    margin-left: 4px;
-  }
 }
 
 .beat-row {
@@ -139,7 +131,6 @@
   border-radius: 50%;
   background: var(--surface-container-high);
   border: 1px solid var(--border-subtle);
-  box-shadow: var(--shadow-recess);
   animation: beat-pop var(--dur-slow) var(--ease-spring) both;
   transition: background var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-fast) ease;
   &.first { border-color: var(--ring-primary); }

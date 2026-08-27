@@ -4,7 +4,6 @@
       <div>
         <span class="section-label">Practice tools</span>
         <h2 id="metro-title">Metronome</h2>
-        <p>Tempo → Time Signature → Subdivision → Bar Pattern → Polyrhythm → Sound &amp; Volume</p>
       </div>
     </header>
 
@@ -152,7 +151,6 @@
         <button class="btn primary metro-play" type="button" [class.active]="isPlaying()" [attr.aria-pressed]="isPlaying()" (click)="togglePlay()">
           <span class="app-icon ti" [class.ti-player-pause]="isPlaying()" [class.ti-player-play]="!isPlaying()" aria-hidden="true"></span>
           {{ isPlaying() ? 'Stop' : 'Start' }}
-          <span class="kbd-hint" aria-hidden="true">Space</span>
         </button>
 
         <div class="beat-row" role="group" aria-label="Beat indicator">
