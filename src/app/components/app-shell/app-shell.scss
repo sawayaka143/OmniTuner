@@ -99,6 +99,10 @@
   }
 
   .settings-trigger {
+    width: var(--ctrl-h-md);
+    min-height: var(--ctrl-h-md);
+    padding: 0;
+
     .app-icon {
       font-size: var(--text-lg);
     }

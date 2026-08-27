@@ -27,19 +27,18 @@
   }
 
   &.ghost {
-    border: 0;
-    border-radius: var(--r-sm);
     background: transparent;
-    box-shadow: none;
+    box-shadow: inset 0 0 0 1px transparent;
 
     &:hover {
-      background: var(--surface-container-high);
-      border-color: transparent;
-      box-shadow: none;
+      background: var(--surface-container-low);
+      box-shadow:
+        inset 0 0 0 1px var(--border-subtle),
+        var(--shadow-recess);
     }
 
     &:focus-visible {
-      background: var(--surface-container-high);
+      background: var(--surface-container-low);
     }
   }
 
