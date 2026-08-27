@@ -1,6 +1,21 @@
-import { Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  ElementRef,
+  computed,
+  inject,
+  signal,
+  viewChild,
+  viewChildren,
+} from '@angular/core';
 import { DOCUMENT } from '@angular/common';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import {
+  NavigationEnd,
+  Router,
+  RouterLink,
+  RouterLinkActive,
+  RouterOutlet,
+} from '@angular/router';
 import { textColorOn } from '../../data/interval-colors';
 import { TunerStartupMode } from '../../models/tuner-preferences.model';
 import { ScalePreferences } from '../../services/scale-preferences';
@@ -9,6 +24,12 @@ import { Brand } from '../brand/brand';
 import { SettingsPanel } from '../settings-panel/settings-panel';
 import { ThemeService } from '../../services/theme.service';
 import { IconButton } from '../../ui/icon-button/icon-button';
+
+interface NavIndicatorState {
+  readonly x: number;
+  readonly width: number;
+  readonly visible: boolean;
+}
 
 @Component({
   selector: 'app-app-shell',
@@ -20,15 +41,25 @@ import { IconButton } from '../../ui/icon-button/icon-button';
     '[style.--scale-accent-ink]': 'accentInk()',
     '[style.--in-tune-color]': 'inTuneColor()',
     '[style.--out-of-tune-color]': 'outOfTuneColor()',
+    '(window:resize)': 'scheduleIndicatorMeasure()',
   },
 })
 export class AppShell {
   private readonly document = inject(DOCUMENT);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly router = inject(Router);
   private readonly preferences = inject(ScalePreferences);
   private readonly tunerPreferences = inject(TunerPreferences);
   private readonly themeService = inject(ThemeService);
 
   private readonly themeTrigger = viewChild('themeTrigger', { read: ElementRef });
+  private readonly navLinks = viewChildren<ElementRef<HTMLAnchorElement>>('navLink');
+
+  private readonly navigationEvents = this.router.events.subscribe((event) => {
+    if (event instanceof NavigationEnd) {
+      this.scheduleIndicatorMeasure();
+    }
+  });
 
   protected readonly settingsOpen = signal(false);
   protected readonly preferencesState = this.preferences.state;
@@ -40,6 +71,16 @@ export class AppShell {
   protected readonly themeLabel = computed(() =>
     this.themeService.theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme',
   );
+  protected readonly indicator = signal<NavIndicatorState>({ x: 0, width: 0, visible: false });
+  protected readonly indicatorReady = signal(false);
+
+  private firstIndicatorMeasure = true;
+
+  constructor() {
+    this.destroyRef.onDestroy(() => this.navigationEvents.unsubscribe());
+    this.scheduleIndicatorMeasure();
+    this.scheduleIndicatorFontMeasure();
+  }
 
   protected readonly inTuneColor = computed(() =>
     this.tunerSettings().inTune.enabled ? this.tunerSettings().inTune.color : null,
@@ -142,5 +183,34 @@ export class AppShell {
     root.style.setProperty('--theme-reveal-x', `${x}px`);
     root.style.setProperty('--theme-reveal-y', `${y}px`);
     root.style.setProperty('--theme-reveal-radius', `${radius}px`);
+  }
+
+  protected scheduleIndicatorMeasure(): void {
+    const view = this.document.defaultView;
+    if (!view) return;
+    view.requestAnimationFrame(() => this.measureIndicator());
+  }
+
+  private scheduleIndicatorFontMeasure(): void {
+    const view = this.document.defaultView;
+    if (!view) return;
+    void view.document.fonts?.ready.then(() => this.measureIndicator());
+  }
+
+  private measureIndicator(): void {
+    const links = this.navLinks();
+    const index = links.findIndex((link) => link.nativeElement.classList.contains('active'));
+    if (index === -1) {
+      this.indicator.set({ x: 0, width: 0, visible: false });
+      return;
+    }
+
+    const link = links[index].nativeElement;
+    this.indicator.set({ x: link.offsetLeft, width: link.offsetWidth, visible: true });
+
+    if (this.firstIndicatorMeasure) {
+      this.firstIndicatorMeasure = false;
+      this.document.defaultView?.requestAnimationFrame(() => this.indicatorReady.set(true));
+    }
   }
 }

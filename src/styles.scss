@@ -33,6 +33,7 @@
   --meter-tick-major: rgba(255, 255, 255, 0.35);
   --needle-color: var(--text);
   --in-tune-color: var(--scale-accent);
+  --dial-well: #000000;
 
   --in-tune-text: var(--in-tune-color);
   --out-of-tune-color: #ff8aab;
@@ -146,6 +147,7 @@ html[data-theme='light'] {
   --border-active: rgba(0, 0, 0, 0.32);
   --meter-tick-minor: rgba(0, 0, 0, 0.14);
   --meter-tick-major: rgba(0, 0, 0, 0.3);
+  --dial-well: var(--surface-container-high);
   --backdrop: rgba(18, 18, 17, 0.32);
 
   --accent-text: color-mix(in srgb, var(--scale-accent) 30%, #1a1a18);

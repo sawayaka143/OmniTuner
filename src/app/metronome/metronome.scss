@@ -38,7 +38,7 @@
   padding: var(--space-4);
   border: 1px solid var(--border-subtle);
   border-radius: var(--r-md);
-  background: var(--surface-container);
+  background: var(--surface-container-low);
   > .section-label {
     color: var(--text-muted);
     font-size: var(--text-2xs);
@@ -63,6 +63,10 @@
   border-radius: var(--r-md);
   background: var(--surface-container-low);
   box-shadow: var(--shadow-lift);
+
+  app-bpm-dial {
+    margin-block: var(--space-4);
+  }
 }
 
 .console-display {
@@ -79,6 +83,10 @@
   font-weight: var(--fw-semibold);
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
+
+  html[data-theme='light'] & {
+    color: var(--accent-text);
+  }
 }
 
 .console-bpm-unit {
@@ -93,21 +101,10 @@
   align-items: center;
   gap: var(--space-2);
   .bpm-input {
+    @include form-field();
     width: 72px;
-    min-height: var(--ctrl-h-lg);
-    border-radius: var(--r-md);
-    border: 1px solid var(--border-subtle);
-    background: var(--surface-container-low);
-    color: var(--text);
     text-align: center;
-    font-family: var(--font);
-    font-size: var(--text-lg);
-    font-weight: var(--fw-medium);
     font-variant-numeric: tabular-nums;
-    &:focus-visible {
-      outline: 2px solid var(--border-active);
-      outline-offset: 2px;
-    }
   }
 }
 
@@ -234,15 +231,9 @@
     gap: 6px;
   }
   .ts-num {
+    @include form-field();
     width: 52px;
-    min-height: var(--ctrl-h-md);
-    border-radius: var(--r-md);
-    border: 1px solid var(--border-subtle);
-    background: var(--surface-container-low);
-    color: var(--text);
     text-align: center;
-    font-family: var(--font);
-    font-size: var(--text-sm);
     font-variant-numeric: tabular-nums;
   }
   app-listbox {

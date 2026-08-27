@@ -2,10 +2,54 @@
   <div class="header-inner">
     <app-brand class="app-title" />
     <nav class="nav-desktop" aria-label="Primary navigation">
-      <a class="nav-link" routerLink="/scales" routerLinkActive="active">Scales</a>
-      <a class="nav-link" routerLink="/tuner" routerLinkActive="active">Tuner</a>
-      <a class="nav-link" routerLink="/chords" routerLinkActive="active">Chords</a>
-      <a class="nav-link" routerLink="/metronome" routerLinkActive="active">Metronome</a>
+      <span
+        class="nav-indicator"
+        aria-hidden="true"
+        [class.visible]="indicator().visible"
+        [class.ready]="indicatorReady()"
+        [style.transform]="'translateX(' + indicator().x + 'px)'"
+        [style.width.px]="indicator().width"
+      ></span>
+      <a
+        class="nav-link"
+        routerLink="/scales"
+        routerLinkActive="active"
+        ariaCurrentWhenActive="page"
+        #navLink
+      >
+        <span class="app-icon ti ti-music" aria-hidden="true"></span>
+        Scales
+      </a>
+      <a
+        class="nav-link"
+        routerLink="/tuner"
+        routerLinkActive="active"
+        ariaCurrentWhenActive="page"
+        #navLink
+      >
+        <span class="app-icon ti ti-wave-sine" aria-hidden="true"></span>
+        Tuner
+      </a>
+      <a
+        class="nav-link"
+        routerLink="/chords"
+        routerLinkActive="active"
+        ariaCurrentWhenActive="page"
+        #navLink
+      >
+        <span class="app-icon ti ti-grid-dots" aria-hidden="true"></span>
+        Chords
+      </a>
+      <a
+        class="nav-link"
+        routerLink="/metronome"
+        routerLinkActive="active"
+        ariaCurrentWhenActive="page"
+        #navLink
+      >
+        <span class="app-icon ti ti-metronome" aria-hidden="true"></span>
+        Metronome
+      </a>
     </nav>
     <div class="header-actions">
       <app-icon-button

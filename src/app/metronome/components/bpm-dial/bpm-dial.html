@@ -16,6 +16,7 @@
     (keydown)="onKeydown($event)"
   >
     <svg class="dial-svg" viewBox="0 0 300 300" aria-hidden="true">
+      <circle cx="150" cy="150" r="143" class="dial-well" />
       <g class="dial-face" [attr.transform]="faceTransform()">
         <circle cx="150" cy="150" r="140" class="dial-plate" />
         <circle cx="150" cy="150" r="128" class="dial-rim" />
@@ -31,7 +32,7 @@
       </g>
       <circle cx="150" cy="150" r="92" class="dial-center" />
       <circle cx="150" cy="150" r="92" class="dial-center-line" />
-      <polygon class="dial-pointer" points="150,12 143,26 157,26" />
+      <polygon class="dial-pointer" points="150,23 144.5,12 155.5,12" />
     </svg>
   </div>
 
