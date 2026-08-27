@@ -19,7 +19,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: var(--space-2);
   z-index: var(--z-float);
 }
@@ -27,6 +27,11 @@
 .selectors .seg {
   max-width: 100%;
   box-sizing: border-box;
+}
+
+/* Tuning trigger hugs the right edge of the band. */
+.dropdown-wrapper {
+  margin-left: auto;
 }
 
 .mode-seg {
@@ -142,10 +147,9 @@
 
 .dropdown-menu {
   @include dropdown-menu();
-  left: 50%;
-  /* Center the menu on the trigger. `translate` (not `transform`) so it
-     composes with the dropdown-appear transform animation. */
-  translate: -50% 0;
+  /* Anchored to the trigger's right edge so the menu opens leftward and
+     stays inside the workbench card. */
+  right: 0;
   width: min(300px, calc(100vw - var(--space-7)));
   max-height: min(460px, calc(100dvh - 180px));
 }
@@ -277,7 +281,6 @@
   }
 
   .dropdown-menu {
-    left: 50%;
     width: min(320px, calc(100vw - var(--space-6)));
   }
 }
