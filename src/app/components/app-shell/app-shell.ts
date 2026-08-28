@@ -31,6 +31,8 @@ interface NavIndicatorState {
   readonly visible: boolean;
 }
 
+const PAGE_ROUTES: readonly string[] = ['/scales', '/tuner', '/chords', '/metronome'];
+
 @Component({
   selector: 'app-app-shell',
   imports: [RouterOutlet, RouterLink, RouterLinkActive, SettingsPanel, Brand, IconButton],
@@ -42,6 +44,7 @@ interface NavIndicatorState {
     '[style.--in-tune-color]': 'inTuneColor()',
     '[style.--out-of-tune-color]': 'outOfTuneColor()',
     '(window:resize)': 'scheduleIndicatorMeasure()',
+    '(window:keydown)': 'onWindowKeydown($event)',
   },
 })
 export class AppShell {
@@ -157,6 +160,26 @@ export class AppShell {
 
     this.updateRevealOrigin();
     doc.startViewTransition(() => this.themeService.toggleSync());
+  }
+
+  protected onWindowKeydown(event: KeyboardEvent): void {
+    if (event.defaultPrevented || this.settingsOpen()) return;
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return;
+    const target = event.target as HTMLElement | null;
+    const isField =
+      !!target &&
+      (target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.tagName === 'SELECT' ||
+        target.isContentEditable);
+    if (isField) return;
+    const index = PAGE_ROUTES.indexOf(this.router.url.split('?')[0].split('#')[0]);
+    if (index === -1) return;
+    const offset = event.key === 'ArrowRight' ? 1 : -1;
+    const next = (index + offset + PAGE_ROUTES.length) % PAGE_ROUTES.length;
+    event.preventDefault();
+    void this.router.navigate([PAGE_ROUTES[next]]);
   }
 
   private prefersReducedMotion(): boolean {
