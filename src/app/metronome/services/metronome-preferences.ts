@@ -5,6 +5,7 @@ import {
   DEFAULT_METRONOME_STATE,
   DENOMINATORS,
   Denominator,
+  MetronomePreset,
   MetronomeSoundRoles,
   MetronomeState,
   PATTERN_MAX_BARS,
@@ -12,6 +13,10 @@ import {
   PolyState,
   POLY_MAX,
   POLY_MIN,
+  PRESETS_MAX,
+  RAMP_BARS_MAX,
+  RAMP_BARS_MIN,
+  TempoRamp,
 } from '../models/metronome.model';
 import { SoundBank } from '../utils/metronome-sounds';
 
@@ -27,9 +32,12 @@ export const METRONOME_STORAGE = new InjectionToken<Storage | null>('Metronome s
 });
 
 interface Persisted {
-  readonly version: 2;
+  readonly version: 3;
   readonly state: MetronomeState;
+  readonly presets: MetronomePreset[];
 }
+
+export const METRONOME_PRESET_ID_PREFIX = 'mp-';
 
 const clampBpm = (v: number): number => Math.min(BPM_MAX, Math.max(BPM_MIN, Math.round(v)));
 const clampVolume = (v: number): number => Math.min(1, Math.max(0, v));
@@ -150,6 +158,27 @@ const readState = (raw: unknown): MetronomeState => {
         ? clampVolume(state['masterVolume'])
         : fallback.masterVol;
 
+  const countIn = typeof state['countIn'] === 'boolean' ? state['countIn'] : fallback.countIn;
+
+  let ramp: TempoRamp = fallback.ramp;
+  if (isRecord(state['ramp'])) {
+    const enabled =
+      typeof state['ramp']['enabled'] === 'boolean'
+        ? state['ramp']['enabled']
+        : fallback.ramp.enabled;
+    const targetRaw = state['ramp']['targetBpm'];
+    const targetBpm =
+      typeof targetRaw === 'number' && Number.isFinite(targetRaw)
+        ? clampBpm(targetRaw)
+        : fallback.ramp.targetBpm;
+    const barsRaw = state['ramp']['bars'];
+    const bars =
+      typeof barsRaw === 'number' && Number.isInteger(barsRaw)
+        ? Math.min(RAMP_BARS_MAX, Math.max(RAMP_BARS_MIN, barsRaw))
+        : fallback.ramp.bars;
+    ramp = { enabled, targetBpm, bars };
+  }
+
   return {
     bpm,
     timeSignature: { numerator, denominator },
@@ -158,19 +187,76 @@ const readState = (raw: unknown): MetronomeState => {
     poly,
     sounds,
     masterVol,
+    countIn,
+    ramp,
   };
+};
+
+const readPresets = (raw: unknown): MetronomePreset[] => {
+  if (!isRecord(raw) || !Array.isArray(raw['presets'])) return [];
+  const presets: MetronomePreset[] = [];
+  for (const entry of raw['presets']) {
+    if (!isRecord(entry)) continue;
+    const id = entry['id'];
+    const name = entry['name'];
+    if (typeof id !== 'string' || id.length === 0) continue;
+    if (typeof name !== 'string' || name.trim().length === 0) continue;
+    presets.push({ id, name, state: readState(entry) });
+    if (presets.length >= PRESETS_MAX) break;
+  }
+  return presets;
 };
 
 @Service()
 export class MetronomePreferences {
   private readonly storage = inject(METRONOME_STORAGE);
   private readonly stateSignal = signal<MetronomeState>(this.load());
+  private readonly presetsSignal = signal<MetronomePreset[]>(this.loadPresets());
 
   readonly state = this.stateSignal.asReadonly();
+  readonly presets = this.presetsSignal.asReadonly();
 
   setBpm(bpm: number): void {
     if (!Number.isFinite(bpm)) return;
     this.update({ bpm: clampBpm(bpm) });
+  }
+
+  setCountIn(enabled: boolean): void {
+    this.update({ countIn: enabled });
+  }
+
+  setRamp(patch: Partial<TempoRamp>): void {
+    const current = this.stateSignal().ramp;
+    const enabled = patch.enabled ?? current.enabled;
+    const targetBpm = patch.targetBpm !== undefined ? clampBpm(patch.targetBpm) : current.targetBpm;
+    const bars =
+      patch.bars !== undefined
+        ? Math.min(RAMP_BARS_MAX, Math.max(RAMP_BARS_MIN, Math.round(patch.bars)))
+        : current.bars;
+    this.update({ ramp: { enabled, targetBpm, bars } });
+  }
+
+  savePreset(name: string): MetronomePreset | null {
+    const trimmed = name.trim();
+    const finalName = trimmed.length > 0 ? trimmed : `Preset ${this.presetsSignal().length + 1}`;
+    const id = `${METRONOME_PRESET_ID_PREFIX}${Date.now().toString(36)}-${Math.random()
+      .toString(36)
+      .slice(2, 8)}`;
+    const preset: MetronomePreset = { id, name: finalName, state: this.stateSignal() };
+    this.presetsSignal.update((list) => [preset, ...list].slice(0, PRESETS_MAX));
+    this.persist();
+    return preset;
+  }
+
+  applyPreset(id: string): void {
+    const preset = this.presetsSignal().find((p) => p.id === id);
+    if (!preset) return;
+    this.update(preset.state);
+  }
+
+  deletePreset(id: string): void {
+    this.presetsSignal.update((list) => list.filter((p) => p.id !== id));
+    this.persist();
   }
 
   setTimeSignature(numerator: number, denominator: Denominator): void {
@@ -252,7 +338,10 @@ export class MetronomePreferences {
       const raw = this.storage.getItem(METRONOME_STORAGE_KEY);
       if (!raw) return DEFAULT_METRONOME_STATE;
       const parsed = JSON.parse(raw) as unknown;
-      if (isRecord(parsed) && (parsed['version'] === 2 || parsed['version'] === 1))
+      if (
+        isRecord(parsed) &&
+        (parsed['version'] === 3 || parsed['version'] === 2 || parsed['version'] === 1)
+      )
         return readState(parsed);
       return DEFAULT_METRONOME_STATE;
     } catch {
@@ -260,9 +349,26 @@ export class MetronomePreferences {
     }
   }
 
+  private loadPresets(): MetronomePreset[] {
+    if (!this.storage) return [];
+    try {
+      const raw = this.storage.getItem(METRONOME_STORAGE_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw) as unknown;
+      if (isRecord(parsed) && parsed['version'] === 3) return readPresets(parsed);
+      return [];
+    } catch {
+      return [];
+    }
+  }
+
   private persist(): void {
     if (!this.storage) return;
-    const value: Persisted = { version: 2, state: this.stateSignal() };
+    const value: Persisted = {
+      version: 3,
+      state: this.stateSignal(),
+      presets: this.presetsSignal(),
+    };
     try {
       this.storage.setItem(METRONOME_STORAGE_KEY, JSON.stringify(value));
     } catch {}

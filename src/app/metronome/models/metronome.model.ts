@@ -72,7 +72,32 @@ export interface MetronomeState {
   readonly poly: PolyState;
   readonly sounds: MetronomeSoundRoles;
   readonly masterVol: number;
+  readonly countIn: boolean;
+  readonly ramp: TempoRamp;
 }
+
+export interface TempoRamp {
+  readonly enabled: boolean;
+  readonly targetBpm: number;
+  readonly bars: number;
+}
+
+export const RAMP_BARS_MIN = 1;
+export const RAMP_BARS_MAX = 32;
+
+export const DEFAULT_METRONOME_RAMP: TempoRamp = {
+  enabled: false,
+  targetBpm: 120,
+  bars: 8,
+};
+
+export interface MetronomePreset {
+  readonly id: string;
+  readonly name: string;
+  readonly state: MetronomeState;
+}
+
+export const PRESETS_MAX = 50;
 
 export const DEFAULT_METRONOME_SOUNDS: MetronomeSoundRoles = {
   downbeat: { id: 'beep-hi', vol: 1 },
@@ -89,6 +114,8 @@ export const DEFAULT_METRONOME_STATE: MetronomeState = {
   poly: { enabled: false, events: 3, accentFirst: true },
   sounds: DEFAULT_METRONOME_SOUNDS,
   masterVol: 0.9,
+  countIn: false,
+  ramp: DEFAULT_METRONOME_RAMP,
 };
 
 export const METER_PRESETS: readonly TimeSignature[] = [

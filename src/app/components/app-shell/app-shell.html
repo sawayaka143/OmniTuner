@@ -52,6 +52,16 @@
       </a>
     </nav>
     <div class="header-actions">
+      <button
+        class="btn ghost help-trigger"
+        type="button"
+        aria-label="Keyboard shortcuts"
+        [class.active]="shortcutOpen()"
+        [attr.aria-expanded]="shortcutOpen()"
+        (click)="shortcutOpen.set(true)"
+      >
+        <span class="app-icon ti ti-keyboard" aria-hidden="true"></span>
+      </button>
       <app-icon-button
         #themeTrigger
         class="theme-trigger"
@@ -102,3 +112,5 @@
   (referencePitchChange)="setReferencePitch($event)"
   (dismiss)="settingsOpen.set(false)"
 />
+
+<app-shortcut-help [open]="shortcutOpen()" (dismiss)="shortcutOpen.set(false)" />

@@ -9,19 +9,14 @@ import {
   viewChildren,
 } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
-import {
-  NavigationEnd,
-  Router,
-  RouterLink,
-  RouterLinkActive,
-  RouterOutlet,
-} from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { textColorOn } from '../../data/interval-colors';
 import { TunerStartupMode } from '../../models/tuner-preferences.model';
 import { ScalePreferences } from '../../services/scale-preferences';
 import { TunerPreferences } from '../../services/tuner-preferences';
 import { Brand } from '../brand/brand';
 import { SettingsPanel } from '../settings-panel/settings-panel';
+import { ShortcutHelp } from '../shortcut-help/shortcut-help';
 import { ThemeService } from '../../services/theme.service';
 import { IconButton } from '../../ui/icon-button/icon-button';
 
@@ -35,7 +30,15 @@ const PAGE_ROUTES: readonly string[] = ['/scales', '/tuner', '/chords', '/metron
 
 @Component({
   selector: 'app-app-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, SettingsPanel, Brand, IconButton],
+  imports: [
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    SettingsPanel,
+    ShortcutHelp,
+    Brand,
+    IconButton,
+  ],
   templateUrl: './app-shell.html',
   styleUrl: './app-shell.scss',
   host: {
@@ -65,6 +68,7 @@ export class AppShell {
   });
 
   protected readonly settingsOpen = signal(false);
+  protected readonly shortcutOpen = signal(false);
   protected readonly preferencesState = this.preferences.state;
   protected readonly accentInk = computed(() => textColorOn(this.preferencesState().accent));
   protected readonly tunerSettings = this.tunerPreferences.tunerSettings;
@@ -164,22 +168,40 @@ export class AppShell {
 
   protected onWindowKeydown(event: KeyboardEvent): void {
     if (event.defaultPrevented || this.settingsOpen()) return;
+    if (this.isShortcutToggle(event)) {
+      const target = event.target as HTMLElement | null;
+      if (this.isEditableTarget(target)) return;
+      event.preventDefault();
+      this.shortcutOpen.update((open) => !open);
+      return;
+    }
     if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
     if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return;
     const target = event.target as HTMLElement | null;
-    const isField =
-      !!target &&
-      (target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.tagName === 'SELECT' ||
-        target.isContentEditable);
-    if (isField) return;
+    if (this.isEditableTarget(target)) return;
     const index = PAGE_ROUTES.indexOf(this.router.url.split('?')[0].split('#')[0]);
     if (index === -1) return;
     const offset = event.key === 'ArrowRight' ? 1 : -1;
     const next = (index + offset + PAGE_ROUTES.length) % PAGE_ROUTES.length;
     event.preventDefault();
     void this.router.navigate([PAGE_ROUTES[next]]);
+  }
+
+  private isShortcutToggle(event: KeyboardEvent): boolean {
+    return (
+      (event.key === '?' || event.key === '/') && !event.ctrlKey && !event.metaKey && !event.altKey
+    );
+  }
+
+  private isEditableTarget(target: EventTarget | null): boolean {
+    const el = target as HTMLElement | null;
+    return (
+      !!el &&
+      (el.tagName === 'INPUT' ||
+        el.tagName === 'TEXTAREA' ||
+        el.tagName === 'SELECT' ||
+        el.isContentEditable)
+    );
   }
 
   private prefersReducedMotion(): boolean {

@@ -1,6 +1,6 @@
 import { DestroyRef, InjectionToken, Service, inject, signal } from '@angular/core';
 import { DEFAULT_METRONOME_STATE, MetronomeState } from '../models/metronome.model';
-import { buildBarEvents, meterModel } from '../utils/metronome-timing';
+import { BarEvent, buildBarEvents, meterModel } from '../utils/metronome-timing';
 import { SoundBank } from '../utils/metronome-sounds';
 
 export type AudioContextFactory = () => AudioContext | null;
@@ -31,6 +31,7 @@ export interface UiQueueEvent {
   readonly barIndex?: number;
   readonly patternPos?: number;
   readonly active?: boolean;
+  readonly countIn?: boolean;
   readonly beatsPerBar?: number;
   readonly layer?: string;
   readonly role?: string;
@@ -58,6 +59,8 @@ export class MetronomeAudio {
     patternPos: number;
     beatsPerBar: number;
     barActive: boolean;
+    countIn: boolean;
+    bpm: number;
   } | null>(null);
 
   private config: MetronomeState = JSON.parse(
@@ -74,6 +77,8 @@ export class MetronomeAudio {
   private anchorT = 0;
   private anchorB = 0;
   private spb = 60 / this.config.bpm;
+  private rampStartBpm = this.config.bpm;
+  private inCountIn = false;
   private barEvents: ReturnType<typeof buildBarEvents> = [];
   private nextIdx = 0;
   private model = meterModel(
@@ -122,6 +127,8 @@ export class MetronomeAudio {
     patternPos: number;
     beatsPerBar: number;
     barActive: boolean;
+    countIn: boolean;
+    bpm: number;
   } | null {
     if (!this.isPlaying() || !this.context) return null;
     const barStart = this.anchorT + (this.barBase - this.anchorB) * this.spb;
@@ -132,7 +139,9 @@ export class MetronomeAudio {
       barIndex: this.barCount,
       patternPos: this.patternPos,
       beatsPerBar: this.model.beatsPerBar,
-      barActive: this.config.barPattern[this.patternPos] === 1,
+      barActive: this.barCount < 0 || this.config.barPattern[this.patternPos] === 1,
+      countIn: this.barCount < 0,
+      bpm: Math.round(60 / this.spb),
     };
   }
 
@@ -198,10 +207,12 @@ export class MetronomeAudio {
       this.config.timeSignature.denominator,
     );
     this.spb = 60 / this.config.bpm;
-    this.barCount = 0;
+    this.rampStartBpm = this.config.bpm;
+    this.inCountIn = this.config.countIn;
+    this.barCount = this.inCountIn ? -1 : 0;
     this.patternPos = 0;
-    this.barBase = 0;
-    this.anchorB = 0;
+    this.barBase = this.inCountIn ? -this.model.beatsPerBar : 0;
+    this.anchorB = this.barBase;
     this.anchorT = now + START_DELAY_S;
     this.uiQueue.length = 0;
     this.buildBar();
@@ -217,6 +228,7 @@ export class MetronomeAudio {
   stop(): void {
     if (!this.isPlaying()) return;
     this.isPlaying.set(false);
+    this.inCountIn = false;
     if (this.timer) {
       clearInterval(this.timer);
       this.timer = null;
@@ -298,6 +310,24 @@ export class MetronomeAudio {
     this.spb = 60 / this.config.bpm;
     this.anchorT = now;
     this.anchorB = elapsedB;
+    this.rampStartBpm = this.config.bpm;
+  }
+
+  /** Shifts the tempo to `bpm` exactly at the bar boundary `atBeat`, keeping the beat grid continuous. */
+  private setSpbAt(bpm: number, atBeat: number): void {
+    if (!Number.isFinite(bpm) || bpm <= 0) return;
+    const t = this.anchorT + (atBeat - this.anchorB) * this.spb;
+    this.anchorT = t;
+    this.anchorB = atBeat;
+    this.spb = 60 / bpm;
+  }
+
+  private applyRampStep(): void {
+    if (!this.config.ramp.enabled || this.inCountIn || this.barCount < 0) return;
+    const { bars, targetBpm } = this.config.ramp;
+    const progress = Math.min(Math.max(this.barCount / Math.max(1, bars), 0), 1);
+    const effBpm = this.rampStartBpm + (targetBpm - this.rampStartBpm) * progress;
+    this.setSpbAt(effBpm, this.barBase);
   }
 
   private tick(): void {
@@ -339,18 +369,27 @@ export class MetronomeAudio {
     }
     this.barBase += finishedBeats;
     this.barCount++;
-    this.patternPos = (this.patternPos + 1) % Math.max(1, this.config.barPattern.length);
+    if (this.inCountIn) {
+      this.inCountIn = false;
+      this.patternPos = 0;
+    } else {
+      this.patternPos = (this.patternPos + 1) % Math.max(1, this.config.barPattern.length);
+    }
+    this.applyRampStep();
     this.buildBar();
     this.nextIdx = 0;
   }
 
   private buildBar(): void {
-    const active = this.config.barPattern[this.patternPos] === 1;
+    const countInBar = this.inCountIn;
+    const active = countInBar || this.config.barPattern[this.patternPos] === 1;
     this.barEvents = active
-      ? buildBarEvents(this.model, {
-          subdivision: this.config.divisionsPerBeat,
-          poly: this.config.poly,
-        })
+      ? countInBar
+        ? this.buildCountInEvents()
+        : buildBarEvents(this.model, {
+            subdivision: this.config.divisionsPerBeat,
+            poly: this.config.poly,
+          })
       : [];
     this.uiQueue.push({
       t: this.anchorT + (this.barBase - this.anchorB) * this.spb,
@@ -358,8 +397,17 @@ export class MetronomeAudio {
       barIndex: this.barCount,
       patternPos: this.patternPos,
       active,
+      countIn: countInBar,
       beatsPerBar: this.model.beatsPerBar,
     });
+  }
+
+  private buildCountInEvents(): BarEvent[] {
+    const events: BarEvent[] = [];
+    for (let b = 0; b < this.model.beatsPerBar; b++) {
+      events.push({ beats: b, layer: 'meter', role: b === 0 ? 'downbeat' : 'beat' });
+    }
+    return events;
   }
 
   private playEvent(event: ReturnType<typeof buildBarEvents>[number], t: number): void {
@@ -399,15 +447,7 @@ export class MetronomeAudio {
 
   private async ensureAudio(): Promise<void> {
     if (!this.context) {
-      const Ctx =
-        (
-          globalThis as unknown as {
-            AudioContext?: typeof AudioContext;
-            webkitAudioContext?: typeof AudioContext;
-          }
-        ).AudioContext ??
-        (globalThis as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-      if (Ctx) this.context = new Ctx();
+      this.context = this.createContext();
     }
     if (!this.context) return;
     if (this.context.state === 'suspended') {

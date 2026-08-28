@@ -176,6 +176,52 @@
             </div>
           </div>
         </div>
+
+        <div class="rail-section">
+          <span class="section-label">06 · Presets</span>
+          <div class="preset-save">
+            <input
+              class="preset-name"
+              type="text"
+              maxlength="40"
+              placeholder="Preset name"
+              aria-label="Preset name"
+              [value]="presetName()"
+              (input)="onPresetNameInput($event)"
+              (keydown.enter)="savePreset()"
+            />
+            <button type="button" class="btn small" (click)="savePreset()">Save</button>
+          </div>
+          @if (presets().length > 0) {
+            <app-listbox
+              [options]="presetOptions()"
+              [value]="
+                presetOptions().find((o) => o.value === selectedPresetId()) ?? {
+                  value: '',
+                  label: presetTriggerLabel(),
+                }
+              "
+              ariaLabel="Saved metronome presets"
+              triggerKicker="presets"
+              [triggerLabel]="presetTriggerLabel()"
+              [optionLabel]="identityOption"
+              [trackByFn]="trackPreset"
+              [open]="presetListOpen()"
+              (toggle)="presetListOpen.update((v) => !v)"
+              (select)="applyPresetOption($event)"
+            />
+            <div class="pat-btns">
+              <button
+                type="button"
+                class="btn small ghost"
+                [disabled]="selectedPresetId() === null"
+                (click)="deleteSelectedPreset()"
+              >
+                Delete selected
+              </button>
+            </div>
+          }
+        </div>
       </aside>
 
       <section class="metro-console" aria-label="Metronome console">
@@ -230,6 +276,81 @@
           {{ isPlaying() ? 'Stop' : 'Start' }}
         </button>
 
+        <div class="console-tools">
+          <app-toggle
+            [checked]="countIn()"
+            label="Count-in"
+            [inline]="true"
+            (change)="setCountIn($event)"
+          />
+          <div class="ramp-row">
+            <app-toggle
+              [checked]="ramp().enabled"
+              label="Ramp"
+              [inline]="true"
+              (change)="setRampEnabled($event)"
+            />
+            @if (ramp().enabled) {
+              <div class="ramp-controls">
+                <div class="mini-step">
+                  <button
+                    type="button"
+                    class="step-btn"
+                    aria-label="Decrease ramp target tempo"
+                    (click)="setRampTarget(ramp().targetBpm - 1)"
+                  >
+                    −
+                  </button>
+                  <input
+                    type="number"
+                    min="1"
+                    max="800"
+                    [value]="ramp().targetBpm"
+                    (change)="setRampTarget($any($event.target).valueAsNumber)"
+                    aria-label="Ramp target tempo in BPM"
+                  />
+                  <button
+                    type="button"
+                    class="step-btn"
+                    aria-label="Increase ramp target tempo"
+                    (click)="setRampTarget(ramp().targetBpm + 1)"
+                  >
+                    +
+                  </button>
+                </div>
+                <span class="ramp-unit">BPM in</span>
+                <div class="mini-step">
+                  <button
+                    type="button"
+                    class="step-btn"
+                    aria-label="Fewer ramp bars"
+                    (click)="setRampBars(ramp().bars - 1)"
+                  >
+                    −
+                  </button>
+                  <input
+                    type="number"
+                    min="1"
+                    max="32"
+                    [value]="ramp().bars"
+                    (change)="setRampBars($any($event.target).valueAsNumber)"
+                    aria-label="Ramp length in bars"
+                  />
+                  <button
+                    type="button"
+                    class="step-btn"
+                    aria-label="More ramp bars"
+                    (click)="setRampBars(ramp().bars + 1)"
+                  >
+                    +
+                  </button>
+                </div>
+                <span class="ramp-unit">bars</span>
+              </div>
+            }
+          </div>
+        </div>
+
         <div class="beat-row" role="group" aria-label="Beat indicator">
           @for (b of beatCells(); track b; let i = $index) {
             <span
@@ -261,9 +382,23 @@
         </div>
 
         <footer class="console-status">
-          <span>{{ isPlaying() ? 'Playing' : 'Stopped' }}</span>
-          <span>bar {{ currentBar() + 1 }}/{{ barPattern().length }}</span>
-          <span>{{ divisions() > 1 ? divisions() + ' per beat' : 'beats only' }}</span>
+          <span>{{
+            isPlaying() ? (transport()?.countIn ? 'Count-in' : 'Playing') : 'Stopped'
+          }}</span>
+          <span>
+            @if (isPlaying() && transport()?.countIn) {
+              get ready…
+            } @else {
+              bar {{ currentBar() + 1 }}/{{ barPattern().length }}
+            }
+          </span>
+          <span>
+            @if (ramp().enabled) {
+              → {{ ramp().targetBpm }} BPM
+            } @else {
+              {{ divisions() > 1 ? divisions() + ' per beat' : 'beats only' }}
+            }
+          </span>
         </footer>
       </section>
 

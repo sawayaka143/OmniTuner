@@ -53,6 +53,9 @@ export class Metronome {
   readonly poly = computed(() => this.state().poly);
   readonly sounds = computed(() => this.state().sounds);
   readonly masterVol = computed(() => this.state().masterVol);
+  readonly countIn = computed(() => this.state().countIn);
+  readonly ramp = computed(() => this.state().ramp);
+  readonly presets = this.prefs.presets;
 
   readonly meterPresets = METER_PRESETS;
   readonly subdivisions = SUBDIVISIONS;
@@ -113,6 +116,18 @@ export class Metronome {
     label: `${p[0]}:${p[1]}`,
   }));
 
+  readonly presetOptions = computed(() =>
+    this.presets().map((p) => ({ value: p.id, label: p.name })),
+  );
+
+  readonly selectedPreset = computed(() => {
+    const id = this.selectedPresetId();
+    if (id === null) return null;
+    return this.presets().find((p) => p.id === id) ?? null;
+  });
+
+  readonly presetTriggerLabel = computed(() => this.selectedPreset()?.name ?? 'Load preset…');
+
   readonly barPresetValue = computed((): SelectOption<string> => {
     const label = this.barPreset();
     return (
@@ -130,6 +145,7 @@ export class Metronome {
 
   readonly identityOption = (o: SelectOption<string>): string => o.label;
   readonly trackPatternOption = (o: SelectOption<string>): unknown => o.value;
+  readonly trackPreset = (o: SelectOption<string>): unknown => o.value;
 
   readonly soundRoles: readonly {
     key: 'downbeat' | 'beat' | 'subdivision' | 'poly';
@@ -177,6 +193,9 @@ export class Metronome {
   readonly soundBeatOpen = signal(false);
   readonly soundSubdivOpen = signal(false);
   readonly soundPolyOpen = signal(false);
+  readonly presetListOpen = signal(false);
+  readonly presetName = signal('');
+  readonly selectedPresetId = signal<string | null>(null);
 
   private tapTimes: number[] = [];
 
@@ -299,6 +318,48 @@ export class Metronome {
 
   setPolyEvents(value: number): void {
     this.prefs.setPoly({ events: Math.round(value) });
+  }
+
+  setCountIn(enabled: boolean): void {
+    this.prefs.setCountIn(enabled);
+  }
+
+  setRampEnabled(enabled: boolean): void {
+    this.prefs.setRamp({ enabled });
+  }
+
+  setRampTarget(bpm: number): void {
+    this.prefs.setRamp({ targetBpm: Math.round(bpm) });
+  }
+
+  setRampBars(bars: number): void {
+    this.prefs.setRamp({ bars: Math.round(bars) });
+  }
+
+  onPresetNameInput(event: Event): void {
+    const target = event.target;
+    if (target instanceof HTMLInputElement) this.presetName.set(target.value);
+  }
+
+  savePreset(): void {
+    const preset = this.prefs.savePreset(this.presetName());
+    if (!preset) return;
+    this.selectedPresetId.set(preset.id);
+    this.presetName.set('');
+    this.presetListOpen.set(false);
+  }
+
+  applyPresetOption(option: SelectOption<string>): void {
+    this.prefs.applyPreset(option.value);
+    this.selectedPresetId.set(option.value);
+    this.presetListOpen.set(false);
+  }
+
+  deleteSelectedPreset(): void {
+    const id = this.selectedPresetId();
+    if (id === null) return;
+    this.prefs.deletePreset(id);
+    this.selectedPresetId.set(null);
   }
 
   applyPolyPreset(pair: readonly [number, number]): void {
