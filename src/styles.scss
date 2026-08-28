@@ -272,6 +272,18 @@ html {
   scrollbar-gutter: stable;
 }
 
+input[type='number'] {
+  appearance: textfield;
+  cursor: ns-resize;
+  touch-action: none;
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}
+
 h1,
 h2,
 h3 {

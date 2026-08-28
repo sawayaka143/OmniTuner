@@ -44,6 +44,24 @@
   }
 }
 
+.meter {
+  .gauge-frame {
+    stroke: #62625d;
+
+    html[data-theme='light'] & {
+      stroke: #a8a6a1;
+    }
+  }
+
+  .hand {
+    stroke: var(--good);
+  }
+
+  .pivot {
+    fill: var(--text);
+  }
+}
+
 .wordmark {
   font: var(--fw-bold) var(--text-lg) var(--font);
   letter-spacing: var(--tracking-normal);

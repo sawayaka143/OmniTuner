@@ -1,6 +1,8 @@
 import { Component, computed, DestroyRef, effect, inject, signal, untracked } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
+import { ScalePreferences } from '../services/scale-preferences';
 import { Listbox } from '../ui/listbox/listbox';
+import { NumberScrubber } from '../ui/number-scrubber';
 import { Toggle } from '../ui/toggle/toggle';
 import { BpmDial } from './components/bpm-dial/bpm-dial';
 import {
@@ -23,7 +25,7 @@ interface SelectOption<T> {
 
 @Component({
   selector: 'app-metronome',
-  imports: [DecimalPipe, Listbox, BpmDial, Toggle],
+  imports: [DecimalPipe, Listbox, BpmDial, Toggle, NumberScrubber],
   providers: [MetronomeAudio],
   templateUrl: './metronome.html',
   styleUrl: './metronome.scss',
@@ -33,10 +35,12 @@ interface SelectOption<T> {
 })
 export class Metronome {
   private readonly prefs = inject(MetronomePreferences);
+  private readonly preferences = inject(ScalePreferences);
   private readonly audio = inject(MetronomeAudio);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly state = this.prefs.state;
+  protected readonly preferencesState = this.preferences.state;
   readonly isPlaying = this.audio.isPlaying;
   readonly currentBar = this.audio.currentBar;
   readonly transport = this.audio.transport;

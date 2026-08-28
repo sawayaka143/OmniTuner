@@ -25,6 +25,7 @@ import {
 import { AudioCaptureService } from '../services/audio-capture-service';
 import { InstrumentRegistry } from '../services/instrument-registry';
 import { ScalePlayback } from '../services/scale-playback';
+import { ScalePreferences } from '../services/scale-preferences';
 import { ThemeService } from '../services/theme.service';
 import { TunerPreferences } from '../services/tuner-preferences';
 import {
@@ -72,8 +73,11 @@ export class AudioMonitor implements OnInit {
   private readonly registry = inject(InstrumentRegistry);
   private readonly tunerPreferences = inject(TunerPreferences);
   private readonly scalePlayback = inject(ScalePlayback);
+  private readonly preferences = inject(ScalePreferences);
   private readonly themeService = inject(ThemeService);
   private readonly destroyRef = inject(DestroyRef);
+
+  protected readonly preferencesState = this.preferences.state;
 
   readonly isCapturing = this.audioCapture.isCapturing;
   readonly frequency = this.audioCapture.frequency;
