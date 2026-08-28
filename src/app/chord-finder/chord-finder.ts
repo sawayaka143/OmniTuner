@@ -15,7 +15,7 @@ import {
   parseTuning,
   pcName,
 } from '../utils/chord-theory';
-import { MAX_FRET, RESULTS_PER_CHORD, searchChord, VoicingShape } from '../utils/chord-voicing';
+import { RESULTS_PER_CHORD, searchChord, VoicingShape } from '../utils/chord-voicing';
 import { DiagramLabelMode, DiagramView, NeckDiagram } from './neck-diagram/neck-diagram';
 import { Segmented } from '../ui/segmented/segmented';
 import { Listbox } from '../ui/listbox/listbox';
@@ -76,11 +76,8 @@ export class ChordFinder {
     })),
   );
 
-  protected readonly instrumentLabel = computed(() => this.registry.selectedInstrument().label);
-
   protected readonly viewChoices = ['tab', 'dots', 'lines'] as const;
   protected readonly labelChoices = ['notes', 'func'] as const;
-  protected readonly maxFret = MAX_FRET;
   protected readonly identityFn = <T>(value: T): T => value;
   protected readonly tuningLabelFn = (o: TuningOption): string => o.label;
   protected readonly tuningAltFn = (o: TuningOption): string | null => o.text;

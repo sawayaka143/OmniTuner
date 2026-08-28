@@ -44,7 +44,7 @@ describe('ShortcutHelp', () => {
 
   it('renders one entry per documented shortcut', () => {
     const entries = fixture.nativeElement.querySelectorAll('.shortcut-entry');
-    expect(entries.length).toBe(7);
+    expect(entries.length).toBe(8);
   });
 
   it('opens and closes the dialog through the open input', async () => {

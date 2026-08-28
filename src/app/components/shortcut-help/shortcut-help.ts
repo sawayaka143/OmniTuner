@@ -19,6 +19,7 @@ export class ShortcutHelp {
   private readonly dialog = viewChild<ElementRef<HTMLDialogElement>>('dialog');
 
   protected readonly entries: readonly ShortcutEntry[] = [
+    { keys: ['Ctrl', 'K'], description: 'Command palette' },
     { keys: ['←', '→'], description: 'Previous / next page' },
     { keys: ['?', '/'], description: 'Toggle this help' },
     { keys: ['Esc'], description: 'Close dialogs' },

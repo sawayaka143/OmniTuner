@@ -25,19 +25,6 @@ const START_DELAY_S = 0.08;
 
 const STAGED_KEYS = new Set(['numerator', 'denominator', 'subdivision', 'poly', 'pattern']);
 
-export interface UiQueueEvent {
-  readonly t: number;
-  readonly kind: 'bar' | 'hit';
-  readonly barIndex?: number;
-  readonly patternPos?: number;
-  readonly active?: boolean;
-  readonly countIn?: boolean;
-  readonly beatsPerBar?: number;
-  readonly layer?: string;
-  readonly role?: string;
-  readonly beats?: number;
-}
-
 @Service()
 export class MetronomeAudio {
   private readonly createContext = inject(METRONOME_AUDIO_CONTEXT_FACTORY);
@@ -68,7 +55,6 @@ export class MetronomeAudio {
   ) as MetronomeState;
 
   private dirty = false;
-  private uiQueue: UiQueueEvent[] = [];
   private activeSources: AudioScheduledSourceNode[] = [];
 
   private barCount = 0;
@@ -94,31 +80,12 @@ export class MetronomeAudio {
   private onStateChange: (() => void) | null = null;
   private onUnlockTouch: (() => void) | null = null;
   private onUnlockClick: (() => void) | null = null;
-  private listeners = new Map<string, Set<(payload: unknown) => void>>();
 
   constructor() {
     this.destroyRef.onDestroy(() => this.teardown());
     document.addEventListener('visibilitychange', () => {
       if (this.isPlaying()) this.tick();
     });
-  }
-
-  on(event: string, handler: (payload: unknown) => void): () => void {
-    if (!this.listeners.has(event)) this.listeners.set(event, new Set());
-    this.listeners.get(event)!.add(handler);
-    return () => this.listeners.get(event)?.delete(handler);
-  }
-
-  private emit(event: string, payload: unknown): void {
-    for (const handler of this.listeners.get(event) ?? []) handler(payload);
-  }
-
-  getUiQueue(): UiQueueEvent[] {
-    return this.uiQueue;
-  }
-
-  getModel(): typeof this.model {
-    return this.model;
   }
 
   getTransport(): {
@@ -178,7 +145,6 @@ export class MetronomeAudio {
         (this.config as unknown as Record<string, unknown>)[key] = value;
       }
     }
-    this.emit('cfg', patch);
   }
 
   set(patch: Partial<MetronomeState> & Record<string, unknown>): void {
@@ -214,7 +180,6 @@ export class MetronomeAudio {
     this.barBase = this.inCountIn ? -this.model.beatsPerBar : 0;
     this.anchorB = this.barBase;
     this.anchorT = now + START_DELAY_S;
-    this.uiQueue.length = 0;
     this.buildBar();
     this.nextIdx = 0;
 
@@ -222,7 +187,6 @@ export class MetronomeAudio {
     this.timer = setInterval(() => this.tick(), TICK_MS);
     this.tick();
     this.startRaf();
-    this.emit('state', { running: true });
   }
 
   stop(): void {
@@ -233,7 +197,6 @@ export class MetronomeAudio {
       clearInterval(this.timer);
       this.timer = null;
     }
-    this.uiQueue.length = 0;
     this.stopRaf();
 
     if (this.context && this.masterGain) {
@@ -257,7 +220,6 @@ export class MetronomeAudio {
     }
     this.removeResumeListeners();
     this.removeUnlockListeners();
-    this.emit('state', { running: false });
   }
 
   async toggle(): Promise<void> {
@@ -297,10 +259,6 @@ export class MetronomeAudio {
 
   clearError(): void {
     this.error.set(null);
-  }
-
-  getAudioContext(): AudioContext | null {
-    return this.context;
   }
 
   private retune(): void {
@@ -391,15 +349,6 @@ export class MetronomeAudio {
             poly: this.config.poly,
           })
       : [];
-    this.uiQueue.push({
-      t: this.anchorT + (this.barBase - this.anchorB) * this.spb,
-      kind: 'bar',
-      barIndex: this.barCount,
-      patternPos: this.patternPos,
-      active,
-      countIn: countInBar,
-      beatsPerBar: this.model.beatsPerBar,
-    });
   }
 
   private buildCountInEvents(): BarEvent[] {
@@ -416,7 +365,6 @@ export class MetronomeAudio {
       for (const node of this.bank.play(spec.id, this.masterGain, t, spec.vol))
         this.trackSource(node);
     }
-    this.uiQueue.push({ t, kind: 'hit', layer: event.layer, role: event.role, beats: event.beats });
   }
 
   private soundFor(
@@ -476,11 +424,6 @@ export class MetronomeAudio {
     const frame = (): void => {
       if (!this.isPlaying() || !this.context) return;
       const now = this.context.currentTime;
-      const queue = this.uiQueue;
-      while (queue.length > 0 && queue[0].t <= now + 0.004) {
-        const event = queue.shift()!;
-        void event;
-      }
       const transport = this.getTransport();
       if (transport) {
         this.currentBar.set(transport.barIndex);

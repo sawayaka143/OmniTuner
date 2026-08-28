@@ -32,14 +32,12 @@ export class SettingsPanel {
   readonly rootNoteColor = input('#ede8d0');
   readonly noteColor = input('#3b3b3b');
   readonly workbenchScale = input(1);
-  readonly chordRandomProgression = input(true);
   readonly tunerSettings = input<TunerSettings>(DEFAULT_TUNER_SETTINGS);
 
   readonly accentChange = output<string>();
   readonly rootNoteColorChange = output<string>();
   readonly noteColorChange = output<string>();
   readonly workbenchScaleChange = output<number>();
-  readonly chordRandomProgressionChange = output<boolean>();
   readonly workbenchScaleReset = output<void>();
   readonly startupModeChange = output<TunerStartupMode>();
   readonly inTuneEnabledChange = output<boolean>();

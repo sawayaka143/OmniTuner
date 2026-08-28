@@ -294,11 +294,6 @@ export class MetronomePreferences {
     this.update({ poly: next });
   }
 
-  setSounds(patch: Partial<MetronomeSoundRoles>): void {
-    const current = this.stateSignal().sounds;
-    this.update({ sounds: { ...current, ...patch } });
-  }
-
   setSoundRole(
     role: keyof MetronomeSoundRoles,
     id: string,

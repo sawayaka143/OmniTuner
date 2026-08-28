@@ -1,0 +1,55 @@
+<dialog
+  #dialog
+  class="palette-dialog"
+  aria-labelledby="command-palette-title"
+  (cancel)="requestDismiss($event)"
+  (click)="onDialogClick($event)"
+>
+  <section class="palette-sheet">
+    <h2 id="command-palette-title" class="palette-title">Command palette</h2>
+
+    <div class="palette-search">
+      <span class="app-icon ti ti-search" aria-hidden="true"></span>
+      <input
+        #input
+        type="text"
+        role="combobox"
+        aria-expanded="true"
+        aria-controls="command-palette-listbox"
+        [attr.aria-activedescendant]="activeOptionId()"
+        aria-label="Search commands"
+        placeholder="Type a command…"
+        autocomplete="off"
+        spellcheck="false"
+        [value]="query()"
+        (input)="onQueryInput($event)"
+        (keydown)="onInputKeydown($event)"
+      />
+      <kbd aria-hidden="true">Esc</kbd>
+    </div>
+
+    <ul id="command-palette-listbox" class="palette-list" role="listbox" aria-label="Commands">
+      @for (command of filteredCommands(); track command.id; let index = $index) {
+        <li
+          #option
+          role="option"
+          [id]="'palette-option-' + command.id"
+          class="palette-option"
+          [class.active]="index === activeIndex()"
+          [attr.aria-selected]="index === activeIndex()"
+          (mousemove)="activeIndex.set(index)"
+          (click)="runCommand(command)"
+        >
+          <span class="app-icon ti {{ command.icon }}" aria-hidden="true"></span>
+          <span class="option-label">{{ command.label }}</span>
+          @if (command.hint; as hint) {
+            <span class="option-hint">{{ hint }}</span>
+          }
+          <span class="option-group">{{ command.group }}</span>
+        </li>
+      } @empty {
+        <li class="palette-empty">No matching commands</li>
+      }
+    </ul>
+  </section>
+</dialog>

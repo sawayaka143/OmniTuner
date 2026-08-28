@@ -43,10 +43,6 @@ export class ScalePlayback {
     });
   }
 
-  get currentTime(): number {
-    return this.context?.currentTime ?? 0;
-  }
-
   createGain(): GainNode | null {
     const context = this.getContext();
     if (!context) return null;

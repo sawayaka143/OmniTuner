@@ -93,13 +93,11 @@
   [rootNoteColor]="preferencesState().rootNoteColor"
   [noteColor]="preferencesState().noteColor"
   [workbenchScale]="preferencesState().workbenchScale"
-  [chordRandomProgression]="preferencesState().chordRandomProgression"
   [tunerSettings]="tunerSettings()"
   (accentChange)="setAccent($event)"
   (rootNoteColorChange)="setRootNoteColor($event)"
   (noteColorChange)="setNoteColor($event)"
   (workbenchScaleChange)="setWorkbenchScale($event)"
-  (chordRandomProgressionChange)="setChordRandomProgression($event)"
   (workbenchScaleReset)="resetWorkbenchScale()"
   (startupModeChange)="setTunerStartupMode($event)"
   (inTuneEnabledChange)="setInTuneEnabled($event)"
@@ -114,3 +112,5 @@
 />
 
 <app-shortcut-help [open]="shortcutOpen()" (dismiss)="shortcutOpen.set(false)" />
+
+<app-command-palette [open]="paletteOpen()" (dismiss)="paletteOpen.set(false)" />

@@ -5,8 +5,3 @@ declare module '@vitest/expect' {
     toHaveNoViolations(): void;
   }
 }
-
-declare module '*.scss?raw' {
-  const content: string;
-  export default content;
-}

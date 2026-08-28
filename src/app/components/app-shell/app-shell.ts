@@ -17,6 +17,7 @@ import { TunerPreferences } from '../../services/tuner-preferences';
 import { Brand } from '../brand/brand';
 import { SettingsPanel } from '../settings-panel/settings-panel';
 import { ShortcutHelp } from '../shortcut-help/shortcut-help';
+import { CommandPalette } from '../command-palette/command-palette';
 import { ThemeService } from '../../services/theme.service';
 import { IconButton } from '../../ui/icon-button/icon-button';
 
@@ -36,6 +37,7 @@ const PAGE_ROUTES: readonly string[] = ['/scales', '/tuner', '/chords', '/metron
     RouterLinkActive,
     SettingsPanel,
     ShortcutHelp,
+    CommandPalette,
     Brand,
     IconButton,
   ],
@@ -69,6 +71,7 @@ export class AppShell {
 
   protected readonly settingsOpen = signal(false);
   protected readonly shortcutOpen = signal(false);
+  protected readonly paletteOpen = signal(false);
   protected readonly preferencesState = this.preferences.state;
   protected readonly accentInk = computed(() => textColorOn(this.preferencesState().accent));
   protected readonly tunerSettings = this.tunerPreferences.tunerSettings;
@@ -109,10 +112,6 @@ export class AppShell {
 
   protected setWorkbenchScale(scale: number): void {
     this.preferences.setWorkbenchScale(scale);
-  }
-
-  protected setChordRandomProgression(chordRandomProgression: boolean): void {
-    this.preferences.setChordRandomProgression(chordRandomProgression);
   }
 
   protected resetWorkbenchScale(): void {
@@ -167,7 +166,13 @@ export class AppShell {
   }
 
   protected onWindowKeydown(event: KeyboardEvent): void {
-    if (event.defaultPrevented || this.settingsOpen()) return;
+    if (event.defaultPrevented) return;
+    if (this.isPaletteToggle(event)) {
+      event.preventDefault();
+      if (!this.settingsOpen()) this.paletteOpen.update((open) => !open);
+      return;
+    }
+    if (this.settingsOpen()) return;
     if (this.isShortcutToggle(event)) {
       const target = event.target as HTMLElement | null;
       if (this.isEditableTarget(target)) return;
@@ -185,6 +190,10 @@ export class AppShell {
     const next = (index + offset + PAGE_ROUTES.length) % PAGE_ROUTES.length;
     event.preventDefault();
     void this.router.navigate([PAGE_ROUTES[next]]);
+  }
+
+  private isPaletteToggle(event: KeyboardEvent): boolean {
+    return (event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === 'k';
   }
 
   private isShortcutToggle(event: KeyboardEvent): boolean {

@@ -6,7 +6,6 @@ import { Listbox } from './ui/listbox/listbox';
 import { Segmented } from './ui/segmented/segmented';
 import { Toggle } from './ui/toggle/toggle';
 import { TextField } from './ui/text-field/text-field';
-import { SwatchGroup } from './ui/swatch-group/swatch-group';
 import { IconButton } from './ui/icon-button/icon-button';
 
 const ELEMENTS: readonly string[] = ['Peach', 'Plum', 'Lemon', 'Lime'];
@@ -35,18 +34,9 @@ const ELEMENTS: readonly string[] = ['Peach', 'Plum', 'Lemon', 'Lime'];
     />
     <app-toggle [checked]="toggled()" label="Enable sound" (change)="toggled.set($event)" />
     <app-text-field label="Name" [value]="name()" (valueChange)="name.set($event)" />
-    <app-swatch-group
-      [options]="swatches"
-      [value]="swatch()"
-      ariaLabel="Accent"
-      [swatchColor]="identityFn"
-      [ariaLabelFor]="identityFn"
-      [trackByFn]="identityFn"
-      (select)="swatch.set($event)"
-    />
     <app-icon-button icon="x" label="Close" (activate)="closed.set(true)" />
   `,
-  imports: [Listbox, Segmented, Toggle, TextField, SwatchGroup, IconButton],
+  imports: [Listbox, Segmented, Toggle, TextField, IconButton],
 })
 class A11yHost {
   readonly items = ELEMENTS.map((label, id) => ({ id, label }));
@@ -56,8 +46,6 @@ class A11yHost {
   readonly seg = signal<'tab' | 'dots' | 'lines'>('tab');
   readonly toggled = signal(false);
   readonly name = signal('');
-  readonly swatches = ['#ff8aab', '#7ecba8', '#f5f5f3'];
-  readonly swatch = signal('#ff8aab');
   readonly closed = signal(false);
   readonly labelFn = (f: { id: number; label: string }) => f.label;
   readonly trackFn = (f: { id: number; label: string }) => f.id;

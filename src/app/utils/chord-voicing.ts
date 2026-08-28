@@ -25,22 +25,6 @@ export interface VoicingShape {
   readonly cost: number;
 }
 
-export type OpenStringMode = 'allow' | 'require' | 'mostly' | 'exclude';
-
-export const OPEN_MODE_DESCRIPTIONS: Readonly<Record<OpenStringMode, string>> = {
-  allow: 'open strings may ring anywhere — no constraint',
-  require: 'every shape must include at least one open string',
-  mostly: 'majority of the sounding notes must be open — drone-like voicings',
-  exclude: 'pure closed voicings — every sounding string is fretted',
-};
-
-export const OPEN_MODE_SUMMARIES: Readonly<Record<OpenStringMode, string>> = {
-  allow: 'open strings free',
-  require: '≥1 open string required',
-  mostly: 'mostly open (majority of notes open)',
-  exclude: 'no open strings',
-};
-
 const mod12 = (value: number): number => ((value % 12) + 12) % 12;
 
 type Diagram = (number | null)[];

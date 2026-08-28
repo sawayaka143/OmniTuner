@@ -57,11 +57,7 @@ export class Metronome {
   readonly ramp = computed(() => this.state().ramp);
   readonly presets = this.prefs.presets;
 
-  readonly meterPresets = METER_PRESETS;
   readonly subdivisions = SUBDIVISIONS;
-  readonly patternPresets = PATTERN_PRESETS;
-  readonly polyPresets = POLY_PRESETS;
-  readonly soundOptions = SoundBank.options();
 
   readonly denomOptions: readonly SelectOption<Denominator>[] = DENOMINATORS.map((d) => ({
     value: d,

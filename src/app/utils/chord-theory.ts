@@ -511,21 +511,6 @@ export interface DiatonicBadge {
   readonly text: string;
 }
 
-export function computeBadge(
-  chord: ParsedChord,
-  scaleRootRaw: string,
-  modeName: ModeName,
-  tuningFlats: boolean,
-): DiatonicBadge | null {
-  const scaleRoot = (scaleRootRaw ?? '').trim();
-  if (!scaleRoot) return null;
-  const token = /\d/.test(scaleRoot) ? scaleRoot : `${scaleRoot}3`;
-  const parsed = parseNoteToken(token);
-  if (!parsed)
-    return { kind: 'warn', text: `scale root '${scaleRoot}' unreadable — badge skipped` };
-  return computeBadgeForPc(chord, parsed.pc, modeName, tuningFlats, parsed.flats);
-}
-
 export function computeBadgeForPc(
   chord: ParsedChord,
   tonicPc: number,

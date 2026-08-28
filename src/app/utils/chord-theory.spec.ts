@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  computeBadge,
   midiName,
   parseChord,
   parseNoteToken,
@@ -187,48 +186,5 @@ describe('note names', () => {
     expect(pcName(1, true)).toBe('Db');
     expect(midiName(60, false)).toBe('C4');
     expect(midiName(58, true)).toBe('Bb3');
-  });
-});
-
-describe('computeBadge', () => {
-  const cMajor = parseChord('C');
-  const chord = cMajor.ok ? cMajor.chord : null;
-
-  it('returns null without a scale root', () => {
-    expect(chord && computeBadge(chord, '', 'Ionian', false)).toBeNull();
-  });
-
-  it('labels diatonic chords with their numeral', () => {
-    if (!chord) throw new Error('parse failed');
-    const badge = computeBadge(chord, 'C', 'Ionian', false);
-    expect(badge).toEqual({ kind: 'good', text: '◈ I — diatonic to C Ionian' });
-  });
-
-  it('flags chromatic chords', () => {
-    const fs = parseChord('F#m');
-    if (!fs.ok) throw new Error('parse failed');
-    const badge = computeBadge(fs.chord, 'C', 'Ionian', false);
-    expect(badge?.kind).toBe('bad');
-  });
-
-  it('labels parallel-major mixture as borrowed in minor keys', () => {
-    const gm = parseChord('Gm');
-    if (!gm.ok) throw new Error('parse failed');
-    const badge = computeBadge(gm.chord, 'Bb', 'Aeolian', true);
-    expect(badge).toEqual({ kind: 'warn', text: '◈ vi — borrowed from Bb major' });
-  });
-
-  it('labels parallel-minor mixture as borrowed in major keys', () => {
-    const bb = parseChord('Bb');
-    if (!bb.ok) throw new Error('parse failed');
-    const badge = computeBadge(bb.chord, 'C', 'Ionian', true);
-    expect(badge).toEqual({ kind: 'warn', text: '◈ bVII — borrowed from C minor' });
-  });
-
-  it('keeps the parallel-major VI in minor keys chromatic when the quality does not match', () => {
-    const g = parseChord('G');
-    if (!g.ok) throw new Error('parse failed');
-    const badge = computeBadge(g.chord, 'Bb', 'Aeolian', true);
-    expect(badge?.kind).toBe('bad');
   });
 });

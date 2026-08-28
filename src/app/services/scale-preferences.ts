@@ -179,10 +179,6 @@ export class ScalePreferences {
     this.update({ workbenchScale: snapped });
   }
 
-  setChordRandomProgression(chordRandomProgression: boolean): void {
-    this.update({ chordRandomProgression });
-  }
-
   resetWorkbenchScale(): void {
     this.update({ workbenchScale: 1 });
   }

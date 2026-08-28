@@ -90,7 +90,6 @@ export class StringEditor {
   });
 
   protected readonly effectiveError = computed(() => this.externalError() || this.nameError());
-  protected readonly nameInvalid = computed(() => !!this.effectiveError());
 
   constructor() {
     effect(() => {
