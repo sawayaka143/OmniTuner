@@ -3,6 +3,7 @@ import {
   DestroyRef,
   ElementRef,
   computed,
+  effect,
   inject,
   signal,
   viewChild,
@@ -14,11 +15,12 @@ import { textColorOn } from '../../data/interval-colors';
 import { TunerStartupMode } from '../../models/tuner-preferences.model';
 import { ScalePreferences } from '../../services/scale-preferences';
 import { TunerPreferences } from '../../services/tuner-preferences';
+import { ThemeService } from '../../services/theme.service';
+import { applySurfaceOverrides, surfaceOverrides } from '../../utils/surface-theme';
 import { Brand } from '../brand/brand';
 import { SettingsPanel } from '../settings-panel/settings-panel';
 import { ShortcutHelp } from '../shortcut-help/shortcut-help';
 import { CommandPalette } from '../command-palette/command-palette';
-import { ThemeService } from '../../services/theme.service';
 import { IconButton } from '../../ui/icon-button/icon-button';
 
 interface NavIndicatorState {
@@ -90,6 +92,14 @@ export class AppShell {
     this.destroyRef.onDestroy(() => this.navigationEvents.unsubscribe());
     this.scheduleIndicatorMeasure();
     this.scheduleIndicatorFontMeasure();
+    effect(() => {
+      const state = this.preferencesState();
+      const theme = this.themeService.theme();
+      applySurfaceOverrides(
+        this.document.documentElement.style,
+        surfaceOverrides(state.bgColor, state.cardColor, theme),
+      );
+    });
   }
 
   protected readonly inTuneColor = computed(() =>
@@ -108,6 +118,14 @@ export class AppShell {
 
   protected setNoteColor(color: string): void {
     this.preferences.setNoteColor(color);
+  }
+
+  protected setBgColor(color: string | null): void {
+    this.preferences.setBgColor(color);
+  }
+
+  protected setCardColor(color: string | null): void {
+    this.preferences.setCardColor(color);
   }
 
   protected setWorkbenchScale(scale: number): void {

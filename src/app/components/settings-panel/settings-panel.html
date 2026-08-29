@@ -18,57 +18,60 @@
           <h3 id="appearance-title">Appearance</h3>
         </div>
 
-        <label class="custom-accent">
-          <span class="color-preview" [style.background-color]="accent()" aria-hidden="true"></span>
-          <span class="custom-copy">
-            <strong>Accent</strong>
-          </span>
-          <input
-            type="color"
-            [value]="accent()"
-            aria-label="Choose a custom accent color"
-            (input)="onCustomAccent($event)"
-          />
-        </label>
+        <app-color-field
+          label="Accent"
+          [value]="accent()"
+          (valueChange)="accentChange.emit($event)"
+        />
+
+        <section class="surface-colors" aria-labelledby="surface-colors-title">
+          <h4 id="surface-colors-title">Background</h4>
+
+          <div class="with-reset">
+            <app-color-field
+              label="Background"
+              [value]="bgColor()"
+              (valueChange)="bgColorChange.emit($event)"
+            />
+            @if (bgColor()) {
+              <app-icon-button
+                icon="refresh"
+                label="Reset background color"
+                (activate)="bgColorChange.emit(null)"
+              />
+            }
+          </div>
+
+          <div class="with-reset">
+            <app-color-field
+              label="Cards"
+              [value]="cardColor()"
+              (valueChange)="cardColorChange.emit($event)"
+            />
+            @if (cardColor()) {
+              <app-icon-button
+                icon="refresh"
+                label="Reset card color"
+                (activate)="cardColorChange.emit(null)"
+              />
+            }
+          </div>
+        </section>
 
         <section class="note-colors" aria-labelledby="note-colors-title">
           <h4 id="note-colors-title">Scale notes</h4>
 
-          <label class="custom-accent">
-            <span
-              class="color-preview"
-              [style.background-color]="rootNoteColor()"
-              aria-hidden="true"
-            ></span>
-            <span class="custom-copy">
-              <strong>Root note</strong>
-              <span>{{ rootNoteColor() }}</span>
-            </span>
-            <input
-              type="color"
-              [value]="rootNoteColor()"
-              aria-label="Choose the root note color"
-              (input)="onRootNoteColor($event)"
-            />
-          </label>
+          <app-color-field
+            label="Root note"
+            [value]="rootNoteColor()"
+            (valueChange)="rootNoteColorChange.emit($event)"
+          />
 
-          <label class="custom-accent">
-            <span
-              class="color-preview"
-              [style.background-color]="noteColor()"
-              aria-hidden="true"
-            ></span>
-            <span class="custom-copy">
-              <strong>Other notes</strong>
-              <span>{{ noteColor() }}</span>
-            </span>
-            <input
-              type="color"
-              [value]="noteColor()"
-              aria-label="Choose the color for other scale notes"
-              (input)="onNoteColor($event)"
-            />
-          </label>
+          <app-color-field
+            label="Other notes"
+            [value]="noteColor()"
+            (valueChange)="noteColorChange.emit($event)"
+          />
         </section>
 
         <section class="workbench-size" aria-labelledby="workbench-size-title">
@@ -184,39 +187,17 @@
         <section class="in-tune-color" aria-labelledby="in-tune-color-title">
           <h4 id="in-tune-color-title">Tuner colors</h4>
 
-          <label class="custom-accent">
-            <span
-              class="color-preview"
-              [style.background-color]="tunerSettings().inTune.color"
-              aria-hidden="true"
-            ></span>
-            <span class="custom-copy">
-              <strong>In-tune color</strong>
-            </span>
-            <input
-              type="color"
-              [value]="tunerSettings().inTune.color"
-              aria-label="Choose a custom in-tune color"
-              (input)="onCustomInTuneColor($event)"
-            />
-          </label>
+          <app-color-field
+            label="In-tune color"
+            [value]="tunerSettings().inTune.color"
+            (valueChange)="chooseInTuneColor($event)"
+          />
 
-          <label class="custom-accent">
-            <span
-              class="color-preview"
-              [style.background-color]="tunerSettings().inTune.outOfTuneColor"
-              aria-hidden="true"
-            ></span>
-            <span class="custom-copy">
-              <strong>Out-of-tune color</strong>
-            </span>
-            <input
-              type="color"
-              [value]="tunerSettings().inTune.outOfTuneColor"
-              aria-label="Choose a custom out-of-tune color"
-              (input)="onCustomOutOfTuneColor($event)"
-            />
-          </label>
+          <app-color-field
+            label="Out-of-tune color"
+            [value]="tunerSettings().inTune.outOfTuneColor"
+            (valueChange)="outOfTuneColorChange.emit($event)"
+          />
         </section>
 
         <section class="in-tune-ranges" aria-labelledby="in-tune-ranges-title">
