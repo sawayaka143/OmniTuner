@@ -1,3 +1,7 @@
+import { readFileSync } from 'node:fs';
+
+const stylesheet = readFileSync(`${process.cwd()}/src/styles.scss`, 'utf8');
+
 const AA_MIN = 4.5;
 
 const DARK_TEXT_TOKENS: Record<string, string> = {
@@ -34,11 +38,6 @@ const LIGHT_SEMANTIC_TOKENS: Record<string, string> = {
   '--danger-hover': '#8f1138',
 };
 
-const ACCENT_TEXT_MIX = {
-  light: { ratio: 0.3, base: '#1a1a18' },
-  dark: { ratio: 0.4, base: '#f5f5f3' },
-};
-
 const ACCENT_EXTREMES: readonly string[] = [
   '#ede8d0',
   '#ffffff',
@@ -49,6 +48,51 @@ const ACCENT_EXTREMES: readonly string[] = [
   '#ff0000',
   '#0000ff',
 ];
+
+function parseTokenBlock(source: string, selector: string): Record<string, string> {
+  const selectorAt = source.indexOf(selector);
+  if (selectorAt === -1) return {};
+  const open = source.indexOf('{', selectorAt);
+  if (open === -1) return {};
+
+  let depth = 1;
+  let cursor = open;
+  while (depth > 0 && cursor < source.length - 1) {
+    cursor += 1;
+    if (source[cursor] === '{') depth += 1;
+    else if (source[cursor] === '}') depth -= 1;
+  }
+
+  const body = source.slice(open + 1, cursor);
+  const tokens: Record<string, string> = {};
+  for (const match of body.matchAll(/--([\w-]+):\s*([^;]+);/g)) {
+    tokens[`--${match[1]}`] = match[2].trim();
+  }
+  return tokens;
+}
+
+interface AccentMix {
+  readonly ratio: number;
+  readonly base: string;
+}
+
+function accentMixFrom(declared: Record<string, string>, theme: string): AccentMix {
+  const declaration = declared['--accent-text'];
+  const match = declaration
+    ? /color-mix\(in srgb,\s*var\(--scale-accent\)\s*(\d+)%,\s*(#[0-9a-fA-F]{6})\)/.exec(declaration)
+    : null;
+  if (!match) {
+    throw new Error(`--accent-text color-mix declaration missing or unsupported (${theme} theme)`);
+  }
+  return { ratio: Number(match[1]) / 100, base: match[2].toLowerCase() };
+}
+
+const DARK_DECLARED = parseTokenBlock(stylesheet, ':root');
+const LIGHT_DECLARED = parseTokenBlock(stylesheet, "html[data-theme='light']");
+const ACCENT_TEXT_MIX = {
+  light: accentMixFrom(LIGHT_DECLARED, 'light'),
+  dark: accentMixFrom(DARK_DECLARED, 'dark'),
+};
 
 function hexToRgb(hex: string): [number, number, number] {
   const c = hex.replace('#', '');
@@ -76,9 +120,34 @@ function mixHex(a: string, b: string, ratio: number): string {
 }
 
 describe('color token contrast (WCAG AA)', () => {
-  it('text tokens are defined', () => {
-    expect(Object.keys(DARK_TEXT_TOKENS).length).toBeGreaterThan(0);
-    expect(Object.keys(LIGHT_TEXT_TOKENS).length).toBeGreaterThan(0);
+  describe('stylesheet cross-check (src/styles.scss)', () => {
+    it('parses both theme blocks from the stylesheet', () => {
+      expect(Object.keys(DARK_DECLARED).length, 'dark :root block').toBeGreaterThan(0);
+      expect(Object.keys(LIGHT_DECLARED).length, 'light theme block').toBeGreaterThan(0);
+    });
+
+    it('declares the dark tokens under test', () => {
+      const defined: Record<string, string> = { ...DARK_TEXT_TOKENS, ...DARK_SURFACE_TOKENS };
+      for (const [name, hex] of Object.entries(defined)) {
+        expect(DARK_DECLARED[name], `${name} (dark)`).toBe(hex);
+      }
+    });
+
+    it('declares the light tokens under test', () => {
+      const defined: Record<string, string> = {
+        ...LIGHT_TEXT_TOKENS,
+        ...LIGHT_SURFACE_TOKENS,
+        ...LIGHT_SEMANTIC_TOKENS,
+      };
+      for (const [name, hex] of Object.entries(defined)) {
+        expect(LIGHT_DECLARED[name], `${name} (light)`).toBe(hex);
+      }
+    });
+
+    it('mixes --accent-text over the theme text base', () => {
+      expect(ACCENT_TEXT_MIX.dark.base).toBe(DARK_TEXT_TOKENS['--text']);
+      expect(ACCENT_TEXT_MIX.light.base).toBe(LIGHT_TEXT_TOKENS['--text']);
+    });
   });
 
   describe('dark theme (:root)', () => {

@@ -10,15 +10,21 @@ class MockWorker {
 
 describe('App', () => {
   beforeEach(async () => {
-    globalThis.Worker = MockWorker as unknown as typeof Worker;
+    vi.stubGlobal('Worker', MockWorker);
     await TestBed.configureTestingModule({
       imports: [App],
       providers: [provideRouter([])],
     }).compileComponents();
   });
 
+  afterEach(() => {
+    TestBed.resetTestingModule();
+    vi.unstubAllGlobals();
+  });
+
   it('should create the app', () => {
     const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
     expect(fixture.componentInstance).toBeTruthy();
   });
 });

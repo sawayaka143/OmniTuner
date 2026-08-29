@@ -137,10 +137,10 @@ describe('computeFretboard', () => {
     expect(openLowE.interval).not.toBeNull();
 
     const pc6 = board[5].find((c) => c.pitchClass === 6);
-    if (pc6?.interval === null) {
-      expect(pc6.color).toBe('');
-      expect(pc6.isRoot).toBe(false);
-    }
+    expect(pc6).toBeTruthy();
+    expect(pc6!.interval).toBeNull();
+    expect(pc6!.color).toBe('');
+    expect(pc6!.isRoot).toBe(false);
   });
 
   it('works with an arbitrary (duplicate/odd) tuning without throwing', () => {

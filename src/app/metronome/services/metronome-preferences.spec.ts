@@ -87,7 +87,7 @@ describe('MetronomePreferences', () => {
     expect(reloaded.presets()[0]?.state.countIn).toBe(true);
   });
 
-  it('falls back to defaults when applying an unknown preset id', () => {
+  it('ignores an unknown preset id (state unchanged)', () => {
     const prefs = setup(storage);
     prefs.setBpm(140);
     prefs.applyPreset('does-not-exist');

@@ -48,23 +48,36 @@ describe('StepButton', () => {
     expect(emitted).toEqual([51]);
   });
 
-  it('repeats while pressed', async () => {
+  it('repeats while pressed', () => {
     const emitted: number[] = [];
     fixture.componentInstance.step.subscribe((v) => {
       emitted.push(v);
       fixture.componentRef.setInput('value', v);
     });
 
-    button.dispatchEvent(new PointerEvent('pointerdown'));
-    await new Promise((r) => setTimeout(r, 540));
-    expect(emitted.length).toBeGreaterThanOrEqual(2);
-    expect(emitted[0]).toBe(51);
-    expect(emitted[1]).toBe(52);
+    vi.useFakeTimers();
+    try {
+      button.dispatchEvent(new PointerEvent('pointerdown'));
+      expect(emitted).toEqual([51]);
 
-    button.dispatchEvent(new PointerEvent('pointerup'));
-    const countAtRelease = emitted.length;
-    await new Promise((r) => setTimeout(r, 200));
-    expect(emitted.length).toBe(countAtRelease);
+      vi.advanceTimersByTime(419);
+      expect(emitted).toEqual([51]);
+
+      vi.advanceTimersByTime(1);
+      expect(emitted).toEqual([51]);
+
+      vi.advanceTimersByTime(85);
+      expect(emitted).toEqual([51, 52]);
+
+      vi.advanceTimersByTime(85);
+      expect(emitted).toEqual([51, 52, 53]);
+
+      button.dispatchEvent(new PointerEvent('pointerup'));
+      vi.advanceTimersByTime(300);
+      expect(emitted).toEqual([51, 52, 53]);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('disables the button when value is at the upper limit and direction is +1', () => {
@@ -81,9 +94,11 @@ describe('StepButton', () => {
     expect(button.disabled).toBe(true);
   });
 
-  it('does not emit when at the limit (button is disabled, no native click)', () => {
+  it('does not emit when the clamped value equals the current value', () => {
     fixture.componentRef.setInput('value', 96);
+    fixture.componentRef.setInput('max', 96);
     fixture.detectChanges();
+    expect(button.disabled).toBe(true);
     const emitted: number[] = [];
     fixture.componentInstance.step.subscribe((v) => emitted.push(v));
     button.dispatchEvent(new PointerEvent('pointerdown'));
@@ -115,9 +130,8 @@ describe('StepButton', () => {
     expect(emitted).toEqual([24]);
   });
 
-  it('does not emit when the clamped value equals the current value', () => {
+  it('emits the clamped next value when max allows it', () => {
     fixture.componentRef.setInput('value', 96);
-    fixture.componentRef.setInput('min', 24);
     fixture.componentRef.setInput('max', 100);
     fixture.componentRef.setInput('disabled', false);
     fixture.detectChanges();
