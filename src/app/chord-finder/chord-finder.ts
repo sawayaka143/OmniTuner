@@ -17,6 +17,7 @@ import {
 } from '../utils/chord-theory';
 import { RESULTS_PER_CHORD, searchChord, VoicingShape } from '../utils/chord-voicing';
 import { DiagramLabelMode, DiagramView, NeckDiagram } from './neck-diagram/neck-diagram';
+import { KeyFinder } from './key-finder/key-finder';
 import { Segmented } from '../ui/segmented/segmented';
 import { Listbox } from '../ui/listbox/listbox';
 import { TextField } from '../ui/text-field/text-field';
@@ -53,7 +54,7 @@ export interface TabLine {
 
 @Component({
   selector: 'app-chord-finder',
-  imports: [NeckDiagram, Segmented, Listbox, TextField],
+  imports: [NeckDiagram, Segmented, Listbox, TextField, KeyFinder],
   templateUrl: './chord-finder.html',
   styleUrl: './chord-finder.scss',
   host: {

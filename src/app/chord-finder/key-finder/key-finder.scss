@@ -1,0 +1,104 @@
+@use '../../styles' as *;
+
+:host {
+  display: block;
+  width: min(1180px, 100%);
+}
+
+.key-finder {
+  overflow: hidden;
+  zoom: var(--workbench-scale, 1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-md);
+  background: var(--surface-container-low);
+  box-shadow: var(--shadow-lift);
+}
+
+.key-finder-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--border-subtle);
+
+  h2 {
+    font-family: var(--font);
+    font-size: clamp(26px, 2.6vw, 34px);
+    font-weight: var(--fw-normal);
+    letter-spacing: var(--tracking-tight);
+    line-height: 1;
+  }
+
+  p {
+    margin: 0;
+    color: var(--text-muted);
+    font-family: var(--font);
+    font-size: var(--text-xs);
+    letter-spacing: var(--tracking-narrow);
+  }
+}
+
+.key-finder-body {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5) var(--space-5);
+}
+
+.key-result {
+  min-height: var(--space-8);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-md);
+  background: var(--workbench-inset);
+}
+
+.key-primary {
+  margin: 0;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: var(--text-xl);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-tight);
+  line-height: 1;
+
+  &.good {
+    color: var(--good);
+  }
+
+  &.warn {
+    color: var(--accent-text);
+  }
+
+  &.bad {
+    color: var(--warn);
+  }
+}
+
+.key-confidence {
+  margin-left: var(--space-2);
+  color: var(--text-dim);
+  font-size: var(--text-2sm);
+  font-weight: var(--fw-normal);
+  letter-spacing: var(--tracking-extra-wide);
+  text-transform: uppercase;
+}
+
+.key-alternatives {
+  margin: var(--space-2) 0 0;
+  color: var(--text-muted);
+  font-family: var(--font);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-narrow);
+}
+
+.key-empty {
+  margin: 0;
+  color: var(--text-dim);
+  font-family: var(--font);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-narrow);
+
+  &.bad {
+    color: var(--warn);
+  }
+}

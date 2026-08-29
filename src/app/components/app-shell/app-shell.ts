@@ -27,7 +27,7 @@ interface NavIndicatorState {
   readonly visible: boolean;
 }
 
-const PAGE_ROUTES: readonly string[] = ['/scales', '/tuner', '/chords', '/metronome'];
+const PAGE_ROUTES: readonly string[] = ['/tuner', '/chords', '/scales', '/metronome'];
 
 @Component({
   selector: 'app-app-shell',

@@ -298,15 +298,9 @@
   }
 }
 
-.field-label {
-  @include field-label(
-    $color: var(--text-dim),
-    $size: var(--text-3xs),
-    $weight: var(--fw-semibold),
-    $tracking: var(--tracking-extra-wide)
-  );
-  margin: var(--space-3) 0 var(--space-2);
-  line-height: 1;
+.controls-panel app-listbox {
+  display: block;
+  margin-bottom: var(--space-3);
 }
 
 .controls-panel app-segmented {

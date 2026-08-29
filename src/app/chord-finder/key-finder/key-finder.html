@@ -1,0 +1,37 @@
+<section class="key-finder" aria-labelledby="key-finder-title">
+  <header class="key-finder-header">
+    <h2 id="key-finder-title">Key finder</h2>
+    <p>Enter a chord progression and the matching key is detected live — no voicings needed.</p>
+  </header>
+
+  <div class="key-finder-body">
+    <app-text-field
+      label="chords, comma-separated"
+      [value]="chordsText()"
+      [hint]="chordsHint().text"
+      [hintTone]="chordsHint().tone"
+      (valueChange)="chordsText.set($event)"
+    />
+
+    <div class="key-result" role="status" aria-live="polite">
+      @if (analysis().key; as key) {
+        <p
+          class="key-primary"
+          [class.good]="keyTone() === 'good'"
+          [class.warn]="keyTone() === 'warn'"
+          [class.bad]="keyTone() === 'bad'"
+        >
+          {{ key.tonicName }} {{ key.mode }}
+          <span class="key-confidence">{{ key.confidence }}</span>
+        </p>
+        @if (alternativesLabel()) {
+          <p class="key-alternatives">also fits: {{ alternativesLabel() }}</p>
+        }
+      } @else if (analysis().total > 0) {
+        <p class="key-empty bad">no readable chords — check the spelling above</p>
+      } @else {
+        <p class="key-empty">type chords above to detect the key</p>
+      }
+    </div>
+  </div>
+</section>

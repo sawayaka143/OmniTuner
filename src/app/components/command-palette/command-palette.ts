@@ -32,9 +32,9 @@ const PAGE_COMMANDS: readonly {
   readonly route: string;
   readonly icon: string;
 }[] = [
-  { id: 'go-scales', label: 'Go to Scales', route: '/scales', icon: 'ti-music' },
   { id: 'go-tuner', label: 'Go to Tuner', route: '/tuner', icon: 'ti-wave-sine' },
   { id: 'go-chords', label: 'Go to Chords', route: '/chords', icon: 'ti-grid-dots' },
+  { id: 'go-scales', label: 'Go to Scales', route: '/scales', icon: 'ti-music' },
   { id: 'go-metronome', label: 'Go to Metronome', route: '/metronome', icon: 'ti-metronome' },
 ];
 
