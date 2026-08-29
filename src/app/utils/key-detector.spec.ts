@@ -18,10 +18,16 @@ describe('detectKey', () => {
     expect(dk!.confidence).toBe('strong');
   });
 
-  it('detects a minor tonic for Am Dm E', () => {
-    const dk = detectKey(chords('Am', 'Dm', 'E'));
+  it('resolves Am Dm E to C Ionian, scoring A Aeolian equally', () => {
+    const chordsAmDmE = chords('Am', 'Dm', 'E');
+    const dk = detectKey(chordsAmDmE);
     expect(dk).not.toBeNull();
-    expect(['A', 'C']).toContain(dk!.tonicName);
+    expect(dk!.tonicName).toBe('C');
+    expect(dk!.mode).toBe('Ionian');
+
+    const ranked = rankKeys(chordsAmDmE);
+    const aeolian = ranked.find((k) => k.tonicName === 'A' && k.mode === 'Aeolian');
+    expect(aeolian?.score).toBe(ranked[0].score);
   });
 
   it('detects C Ionian for ii-V-I Dm7 G7 Cmaj7', () => {
@@ -54,10 +60,11 @@ describe('detectKey', () => {
     expect(detectKey([])).toBeNull();
   });
 
-  it('handles pop progression C G Am F', () => {
+  it('detects C Ionian for pop progression C G Am F', () => {
     const dk = detectKey(chords('C', 'G', 'Am', 'F'));
     expect(dk).not.toBeNull();
-    expect(['C', 'A']).toContain(dk!.tonicName);
+    expect(dk!.tonicName).toBe('C');
+    expect(dk!.mode).toBe('Ionian');
   });
 
   it('rankKeys returns sorted list', () => {
@@ -68,7 +75,13 @@ describe('detectKey', () => {
 
   it('alternatives present for strong key', () => {
     const dk = detectKey(chords('C', 'F', 'G', 'Am'));
+    expect(dk!.tonicName).toBe('C');
+    expect(dk!.mode).toBe('Ionian');
+    expect(dk!.confidence).toBe('strong');
     expect(dk!.alternatives.length).toBeGreaterThan(0);
+    for (const alt of dk!.alternatives) {
+      expect(alt.score).toBeLessThanOrEqual(dk!.score);
+    }
   });
 
   it('respects flat spelling for flat chords', () => {

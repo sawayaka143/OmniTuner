@@ -113,15 +113,17 @@ describe('CommandPalette', () => {
   });
 
   it('changes the root note from the palette', async () => {
+    expect(preferences.state().rootPitchClass).toBe(4);
+
     await openPalette();
 
-    const rootOption = options().find((option) => option.textContent?.includes('Root note: E'));
+    const rootOption = options().find((option) => option.textContent?.includes('Root note: C'));
     if (!rootOption) throw new Error('Root note command not rendered');
 
     rootOption.click();
     fixture.detectChanges();
 
-    expect(preferences.state().rootPitchClass).toBe(4);
+    expect(preferences.state().rootPitchClass).toBe(0);
     expect(fixture.componentInstance.closed).toBe(true);
   });
 

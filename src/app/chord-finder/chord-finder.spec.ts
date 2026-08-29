@@ -1,5 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
+import { PROGRESSION_PRESETS } from '../data/chord-progression-presets';
+import { degreesToProgression } from '../utils/degree-to-chord';
+import { flatsForPc } from '../utils/chord-theory';
 import { ChordFinder } from './chord-finder';
 
 describe('ChordFinder', () => {
@@ -52,22 +55,25 @@ describe('ChordFinder', () => {
     expect(tokens.length).toBeLessThanOrEqual(6);
   });
 
-  it('shuffle randomizes the progression', () => {
+  it('shuffle applies the forced random preset and tonic', () => {
     const input = fieldInput('chords, comma-separated')!;
-    const before = input.value;
     const shuffleBtn = [...el().querySelectorAll<HTMLButtonElement>('button')].find(
       (b) => b.textContent?.trim() === 'Shuffle',
     )!;
     expect(shuffleBtn).toBeTruthy();
+
+    const randomSpy = vi.spyOn(Math, 'random').mockReturnValueOnce(0).mockReturnValueOnce(0);
     shuffleBtn.click();
     fixture.detectChanges();
-    const tokens = input.value
-      .split(/[,;|]/)
-      .map((t) => t.trim())
-      .filter(Boolean);
+    randomSpy.mockRestore();
+
+    const expected = degreesToProgression(PROGRESSION_PRESETS[0].degrees, 0, flatsForPc(0)).join(
+      ', ',
+    );
+    expect(input.value).toBe(expected);
+    const tokens = expected.split(/[,;|]/).filter(Boolean);
     expect(tokens.length).toBeGreaterThanOrEqual(3);
-    expect(tokens.length).toBeLessThanOrEqual(6);
-    expect(input.value).not.toEqual(before);
+    expect(el().querySelectorAll('.chord-card').length).toBe(tokens.length);
   });
 
   it('validates the default tuning live', () => {
@@ -152,9 +158,15 @@ describe('ChordFinder', () => {
 
   it('refuses to copy before anything was generated', async () => {
     const toolbarButtons = el().querySelectorAll<HTMLButtonElement>('.control-rail .btn');
-    toolbarButtons[toolbarButtons.length - 2].click();
+    const copyButton = toolbarButtons[toolbarButtons.length - 2];
+    expect(copyButton.textContent?.trim()).toBe('copy tab');
+
+    copyButton.click();
     fixture.detectChanges();
     await fixture.whenStable();
+
+    expect(copyButton.textContent?.trim()).toBe('copy tab');
+    expect(el().querySelectorAll('.chord-card').length).toBe(0);
   });
 
   it('generates a progression with an invalid chord token in the middle without misaligning', () => {

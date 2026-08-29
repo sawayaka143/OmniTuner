@@ -140,7 +140,7 @@ describe('ScalePreferences', () => {
         state: {
           accent: '#123456',
           rootNoteColor: '#ffffff',
-          noteColor: '#3b3b3b',
+          noteColor: '#445566',
         },
       }),
     );
@@ -148,7 +148,7 @@ describe('ScalePreferences', () => {
     expect(createService().state()).toMatchObject({
       accent: '#123456',
       rootNoteColor: DEFAULT_SCALE_PREFERENCES.rootNoteColor,
-      noteColor: '#3b3b3b',
+      noteColor: '#445566',
     });
   });
 

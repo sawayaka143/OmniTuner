@@ -36,7 +36,7 @@ describe('AudioCaptureService', () => {
 
   beforeEach(() => {
     MockWorker.latest = null;
-    globalThis.Worker = MockWorker as unknown as typeof Worker;
+    vi.stubGlobal('Worker', MockWorker);
     TestBed.configureTestingModule({});
     service = TestBed.inject(AudioCaptureService);
     worker = MockWorker.latest!;
@@ -46,6 +46,7 @@ describe('AudioCaptureService', () => {
 
   afterEach(() => {
     TestBed.resetTestingModule();
+    vi.unstubAllGlobals();
   });
 
   it('should be created', () => {
@@ -150,13 +151,20 @@ describe('AudioCaptureService', () => {
     expect(progress).toBeLessThan(0.6);
   });
 
-  it('guards non-positive frequencies without producing NaN', () => {
+  it('guards non-positive frequencies without losing the lock or producing NaN', () => {
     worker.emit({ frequency: 0, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
-    expect(Number.isNaN(service.frequency())).toBe(false);
+    expect(service.frequency()).toBeNull();
 
-    worker.emit({ frequency: 110, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
+    for (let frame = 0; frame < 3; frame++) {
+      worker.emit({ frequency: 110, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
+    }
+    expect(service.trackingState()).toBe('locked');
+    expect(service.frequency()).toBeCloseTo(110, 0);
+
     worker.emit({ frequency: -5, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
-    expect(Number.isNaN(service.frequency() ?? 0)).toBe(false);
+    expect(service.frequency()).not.toBeNull();
+    expect(Number.isNaN(service.frequency()!)).toBe(false);
+    expect(service.frequency()!).toBeCloseTo(110, 0);
   });
 
   it('does not lock onto inconsistent high-confidence readings', () => {

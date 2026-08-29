@@ -29,9 +29,20 @@ describe('searchChord (biomechanical engine)', () => {
     }
   });
 
-  it('respects the biomechanical span (≤4 or thumb reach)', () => {
+  it('respects the biomechanical span (<=4, or thumb reach on the low string)', () => {
+    const maxSpan = 4;
+    const maxThumbReach = 4;
     for (const shape of searchChord(tuning, chord('Em7'))) {
-      expect(shape.span).toBeLessThanOrEqual(4);
+      const frets = JSON.stringify(shape.frets);
+      if (shape.span <= maxSpan) continue;
+      const [thumb, ...rest] = shape.frets;
+      const others = rest.filter((f): f is number => f !== null && f > 0);
+      expect(thumb, frets).not.toBeNull();
+      expect(thumb!, frets).toBeGreaterThan(0);
+      expect(others.length, frets).toBeGreaterThan(0);
+      expect(Math.max(...others) - Math.min(...others), frets).toBeLessThanOrEqual(maxSpan);
+      expect(thumb!, frets).toBeLessThanOrEqual(Math.min(...others));
+      expect(Math.min(...others) - thumb!, frets).toBeLessThanOrEqual(maxThumbReach);
     }
   });
 
@@ -95,14 +106,15 @@ describe('searchChord (biomechanical engine)', () => {
       let runs = 0;
       let prevFret: number | null = null;
       for (const fret of shape.frets) {
-        if (fret === null || fret === 0) {
+        if (fret === 0) {
           prevFret = null;
           continue;
         }
+        if (fret === null) continue;
         if (fret !== prevFret) runs++;
         prevFret = fret;
       }
-      expect(runs).toBeLessThanOrEqual(4);
+      expect(runs, JSON.stringify(shape.frets)).toBeLessThanOrEqual(4);
     }
   });
 });

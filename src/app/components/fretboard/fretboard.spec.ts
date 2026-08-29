@@ -231,11 +231,12 @@ describe('Fretboard', () => {
     Object.defineProperty(board, 'offsetHeight', { configurable: true, value: 300 });
 
     ResizeObserverMock.latest?.trigger();
-    await new Promise((resolve) => setTimeout(resolve, 30));
 
-    expect(board.style.transform).toBe('translateY(75px) scale(0.5)');
-    expect(frame.style.width).toBe('300px');
-    expect(frame.style.height).toBe('300px');
+    await vi.waitFor(() => {
+      expect(board.style.transform).toBe('translateY(75px) scale(0.5)');
+      expect(frame.style.width).toBe('300px');
+      expect(frame.style.height).toBe('300px');
+    });
   });
 
   it('does not scale the board when there is room to spare', async () => {
@@ -251,9 +252,10 @@ describe('Fretboard', () => {
     Object.defineProperty(board, 'offsetHeight', { configurable: true, value: 300 });
 
     ResizeObserverMock.latest?.trigger();
-    await new Promise((resolve) => setTimeout(resolve, 30));
 
-    expect(board.style.transform).toBe('translateY(0px) scale(1)');
+    await vi.waitFor(() => {
+      expect(board.style.transform).toBe('translateY(0px) scale(1)');
+    });
   });
 
   it('disconnects its container observer on destroy', () => {

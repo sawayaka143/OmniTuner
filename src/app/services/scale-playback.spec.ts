@@ -61,7 +61,10 @@ const makeStubContext = (): StubAudioContext => {
 };
 
 describe('ScalePlayback', () => {
-  afterEach(() => TestBed.resetTestingModule());
+  afterEach(() => {
+    TestBed.resetTestingModule();
+    vi.unstubAllGlobals();
+  });
 
   it('converts MIDI notes to equal-tempered frequencies', () => {
     expect(midiToFrequency(69)).toBe(440);
@@ -135,7 +138,6 @@ describe('ScalePlayback', () => {
 
     expect(fetchStub).toHaveBeenCalledWith('audio/guitar/a4_mf_rr1.wav');
     expect(context.bufferSource.playbackRate.value).toBeCloseTo(2 ** (1 / 12), 5);
-    vi.unstubAllGlobals();
   });
 
   it('falls back to the oscillator playNote outside the recorded range', () => {
