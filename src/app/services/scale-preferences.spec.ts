@@ -152,6 +152,55 @@ describe('ScalePreferences', () => {
     });
   });
 
+  describe('surface colors', () => {
+    it('defaults to null so surfaces follow the theme', () => {
+      const state = createService().state();
+      expect(state.bgColor).toBeNull();
+      expect(state.cardColor).toBeNull();
+    });
+
+    it('persists custom surface colors across reload', () => {
+      const service = createService();
+      service.setBgColor('#1a1a2e');
+      service.setCardColor('#24243E');
+
+      TestBed.resetTestingModule();
+      expect(createService().state()).toMatchObject({
+        bgColor: '#1a1a2e',
+        cardColor: '#24243e',
+      });
+    });
+
+    it('rejects invalid surface colors', () => {
+      const service = createService();
+      service.setBgColor('blue');
+      service.setCardColor('#12345');
+      expect(service.state().bgColor).toBeNull();
+      expect(service.state().cardColor).toBeNull();
+    });
+
+    it('resets surface colors back to the theme', () => {
+      const service = createService();
+      service.setBgColor('#1a1a2e');
+      service.setCardColor('#24243e');
+      service.setBgColor(null);
+      service.setCardColor(null);
+      expect(service.state().bgColor).toBeNull();
+      expect(service.state().cardColor).toBeNull();
+    });
+
+    it('falls back to null for missing or invalid persisted surface colors', () => {
+      storage.setItem(
+        SCALE_PREFERENCES_STORAGE_KEY,
+        JSON.stringify({
+          version: 1,
+          state: { bgColor: 'white', cardColor: 5 },
+        }),
+      );
+      expect(createService().state()).toMatchObject({ bgColor: null, cardColor: null });
+    });
+  });
+
   describe('workbenchScale', () => {
     it('defaults to 1', () => {
       expect(createService().state().workbenchScale).toBe(1);

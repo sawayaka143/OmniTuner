@@ -111,6 +111,14 @@ const parseState = (value: unknown): ScalePreferencesState | null => {
       typeof noteColor === 'string' && HEX_COLOR.test(noteColor)
         ? noteColor.toLowerCase()
         : DEFAULT_SCALE_PREFERENCES.noteColor,
+    bgColor:
+      typeof state['bgColor'] === 'string' && HEX_COLOR.test(state['bgColor'])
+        ? state['bgColor'].toLowerCase()
+        : null,
+    cardColor:
+      typeof state['cardColor'] === 'string' && HEX_COLOR.test(state['cardColor'])
+        ? state['cardColor'].toLowerCase()
+        : null,
     chordRandomProgression:
       typeof state['chordRandomProgression'] === 'boolean'
         ? state['chordRandomProgression']
@@ -169,6 +177,24 @@ export class ScalePreferences {
   setNoteColor(noteColor: string): void {
     if (!HEX_COLOR.test(noteColor)) return;
     this.update({ noteColor: noteColor.toLowerCase() });
+  }
+
+  setBgColor(bgColor: string | null): void {
+    if (bgColor === null) {
+      this.update({ bgColor: null });
+      return;
+    }
+    if (!HEX_COLOR.test(bgColor)) return;
+    this.update({ bgColor: bgColor.toLowerCase() });
+  }
+
+  setCardColor(cardColor: string | null): void {
+    if (cardColor === null) {
+      this.update({ cardColor: null });
+      return;
+    }
+    if (!HEX_COLOR.test(cardColor)) return;
+    this.update({ cardColor: cardColor.toLowerCase() });
   }
 
   setWorkbenchScale(scale: number): void {

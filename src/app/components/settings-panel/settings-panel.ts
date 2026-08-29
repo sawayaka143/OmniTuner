@@ -13,6 +13,7 @@ import {
 } from '../../models/tuner-preferences.model';
 import { Toggle } from '../../ui/toggle/toggle';
 import { IconButton } from '../../ui/icon-button/icon-button';
+import { ColorField } from '../../ui/color-field/color-field';
 import { RovingRadioGroup } from '../../ui/keyboard-nav';
 
 interface StartupModeOption {
@@ -24,19 +25,23 @@ interface StartupModeOption {
   selector: 'app-settings-panel',
   templateUrl: './settings-panel.html',
   styleUrl: './settings-panel.scss',
-  imports: [Toggle, IconButton, RovingRadioGroup],
+  imports: [Toggle, IconButton, ColorField, RovingRadioGroup],
 })
 export class SettingsPanel {
   readonly open = input(false);
   readonly accent = input('#ede8d0');
   readonly rootNoteColor = input('#ede8d0');
   readonly noteColor = input('#3b3b3b');
+  readonly bgColor = input<string | null>(null);
+  readonly cardColor = input<string | null>(null);
   readonly workbenchScale = input(1);
   readonly tunerSettings = input<TunerSettings>(DEFAULT_TUNER_SETTINGS);
 
   readonly accentChange = output<string>();
   readonly rootNoteColorChange = output<string>();
   readonly noteColorChange = output<string>();
+  readonly bgColorChange = output<string | null>();
+  readonly cardColorChange = output<string | null>();
   readonly workbenchScaleChange = output<number>();
   readonly workbenchScaleReset = output<void>();
   readonly startupModeChange = output<TunerStartupMode>();
@@ -86,21 +91,6 @@ export class SettingsPanel {
     this.accentChange.emit(value);
   }
 
-  protected onCustomAccent(event: Event): void {
-    const target = event.target;
-    if (target instanceof HTMLInputElement) this.chooseAccent(target.value);
-  }
-
-  protected onRootNoteColor(event: Event): void {
-    const target = event.target;
-    if (target instanceof HTMLInputElement) this.rootNoteColorChange.emit(target.value);
-  }
-
-  protected onNoteColor(event: Event): void {
-    const target = event.target;
-    if (target instanceof HTMLInputElement) this.noteColorChange.emit(target.value);
-  }
-
   protected onWorkbenchScale(event: Event): void {
     const target = event.target;
     if (target instanceof HTMLInputElement) this.workbenchScaleChange.emit(Number(target.value));
@@ -113,16 +103,6 @@ export class SettingsPanel {
 
   protected chooseInTuneColor(value: string): void {
     this.inTuneColorChange.emit(value);
-  }
-
-  protected onCustomInTuneColor(event: Event): void {
-    const target = event.target;
-    if (target instanceof HTMLInputElement) this.chooseInTuneColor(target.value);
-  }
-
-  protected onCustomOutOfTuneColor(event: Event): void {
-    const target = event.target;
-    if (target instanceof HTMLInputElement) this.outOfTuneColorChange.emit(target.value);
   }
 
   protected onTolerance(event: Event): void {

@@ -13,6 +13,8 @@ export const DEFAULT_SCALE_PREFERENCES: ScalePreferencesState = {
   accent: '#ede8d0',
   rootNoteColor: '#ede8d0',
   noteColor: '#3b3b3b',
+  bgColor: null,
+  cardColor: null,
   workbenchScale: 1,
   chordRandomProgression: true,
 };
