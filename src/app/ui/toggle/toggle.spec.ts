@@ -88,4 +88,15 @@ describe('Toggle', () => {
     fixture.detectChanges();
     expect(button.hasAttribute('title')).toBe(false);
   });
+
+  it('applies the prominent class when prominent is true', () => {
+    fixture.componentRef.setInput('inline', true);
+    fixture.componentRef.setInput('prominent', true);
+    fixture.detectChanges();
+    expect(button.classList.contains('prominent')).toBe(true);
+  });
+
+  it('omits the prominent class by default', () => {
+    expect(button.classList.contains('prominent')).toBe(false);
+  });
 });

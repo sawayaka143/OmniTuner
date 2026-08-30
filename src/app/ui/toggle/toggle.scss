@@ -7,6 +7,30 @@
     @include toggle-switch($with-label: true);
   }
 
+  &.prominent {
+    min-height: var(--ctrl-h-xl);
+    padding: 0 var(--space-4);
+    border-color: var(--border-medium);
+    background: var(--surface-container);
+    font-size: var(--text-sm);
+    font-weight: var(--fw-medium);
+
+    .toggle-lamp {
+      width: calc(var(--space-2) + 2px);
+      height: calc(var(--space-2) + 2px);
+    }
+
+    &.active {
+      border-color: var(--border-active);
+      background: color-mix(in srgb, var(--accent-text) 12%, transparent);
+      color: var(--accent-text);
+
+      .toggle-lamp {
+        background: var(--accent-text);
+      }
+    }
+  }
+
   &:disabled {
     cursor: not-allowed;
     opacity: 0.5;

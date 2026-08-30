@@ -181,4 +181,37 @@ describe('ChordFinder', () => {
     expect(el().querySelectorAll('.chord-card').length).toBe(3);
     expect(el().querySelectorAll('.chord-card .card-note.error').length).toBe(1);
   });
+
+  it('closes the tuning list when the instrument list opens', () => {
+    const triggers = el().querySelectorAll<HTMLButtonElement>('.controls-panel app-listbox .btn');
+    triggers[1].click();
+    fixture.detectChanges();
+    expect(el().querySelector('[aria-label="Tuning preset"]')).toBeTruthy();
+
+    triggers[0].click();
+    fixture.detectChanges();
+    expect(el().querySelector('[aria-label="Tuning preset"]')).toBeFalsy();
+    expect(el().querySelector('[aria-label="Instrument"]')).toBeTruthy();
+  });
+
+  it('switches instrument and resyncs the tuning text field', () => {
+    const triggers = el().querySelectorAll<HTMLButtonElement>('.controls-panel app-listbox .btn');
+    const instrumentTrigger = triggers[0];
+    expect(instrumentTrigger.textContent).toContain('Guitar');
+
+    instrumentTrigger.click();
+    fixture.detectChanges();
+
+    const menu = el().querySelector('[aria-label="Instrument"]');
+    if (!menu) throw new Error('instrument menu missing');
+    const option = [...menu.querySelectorAll<HTMLButtonElement>('[role="option"]')].find((b) =>
+      b.textContent?.includes('Ukulele'),
+    );
+    if (!option) throw new Error('ukulele option missing');
+    option.click();
+    fixture.detectChanges();
+
+    expect(instrumentTrigger.textContent).toContain('Ukulele');
+    expect(fieldInput('custom')?.value).toBe('G4 C4 E4 A4');
+  });
 });

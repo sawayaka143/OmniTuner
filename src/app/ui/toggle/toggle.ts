@@ -7,6 +7,7 @@ import { Component, input, output } from '@angular/core';
       type="button"
       class="toggle-button"
       [class.inline]="inline()"
+      [class.prominent]="prominent()"
       [class.active]="checked()"
       [attr.role]="inline() ? null : 'switch'"
       [attr.aria-checked]="inline() ? null : checked()"
@@ -28,6 +29,7 @@ export class Toggle {
   readonly checked = input.required<boolean>();
   readonly label = input.required<string>();
   readonly inline = input(false);
+  readonly prominent = input(false);
   readonly title = input<string | null>(null);
   readonly disabled = input(false);
   readonly change = output<boolean>();

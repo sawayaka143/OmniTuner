@@ -6,7 +6,7 @@
 
 .tuning-selector {
   position: relative;
-  width: min(220px, calc(100vw - 48px));
+  width: 100%;
 }
 
 .selector-button {
@@ -65,12 +65,6 @@
 
 .create-option {
   color: var(--text);
-}
-
-@media (max-width: 560px) {
-  .tuning-selector {
-    width: min(100%, 330px);
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

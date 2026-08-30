@@ -14,10 +14,10 @@
 
 .scales-controls {
   display: grid;
-  grid-template-columns: 162px 210px 220px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   align-items: center;
-  justify-content: center;
   gap: var(--space-2);
+  width: min(904px, 100%);
 }
 
 .current-scale {
@@ -90,13 +90,6 @@
   cursor: pointer;
 }
 
-@media (max-width: 1040px) {
-  .scales-controls {
-    grid-template-columns: 162px 210px 220px;
-    justify-content: center;
-  }
-}
-
 @media (max-width: 760px) {
   .app-main {
     gap: var(--space-7);
@@ -105,8 +98,9 @@
 
   .scales-controls {
     width: 100%;
-    grid-template-columns: minmax(0, 162px) minmax(0, 210px);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
 
+    app-listbox,
     app-tuning-selector {
       grid-column: 1 / -1;
       justify-self: center;

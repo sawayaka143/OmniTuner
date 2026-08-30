@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { ScalePreferences } from '../services/scale-preferences';
 import { InstrumentRegistry } from '../services/instrument-registry';
+import { Instrument } from '../models/instrument.model';
 import { textColorOn } from '../data/interval-colors';
 import { PROGRESSION_PRESETS } from '../data/chord-progression-presets';
 import { degreesToProgression } from '../utils/degree-to-chord';
@@ -83,6 +84,8 @@ export class ChordFinder {
   protected readonly tuningLabelFn = (o: TuningOption): string => o.label;
   protected readonly tuningAltFn = (o: TuningOption): string | null => o.text;
   protected readonly tuningTrackFn = (o: TuningOption): string => o.id;
+  protected readonly instrumentLabelFn = (o: Instrument): string => o.label;
+  protected readonly instrumentTrackFn = (o: Instrument): string => o.id;
   protected readonly viewLabelFn = (o: 'tab' | 'dots' | 'lines'): string => o;
   protected readonly labelChoiceLabelFn = (o: 'notes' | 'func'): string =>
     o === 'notes' ? 'notes' : 'R b3';
@@ -104,6 +107,9 @@ export class ChordFinder {
   );
   protected readonly labelMode = signal<DiagramLabelMode>('notes');
   protected readonly tuningListOpen = signal(false);
+  protected readonly instruments = this.registry.instruments;
+  protected readonly selectedInstrument = this.registry.selectedInstrument;
+  protected readonly instrumentListOpen = signal(false);
 
   protected readonly results = signal<GenerationResult | null>(null);
   protected readonly detectedKey = computed(() => this.results()?.detectedKey ?? null);
@@ -270,6 +276,12 @@ export class ChordFinder {
     return kind === 'good' ? 'good' : kind === 'bad' ? 'bad' : 'neutral';
   });
 
+  protected onInstrumentSelect(instrument: Instrument): void {
+    this.registry.selectInstrument(instrument.id);
+    this.instrumentListOpen.set(false);
+    this.syncTuningText();
+  }
+
   protected onTuningSelect(option: TuningOption): void {
     this.applyTuning(option.id);
     this.tuningListOpen.set(false);
@@ -282,7 +294,22 @@ export class ChordFinder {
     this.registry.selectTuning(tuningId);
   }
 
+  private syncTuningText(): void {
+    this.tuningText.set(
+      this.registry
+        .selectedTuning()
+        .strings.map((s) => s.name)
+        .join(' '),
+    );
+  }
+
+  protected toggleInstrumentList(): void {
+    this.tuningListOpen.set(false);
+    this.instrumentListOpen.update((open) => !open);
+  }
+
   protected toggleTuningList(): void {
+    this.instrumentListOpen.set(false);
     this.tuningListOpen.update((open) => !open);
   }
 

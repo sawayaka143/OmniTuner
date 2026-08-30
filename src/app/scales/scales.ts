@@ -10,6 +10,8 @@ import { textColorOn } from '../data/interval-colors';
 import { computeFretboard, noteName, parseNote } from '../utils/scale-theory';
 import { frequencyToMidiNote } from '../utils/pitch-utils';
 import { InstrumentRegistry } from '../services/instrument-registry';
+import { Instrument } from '../models/instrument.model';
+import { Listbox } from '../ui/listbox/listbox';
 import { ScalePreferences } from '../services/scale-preferences';
 import { ScalePlayback } from '../services/scale-playback';
 import { TuningSelector, TuningOption } from './tuning-selector/tuning-selector';
@@ -36,6 +38,7 @@ interface PreviewTuning {
     ScaleOptions,
     ScaleNotes,
     Fretboard,
+    Listbox,
   ],
   templateUrl: './scales.html',
   styleUrl: './scales.scss',
@@ -51,6 +54,7 @@ export class Scales {
 
   readonly rootPickerOpen = signal(false);
   readonly scalePickerOpen = signal(false);
+  readonly instrumentPickerOpen = signal(false);
   readonly tuningPickerOpen = signal(false);
   readonly tuningEditorOpen = signal(false);
   protected readonly editingTuningId = signal<string | null>(null);
@@ -107,6 +111,11 @@ export class Scales {
   );
 
   protected readonly instrumentLabel = computed(() => this.registry.selectedInstrument().label);
+
+  protected readonly instruments = this.registry.instruments;
+  protected readonly selectedInstrument = this.registry.selectedInstrument;
+  protected readonly instrumentLabelFn = (o: Instrument): string => o.label;
+  protected readonly instrumentTrackFn = (o: Instrument): string => o.id;
 
   protected readonly rootNotes = computed(() =>
     this.preferencesState().accidental === 'flat' ? FLAT_NAMES : SHARP_NAMES,
@@ -369,26 +378,42 @@ export class Scales {
 
   protected toggleRootPicker(): void {
     this.scalePickerOpen.set(false);
+    this.instrumentPickerOpen.set(false);
     this.tuningPickerOpen.set(false);
     this.rootPickerOpen.update((isOpen) => !isOpen);
   }
 
   protected toggleScalePicker(): void {
     this.rootPickerOpen.set(false);
+    this.instrumentPickerOpen.set(false);
     this.tuningPickerOpen.set(false);
     this.scalePickerOpen.update((isOpen) => !isOpen);
+  }
+
+  protected toggleInstrumentPicker(): void {
+    this.rootPickerOpen.set(false);
+    this.scalePickerOpen.set(false);
+    this.tuningPickerOpen.set(false);
+    this.instrumentPickerOpen.update((isOpen) => !isOpen);
   }
 
   protected toggleTuningPicker(): void {
     this.rootPickerOpen.set(false);
     this.scalePickerOpen.set(false);
+    this.instrumentPickerOpen.set(false);
     this.tuningPickerOpen.update((isOpen) => !isOpen);
   }
 
   protected closePickers(): void {
     this.rootPickerOpen.set(false);
     this.scalePickerOpen.set(false);
+    this.instrumentPickerOpen.set(false);
     this.tuningPickerOpen.set(false);
+  }
+
+  protected selectInstrument(instrument: Instrument): void {
+    this.registry.selectInstrument(instrument.id);
+    this.instrumentPickerOpen.set(false);
   }
 
   protected openTuningEditor(id: string | null = null): void {

@@ -3,9 +3,6 @@
 :host {
   display: block;
   width: min(1180px, 100%);
-}
-
-.key-finder {
   overflow: hidden;
   zoom: var(--workbench-scale, 1);
   border: 1px solid var(--border-subtle);

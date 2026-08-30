@@ -2,7 +2,6 @@
   class="app-main"
   [style.--scale-accent]="preferencesState().accent"
   [style.--scale-accent-ink]="accentInk()"
-  [style.--workbench-scale]="preferencesState().workbenchScale"
   (click)="closePickers()"
 >
   <section class="studio-intro" aria-label="Scale selection">
@@ -23,6 +22,19 @@
         (select)="selectScale($event)"
         (toggle)="toggleScalePicker()"
         (close)="closePickers()"
+      />
+
+      <app-listbox
+        [options]="instruments()"
+        [value]="selectedInstrument()"
+        ariaLabel="Instrument"
+        [triggerLabel]="selectedInstrument().label"
+        triggerKicker="instrument"
+        [optionLabel]="instrumentLabelFn"
+        [trackByFn]="instrumentTrackFn"
+        [open]="instrumentPickerOpen()"
+        (toggle)="toggleInstrumentPicker()"
+        (select)="selectInstrument($event)"
       />
 
       <app-tuning-selector

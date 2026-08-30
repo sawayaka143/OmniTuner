@@ -2,7 +2,6 @@
   class="app-main"
   [style.--scale-accent]="preferencesState().accent"
   [style.--scale-accent-ink]="accentInk()"
-  [style.--workbench-scale]="preferencesState().workbenchScale"
 >
   <section class="workbench" aria-labelledby="chord-finder-title">
     <header class="workbench-header">
@@ -15,6 +14,19 @@
       <aside class="controls-panel" aria-label="Voicing controls">
         <div class="control-section">
           <span class="section-label">01 · Tuning</span>
+
+          <app-listbox
+            [options]="instruments()"
+            [value]="selectedInstrument()"
+            ariaLabel="Instrument"
+            [triggerLabel]="selectedInstrument().label"
+            triggerKicker="instrument"
+            [optionLabel]="instrumentLabelFn"
+            [trackByFn]="instrumentTrackFn"
+            [open]="instrumentListOpen()"
+            (toggle)="toggleInstrumentList()"
+            (select)="onInstrumentSelect($event)"
+          />
 
           @if (selectedTuningOption(); as selectedTuning) {
             <app-listbox

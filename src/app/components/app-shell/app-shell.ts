@@ -50,6 +50,7 @@ const PAGE_ROUTES: readonly string[] = ['/tuner', '/chords', '/scales', '/metron
     '[style.--scale-accent-ink]': 'accentInk()',
     '[style.--in-tune-color]': 'inTuneColor()',
     '[style.--out-of-tune-color]': 'outOfTuneColor()',
+    '[style.--workbench-scale]': 'preferencesState().workbenchScale',
     '(window:resize)': 'scheduleIndicatorMeasure()',
     '(window:keydown)': 'onWindowKeydown($event)',
   },

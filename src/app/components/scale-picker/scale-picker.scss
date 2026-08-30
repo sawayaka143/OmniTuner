@@ -2,8 +2,7 @@
 
 .dropdown-wrapper {
   position: relative;
-  width: min(210px, calc(100vw - 48px));
-  flex-shrink: 0;
+  width: 100%;
 }
 
 .btn {
@@ -37,12 +36,6 @@
   letter-spacing: var(--tracking-narrow);
   line-height: var(--leading-snug);
   text-transform: none;
-}
-
-@media (max-width: 560px) {
-  .dropdown-wrapper {
-    width: min(100%, 330px);
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
