@@ -316,6 +316,7 @@ h3 {
   font-size: var(--text-xs);
   font-weight: var(--fw-semibold);
   letter-spacing: var(--tracking-narrow);
+  text-decoration: none;
   cursor: pointer;
   transition:
     filter var(--dur-med) ease,

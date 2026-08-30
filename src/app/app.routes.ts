@@ -18,5 +18,22 @@ export const routes: Routes = [
     path: 'metronome',
     loadComponent: () => import('./metronome/metronome').then((c) => c.Metronome),
   },
-  { path: '**', redirectTo: 'tuner' },
+  {
+    path: 'error',
+    loadComponent: () => import('./pages/error/error-page').then((c) => c.ErrorPage),
+    title: 'Something went wrong · OmniTuner',
+    data: {
+      code: 'Oops',
+      icon: 'ti-alert-triangle',
+      title: 'Something went wrong',
+      description:
+        'The page failed to load. This can happen right after an app update — reload to get the latest version.',
+      showReload: true,
+    },
+  },
+  {
+    path: '**',
+    loadComponent: () => import('./pages/not-found/not-found').then((c) => c.NotFound),
+    title: 'Page not found · OmniTuner',
+  },
 ];

@@ -1,0 +1,26 @@
+<main class="app-main">
+  <section class="error-card" aria-labelledby="error-title">
+    <span class="app-icon ti error-icon {{ icon() }}" aria-hidden="true"></span>
+    <p class="error-code">{{ code() }}</p>
+    <h2 class="error-title" id="error-title">{{ title() }}</h2>
+    <p class="error-desc">{{ description() }}</p>
+    @if (attemptedUrl(); as url) {
+      <p class="error-url">
+        <span class="section-label">Requested page</span>
+        <code>{{ url }}</code>
+      </p>
+    }
+    <div class="error-actions">
+      <a class="btn primary" routerLink="/tuner">
+        <span class="app-icon ti ti-wave-sine" aria-hidden="true"></span>
+        Go to Tuner
+      </a>
+      @if (showReload()) {
+        <button type="button" class="btn" (click)="reload()">
+          <span class="app-icon ti ti-refresh" aria-hidden="true"></span>
+          Reload page
+        </button>
+      }
+    </div>
+  </section>
+</main>
