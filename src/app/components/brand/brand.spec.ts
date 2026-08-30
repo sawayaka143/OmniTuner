@@ -26,4 +26,10 @@ describe('Brand', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('renders the app icon logo beside the wordmark', () => {
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('img.logo')).toBeTruthy();
+    expect(el.querySelector('.wordmark')?.textContent).toContain('OmniTuner');
+  });
 });
