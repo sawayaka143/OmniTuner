@@ -5,14 +5,15 @@
 }
 
 .settings-dialog {
-  width: min(420px, calc(100vw - 24px));
-  height: calc(100dvh - 24px);
-  max-height: 760px;
-  margin: auto var(--space-3) auto auto;
+  width: 100vw;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
   padding: 0;
   overflow: visible;
   border: 0;
-  border-radius: var(--r-md);
+  border-radius: 0;
   background: transparent;
   color: var(--text);
 
@@ -23,7 +24,12 @@
 }
 
 .settings-sheet {
-  height: 100%;
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  width: min(420px, calc(100vw - 24px));
+  height: calc(100dvh - 24px);
+  max-height: 760px;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   overflow: hidden;
@@ -31,6 +37,24 @@
   border-radius: var(--r-md);
   background: var(--surface-container-low);
   box-shadow: var(--shadow-dialog);
+
+  &.dragging {
+    box-shadow:
+      var(--shadow-dialog),
+      0 0 0 1px var(--border-active);
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 .settings-header {
@@ -41,6 +65,18 @@
   gap: var(--space-5);
   padding: var(--space-4) var(--space-5);
   border-bottom: 1px solid var(--border-subtle);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+
+  &.dragging {
+    cursor: grabbing;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--border-active);
+    outline-offset: -2px;
+  }
 
   h2 {
     font-family: var(--font);
@@ -297,13 +333,5 @@
   .toggle-button,
   .toggle-lamp {
     transition-duration: 0.01ms;
-  }
-}
-
-@media (max-width: 520px) {
-  .settings-dialog {
-    width: calc(100vw - var(--space-4));
-    height: calc(100dvh - var(--space-4));
-    margin: auto;
   }
 }

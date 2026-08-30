@@ -6,8 +6,24 @@
   (cancel)="requestDismiss($event)"
   (click)="onDialogClick($event)"
 >
-  <section class="settings-sheet">
-    <header class="settings-header">
+  <section
+    #sheet
+    class="settings-sheet"
+    [style.left.px]="sheetLeft()"
+    [style.top.px]="sheetTop()"
+    [style.transform]="dragTransform()"
+  >
+    <header
+      class="settings-header"
+      tabindex="0"
+      [class.dragging]="dragging()"
+      (pointerdown)="onDragStart($event)"
+      (dblclick)="resetPosition()"
+      (keydown)="onDragKeydown($event)"
+    >
+      <span class="sr-only">
+        Settings window. Use arrow keys to move it, double-click to reset its position.
+      </span>
       <h2 id="settings-title">Settings</h2>
       <app-icon-button icon="x" label="Close settings" (activate)="requestDismiss()" />
     </header>
