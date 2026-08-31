@@ -23,6 +23,7 @@ import {
   TunerMode,
 } from '../models/tuner-preferences.model';
 import { AudioCaptureService } from '../services/audio-capture-service';
+import { HapticsService } from '../services/haptics.service';
 import { InstrumentRegistry } from '../services/instrument-registry';
 import { ScalePlayback } from '../services/scale-playback';
 import { ThemeService } from '../services/theme.service';
@@ -72,6 +73,7 @@ export class AudioMonitor implements OnInit {
   private readonly registry = inject(InstrumentRegistry);
   private readonly tunerPreferences = inject(TunerPreferences);
   private readonly scalePlayback = inject(ScalePlayback);
+  private readonly haptics = inject(HapticsService);
   private readonly themeService = inject(ThemeService);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -488,6 +490,7 @@ export class AudioMonitor implements OnInit {
   }
 
   protected toggleCapture(): void {
+    this.haptics.light();
     if (this.isCapturing()) {
       this.audioCapture.stopCapture();
     } else {
@@ -535,6 +538,7 @@ export class AudioMonitor implements OnInit {
     if (this.confirmed()) return;
 
     this.confirmed.set(true);
+    this.haptics.success();
     const inTune = this.tunerSettings().inTune;
     if (inTune.enabled && inTune.sound) this.scalePlayback.playChime();
     if (inTune.enabled && inTune.glow) this.triggerPulse();

@@ -3,7 +3,23 @@
   [style.--scale-accent]="preferencesState().accent"
   [style.--scale-accent-ink]="accentInk()"
 >
-  <section class="workbench" aria-labelledby="chord-finder-title">
+  <div class="mobile-view-switch">
+    <app-segmented
+      [options]="mobileViewChoices"
+      [value]="mobileView()"
+      ariaLabel="Chords section"
+      indicator="accent"
+      [optionLabel]="mobileViewLabelFn"
+      [trackByFn]="identityFn"
+      (select)="mobileView.set($event)"
+    />
+  </div>
+
+  <section
+    class="workbench"
+    aria-label="Chord finder"
+    [class.mobile-hidden]="mobileView() !== 'voicings'"
+  >
     <header class="workbench-header">
       <div class="finder-title">
         <h2 id="chord-finder-title">Chord finder</h2>
@@ -251,6 +267,15 @@
                 }
               </article>
             }
+          } @else {
+            <div class="stage-empty">
+              <span class="app-icon ti ti-music" aria-hidden="true"></span>
+              <p>No voicings yet</p>
+              <span>
+                Enter a chord progression and hit “Generate voicings” — matching fingerings show up
+                here as tab or a neck diagram.
+              </span>
+            </div>
           }
         </div>
 
@@ -269,5 +294,5 @@
     </div>
   </section>
 
-  <app-key-finder />
+  <app-key-finder [class.mobile-hidden]="mobileView() !== 'key'" />
 </main>

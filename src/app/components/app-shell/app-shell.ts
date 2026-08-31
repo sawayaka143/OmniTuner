@@ -14,6 +14,7 @@ import { DOCUMENT } from '@angular/common';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { textColorOn } from '../../data/interval-colors';
 import { TunerStartupMode } from '../../models/tuner-preferences.model';
+import { HapticsService } from '../../services/haptics.service';
 import { ScalePreferences } from '../../services/scale-preferences';
 import { TunerPreferences } from '../../services/tuner-preferences';
 import { ThemeService } from '../../services/theme.service';
@@ -75,13 +76,14 @@ export class AppShell {
   private readonly preferences = inject(ScalePreferences);
   private readonly tunerPreferences = inject(TunerPreferences);
   private readonly themeService = inject(ThemeService);
+  private readonly haptics = inject(HapticsService);
 
   private readonly themeTrigger = viewChild('themeTrigger', { read: ElementRef });
   private readonly navLinks = viewChildren<ElementRef<HTMLAnchorElement>>('navLink');
-  private readonly mobileNavLinks = viewChildren<ElementRef<HTMLAnchorElement>>('mobileNavLink');
 
   private readonly navigationEvents = this.router.events.subscribe((event) => {
     if (event instanceof NavigationEnd) {
+      this.activePath.set(this.routePathOf(event.urlAfterRedirects));
       this.scheduleIndicatorMeasure();
     }
   });
@@ -101,8 +103,11 @@ export class AppShell {
     this.themeService.theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme',
   );
   protected readonly indicator = signal<NavIndicatorState>({ x: 0, width: 0, visible: false });
-  protected readonly mobileIndicator = signal<NavIndicatorState>({ x: 0, width: 0, visible: false });
   protected readonly indicatorReady = signal(false);
+  protected readonly activePath = signal(this.routePathOf(this.router.url));
+  protected readonly mobileTitle = computed(
+    () => NAV_ITEMS.find((item) => item.path === this.activePath())?.label ?? 'OmniTuner',
+  );
 
   private firstIndicatorMeasure = true;
 
@@ -313,7 +318,16 @@ export class AppShell {
 
   private measureIndicator(): void {
     this.measureIndicatorFor(this.navLinks(), this.indicator);
-    this.measureIndicatorFor(this.mobileNavLinks(), this.mobileIndicator);
+  }
+
+  private routePathOf(url: string): string {
+    const path = url.split('?')[0].split('#')[0];
+    if (path === '/' || path === '') return PAGE_ROUTES[0];
+    return path;
+  }
+
+  protected onNavActivate(): void {
+    this.haptics.light();
   }
 
   private measureIndicatorFor(

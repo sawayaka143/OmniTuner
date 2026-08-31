@@ -156,25 +156,40 @@ app-string-list {
 
 @media (max-width: 760px) {
   .app-main {
-    gap: var(--space-5);
-    padding: calc(var(--ctrl-h-lg) + var(--space-5)) var(--space-4) var(--space-8);
+    gap: var(--space-4);
+    padding: var(--space-4) var(--space-3) var(--space-8);
+  }
+
+  // Keep the instrument compact and centered instead of stretching edge to
+  // edge (overflow stays visible so the picker menus can escape the card).
+  .workbench {
+    width: min(480px, 100%);
+    margin-inline: auto;
+  }
+
+  // Always reachable: pins above the nav bar while the meter area scrolls.
+  .capture-btn {
+    position: sticky;
+    bottom: calc(var(--nav-bar-h) + env(safe-area-inset-bottom) + var(--space-1));
+    z-index: var(--z-float);
+    width: 100%;
   }
 }
 
 @media (max-width: 520px) {
+  // Title on the left, auto-detect toggle on the right — never stacked.
   .workbench-header {
-    flex-direction: column;
-    align-items: flex-start;
+    padding: var(--space-4);
     gap: var(--space-3);
-    padding: var(--space-5);
   }
 
   .tuner-controls {
-    padding: var(--space-3) var(--space-4);
+    padding: var(--space-3);
   }
 
   .tuner-stage {
-    padding: var(--space-4) var(--space-3) var(--space-6);
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-3) var(--space-5);
   }
 }
 

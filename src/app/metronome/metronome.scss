@@ -450,6 +450,10 @@
   font-size: var(--text-sm);
 }
 
+.setup-toggle {
+  display: none;
+}
+
 @media (max-width: 1100px) {
   .metro-grid {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -463,29 +467,54 @@
 
 @media (max-width: 760px) {
   .app-main {
-    gap: var(--space-5);
-    padding: calc(var(--ctrl-h-lg) + var(--space-5)) var(--space-4) var(--space-8);
+    gap: var(--space-4);
+    padding: var(--space-4) var(--space-3) var(--space-8);
   }
 
   .workbench-header {
-    padding: var(--space-5);
+    display: none;
   }
-}
 
-@media (max-width: 640px) {
+  // Single column with the console (dial, tempo, play) first; the timing
+  // rails are set-and-forget, so they live behind the setup disclosure.
   .metro-grid {
-    grid-template-columns: 1fr;
-    padding: var(--space-2);
+    display: flex;
+    flex-direction: column;
     gap: var(--space-3);
-    grid-template-rows: auto;
+    padding: var(--space-3);
   }
+
   .metro-console {
-    grid-column: auto;
+    order: -1;
     padding: var(--space-4);
   }
+
+  .setup-toggle {
+    display: inline-flex;
+    justify-content: center;
+    gap: var(--space-2);
+
+    .chevron {
+      transition: transform var(--dur-med) ease;
+
+      &.rotated {
+        transform: rotate(180deg);
+      }
+    }
+  }
+
+  .meter-rail {
+    gap: var(--space-3);
+
+    &:not(.open) {
+      display: none;
+    }
+  }
+
   .sound-row {
     grid-template-columns: 1fr;
   }
+
   .sound-row app-listbox {
     grid-column: 1;
   }

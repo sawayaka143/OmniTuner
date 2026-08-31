@@ -57,63 +57,58 @@
   </div>
 </header>
 
-<button
-  class="fab-settings"
-  type="button"
-  aria-label="Settings"
-  aria-controls="settings-dialog"
-  [class.active]="settingsOpen()"
-  [attr.aria-expanded]="settingsOpen()"
-  (click)="settingsOpen.set(true)"
->
-  <span class="app-icon ti ti-settings" aria-hidden="true"></span>
-</button>
+<header class="mobile-top-bar">
+  <span class="mobile-page-title" role="heading" aria-level="1">{{ mobileTitle() }}</span>
+  <button
+    class="btn ghost mobile-settings-trigger"
+    type="button"
+    aria-label="Settings"
+    aria-controls="settings-dialog"
+    [class.active]="settingsOpen()"
+    [attr.aria-expanded]="settingsOpen()"
+    (click)="settingsOpen.set(true)"
+  >
+    <span class="app-icon ti ti-settings" aria-hidden="true"></span>
+  </button>
+</header>
 
 <router-outlet />
 
 <nav class="bottom-nav" aria-label="Primary navigation">
-  <div class="bottom-nav-pill">
-    <span
-      class="nav-indicator"
-      aria-hidden="true"
-      [class.visible]="mobileIndicator().visible"
-      [class.ready]="indicatorReady()"
-      [style.transform]="'translateX(' + mobileIndicator().x + 'px)'"
-      [style.width.px]="mobileIndicator().width"
-    ></span>
-    @for (item of navItems; track item.path) {
-      <a
-        class="nav-link"
-        [routerLink]="item.path"
-        routerLinkActive="active"
-        ariaCurrentWhenActive="page"
-        #mobileNavLink
-      >
-        <span class="app-icon ti" [class]="item.icon" aria-hidden="true"></span>
-        <span>{{ item.label }}</span>
-      </a>
-    }
-  </div>
+  @for (item of navItems; track item.path) {
+    <a
+      class="bottom-nav-item"
+      [routerLink]="item.path"
+      routerLinkActive="active"
+      ariaCurrentWhenActive="page"
+      (click)="onNavActivate()"
+    >
+      <span class="nav-well" aria-hidden="true">
+        <span class="app-icon ti" [class]="item.icon"></span>
+      </span>
+      <span class="nav-label">{{ item.label }}</span>
+    </a>
+  }
 </nav>
 
 <app-settings-panel
-    [open]="settingsOpen()"
-    [accent]="preferencesState().accent"
-    [rootNoteColor]="preferencesState().rootNoteColor"
-    [noteColor]="preferencesState().noteColor"
-    [bgColor]="preferencesState().bgColor"
-    [cardColor]="preferencesState().cardColor"
-    [tunerSettings]="tunerSettings()"
-    [theme]="theme()"
-    (accentChange)="setAccent($event)"
-    (rootNoteColorChange)="setRootNoteColor($event)"
-    (noteColorChange)="setNoteColor($event)"
-    (bgColorChange)="setBgColor($event)"
-    (cardColorChange)="setCardColor($event)"
-    (startupModeChange)="setTunerStartupMode($event)"
-    (themeChange)="setThemeFromSettings($event)"
-    (openShortcuts)="openShortcutsFromSettings()"
-    (inTuneEnabledChange)="setInTuneEnabled($event)"
+  [open]="settingsOpen()"
+  [accent]="preferencesState().accent"
+  [rootNoteColor]="preferencesState().rootNoteColor"
+  [noteColor]="preferencesState().noteColor"
+  [bgColor]="preferencesState().bgColor"
+  [cardColor]="preferencesState().cardColor"
+  [tunerSettings]="tunerSettings()"
+  [theme]="theme()"
+  (accentChange)="setAccent($event)"
+  (rootNoteColorChange)="setRootNoteColor($event)"
+  (noteColorChange)="setNoteColor($event)"
+  (bgColorChange)="setBgColor($event)"
+  (cardColorChange)="setCardColor($event)"
+  (startupModeChange)="setTunerStartupMode($event)"
+  (themeChange)="setThemeFromSettings($event)"
+  (openShortcuts)="openShortcutsFromSettings()"
+  (inTuneEnabledChange)="setInTuneEnabled($event)"
   (inTuneSoundChange)="setInTuneSound($event)"
   (inTuneGlowChange)="setInTuneGlow($event)"
   (inTuneColorChange)="setInTuneColor($event)"

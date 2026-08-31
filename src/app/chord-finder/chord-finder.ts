@@ -90,6 +90,11 @@ export class ChordFinder {
   protected readonly labelChoiceLabelFn = (o: 'notes' | 'func'): string =>
     o === 'notes' ? 'notes' : 'R b3';
 
+  protected readonly mobileViewChoices = ['voicings', 'key'] as const;
+  protected readonly mobileView = signal<'voicings' | 'key'>('voicings');
+  protected readonly mobileViewLabelFn = (o: 'voicings' | 'key'): string =>
+    o === 'key' ? 'Key finder' : 'Voicings';
+
   protected readonly tuningText = signal(
     this.registry
       .selectedTuning()

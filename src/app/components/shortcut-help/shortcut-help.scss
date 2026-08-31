@@ -89,3 +89,31 @@
   font-size: var(--text-sm);
   text-align: right;
 }
+
+// Bottom-sheet presentation on phones (see styles/mobile.scss).
+@media (max-width: 760px) {
+  .shortcut-dialog {
+    @include bottom-sheet();
+
+    // Only override display while open — an author `display` would otherwise
+    // beat the UA's `dialog:not([open]) { display: none }` and show the
+    // closed dialog permanently.
+    &[open] {
+      display: flex;
+      flex-direction: column;
+    }
+
+    &::backdrop {
+      background: var(--backdrop);
+      backdrop-filter: blur(5px);
+    }
+  }
+
+  .shortcut-sheet {
+    min-height: 0;
+    overflow: auto;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}

@@ -1,8 +1,8 @@
+import { By } from '@angular/platform-browser';
 import { Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { By } from '@angular/platform-browser';
 
-import { StringEditor, StringEditorValue } from '../string-editor/string-editor';
+import { StringEditor } from '../string-editor/string-editor';
 import { TuningEditor } from './tunings-editor';
 
 @Component({
@@ -11,93 +11,120 @@ import { TuningEditor } from './tunings-editor';
     <app-tuning-editor
       [open]="open()"
       [mode]="mode()"
-      [instrumentLabel]="instrumentLabel()"
-      [initialName]="initialName()"
-      [initialNotes]="initialNotes()"
-      (save)="onSave($event)"
-      (preview)="onPreview($event)"
-      (dismiss)="onDismiss()"
+      instrumentLabel="Guitar"
+      [initialName]="name()"
+      [initialNotes]="notes()"
+      (dismiss)="dismissed.set(true)"
+      (save)="saved.set($event)"
     />
   `,
   imports: [TuningEditor],
 })
-class TeHost {
+class EditorHost {
   readonly open = signal(false);
   readonly mode = signal<'create' | 'edit'>('create');
-  readonly instrumentLabel = signal('');
-  readonly initialName = signal('');
-  readonly initialNotes = signal<readonly number[]>([]);
-  readonly saved = signal<StringEditorValue | null>(null);
-  readonly previews = signal<readonly number[]>([]);
-  readonly dismissCount = signal(0);
-  onSave(v: StringEditorValue): void {
-    this.saved.set(v);
-  }
-  onPreview(n: readonly number[]): void {
-    this.previews.set(n);
-  }
-  onDismiss(): void {
-    this.dismissCount.update((n) => n + 1);
-  }
+  readonly name = signal('Drop D');
+  readonly notes = signal<readonly number[]>([38, 45, 50, 55, 59, 64]);
+  readonly dismissed = signal(false);
+  readonly saved = signal<{ readonly name: string; readonly notes: readonly number[] } | null>(
+    null,
+  );
 }
 
 describe('TuningEditor', () => {
-  let fixture: ComponentFixture<TeHost>;
-  let host: TeHost;
-  let editor: TuningEditor;
+  let fixture: ComponentFixture<EditorHost>;
+
+  const dialog = (): HTMLDialogElement =>
+    fixture.nativeElement.querySelector('dialog') as HTMLDialogElement;
 
   beforeEach(async () => {
-    await TestBed.configureTestingModule({ imports: [TeHost] }).compileComponents();
-    fixture = TestBed.createComponent(TeHost);
-    host = fixture.componentInstance;
-    await fixture.whenStable();
-    const debug = fixture.debugElement.query(By.directive(TuningEditor));
-    editor = debug.componentInstance as TuningEditor;
-  });
-
-  afterEach(() => fixture?.destroy());
-
-  const stringEditor = (): StringEditor => {
-    const seDebug = fixture.debugElement.query(By.directive(StringEditor));
-    return seDebug.componentInstance as StringEditor;
-  };
-
-  it('should create', () => {
-    expect(editor).toBeTruthy();
-  });
-
-  it('renders the instrument label kicker when provided', () => {
-    host.instrumentLabel.set('Guitar');
+    HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement): void {
+      this.open = true;
+    };
+    HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement): void {
+      this.open = false;
+    };
+    await TestBed.configureTestingModule({ imports: [EditorHost] }).compileComponents();
+    fixture = TestBed.createComponent(EditorHost);
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('.editor-kicker')?.textContent).toBe('Guitar');
   });
 
-  it('hides the kicker when no instrument label is set', () => {
-    expect(fixture.nativeElement.querySelector('.editor-kicker')).toBeNull();
+  afterEach(() => {
+    TestBed.resetTestingModule();
   });
 
-  it('forwards the composite save event up to its parent', () => {
-    stringEditor().save.emit({ name: 'Drop D', notes: [38, 45, 50, 55, 59, 64] });
-    expect(host.saved()).toEqual({ name: 'Drop D', notes: [38, 45, 50, 55, 59, 64] });
+  const text = (selector: string): string =>
+    (fixture.nativeElement.querySelector(selector) as HTMLElement | null)?.textContent?.trim() ??
+    '';
+
+  it('should be created and start with a closed dialog', () => {
+    expect(fixture.componentInstance).toBeTruthy();
+    expect(dialog().open).toBe(false);
   });
 
-  it('forwards the composite preview event up to its parent', () => {
-    stringEditor().preview.emit([40, 45]);
-    expect(host.previews()).toEqual([40, 45]);
+  it('opens in create mode with the instrument kicker and title', async () => {
+    fixture.componentInstance.open.set(true);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(dialog().open).toBe(true);
+    expect(text('.editor-kicker')).toBe('Guitar');
+    expect(text('#tuning-editor-title')).toBe('New custom tuning');
+    expect(fixture.nativeElement.querySelector('app-string-editor')).toBeTruthy();
   });
 
-  it('emits dismiss when the composite cancels', () => {
-    expect(host.dismissCount()).toBe(0);
-    stringEditor().cancel.emit();
-    expect(host.dismissCount()).toBe(1);
+  it('shows the edit title in edit mode', async () => {
+    fixture.componentInstance.mode.set('edit');
+    fixture.componentInstance.open.set(true);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(text('#tuning-editor-title')).toBe('Edit custom tuning');
   });
 
-  it('forbids string-count change (tunings always match the instrument)', () => {
-    expect(fixture.nativeElement.querySelector('.string-count-row')).toBeNull();
+  it('emits dismiss from the close button and closes', async () => {
+    fixture.componentInstance.open.set(true);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const close = fixture.nativeElement.querySelector(
+      'button[aria-label="Close tuning editor"]',
+    ) as HTMLButtonElement;
+    close.click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.dismissed()).toBe(true);
   });
 
-  it('shows the Tuning name label, not the default Instrument name', () => {
-    const label = fixture.nativeElement.querySelector('label') as HTMLLabelElement;
-    expect(label.textContent).toBe('Tuning name');
+  it('bubbles save events from the string editor', async () => {
+    fixture.componentInstance.open.set(true);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const editor = fixture.debugElement.query(By.css('app-string-editor'))
+      .componentInstance as StringEditor;
+    editor.save.emit({ name: 'D Standard', notes: [38, 45, 50, 55, 59, 64] });
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.saved()).toEqual({
+      name: 'D Standard',
+      notes: [38, 45, 50, 55, 59, 64],
+    });
+  });
+
+  it('emits dismiss when the string editor is cancelled', async () => {
+    fixture.componentInstance.open.set(true);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const editor = fixture.debugElement.query(By.css('app-string-editor'))
+      .componentInstance as StringEditor;
+    editor.cancel.emit();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.dismissed()).toBe(true);
   });
 });

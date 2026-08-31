@@ -110,7 +110,7 @@
   }
 }
 
-@media (max-height: 700px) {
+@media (max-height: 700px), (max-width: 760px) {
   .pitch-note {
     font-size: clamp(56px, 12vw, 84px);
     line-height: 1.05;

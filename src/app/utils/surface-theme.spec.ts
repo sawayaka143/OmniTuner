@@ -15,15 +15,23 @@ describe('surfaceOverrides', () => {
     const overrides = surfaceOverrides('#1a1a2e', null, 'dark');
     expect(overrides.canvas).toBe('#1a1a2e');
     expect(overrides.card).toBe('color-mix(in srgb, #1a1a2e 97.5%, white)');
-    expect(overrides.well).toBe('color-mix(in srgb, color-mix(in srgb, #1a1a2e 97.5%, white) 95.7%, white)');
-    expect(overrides.pill).toBe('color-mix(in srgb, color-mix(in srgb, #1a1a2e 97.5%, white) 91.3%, white)');
+    expect(overrides.well).toBe(
+      'color-mix(in srgb, color-mix(in srgb, #1a1a2e 97.5%, white) 95.7%, white)',
+    );
+    expect(overrides.pill).toBe(
+      'color-mix(in srgb, color-mix(in srgb, #1a1a2e 97.5%, white) 91.3%, white)',
+    );
   });
 
   it('uses light-theme mixing when the background is customized', () => {
     const overrides = surfaceOverrides('#f1f0ec', null, 'light');
     expect(overrides.card).toBe('color-mix(in srgb, #f1f0ec 29%, white)');
-    expect(overrides.well).toBe('color-mix(in srgb, color-mix(in srgb, #f1f0ec 29%, white) 92.8%, black)');
-    expect(overrides.pill).toBe('color-mix(in srgb, color-mix(in srgb, #f1f0ec 29%, white) 88.5%, black)');
+    expect(overrides.well).toBe(
+      'color-mix(in srgb, color-mix(in srgb, #f1f0ec 29%, white) 92.8%, black)',
+    );
+    expect(overrides.pill).toBe(
+      'color-mix(in srgb, color-mix(in srgb, #f1f0ec 29%, white) 88.5%, black)',
+    );
   });
 
   it('uses the custom card color for the card surface', () => {

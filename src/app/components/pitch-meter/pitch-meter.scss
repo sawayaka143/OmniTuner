@@ -101,7 +101,7 @@
   }
 }
 
-@media (max-height: 700px) {
+@media (max-height: 700px), (max-width: 760px) {
   :host {
     --meter-padding-top: 36px;
     --meter-padding-bottom: 32px;

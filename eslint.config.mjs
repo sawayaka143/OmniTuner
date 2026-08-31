@@ -10,7 +10,15 @@ const HTML_FILES = ['**/*.html'];
 
 export default ts.config(
   {
-    ignores: ['dist/', 'node_modules/', 'out-tsc/', 'coverage/', '.commandcode/', 'tests/', 'android/'],
+    ignores: [
+      'dist/',
+      'node_modules/',
+      'out-tsc/',
+      'coverage/',
+      '.commandcode/',
+      'tests/',
+      'android/',
+    ],
   },
   ...ts.configs.recommendedTypeChecked.map((config) => ({
     ...config,

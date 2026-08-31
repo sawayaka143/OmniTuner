@@ -34,30 +34,30 @@ Then open `http://localhost:4200/` and grant microphone access when the tuner as
 
 ## Scripts
 
-| Script | Purpose |
-| --- | --- |
-| `npm start` | Development server with live reload |
-| `npm run build` | Production build into `dist/` |
-| `npm run watch` | Rebuild on file changes (development config) |
-| `npm test` | Run unit tests with Vitest |
-| `npm run test:coverage` | Tests with coverage and threshold checks |
-| `npm run lint` | Lint with ESLint (angular-eslint) |
-| `npm run lint:fix` | Lint and auto-fix |
-| `npm run format` | Format with Prettier |
-| `npm run format:check` | Verify formatting |
+| Script                  | Purpose                                      |
+| ----------------------- | -------------------------------------------- |
+| `npm start`             | Development server with live reload          |
+| `npm run build`         | Production build into `dist/`                |
+| `npm run watch`         | Rebuild on file changes (development config) |
+| `npm test`              | Run unit tests with Vitest                   |
+| `npm run test:coverage` | Tests with coverage and threshold checks     |
+| `npm run lint`          | Lint with ESLint (angular-eslint)            |
+| `npm run lint:fix`      | Lint and auto-fix                            |
+| `npm run format`        | Format with Prettier                         |
+| `npm run format:check`  | Verify formatting                            |
 
 ## Keyboard shortcuts
 
-| Keys | Action |
-| --- | --- |
-| `Ctrl`/`Cmd` + `K` | Command palette |
-| `←` / `→` | Previous / next page |
-| `?` or `/` | Shortcut help |
-| `Esc` | Close dialogs |
-| `Space` | Start / stop metronome |
-| `T` | Tap tempo |
-| `↑` / `↓` | Tempo ±1 |
-| `Shift` + `↑` / `↓` | Tempo ±5 |
+| Keys                | Action                 |
+| ------------------- | ---------------------- |
+| `Ctrl`/`Cmd` + `K`  | Command palette        |
+| `←` / `→`           | Previous / next page   |
+| `?` or `/`          | Shortcut help          |
+| `Esc`               | Close dialogs          |
+| `Space`             | Start / stop metronome |
+| `T`                 | Tap tempo              |
+| `↑` / `↓`           | Tempo ±1               |
+| `Shift` + `↑` / `↓` | Tempo ±5               |
 
 ## Testing and quality gates
 

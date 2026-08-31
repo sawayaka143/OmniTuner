@@ -79,7 +79,9 @@ interface AccentMix {
 function accentMixFrom(declared: Record<string, string>, theme: string): AccentMix {
   const declaration = declared['--accent-text'];
   const match = declaration
-    ? /color-mix\(in srgb,\s*var\(--scale-accent\)\s*(\d+)%,\s*(#[0-9a-fA-F]{6})\)/.exec(declaration)
+    ? /color-mix\(in srgb,\s*var\(--scale-accent\)\s*(\d+)%,\s*(#[0-9a-fA-F]{6})\)/.exec(
+        declaration,
+      )
     : null;
   if (!match) {
     throw new Error(`--accent-text color-mix declaration missing or unsupported (${theme} theme)`);

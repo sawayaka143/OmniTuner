@@ -122,6 +122,9 @@
   --ctrl-h-xl: 44px;
   --ctrl-switch-w: 40px;
   --ctrl-switch-h: 24px;
+
+  --top-bar-h: 56px;
+  --nav-bar-h: 64px;
 }
 
 html[data-theme='light'] {
@@ -266,6 +269,14 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior-y: none;
+}
+
+@media (max-width: 760px) {
+  :root {
+    --ctrl-h-md: 44px;
+    --ctrl-h-lg: 48px;
+  }
 }
 
 html {

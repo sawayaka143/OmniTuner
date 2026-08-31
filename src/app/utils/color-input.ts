@@ -9,11 +9,7 @@ const MAX_CHANNEL = 255;
 const hexToRgb = (hex: string): readonly [number, number, number] => {
   const value = Number.parseInt(hex, 16);
   if (hex.length === 3) {
-    return [
-      ((value >> 8) & 0xf) * 17,
-      ((value >> 4) & 0xf) * 17,
-      (value & 0xf) * 17,
-    ];
+    return [((value >> 8) & 0xf) * 17, ((value >> 4) & 0xf) * 17, (value & 0xf) * 17];
   }
   return [(value >> 16) & 0xff, (value >> 8) & 0xff, value & 0xff];
 };
@@ -23,7 +19,9 @@ const channelsToHex = (channels: readonly number[]): string =>
 
 const parseRgb = (parts: readonly string[]): string | null => {
   const channels = parts.map((part) => Number.parseInt(part, 10));
-  if (channels.some((channel) => !Number.isInteger(channel) || channel < 0 || channel > MAX_CHANNEL)) {
+  if (
+    channels.some((channel) => !Number.isInteger(channel) || channel < 0 || channel > MAX_CHANNEL)
+  ) {
     return null;
   }
   return channelsToHex(channels);

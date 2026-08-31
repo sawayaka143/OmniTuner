@@ -14,6 +14,7 @@ import {
 } from './models/metronome.model';
 import { MetronomePreferences } from './services/metronome-preferences';
 import { MetronomeAudio } from './services/metronome-audio.service';
+import { HapticsService } from '../services/haptics.service';
 import { SoundBank } from './utils/metronome-sounds';
 import { getTempoMarking, meterModel, tapBpm } from './utils/metronome-timing';
 
@@ -35,7 +36,10 @@ interface SelectOption<T> {
 export class Metronome {
   private readonly prefs = inject(MetronomePreferences);
   private readonly audio = inject(MetronomeAudio);
+  private readonly haptics = inject(HapticsService);
   private readonly destroyRef = inject(DestroyRef);
+
+  protected readonly setupOpen = signal(false);
 
   readonly state = this.prefs.state;
   readonly isPlaying = this.audio.isPlaying;
@@ -226,16 +230,20 @@ export class Metronome {
   }
 
   togglePlay(): void {
+    this.haptics.light();
     void this.audio.toggle();
   }
 
   nudgeBpm(delta: number): void {
-    this.prefs.setBpm(this.bpm() + delta);
+    this.setBpm(this.bpm() + delta);
   }
 
   setBpm(value: number): void {
     if (!Number.isFinite(value)) return;
-    this.prefs.setBpm(Math.round(value));
+    const next = Math.round(value);
+    if (next === this.bpm()) return;
+    this.haptics.light();
+    this.prefs.setBpm(next);
   }
 
   onTap(): void {
@@ -249,7 +257,7 @@ export class Metronome {
       for (let i = 1; i < this.tapTimes.length; i++)
         intervals.push(this.tapTimes[i] - this.tapTimes[i - 1]);
       const bpm = tapBpm(intervals);
-      if (bpm !== null) this.prefs.setBpm(bpm);
+      if (bpm !== null) this.setBpm(bpm);
     }
     window.setTimeout(() => {
       if (performance.now() - (this.tapTimes[this.tapTimes.length - 1] ?? 0) > 2000)

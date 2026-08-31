@@ -92,51 +92,51 @@
 
 @media (max-width: 760px) {
   .app-main {
-    gap: var(--space-5);
-    padding: calc(var(--ctrl-h-lg) + var(--space-5)) var(--space-4) var(--space-8);
+    gap: var(--space-4);
+    padding: var(--space-4) var(--space-3) var(--space-5);
   }
 
+  // 2x2 picker grid: root | scale / instrument | tuning.
   .scales-controls {
     width: 100%;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-
-    app-listbox,
-    app-tuning-selector {
-      grid-column: 1 / -1;
-      justify-self: center;
-    }
+    gap: var(--space-2);
   }
 
-  .workbench-header,
-  .workbench-footer {
-    align-items: stretch;
-    grid-template-columns: 1fr;
-  }
-
-  .workbench-footer {
-    display: grid;
-  }
-
-  .fretboard-stage {
-    padding: var(--space-4) var(--space-3) var(--space-3);
-  }
-}
-
-@media (max-width: 520px) {
-  .scales-controls {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .scales-controls app-tuning-selector {
-    grid-column: 1 / -1;
+  // Column layout with the fretboard pinned above the nav bar. The workbench
+  // switches to overflow: clip because overflow: hidden would turn it into a
+  // scroll container and break position: sticky for the fretboard stage.
+  .workbench {
+    display: flex;
+    flex-direction: column;
+    overflow: clip;
   }
 
   .workbench-header {
     align-items: stretch;
     flex-direction: column;
-    padding: var(--space-5);
+    gap: var(--space-3);
+    padding: var(--space-4);
   }
 
+  .workbench-footer {
+    order: 1;
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .fretboard-stage {
+    order: 2;
+    position: sticky;
+    bottom: calc(var(--nav-bar-h) + env(safe-area-inset-bottom));
+    z-index: var(--z-float);
+    padding: var(--space-3);
+    border-top: 1px solid var(--border-subtle);
+  }
+}
+
+@media (max-width: 520px) {
   .playback-actions {
     width: 100%;
 
@@ -152,17 +152,8 @@
     white-space: normal;
   }
 
-  .control-rail {
-    padding: var(--space-3);
-  }
-
   .workbench-footer {
-    padding: var(--space-4) var(--space-5) var(--space-5);
-  }
-
-  .fretboard-stage {
     padding: var(--space-3);
-    overflow-x: clip;
   }
 }
 

@@ -7,7 +7,9 @@ export interface SurfaceOverrides {
   readonly pill: string | null;
 }
 
-const CARD_MIX: Readonly<Record<SurfaceTheme, { readonly into: string; readonly percent: number }>> = {
+const CARD_MIX: Readonly<
+  Record<SurfaceTheme, { readonly into: string; readonly percent: number }>
+> = {
   dark: { into: 'white', percent: 97.5 },
   light: { into: 'white', percent: 29 },
 };

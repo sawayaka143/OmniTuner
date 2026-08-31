@@ -1,5 +1,5 @@
 <main class="app-main">
-  <section class="workbench" aria-labelledby="metro-title">
+  <section class="workbench" aria-label="Metronome">
     <header class="workbench-header">
       <div>
         <h2 id="metro-title">Metronome</h2>
@@ -14,7 +14,22 @@
     }
 
     <div class="metro-grid">
-      <aside class="meter-rail" aria-label="Meter settings">
+      <button
+        class="setup-toggle btn"
+        type="button"
+        [attr.aria-expanded]="setupOpen()"
+        (click)="setupOpen.set(!setupOpen())"
+      >
+        <span class="app-icon ti ti-adjustments-horizontal" aria-hidden="true"></span>
+        <span>{{ setupOpen() ? 'Hide setup' : 'Meter, subdivision, sounds & presets' }}</span>
+        <span
+          class="app-icon ti ti-chevron-down chevron"
+          [class.rotated]="setupOpen()"
+          aria-hidden="true"
+        ></span>
+      </button>
+
+      <aside class="meter-rail" [class.open]="setupOpen()" aria-label="Meter settings">
         <div class="rail-section">
           <span class="section-label">01 · Time signature</span>
           <div class="ts-row">
@@ -402,7 +417,7 @@
         </footer>
       </section>
 
-      <aside class="meter-rail" aria-label="Timing settings">
+      <aside class="meter-rail" [class.open]="setupOpen()" aria-label="Timing settings">
         <div class="rail-section">
           <span class="section-label">04 · Sound</span>
           <div class="sound-row">
