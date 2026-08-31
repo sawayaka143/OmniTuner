@@ -5,3 +5,5 @@ coverage/
 out-tsc/
 bazel-out/
 .eslintcache
+android/
+assets/

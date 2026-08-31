@@ -11,7 +11,9 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "cap:sync": "ng build && npx cap sync",
+    "cap:android": "npm run cap:sync && npx cap open android"
   },
   "private": true,
   "packageManager": "npm@11.13.0",
@@ -22,6 +24,10 @@
     "@angular/platform-browser": "^22.0.0",
     "@angular/router": "^22.0.0",
     "@angular/service-worker": "^22.0.0",
+    "@capacitor-community/keep-awake": "^8.0.1",
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/core": "^8.5.0",
+    "@capacitor/status-bar": "^8.0.3",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },
@@ -29,6 +35,9 @@
     "@angular/build": "^22.0.4",
     "@angular/cli": "^22.0.4",
     "@angular/compiler-cli": "^22.0.0",
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.5.0",
     "@vitest/coverage-v8": "^4.1.10",
     "angular-eslint": "^22.1.0",
     "eslint": "^9.39.5",
@@ -44,6 +53,7 @@
     "@parcel/watcher@2.6.0": true,
     "esbuild@0.28.2": true,
     "lmdb@3.5.6": true,
-    "msgpackr-extract@3.0.4": true
+    "msgpackr-extract@3.0.4": true,
+    "sharp@0.32.6": true
   }
 }

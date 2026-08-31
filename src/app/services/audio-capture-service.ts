@@ -1,4 +1,6 @@
 import { Service, signal, DestroyRef, inject } from '@angular/core';
+import { Capacitor } from '@capacitor/core';
+import { KeepAwake } from '@capacitor-community/keep-awake';
 
 export type PitchTrackingState = 'idle' | 'listening' | 'locked';
 
@@ -165,6 +167,7 @@ export class AudioCaptureService {
       this.resetTracking();
       this.isCapturing.set(true);
       this.trackingState.set('listening');
+      void this.acquireKeepAwake();
       this.scheduleAnalysis();
 
       this.onContextStateChange = () => {
@@ -200,6 +203,7 @@ export class AudioCaptureService {
     this.captureSession += 1;
     this.analysisInFlight = false;
     this.startInFlight = false;
+    void this.releaseKeepAwake();
     this.releaseAudioResources();
     this.frequency.set(null);
     this.isCapturing.set(false);
@@ -243,6 +247,20 @@ export class AudioCaptureService {
       document.removeEventListener('click', this.onUnlockClick);
       this.onUnlockClick = null;
     }
+  }
+
+  private async acquireKeepAwake(): Promise<void> {
+    if (!Capacitor.isNativePlatform()) return;
+    try {
+      await KeepAwake.keepAwake();
+    } catch {}
+  }
+
+  private async releaseKeepAwake(): Promise<void> {
+    if (!Capacitor.isNativePlatform()) return;
+    try {
+      await KeepAwake.allowSleep();
+    } catch {}
   }
 
   private resetTracking(): void {

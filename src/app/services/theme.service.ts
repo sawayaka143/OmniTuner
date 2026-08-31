@@ -1,5 +1,7 @@
 import { DOCUMENT } from '@angular/common';
 import { DestroyRef, effect, inject, InjectionToken, Service, signal } from '@angular/core';
+import { Capacitor } from '@capacitor/core';
+import { StatusBar, Style } from '@capacitor/status-bar';
 
 export type Theme = 'light' | 'dark';
 
@@ -117,6 +119,14 @@ export class ThemeService {
     } catch {}
     const meta = this.document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute('content', THEME_COLOR[theme]);
+    void this.syncNativeStatusBar(theme);
+  }
+
+  private async syncNativeStatusBar(theme: Theme): Promise<void> {
+    if (!Capacitor.isNativePlatform()) return;
+    try {
+      await StatusBar.setStyle({ style: theme === 'dark' ? Style.Dark : Style.Light });
+    } catch {}
   }
 
   private watchSystemPreference(): void {

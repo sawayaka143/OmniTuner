@@ -28,7 +28,9 @@ export default ts.config(
     files: TS_FILES,
     languageOptions: {
       parserOptions: {
-        projectService: true,
+        projectService: {
+          allowDefaultProject: ['capacitor.config.ts'],
+        },
         tsconfigRootDir: import.meta.dirname,
       },
     },

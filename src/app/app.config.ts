@@ -14,6 +14,8 @@ import {
   withPreloading,
 } from '@angular/router';
 
+import { Capacitor } from '@capacitor/core';
+
 import { routes } from './app.routes';
 import { provideServiceWorker } from '@angular/service-worker';
 
@@ -32,7 +34,7 @@ export const appConfig: ApplicationConfig = {
       }),
     ),
     provideServiceWorker('ngsw-worker.js', {
-      enabled: !isDevMode(),
+      enabled: !isDevMode() && !Capacitor.isNativePlatform(),
       registrationStrategy: 'registerWhenStable:30000',
     }),
   ],
