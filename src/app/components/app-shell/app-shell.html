@@ -1,56 +1,6 @@
 <header class="app-header">
   <div class="header-inner">
     <app-brand class="app-title" />
-    <nav class="nav-desktop" aria-label="Primary navigation">
-      <span
-        class="nav-indicator"
-        aria-hidden="true"
-        [class.visible]="indicator().visible"
-        [class.ready]="indicatorReady()"
-        [style.transform]="'translateX(' + indicator().x + 'px)'"
-        [style.width.px]="indicator().width"
-      ></span>
-      <a
-        class="nav-link"
-        routerLink="/tuner"
-        routerLinkActive="active"
-        ariaCurrentWhenActive="page"
-        #navLink
-      >
-        <span class="app-icon ti ti-wave-sine" aria-hidden="true"></span>
-        Tuner
-      </a>
-      <a
-        class="nav-link"
-        routerLink="/chords"
-        routerLinkActive="active"
-        ariaCurrentWhenActive="page"
-        #navLink
-      >
-        <span class="app-icon ti ti-grid-dots" aria-hidden="true"></span>
-        Chords
-      </a>
-      <a
-        class="nav-link"
-        routerLink="/scales"
-        routerLinkActive="active"
-        ariaCurrentWhenActive="page"
-        #navLink
-      >
-        <span class="app-icon ti ti-music" aria-hidden="true"></span>
-        Scales
-      </a>
-      <a
-        class="nav-link"
-        routerLink="/metronome"
-        routerLinkActive="active"
-        ariaCurrentWhenActive="page"
-        #navLink
-      >
-        <span class="app-icon ti ti-metronome" aria-hidden="true"></span>
-        Metronome
-      </a>
-    </nav>
     <div class="header-actions">
       <button
         class="btn ghost help-trigger"
@@ -87,6 +37,31 @@
 
 <router-outlet />
 
+<nav class="bottom-nav" aria-label="Primary navigation">
+  <div class="bottom-nav-pill">
+    <span
+      class="nav-indicator"
+      aria-hidden="true"
+      [class.visible]="indicator().visible"
+      [class.ready]="indicatorReady()"
+      [style.transform]="'translateX(' + indicator().x + 'px)'"
+      [style.width.px]="indicator().width"
+    ></span>
+    @for (item of navItems; track item.path) {
+      <a
+        class="nav-link"
+        [routerLink]="item.path"
+        routerLinkActive="active"
+        ariaCurrentWhenActive="page"
+        #navLink
+      >
+        <span class="app-icon ti" [class]="item.icon" aria-hidden="true"></span>
+        <span>{{ item.label }}</span>
+      </a>
+    }
+  </div>
+</nav>
+
 <app-settings-panel
   [open]="settingsOpen()"
   [accent]="preferencesState().accent"
@@ -94,16 +69,15 @@
   [noteColor]="preferencesState().noteColor"
   [bgColor]="preferencesState().bgColor"
   [cardColor]="preferencesState().cardColor"
-  [workbenchScale]="preferencesState().workbenchScale"
   [tunerSettings]="tunerSettings()"
+  [theme]="theme()"
   (accentChange)="setAccent($event)"
   (rootNoteColorChange)="setRootNoteColor($event)"
   (noteColorChange)="setNoteColor($event)"
   (bgColorChange)="setBgColor($event)"
   (cardColorChange)="setCardColor($event)"
-  (workbenchScaleChange)="setWorkbenchScale($event)"
-  (workbenchScaleReset)="resetWorkbenchScale()"
   (startupModeChange)="setTunerStartupMode($event)"
+  (themeChange)="setThemeFromSettings($event)"
   (inTuneEnabledChange)="setInTuneEnabled($event)"
   (inTuneSoundChange)="setInTuneSound($event)"
   (inTuneGlowChange)="setInTuneGlow($event)"

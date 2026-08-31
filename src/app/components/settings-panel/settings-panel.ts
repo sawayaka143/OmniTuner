@@ -27,10 +27,21 @@ import { Toggle } from '../../ui/toggle/toggle';
 import { IconButton } from '../../ui/icon-button/icon-button';
 import { ColorField } from '../../ui/color-field/color-field';
 import { RovingRadioGroup } from '../../ui/keyboard-nav';
+import type { Theme } from '../../services/theme.service';
 
 interface StartupModeOption {
   readonly value: TunerStartupMode;
   readonly label: string;
+}
+
+interface ThemeOption {
+  readonly value: Theme;
+  readonly label: string;
+}
+
+export interface ThemeChangeEvent {
+  readonly theme: Theme;
+  readonly origin: { readonly x: number; readonly y: number } | null;
 }
 
 interface PanelPosition {
@@ -60,17 +71,16 @@ export class SettingsPanel {
   readonly noteColor = input('#3b3b3b');
   readonly bgColor = input<string | null>(null);
   readonly cardColor = input<string | null>(null);
-  readonly workbenchScale = input(1);
   readonly tunerSettings = input<TunerSettings>(DEFAULT_TUNER_SETTINGS);
+  readonly theme = input<Theme>('dark');
 
   readonly accentChange = output<string>();
   readonly rootNoteColorChange = output<string>();
   readonly noteColorChange = output<string>();
   readonly bgColorChange = output<string | null>();
   readonly cardColorChange = output<string | null>();
-  readonly workbenchScaleChange = output<number>();
-  readonly workbenchScaleReset = output<void>();
   readonly startupModeChange = output<TunerStartupMode>();
+  readonly themeChange = output<ThemeChangeEvent>();
   readonly inTuneEnabledChange = output<boolean>();
   readonly inTuneSoundChange = output<boolean>();
   readonly inTuneGlowChange = output<boolean>();
@@ -103,6 +113,16 @@ export class SettingsPanel {
     { value: 'auto', label: 'Auto' },
     { value: 'manual', label: 'Manual' },
   ];
+
+  protected readonly themeOptions: readonly ThemeOption[] = [
+    { value: 'light', label: 'Light' },
+    { value: 'dark', label: 'Dark' },
+  ];
+
+  protected readonly themeIndicatorTransform = computed(() => {
+    const index = this.themeOptions.findIndex((option) => option.value === this.theme());
+    return `translateX(${Math.max(0, index) * 100}%)`;
+  });
 
   protected readonly startupIndicatorTransform = computed(() => {
     const index = this.startupModeOptions.findIndex(
@@ -208,14 +228,21 @@ export class SettingsPanel {
     this.accentChange.emit(value);
   }
 
-  protected onWorkbenchScale(event: Event): void {
-    const target = event.target;
-    if (target instanceof HTMLInputElement) this.workbenchScaleChange.emit(Number(target.value));
-  }
-
   protected chooseStartupMode(value: TunerStartupMode): void {
     if (this.tunerSettings().startupMode === value) return;
     this.startupModeChange.emit(value);
+  }
+
+  protected chooseTheme(value: Theme, event: MouseEvent): void {
+    if (this.theme() === value) return;
+    const target = event.currentTarget as HTMLElement | null;
+    const rect = target?.getBoundingClientRect();
+    this.themeChange.emit({
+      theme: value,
+      origin: rect
+        ? { x: Math.round(rect.left + rect.width / 2), y: Math.round(rect.top + rect.height / 2) }
+        : null,
+    });
   }
 
   protected chooseInTuneColor(value: string): void {

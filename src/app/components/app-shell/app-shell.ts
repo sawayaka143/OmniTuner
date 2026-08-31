@@ -18,10 +18,16 @@ import { TunerPreferences } from '../../services/tuner-preferences';
 import { ThemeService } from '../../services/theme.service';
 import { applySurfaceOverrides, surfaceOverrides } from '../../utils/surface-theme';
 import { Brand } from '../brand/brand';
-import { SettingsPanel } from '../settings-panel/settings-panel';
+import { SettingsPanel, type ThemeChangeEvent } from '../settings-panel/settings-panel';
 import { ShortcutHelp } from '../shortcut-help/shortcut-help';
 import { CommandPalette } from '../command-palette/command-palette';
 import { IconButton } from '../../ui/icon-button/icon-button';
+
+interface NavItem {
+  readonly path: string;
+  readonly label: string;
+  readonly icon: string;
+}
 
 interface NavIndicatorState {
   readonly x: number;
@@ -29,7 +35,14 @@ interface NavIndicatorState {
   readonly visible: boolean;
 }
 
-const PAGE_ROUTES: readonly string[] = ['/tuner', '/chords', '/scales', '/metronome'];
+const NAV_ITEMS: readonly NavItem[] = [
+  { path: '/tuner', label: 'Tuner', icon: 'ti-wave-sine' },
+  { path: '/chords', label: 'Chords', icon: 'ti-grid-dots' },
+  { path: '/scales', label: 'Scales', icon: 'ti-music' },
+  { path: '/metronome', label: 'Metronome', icon: 'ti-metronome' },
+];
+
+const PAGE_ROUTES: readonly string[] = NAV_ITEMS.map((item) => item.path);
 
 @Component({
   selector: 'app-app-shell',
@@ -50,7 +63,6 @@ const PAGE_ROUTES: readonly string[] = ['/tuner', '/chords', '/scales', '/metron
     '[style.--scale-accent-ink]': 'accentInk()',
     '[style.--in-tune-color]': 'inTuneColor()',
     '[style.--out-of-tune-color]': 'outOfTuneColor()',
-    '[style.--workbench-scale]': 'preferencesState().workbenchScale',
     '(window:resize)': 'scheduleIndicatorMeasure()',
     '(window:keydown)': 'onWindowKeydown($event)',
   },
@@ -73,11 +85,13 @@ export class AppShell {
   });
 
   protected readonly settingsOpen = signal(false);
+  protected readonly navItems = NAV_ITEMS;
   protected readonly shortcutOpen = signal(false);
   protected readonly paletteOpen = signal(false);
   protected readonly preferencesState = this.preferences.state;
   protected readonly accentInk = computed(() => textColorOn(this.preferencesState().accent));
   protected readonly tunerSettings = this.tunerPreferences.tunerSettings;
+  protected readonly theme = this.themeService.theme;
   protected readonly themeIcon = computed(() =>
     this.themeService.theme() === 'dark' ? 'sun' : 'moon',
   );
@@ -129,14 +143,6 @@ export class AppShell {
     this.preferences.setCardColor(color);
   }
 
-  protected setWorkbenchScale(scale: number): void {
-    this.preferences.setWorkbenchScale(scale);
-  }
-
-  protected resetWorkbenchScale(): void {
-    this.preferences.resetWorkbenchScale();
-  }
-
   protected setTunerStartupMode(startupMode: TunerStartupMode): void {
     this.tunerPreferences.setStartupMode(startupMode);
   }
@@ -174,14 +180,34 @@ export class AppShell {
   }
 
   protected toggleTheme(): void {
+    this.applyThemeWithReveal(
+      () => this.themeService.toggle(),
+      () => this.themeService.toggleSync(),
+    );
+  }
+
+  protected setThemeFromSettings(event: ThemeChangeEvent): void {
+    if (event.theme === this.themeService.theme()) return;
+    this.applyThemeWithReveal(
+      () => this.themeService.setTheme(event.theme),
+      () => this.themeService.setThemeSync(event.theme),
+      event.origin,
+    );
+  }
+
+  private applyThemeWithReveal(
+    fallback: () => void,
+    sync: () => void,
+    origin?: { readonly x: number; readonly y: number } | null,
+  ): void {
     const doc = this.document;
     if (typeof doc.startViewTransition !== 'function' || this.prefersReducedMotion()) {
-      this.themeService.toggle();
+      fallback();
       return;
     }
 
-    this.updateRevealOrigin();
-    doc.startViewTransition(() => this.themeService.toggleSync());
+    this.updateRevealOrigin(origin);
+    doc.startViewTransition(sync);
   }
 
   protected onWindowKeydown(event: KeyboardEvent): void {
@@ -240,14 +266,11 @@ export class AppShell {
     }
   }
 
-  private updateRevealOrigin(): void {
-    const trigger = this.themeTrigger()?.nativeElement as HTMLElement | undefined;
-    if (!trigger) return;
-
-    const rect = trigger.getBoundingClientRect();
-    const x = Math.round(rect.left + rect.width / 2);
-    const y = Math.round(rect.top + rect.height / 2);
+  private updateRevealOrigin(origin?: { readonly x: number; readonly y: number } | null): void {
     const root = this.document.documentElement;
+    const point = origin ?? this.themeTriggerOrigin();
+    const x = point ? point.x : Math.round(root.clientWidth / 2);
+    const y = point ? point.y : Math.round(root.clientHeight / 2);
     const radius = Math.hypot(
       Math.max(x, root.clientWidth - x),
       Math.max(y, root.clientHeight - y),
@@ -256,6 +279,16 @@ export class AppShell {
     root.style.setProperty('--theme-reveal-x', `${x}px`);
     root.style.setProperty('--theme-reveal-y', `${y}px`);
     root.style.setProperty('--theme-reveal-radius', `${radius}px`);
+  }
+
+  private themeTriggerOrigin(): { readonly x: number; readonly y: number } | null {
+    const trigger = this.themeTrigger()?.nativeElement as HTMLElement | undefined;
+    const rect = trigger?.getBoundingClientRect();
+    if (!rect || (rect.width === 0 && rect.height === 0)) return null;
+    return {
+      x: Math.round(rect.left + rect.width / 2),
+      y: Math.round(rect.top + rect.height / 2),
+    };
   }
 
   protected scheduleIndicatorMeasure(): void {

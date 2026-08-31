@@ -16,6 +16,12 @@
   color: var(--text);
 }
 
+@media (max-width: 640px) {
+  .logo {
+    display: none;
+  }
+}
+
 .wordmark span {
   color: var(--text-muted);
   font-weight: var(--fw-semibold);

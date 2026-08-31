@@ -65,6 +65,13 @@ export class ThemeService {
     this.persist(theme);
   }
 
+  setThemeSync(theme: Theme): void {
+    if (!isTheme(theme) || this.themeSignal() === theme) return;
+    this.themeSignal.set(theme);
+    this.persist(theme);
+    this.apply(theme);
+  }
+
   toggle(): void {
     this.setTheme(this.nextTheme());
   }
