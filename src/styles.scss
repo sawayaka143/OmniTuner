@@ -428,12 +428,3 @@ h3 {
   inset: -6px;
   border-radius: inherit;
 }
-
-.app-header {
-  padding-top: var(--safe-area-inset-top, env(safe-area-inset-top));
-}
-
-.app-header .header-inner {
-  padding-left: max(var(--space-6), var(--safe-area-inset-left, env(safe-area-inset-left)));
-  padding-right: max(var(--space-6), var(--safe-area-inset-right, env(safe-area-inset-right)));
-}

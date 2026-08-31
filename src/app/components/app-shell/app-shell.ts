@@ -2,6 +2,7 @@ import {
   Component,
   DestroyRef,
   ElementRef,
+  WritableSignal,
   computed,
   effect,
   inject,
@@ -77,6 +78,7 @@ export class AppShell {
 
   private readonly themeTrigger = viewChild('themeTrigger', { read: ElementRef });
   private readonly navLinks = viewChildren<ElementRef<HTMLAnchorElement>>('navLink');
+  private readonly mobileNavLinks = viewChildren<ElementRef<HTMLAnchorElement>>('mobileNavLink');
 
   private readonly navigationEvents = this.router.events.subscribe((event) => {
     if (event instanceof NavigationEnd) {
@@ -99,6 +101,7 @@ export class AppShell {
     this.themeService.theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme',
   );
   protected readonly indicator = signal<NavIndicatorState>({ x: 0, width: 0, visible: false });
+  protected readonly mobileIndicator = signal<NavIndicatorState>({ x: 0, width: 0, visible: false });
   protected readonly indicatorReady = signal(false);
 
   private firstIndicatorMeasure = true;
@@ -193,6 +196,11 @@ export class AppShell {
       () => this.themeService.setThemeSync(event.theme),
       event.origin,
     );
+  }
+
+  protected openShortcutsFromSettings(): void {
+    this.settingsOpen.set(false);
+    this.shortcutOpen.set(true);
   }
 
   private applyThemeWithReveal(
@@ -304,15 +312,23 @@ export class AppShell {
   }
 
   private measureIndicator(): void {
-    const links = this.navLinks();
+    this.measureIndicatorFor(this.navLinks(), this.indicator);
+    this.measureIndicatorFor(this.mobileNavLinks(), this.mobileIndicator);
+  }
+
+  private measureIndicatorFor(
+    links: readonly ElementRef<HTMLAnchorElement>[],
+    indicator: WritableSignal<NavIndicatorState>,
+  ): void {
     const index = links.findIndex((link) => link.nativeElement.classList.contains('active'));
-    if (index === -1) {
-      this.indicator.set({ x: 0, width: 0, visible: false });
+    const link = index === -1 ? null : links[index].nativeElement;
+
+    if (!link || link.offsetWidth === 0) {
+      indicator.set({ x: 0, width: 0, visible: false });
       return;
     }
 
-    const link = links[index].nativeElement;
-    this.indicator.set({ x: link.offsetLeft, width: link.offsetWidth, visible: true });
+    indicator.set({ x: link.offsetLeft, width: link.offsetWidth, visible: true });
 
     if (this.firstIndicatorMeasure) {
       this.firstIndicatorMeasure = false;

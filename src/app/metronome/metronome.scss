@@ -461,6 +461,17 @@
   }
 }
 
+@media (max-width: 760px) {
+  .app-main {
+    gap: var(--space-5);
+    padding: calc(var(--ctrl-h-lg) + var(--space-5)) var(--space-4) var(--space-8);
+  }
+
+  .workbench-header {
+    padding: var(--space-5);
+  }
+}
+
 @media (max-width: 640px) {
   .metro-grid {
     grid-template-columns: 1fr;

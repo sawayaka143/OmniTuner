@@ -89,6 +89,7 @@ export class SettingsPanel {
   readonly inTuneToleranceChange = output<number>();
   readonly inTuneHoldMsChange = output<number>();
   readonly referencePitchChange = output<number>();
+  readonly openShortcuts = output<void>();
   readonly dismiss = output<void>();
 
   protected readonly dragOffset = signal<PanelPosition>(readStoredPosition());

@@ -92,8 +92,8 @@
 
 @media (max-width: 760px) {
   .app-main {
-    gap: var(--space-7);
-    padding: var(--space-7) var(--space-4) var(--space-8);
+    gap: var(--space-5);
+    padding: calc(var(--ctrl-h-lg) + var(--space-5)) var(--space-4) var(--space-8);
   }
 
   .scales-controls {
@@ -124,17 +124,28 @@
 
 @media (max-width: 520px) {
   .scales-controls {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .scales-controls app-tuning-selector {
-    grid-column: auto;
+    grid-column: 1 / -1;
   }
 
   .workbench-header {
     align-items: stretch;
     flex-direction: column;
     padding: var(--space-5);
+  }
+
+  .playback-actions {
+    width: 100%;
+
+    .play-tuning,
+    .play-scale {
+      flex: 1 1 0;
+      justify-content: center;
+      min-width: 0;
+    }
   }
 
   .current-scale p {

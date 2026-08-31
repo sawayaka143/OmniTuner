@@ -1,6 +1,28 @@
 <header class="app-header">
   <div class="header-inner">
     <app-brand class="app-title" />
+    <nav class="nav-desktop" aria-label="Primary navigation">
+      <span
+        class="nav-indicator"
+        aria-hidden="true"
+        [class.visible]="indicator().visible"
+        [class.ready]="indicatorReady()"
+        [style.transform]="'translateX(' + indicator().x + 'px)'"
+        [style.width.px]="indicator().width"
+      ></span>
+      @for (item of navItems; track item.path) {
+        <a
+          class="nav-link"
+          [routerLink]="item.path"
+          routerLinkActive="active"
+          ariaCurrentWhenActive="page"
+          #navLink
+        >
+          <span class="app-icon ti" [class]="item.icon" aria-hidden="true"></span>
+          <span>{{ item.label }}</span>
+        </a>
+      }
+    </nav>
     <div class="header-actions">
       <button
         class="btn ghost help-trigger"
@@ -35,6 +57,18 @@
   </div>
 </header>
 
+<button
+  class="fab-settings"
+  type="button"
+  aria-label="Settings"
+  aria-controls="settings-dialog"
+  [class.active]="settingsOpen()"
+  [attr.aria-expanded]="settingsOpen()"
+  (click)="settingsOpen.set(true)"
+>
+  <span class="app-icon ti ti-settings" aria-hidden="true"></span>
+</button>
+
 <router-outlet />
 
 <nav class="bottom-nav" aria-label="Primary navigation">
@@ -42,10 +76,10 @@
     <span
       class="nav-indicator"
       aria-hidden="true"
-      [class.visible]="indicator().visible"
+      [class.visible]="mobileIndicator().visible"
       [class.ready]="indicatorReady()"
-      [style.transform]="'translateX(' + indicator().x + 'px)'"
-      [style.width.px]="indicator().width"
+      [style.transform]="'translateX(' + mobileIndicator().x + 'px)'"
+      [style.width.px]="mobileIndicator().width"
     ></span>
     @for (item of navItems; track item.path) {
       <a
@@ -53,7 +87,7 @@
         [routerLink]="item.path"
         routerLinkActive="active"
         ariaCurrentWhenActive="page"
-        #navLink
+        #mobileNavLink
       >
         <span class="app-icon ti" [class]="item.icon" aria-hidden="true"></span>
         <span>{{ item.label }}</span>
@@ -63,22 +97,23 @@
 </nav>
 
 <app-settings-panel
-  [open]="settingsOpen()"
-  [accent]="preferencesState().accent"
-  [rootNoteColor]="preferencesState().rootNoteColor"
-  [noteColor]="preferencesState().noteColor"
-  [bgColor]="preferencesState().bgColor"
-  [cardColor]="preferencesState().cardColor"
-  [tunerSettings]="tunerSettings()"
-  [theme]="theme()"
-  (accentChange)="setAccent($event)"
-  (rootNoteColorChange)="setRootNoteColor($event)"
-  (noteColorChange)="setNoteColor($event)"
-  (bgColorChange)="setBgColor($event)"
-  (cardColorChange)="setCardColor($event)"
-  (startupModeChange)="setTunerStartupMode($event)"
-  (themeChange)="setThemeFromSettings($event)"
-  (inTuneEnabledChange)="setInTuneEnabled($event)"
+    [open]="settingsOpen()"
+    [accent]="preferencesState().accent"
+    [rootNoteColor]="preferencesState().rootNoteColor"
+    [noteColor]="preferencesState().noteColor"
+    [bgColor]="preferencesState().bgColor"
+    [cardColor]="preferencesState().cardColor"
+    [tunerSettings]="tunerSettings()"
+    [theme]="theme()"
+    (accentChange)="setAccent($event)"
+    (rootNoteColorChange)="setRootNoteColor($event)"
+    (noteColorChange)="setNoteColor($event)"
+    (bgColorChange)="setBgColor($event)"
+    (cardColorChange)="setCardColor($event)"
+    (startupModeChange)="setTunerStartupMode($event)"
+    (themeChange)="setThemeFromSettings($event)"
+    (openShortcuts)="openShortcutsFromSettings()"
+    (inTuneEnabledChange)="setInTuneEnabled($event)"
   (inTuneSoundChange)="setInTuneSound($event)"
   (inTuneGlowChange)="setInTuneGlow($event)"
   (inTuneColorChange)="setInTuneColor($event)"

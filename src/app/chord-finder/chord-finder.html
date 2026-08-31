@@ -12,73 +12,96 @@
 
     <div class="finder-columns">
       <aside class="controls-panel" aria-label="Voicing controls">
-        <div class="control-section">
-          <span class="section-label">01 · Tuning</span>
-
-          <app-listbox
-            [options]="instruments()"
-            [value]="selectedInstrument()"
-            ariaLabel="Instrument"
-            [triggerLabel]="selectedInstrument().label"
-            triggerKicker="instrument"
-            [optionLabel]="instrumentLabelFn"
-            [trackByFn]="instrumentTrackFn"
-            [open]="instrumentListOpen()"
-            (toggle)="toggleInstrumentList()"
-            (select)="onInstrumentSelect($event)"
-          />
-
-          @if (selectedTuningOption(); as selectedTuning) {
-            <app-listbox
-              [options]="tuningOptions()"
-              [value]="selectedTuning"
-              ariaLabel="Tuning preset"
-              [triggerLabel]="selectedTuning.label"
-              triggerKicker="preset"
-              [optionLabel]="tuningLabelFn"
-              [optionAlt]="tuningAltFn"
-              [trackByFn]="tuningTrackFn"
-              [open]="tuningListOpen()"
-              (toggle)="toggleTuningList()"
-              (select)="onTuningSelect($event)"
-            />
-          }
-
-          <app-text-field
-            label="custom"
-            [value]="tuningText()"
-            [hint]="tuningHint().text"
-            [hintTone]="tuningHintTone()"
-            (valueChange)="tuningText.set($event)"
-            (enter)="generate()"
-          />
-        </div>
-
-        <div class="control-section">
-          <span class="section-label">02 · Progression</span>
-          <app-text-field
-            label="chords, comma-separated"
-            [value]="progressionText()"
-            [hint]="progressionHint().text"
-            [hintTone]="progressionHintTone()"
-            (valueChange)="onProgressionInput($event)"
-            (enter)="generate()"
-          />
-          @if (shuffleEnabled()) {
-            <button
-              class="btn small"
-              type="button"
-              aria-label="Shuffle progression and key"
-              (click)="shuffle()"
-            >
-              Shuffle
-            </button>
-          }
-        </div>
-
-        <button class="btn primary generate" type="button" (click)="generate()">
-          GENERATE VOICINGS
+        <button
+          class="controls-toggle"
+          type="button"
+          aria-controls="voicing-controls-body"
+          [attr.aria-expanded]="controlsOpen()"
+          (click)="controlsOpen.set(!controlsOpen())"
+        >
+          <span class="app-icon ti ti-adjustments-horizontal" aria-hidden="true"></span>
+          <span class="controls-toggle-label">
+            Voicing controls
+            @if (selectedTuningOption(); as tuning) {
+              <span class="controls-toggle-summary"
+                >{{ selectedInstrument().label }} · {{ tuning.label }}</span
+              >
+            }
+          </span>
+          <span class="app-icon ti ti-chevron-down" aria-hidden="true"></span>
         </button>
+
+        <div id="voicing-controls-body" class="controls-body" [class.open]="controlsOpen()">
+          <div class="controls-inner">
+            <div class="control-section">
+              <span class="section-label">01 · Tuning</span>
+
+              <app-listbox
+                [options]="instruments()"
+                [value]="selectedInstrument()"
+                ariaLabel="Instrument"
+                [triggerLabel]="selectedInstrument().label"
+                triggerKicker="instrument"
+                [optionLabel]="instrumentLabelFn"
+                [trackByFn]="instrumentTrackFn"
+                [open]="instrumentListOpen()"
+                (toggle)="toggleInstrumentList()"
+                (select)="onInstrumentSelect($event)"
+              />
+
+              @if (selectedTuningOption(); as selectedTuning) {
+                <app-listbox
+                  [options]="tuningOptions()"
+                  [value]="selectedTuning"
+                  ariaLabel="Tuning preset"
+                  [triggerLabel]="selectedTuning.label"
+                  triggerKicker="preset"
+                  [optionLabel]="tuningLabelFn"
+                  [optionAlt]="tuningAltFn"
+                  [trackByFn]="tuningTrackFn"
+                  [open]="tuningListOpen()"
+                  (toggle)="toggleTuningList()"
+                  (select)="onTuningSelect($event)"
+                />
+              }
+
+              <app-text-field
+                label="custom"
+                [value]="tuningText()"
+                [hint]="tuningHint().text"
+                [hintTone]="tuningHintTone()"
+                (valueChange)="tuningText.set($event)"
+                (enter)="generate()"
+              />
+            </div>
+
+            <div class="control-section">
+              <span class="section-label">02 · Progression</span>
+              <app-text-field
+                label="chords, comma-separated"
+                [value]="progressionText()"
+                [hint]="progressionHint().text"
+                [hintTone]="progressionHintTone()"
+                (valueChange)="onProgressionInput($event)"
+                (enter)="generate()"
+              />
+              @if (shuffleEnabled()) {
+                <button
+                  class="btn small"
+                  type="button"
+                  aria-label="Shuffle progression and key"
+                  (click)="shuffle()"
+                >
+                  Shuffle
+                </button>
+              }
+            </div>
+
+            <button class="btn primary generate" type="button" (click)="generate()">
+              GENERATE VOICINGS
+            </button>
+          </div>
+        </div>
       </aside>
 
       <button

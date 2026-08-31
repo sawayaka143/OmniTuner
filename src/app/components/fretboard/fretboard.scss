@@ -47,6 +47,26 @@
   padding: var(--space-4) 4px var(--space-2);
 }
 
+.fretboard-scroll.is-scrollable {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: var(--border-medium);
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
 .fretboard-scale-frame {
   position: relative;
   width: max-content;

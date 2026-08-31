@@ -256,6 +256,16 @@
         </section>
       </section>
 
+      <section class="help-links" aria-labelledby="help-links-title">
+        <h4 id="help-links-title">Help</h4>
+
+        <button type="button" class="shortcuts-row" (click)="openShortcuts.emit()">
+          <span class="app-icon ti ti-keyboard" aria-hidden="true"></span>
+          <span class="shortcuts-label">Keyboard shortcuts</span>
+          <span class="app-icon ti ti-chevron-right" aria-hidden="true"></span>
+        </button>
+      </section>
+
       <p class="privacy-note">
         Audio is analyzed on-device and never uploaded. Preferences are stored locally.
       </p>

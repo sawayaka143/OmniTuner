@@ -216,7 +216,37 @@ describe('Fretboard', () => {
     expect(openNote.querySelector('.fret-dot.is-ghost')).toBeTruthy();
   });
 
-  it('scales the board down to fit a narrow container', async () => {
+  it('clamps the scale and enables horizontal scrolling on narrow viewports', async () => {
+    const windowRecord = window as unknown as Record<string, unknown>;
+    windowRecord['matchMedia'] = () => ({ matches: true });
+    const container = fixture!.nativeElement.querySelector('.fretboard-scroll') as HTMLElement;
+    const frame = fixture!.nativeElement.querySelector('.fretboard-scale-frame') as HTMLElement;
+    const board = fixture!.nativeElement.querySelector('.fretboard') as HTMLElement;
+    const availableWidth = 300;
+
+    container.style.padding = '0';
+    Object.defineProperty(container, 'clientWidth', {
+      configurable: true,
+      get: () => availableWidth,
+    });
+    Object.defineProperty(board, 'offsetWidth', { configurable: true, value: 600 });
+    Object.defineProperty(board, 'offsetHeight', { configurable: true, value: 300 });
+
+    try {
+      ResizeObserverMock.latest?.trigger();
+
+      await vi.waitFor(() => {
+        expect(board.style.transform).toBe('translateY(38px) scale(0.75)');
+        expect(frame.style.width).toBe('450px');
+        expect(frame.style.height).toBe('300px');
+        expect(container.classList.contains('is-scrollable')).toBe(true);
+      });
+    } finally {
+      delete windowRecord['matchMedia'];
+    }
+  });
+
+  it('scales the board down to fit on desktop even below the mobile floor', async () => {
     const container = fixture!.nativeElement.querySelector('.fretboard-scroll') as HTMLElement;
     const frame = fixture!.nativeElement.querySelector('.fretboard-scale-frame') as HTMLElement;
     const board = fixture!.nativeElement.querySelector('.fretboard') as HTMLElement;
@@ -235,7 +265,30 @@ describe('Fretboard', () => {
     await vi.waitFor(() => {
       expect(board.style.transform).toBe('translateY(75px) scale(0.5)');
       expect(frame.style.width).toBe('300px');
-      expect(frame.style.height).toBe('300px');
+      expect(container.classList.contains('is-scrollable')).toBe(false);
+    });
+  });
+
+  it('scales the board down to fit when the fit scale is above the readable floor', async () => {
+    const container = fixture!.nativeElement.querySelector('.fretboard-scroll') as HTMLElement;
+    const frame = fixture!.nativeElement.querySelector('.fretboard-scale-frame') as HTMLElement;
+    const board = fixture!.nativeElement.querySelector('.fretboard') as HTMLElement;
+    const availableWidth = 480;
+
+    container.style.padding = '0';
+    Object.defineProperty(container, 'clientWidth', {
+      configurable: true,
+      get: () => availableWidth,
+    });
+    Object.defineProperty(board, 'offsetWidth', { configurable: true, value: 600 });
+    Object.defineProperty(board, 'offsetHeight', { configurable: true, value: 300 });
+
+    ResizeObserverMock.latest?.trigger();
+
+    await vi.waitFor(() => {
+      expect(board.style.transform).toBe('translateY(30px) scale(0.8)');
+      expect(frame.style.width).toBe('480px');
+      expect(container.classList.contains('is-scrollable')).toBe(false);
     });
   });
 

@@ -39,6 +39,7 @@ export class Fretboard {
   private destroyed = false;
 
   private readonly SHRINK_DELAY_MS = 250;
+  private readonly MIN_SCALE = 0.75;
 
   private readonly displayedFretCountInternal = signal<number | null>(null);
   protected readonly displayedFretCount = computed(() => {
@@ -240,11 +241,16 @@ export class Fretboard {
 
     if (availableWidth <= 0 || naturalWidth <= 0 || naturalHeight <= 0) return;
 
-    const scale = Math.min(1, availableWidth / naturalWidth);
+    const view = this.document.defaultView;
+    const compactViewport =
+      typeof view?.matchMedia === 'function' && view.matchMedia('(max-width: 760px)').matches;
+    const fitScale = Math.min(1, availableWidth / naturalWidth);
+    const scale = compactViewport ? Math.max(fitScale, this.MIN_SCALE) : fitScale;
     const scaledHeight = naturalHeight * scale;
     const offsetY = Math.round((naturalHeight - scaledHeight) / 2);
     frame.style.width = `${naturalWidth * scale}px`;
     frame.style.height = `${naturalHeight}px`;
     board.style.transform = `translateY(${offsetY}px) scale(${scale})`;
+    container.classList.toggle('is-scrollable', compactViewport && fitScale < this.MIN_SCALE);
   }
 }

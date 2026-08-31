@@ -154,6 +154,30 @@ app-string-list {
   }
 }
 
+@media (max-width: 760px) {
+  .app-main {
+    gap: var(--space-5);
+    padding: calc(var(--ctrl-h-lg) + var(--space-5)) var(--space-4) var(--space-8);
+  }
+}
+
+@media (max-width: 520px) {
+  .workbench-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-5);
+  }
+
+  .tuner-controls {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .tuner-stage {
+    padding: var(--space-4) var(--space-3) var(--space-6);
+  }
+}
+
 .sr-only {
   position: absolute;
   width: 1px;

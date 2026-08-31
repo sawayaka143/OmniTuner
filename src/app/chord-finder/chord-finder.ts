@@ -102,6 +102,7 @@ export class ChordFinder {
   private onResizeMove = (e: PointerEvent): void => this.handleResizeMove(e);
   private onResizeUp = (): void => this.handleResizeEnd();
   protected readonly viewMode = signal<DiagramView | 'tab'>('lines');
+  protected readonly controlsOpen = signal(false);
   protected readonly diagramView = computed<DiagramView>(() =>
     this.viewMode() === 'dots' ? 'dots' : 'lines',
   );
