@@ -150,3 +150,97 @@ describe('Listbox', () => {
     expect(fixture.nativeElement.querySelectorAll('[role="option"]').length).toBe(4);
   });
 });
+
+describe('Listbox (native select on phones)', () => {
+  let fixture: ComponentFixture<LbHost>;
+  let host: LbHost;
+  let mediaListeners: Set<(event: MediaQueryListEvent) => void>;
+  let matches: boolean;
+
+  beforeEach(async () => {
+    matches = true;
+    mediaListeners = new Set();
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn().mockImplementation((query: string) => {
+        expect(query).toBe('(max-width: 760px)');
+        return {
+          matches,
+          addEventListener: (_: string, listener: (event: MediaQueryListEvent) => void) =>
+            mediaListeners.add(listener),
+          removeEventListener: (_: string, listener: (event: MediaQueryListEvent) => void) =>
+            mediaListeners.delete(listener),
+        };
+      }),
+    );
+    await TestBed.configureTestingModule({ imports: [LbHost] }).compileComponents();
+    fixture = TestBed.createComponent(LbHost);
+    host = fixture.componentInstance;
+    await fixture.whenStable();
+  });
+
+  afterEach(() => {
+    fixture?.destroy();
+    TestBed.resetTestingModule();
+    vi.unstubAllGlobals();
+  });
+
+  it('renders a real select instead of the custom trigger and menu', () => {
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('select.native-select')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('button.btn')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.dropdown-menu')).toBeNull();
+  });
+
+  it('keeps the pill trigger visual as a decorative sibling', () => {
+    fixture.detectChanges();
+    const visual = fixture.nativeElement.querySelector('.native-trigger') as HTMLElement;
+    expect(visual.textContent).toContain('Fruit');
+    expect(visual.textContent).toContain('Peach');
+    expect(visual.getAttribute('aria-hidden')).toBe('true');
+  });
+
+  it('labels the select for assistive tech and preselects the current value', () => {
+    fixture.detectChanges();
+    const select = fixture.nativeElement.querySelector('select.native-select') as HTMLSelectElement;
+    expect(select.getAttribute('aria-label')).toBe('Pick a fruit');
+    const selected = select.selectedOptions[0];
+    expect(selected?.value).toBe('peach');
+  });
+
+  it('lists every option with its alt text appended', () => {
+    fixture.detectChanges();
+    const select = fixture.nativeElement.querySelector('select.native-select') as HTMLSelectElement;
+    const labels = [...select.options].map((option) => option.textContent?.trim());
+    expect(labels).toEqual(['Peach', 'Plum', 'Raspberry — Rubus idaeus', 'Lemon']);
+  });
+
+  it('renders optgroups when options are grouped', () => {
+    fixture.detectChanges();
+    const select = fixture.nativeElement.querySelector('select.native-select') as HTMLSelectElement;
+    const groups = [...select.querySelectorAll('optgroup')].map((group) => group.label);
+    expect(groups).toEqual(['stone', 'berry', 'citrus']);
+  });
+
+  it('emits select with the matching option object on change', () => {
+    fixture.detectChanges();
+    const select = fixture.nativeElement.querySelector('select.native-select') as HTMLSelectElement;
+
+    select.value = 'lemon';
+    select.dispatchEvent(new Event('change'));
+
+    expect(host.selected()?.id).toBe('lemon');
+  });
+
+  it('switches back to the custom trigger when the breakpoint no longer matches', () => {
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('select.native-select')).toBeTruthy();
+
+    matches = false;
+    mediaListeners.forEach((listener) => listener({ matches: false } as MediaQueryListEvent));
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('select.native-select')).toBeNull();
+    expect(fixture.nativeElement.querySelector('button.btn')).toBeTruthy();
+  });
+});

@@ -9,6 +9,18 @@
   }
 }
 
+@keyframes dropdown-sheet-appear {
+  from {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @mixin dropdown-trigger() {
   width: 100%;
   min-height: var(--ctrl-h-lg);
@@ -68,6 +80,42 @@
   @media (prefers-reduced-motion: reduce) {
     animation: none;
   }
+
+  // Native-picker presentation on phones: menus dock to the bottom edge as
+  // sheets (like Android's select picker) instead of anchoring to the trigger.
+  // The --dropdown-menu-* properties are honoured by components (e.g. listbox)
+  // that re-declare top/bottom/max-height after including this mixin.
+  @media (max-width: 760px) {
+    --dropdown-menu-top: auto;
+    --dropdown-menu-bottom: 0;
+    --dropdown-menu-max-height: min(60dvh, 480px);
+
+    position: fixed;
+    inset: auto 0 0;
+    margin: 0;
+    padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom));
+    border: 0;
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -24px 70px rgba(0, 0, 0, 0.55);
+    animation: dropdown-sheet-appear var(--dur-slow) var(--ease-spring);
+
+    &::before {
+      content: '';
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      display: block;
+      width: 36px;
+      height: 4px;
+      margin: var(--space-2) auto var(--space-1);
+      border-radius: var(--r-pill);
+      background: var(--border-medium);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+    }
+  }
 }
 
 @mixin dropdown-item() {
@@ -103,6 +151,23 @@
   &.selected {
     color: var(--accent-text);
     font-weight: var(--fw-semibold);
+  }
+
+  @media (max-width: 760px) {
+    min-height: 48px;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--r-md);
+    font-size: var(--text-sm);
+
+    .item-alt {
+      overflow: hidden;
+      margin-left: auto;
+      color: var(--text-dim);
+      font-size: var(--text-2xs);
+      letter-spacing: var(--tracking-narrow);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   }
 }
 

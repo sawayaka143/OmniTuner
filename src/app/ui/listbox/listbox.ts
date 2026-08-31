@@ -1,73 +1,126 @@
-import { Component, computed, ElementRef, input, output, viewChild } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  DOCUMENT,
+  computed,
+  ElementRef,
+  inject,
+  input,
+  output,
+  signal,
+  viewChild,
+} from '@angular/core';
 
 let nextListboxId = 0;
+
+const NATIVE_SELECT_QUERY = '(max-width: 760px)';
 
 @Component({
   selector: 'app-listbox',
   template: `
     <div class="dropdown-wrapper">
-      <button
-        #trigger
-        type="button"
-        class="btn"
-        [attr.aria-expanded]="open()"
-        aria-haspopup="listbox"
-        [attr.aria-controls]="open() ? menuId : null"
-        (click)="toggle.emit(); $event.stopPropagation()"
-        (keydown)="onTriggerKeydown($event)"
-      >
-        <span class="button-copy">
-          @if (triggerKicker()) {
-            <span class="button-kicker">{{ triggerKicker() }}</span>
-          }
-          <span class="value-wrap">
-            <strong>{{ triggerLabel() }}</strong>
+      @if (useNativeSelect()) {
+        <span class="btn native-trigger" aria-hidden="true">
+          <span class="button-copy">
+            @if (triggerKicker()) {
+              <span class="button-kicker">{{ triggerKicker() }}</span>
+            }
+            <span class="value-wrap">
+              <strong>{{ triggerLabel() }}</strong>
+            </span>
           </span>
+          <span class="app-icon ti ti-chevron-down dropdown-icon" aria-hidden="true"></span>
         </span>
-        <span
-          class="app-icon ti ti-chevron-down dropdown-icon"
-          [class.rotated]="open()"
-          aria-hidden="true"
-        ></span>
-      </button>
-
-      @if (open()) {
-        <div
-          #menu
-          [id]="menuId"
-          class="dropdown-menu card"
-          role="listbox"
+        <select
+          class="native-select"
           [attr.aria-label]="ariaLabel()"
-          (click)="$event.stopPropagation()"
-          (keydown)="onMenuKeydown($event)"
+          (change)="onNativeChange($event)"
         >
           @for (group of grouped(); track group.label ?? '') {
             @if (group.label) {
-              <div class="dropdown-group">{{ group.label }}</div>
-            }
-            @for (option of group.items; track trackByFn()(option)) {
-              <button
-                type="button"
-                role="option"
-                class="dropdown-item"
-                [class.selected]="isSelected(option)"
-                [attr.aria-selected]="isSelected(option)"
-                (click)="select.emit(option)"
-              >
-                <span>{{ optionLabel()(option) }}</span>
-                @if (optionAlt()?.(option); as alt) {
-                  <span class="item-alt">{{ alt }}</span>
+              <optgroup [label]="group.label">
+                @for (option of group.items; track nativeValue(option)) {
+                  <option [value]="nativeValue(option)" [selected]="isSelected(option)">
+                    {{ nativeOptionLabel(option) }}
+                  </option>
                 }
-              </button>
+              </optgroup>
+            } @else {
+              @for (option of group.items; track nativeValue(option)) {
+                <option [value]="nativeValue(option)" [selected]="isSelected(option)">
+                  {{ nativeOptionLabel(option) }}
+                </option>
+              }
             }
           }
-        </div>
+        </select>
+      } @else {
+        <button
+          #trigger
+          type="button"
+          class="btn"
+          [attr.aria-expanded]="open()"
+          aria-haspopup="listbox"
+          [attr.aria-controls]="open() ? menuId : null"
+          (click)="toggle.emit(); $event.stopPropagation()"
+          (keydown)="onTriggerKeydown($event)"
+        >
+          <span class="button-copy">
+            @if (triggerKicker()) {
+              <span class="button-kicker">{{ triggerKicker() }}</span>
+            }
+            <span class="value-wrap">
+              <strong>{{ triggerLabel() }}</strong>
+            </span>
+          </span>
+          <span
+            class="app-icon ti ti-chevron-down dropdown-icon"
+            [class.rotated]="open()"
+            aria-hidden="true"
+          ></span>
+        </button>
+
+        @if (open()) {
+          <div
+            #menu
+            [id]="menuId"
+            class="dropdown-menu card"
+            role="listbox"
+            [attr.aria-label]="ariaLabel()"
+            (click)="$event.stopPropagation()"
+            (keydown)="onMenuKeydown($event)"
+          >
+            @for (group of grouped(); track group.label ?? '') {
+              @if (group.label) {
+                <div class="dropdown-group">{{ group.label }}</div>
+              }
+              @for (option of group.items; track trackByFn()(option)) {
+                <button
+                  type="button"
+                  role="option"
+                  class="dropdown-item"
+                  [class.selected]="isSelected(option)"
+                  [attr.aria-selected]="isSelected(option)"
+                  (click)="select.emit(option)"
+                >
+                  <span>{{ optionLabel()(option) }}</span>
+                  @if (optionAlt()?.(option); as alt) {
+                    <span class="item-alt">{{ alt }}</span>
+                  }
+                </button>
+              }
+            }
+          </div>
+        }
       }
     </div>
   `,
   styleUrl: './listbox.scss',
 })
 export class Listbox<T> {
+  private readonly document = inject(DOCUMENT);
+  private readonly destroyRef = inject(DestroyRef);
+
   readonly options = input.required<readonly T[]>();
   readonly value = input.required<T>();
   readonly ariaLabel = input.required<string>();
@@ -85,6 +138,26 @@ export class Listbox<T> {
   protected readonly menuId = `app-listbox-menu-${nextListboxId++}`;
   protected readonly triggerBtn = viewChild<ElementRef<HTMLElement>>('trigger');
   protected readonly menu = viewChild<ElementRef<HTMLElement>>('menu');
+
+  // On phones the listbox renders a real <select> so the picker popup is the
+  // platform's own UI. The custom menu remains the desktop presentation.
+  protected readonly useNativeSelect = signal(false);
+
+  constructor() {
+    const view = this.document.defaultView;
+    if (!view?.matchMedia) return;
+    try {
+      const media = view.matchMedia(NATIVE_SELECT_QUERY);
+      this.useNativeSelect.set(media.matches);
+      const listener = (event: MediaQueryListEvent): void => {
+        this.useNativeSelect.set(event.matches);
+      };
+      media.addEventListener('change', listener);
+      this.destroyRef.onDestroy(() => media.removeEventListener('change', listener));
+    } catch {
+      // matchMedia unavailable — keep the custom menu everywhere.
+    }
+  }
 
   protected readonly grouped = computed(() => {
     const items = this.options();
@@ -153,5 +226,21 @@ export class Listbox<T> {
 
   protected isSelected(option: T): boolean {
     return this.value() === option;
+  }
+
+  protected nativeValue(option: T): string {
+    return String(this.trackByFn()(option));
+  }
+
+  protected nativeOptionLabel(option: T): string {
+    const label = this.optionLabel()(option);
+    const alt = this.optionAlt()?.(option);
+    return alt ? `${label} — ${alt}` : label;
+  }
+
+  protected onNativeChange(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    const option = this.options().find((candidate) => this.nativeValue(candidate) === value);
+    if (option !== undefined) this.select.emit(option);
   }
 }
