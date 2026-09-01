@@ -3,6 +3,7 @@ import { DEFAULT_TUNER_SETTINGS } from '../models/tuner-preferences.model';
 import {
   TUNER_PREFERENCES_STORAGE,
   TUNER_PREFERENCES_STORAGE_KEY,
+  TUNER_PREFERENCES_VERSION,
   TunerPreferences,
 } from './tuner-preferences';
 
@@ -87,6 +88,7 @@ describe('TunerPreferences', () => {
     expect(createService().tunerSettings()).toEqual({
       mode: 'manual',
       startupMode: 'auto',
+      autoStart: true,
       referencePitch: 466,
       inTune: {
         enabled: false,
@@ -119,6 +121,7 @@ describe('TunerPreferences', () => {
     expect(restored.tunerSettings()).toEqual({
       mode: 'manual',
       startupMode: 'remember',
+      autoStart: true,
       referencePitch: 442,
       inTune: {
         enabled: false,
@@ -195,6 +198,58 @@ describe('TunerPreferences', () => {
       const service = createService();
       service.setReferencePitch(442.7);
       expect(service.tunerSettings().referencePitch).toBe(443);
+    });
+  });
+
+  describe('autoStart', () => {
+    it('defaults to enabled', () => {
+      expect(createService().tunerSettings().autoStart).toBe(true);
+    });
+
+    it('treats older saved preferences without autoStart as enabled', () => {
+      storage.setItem(
+        TUNER_PREFERENCES_STORAGE_KEY,
+        JSON.stringify({
+          version: 4,
+          tuner: {
+            mode: 'manual',
+            startupMode: 'remember',
+            referencePitch: 442,
+            inTune: DEFAULT_TUNER_SETTINGS.inTune,
+          },
+        }),
+      );
+
+      const settings = createService().tunerSettings();
+      expect(settings.autoStart).toBe(true);
+      expect(settings.mode).toBe('manual');
+      expect(settings.referencePitch).toBe(442);
+    });
+
+    it('persists a disabled choice and restores it', () => {
+      const service = createService();
+      service.setAutoStart(false);
+      expect(service.tunerSettings().autoStart).toBe(false);
+
+      TestBed.resetTestingModule();
+      expect(createService().tunerSettings().autoStart).toBe(false);
+
+      const persisted = JSON.parse(storage.getItem(TUNER_PREFERENCES_STORAGE_KEY) ?? 'null') as {
+        version: number;
+      };
+      expect(persisted.version).toBe(TUNER_PREFERENCES_VERSION);
+    });
+
+    it('treats a non-boolean stored autoStart as enabled', () => {
+      storage.setItem(
+        TUNER_PREFERENCES_STORAGE_KEY,
+        JSON.stringify({
+          version: 5,
+          tuner: { ...DEFAULT_TUNER_SETTINGS, autoStart: 'yes' },
+        }),
+      );
+
+      expect(createService().tunerSettings().autoStart).toBe(true);
     });
   });
 

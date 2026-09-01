@@ -46,6 +46,7 @@ export class AudioCaptureService {
   private analysisInFlight = false;
   private captureSession = 0;
   private startInFlight = false;
+  private userStopped = false;
 
   private analysisTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -95,6 +96,7 @@ export class AudioCaptureService {
     if (this.isCapturing() || this.startInFlight) return;
 
     this.startInFlight = true;
+    this.userStopped = false;
     this.captureError.set(null);
 
     try {
@@ -195,6 +197,7 @@ export class AudioCaptureService {
   }
 
   stopCapture(): void {
+    this.userStopped = true;
     if (this.animationFrameId !== null) {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
@@ -209,6 +212,11 @@ export class AudioCaptureService {
     this.isCapturing.set(false);
     this.trackingState.set('idle');
     this.resetTracking();
+  }
+
+  attemptAutoStart(): void {
+    if (this.isCapturing() || this.startInFlight || this.userStopped) return;
+    void this.startCapture();
   }
 
   private releaseAudioResources(): void {

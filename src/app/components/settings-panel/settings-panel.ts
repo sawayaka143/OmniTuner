@@ -80,6 +80,7 @@ export class SettingsPanel {
   readonly bgColorChange = output<string | null>();
   readonly cardColorChange = output<string | null>();
   readonly startupModeChange = output<TunerStartupMode>();
+  readonly autoStartChange = output<boolean>();
   readonly themeChange = output<ThemeChangeEvent>();
   readonly inTuneEnabledChange = output<boolean>();
   readonly inTuneSoundChange = output<boolean>();

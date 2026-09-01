@@ -157,6 +157,10 @@ export class AppShell {
     this.tunerPreferences.setStartupMode(startupMode);
   }
 
+  protected setAutoStart(autoStart: boolean): void {
+    this.tunerPreferences.setAutoStart(autoStart);
+  }
+
   protected setInTuneEnabled(enabled: boolean): void {
     this.tunerPreferences.setInTuneEnabled(enabled);
   }

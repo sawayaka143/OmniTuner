@@ -171,6 +171,18 @@
         <div class="toggle-rows">
           <div class="toggle-row">
             <div class="custom-copy">
+              <strong>Start tuner automatically</strong>
+              <span>Microphone starts on launch and keeps running</span>
+            </div>
+            <app-toggle
+              [checked]="tunerSettings().autoStart"
+              label="Start tuner automatically"
+              (change)="autoStartChange.emit($event)"
+            />
+          </div>
+
+          <div class="toggle-row">
+            <div class="custom-copy">
               <strong>Highlight when in tune</strong>
             </div>
             <app-toggle

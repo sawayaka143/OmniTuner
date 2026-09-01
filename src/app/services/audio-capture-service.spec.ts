@@ -316,3 +316,135 @@ describe('AudioCaptureService', () => {
     expect(freq!).toBeLessThan(147.2);
   });
 });
+
+class FakeMediaStreamTrack {
+  getSettings(): { channelCount: number } {
+    return { channelCount: 1 };
+  }
+
+  stop(): void {}
+}
+
+class FakeMediaStream {
+  getAudioTracks(): FakeMediaStreamTrack[] {
+    return [new FakeMediaStreamTrack()];
+  }
+
+  getTracks(): FakeMediaStreamTrack[] {
+    return [new FakeMediaStreamTrack()];
+  }
+}
+
+class FakeAudioContext {
+  readonly state = 'running';
+  readonly sampleRate = 48000;
+
+  readonly resume = vi.fn().mockResolvedValue(undefined);
+  readonly close = vi.fn().mockResolvedValue(undefined);
+  readonly addEventListener = vi.fn();
+  readonly removeEventListener = vi.fn();
+
+  createMediaStreamSource(): { connect: () => void; disconnect: () => void } {
+    return { connect: () => undefined, disconnect: () => undefined };
+  }
+
+  createBiquadFilter(): {
+    type: string;
+    frequency: { value: number };
+    Q: { value: number };
+    channelCount: number;
+    channelCountMode: string;
+    connect: () => void;
+    disconnect: () => void;
+  } {
+    return {
+      type: '',
+      frequency: { value: 0 },
+      Q: { value: 0 },
+      channelCount: 1,
+      channelCountMode: 'explicit',
+      connect: () => undefined,
+      disconnect: () => undefined,
+    };
+  }
+
+  createAnalyser(): {
+    fftSize: number;
+    smoothingTimeConstant: number;
+    getFloatTimeDomainData: (buffer: Float32Array) => void;
+    connect: () => void;
+    disconnect: () => void;
+  } {
+    return {
+      fftSize: 8192,
+      smoothingTimeConstant: 0,
+      getFloatTimeDomainData: (buffer: Float32Array) => buffer.fill(0),
+      connect: () => undefined,
+      disconnect: () => undefined,
+    };
+  }
+}
+
+describe('AudioCaptureService auto-start', () => {
+  let service: AudioCaptureService;
+  let getUserMedia: ReturnType<typeof vi.fn>;
+
+  const flush = async (): Promise<void> => {
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+  };
+
+  beforeEach(() => {
+    vi.stubGlobal('Worker', MockWorker);
+    vi.stubGlobal('AudioContext', FakeAudioContext);
+    getUserMedia = vi.fn().mockResolvedValue(new FakeMediaStream());
+    Object.defineProperty(globalThis.navigator, 'mediaDevices', {
+      configurable: true,
+      value: { getUserMedia },
+    });
+    TestBed.configureTestingModule({});
+    service = TestBed.inject(AudioCaptureService);
+    service.isCapturing.set(false);
+    service.trackingState.set('idle');
+  });
+
+  afterEach(() => {
+    TestBed.resetTestingModule();
+    vi.unstubAllGlobals();
+    delete (globalThis.navigator as { mediaDevices?: unknown }).mediaDevices;
+  });
+
+  it('starts capture automatically when the tuner is idle', async () => {
+    service.attemptAutoStart();
+    await flush();
+
+    expect(getUserMedia).toHaveBeenCalledTimes(1);
+    expect(service.isCapturing()).toBe(true);
+    expect(service.trackingState()).toBe('listening');
+  });
+
+  it('does not request the microphone again while capture is running', async () => {
+    service.attemptAutoStart();
+    await flush();
+    getUserMedia.mockClear();
+
+    service.attemptAutoStart();
+    await flush();
+
+    expect(getUserMedia).not.toHaveBeenCalled();
+  });
+
+  it('respects an explicit stop until the user starts capture again', async () => {
+    service.attemptAutoStart();
+    await flush();
+    service.stopCapture();
+    expect(service.isCapturing()).toBe(false);
+
+    service.attemptAutoStart();
+    await flush();
+    expect(getUserMedia).toHaveBeenCalledTimes(1);
+    expect(service.isCapturing()).toBe(false);
+
+    await service.startCapture();
+    expect(service.isCapturing()).toBe(true);
+  });
+});

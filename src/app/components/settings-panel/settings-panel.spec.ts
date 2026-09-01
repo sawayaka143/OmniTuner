@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { axe } from 'vitest-axe';
 import { vi } from 'vitest';
 
+import { DEFAULT_TUNER_SETTINGS } from '../../models/tuner-preferences.model';
 import { SettingsPanel } from './settings-panel';
 
 const POSITION_KEY = 'omnituner.settings-panel.position.v1';
@@ -242,5 +243,25 @@ describe('SettingsPanel', () => {
     dismissed = false;
     header().dispatchEvent(new MouseEvent('click', { bubbles: true }));
     expect(dismissed).toBe(false);
+  });
+
+  it('renders the auto-start toggle state and emits changes', async () => {
+    await openPanel();
+    fixture.componentRef.setInput('tunerSettings', {
+      ...DEFAULT_TUNER_SETTINGS,
+      autoStart: false,
+    });
+    fixture.detectChanges();
+
+    const row = [...fixture.nativeElement.querySelectorAll('.toggle-row')].find((el) =>
+      el.textContent?.includes('Start tuner automatically'),
+    ) as HTMLElement;
+    const toggleButton = row.querySelector('button') as HTMLButtonElement;
+    expect(toggleButton.getAttribute('aria-checked')).toBe('false');
+
+    let emitted: boolean | null = null;
+    component.autoStartChange.subscribe((value) => (emitted = value));
+    toggleButton.click();
+    expect(emitted).toBe(true);
   });
 });

@@ -46,6 +46,7 @@ export interface TunerSettings {
   readonly mode: TunerMode;
 
   readonly startupMode: TunerStartupMode;
+  readonly autoStart: boolean;
   readonly inTune: InTunePreferences;
 
   readonly referencePitch: number;
@@ -64,6 +65,7 @@ export const DEFAULT_IN_TUNE_PREFERENCES: InTunePreferences = {
 export const DEFAULT_TUNER_SETTINGS: TunerSettings = {
   mode: 'auto',
   startupMode: 'remember',
+  autoStart: true,
   inTune: DEFAULT_IN_TUNE_PREFERENCES,
   referencePitch: REFERENCE_PITCH_DEFAULT,
 };

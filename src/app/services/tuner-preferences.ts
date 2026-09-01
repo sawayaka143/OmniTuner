@@ -14,7 +14,7 @@ import {
 } from '../models/tuner-preferences.model';
 
 export const TUNER_PREFERENCES_STORAGE_KEY = 'omnituner.tuner-preferences.v1';
-export const TUNER_PREFERENCES_VERSION = 4;
+export const TUNER_PREFERENCES_VERSION = 5;
 
 export const TUNER_PREFERENCES_STORAGE = new InjectionToken<Storage | null>(
   'Tuner preferences storage',
@@ -86,6 +86,7 @@ const readTunerSettings = (value: unknown): TunerSettings => {
   return {
     mode: isTunerMode(tuner['mode']) ? tuner['mode'] : defaults.mode,
     startupMode: isStartupMode(tuner['startupMode']) ? tuner['startupMode'] : defaults.startupMode,
+    autoStart: typeof tuner['autoStart'] === 'boolean' ? tuner['autoStart'] : defaults.autoStart,
     inTune: {
       enabled:
         typeof rawInTune['enabled'] === 'boolean' ? rawInTune['enabled'] : defaults.inTune.enabled,
@@ -115,6 +116,10 @@ export class TunerPreferences {
   setStartupMode(startupMode: TunerStartupMode): void {
     if (!isStartupMode(startupMode)) return;
     this.updateTuner({ startupMode });
+  }
+
+  setAutoStart(autoStart: boolean): void {
+    this.updateTuner({ autoStart });
   }
 
   setReferencePitch(referencePitch: number): void {

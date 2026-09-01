@@ -375,10 +375,11 @@ export class AudioMonitor implements OnInit {
         clearTimeout(this.pulseTimeout);
         this.pulseTimeout = null;
       }
-      if (this.isCapturing()) {
-        this.audioCapture.stopCapture();
-      }
     });
+
+    if (this.tunerSettings().autoStart) {
+      this.audioCapture.attemptAutoStart();
+    }
   }
 
   protected selectMode(mode: TunerMode): void {
