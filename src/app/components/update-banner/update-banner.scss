@@ -1,0 +1,86 @@
+@use '../../styles' as *;
+
+:host {
+  display: contents;
+}
+
+.update-banner {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-menu);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100vw - 24px);
+  padding: 6px 8px 6px 16px;
+  border: 1px solid var(--border-medium);
+  border-radius: var(--r-pill);
+  background: var(--surface-container-high);
+  box-shadow: var(--shadow-dialog);
+}
+
+.message {
+  color: var(--text);
+  font-size: var(--text-sm);
+  white-space: nowrap;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.reload {
+  padding-inline: 12px;
+  white-space: nowrap;
+  font-size: var(--text-sm);
+}
+
+@media (max-width: 760px) {
+  .update-banner {
+    top: 8px;
+    right: 12px;
+    left: 12px;
+    transform: none;
+  }
+
+  .message {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .update-banner {
+    animation: update-banner-in 200ms ease-out;
+  }
+
+  @keyframes update-banner-in {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-8px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  }
+
+  @media (max-width: 760px) {
+    @keyframes update-banner-in {
+      from {
+        opacity: 0;
+        transform: translateY(-8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  }
+}

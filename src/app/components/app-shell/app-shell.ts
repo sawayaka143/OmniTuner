@@ -23,6 +23,7 @@ import { Brand } from '../brand/brand';
 import { SettingsPanel, type ThemeChangeEvent } from '../settings-panel/settings-panel';
 import { ShortcutHelp } from '../shortcut-help/shortcut-help';
 import { CommandPalette } from '../command-palette/command-palette';
+import { UpdateBanner } from '../update-banner/update-banner';
 import { IconButton } from '../../ui/icon-button/icon-button';
 
 interface NavItem {
@@ -55,6 +56,7 @@ const PAGE_ROUTES: readonly string[] = NAV_ITEMS.map((item) => item.path);
     SettingsPanel,
     ShortcutHelp,
     CommandPalette,
+    UpdateBanner,
     Brand,
     IconButton,
   ],
