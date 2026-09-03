@@ -1,6 +1,7 @@
 import { Service, signal, DestroyRef, inject } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { KeepAwake } from '@capacitor-community/keep-awake';
+import { SILENCE_RMS } from './pitch-detection';
 
 export type PitchTrackingState = 'idle' | 'listening' | 'locked';
 
@@ -22,7 +23,10 @@ const MAX_DROPOUT_HOLD_FRAMES = 6;
 
 const AUDIBLE_HOLD_FRAMES = 60;
 
-const SILENCE_RMS = 0.004;
+// Biquad cutoffs must bracket the worker's detection band (MIN_FREQUENCY /
+// MAX_FREQUENCY) with margin so edge notes pass unattenuated.
+const HIGHPASS_FREQUENCY_HZ = 20;
+const LOWPASS_FREQUENCY_HZ = 1800;
 
 const ANALYSIS_TIMEOUT_MS = 500;
 
@@ -141,14 +145,14 @@ export class AudioCaptureService {
 
       const highpass = ctx.createBiquadFilter();
       highpass.type = 'highpass';
-      highpass.frequency.value = 38;
+      highpass.frequency.value = HIGHPASS_FREQUENCY_HZ;
       highpass.Q.value = 0.7;
       highpass.channelCount = 1;
       highpass.channelCountMode = 'explicit';
 
       const lowpass = ctx.createBiquadFilter();
       lowpass.type = 'lowpass';
-      lowpass.frequency.value = 1250;
+      lowpass.frequency.value = LOWPASS_FREQUENCY_HZ;
       lowpass.Q.value = 0.7;
 
       const analyser = ctx.createAnalyser();

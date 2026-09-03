@@ -72,7 +72,7 @@ CI (`.github/workflows/ci.yml`) runs on pushes to `master` and on all pull reque
 
 ## Architecture notes
 
-- **Pitch detection** runs in a dedicated Web Worker (`src/app/services/pitch-detector.worker.ts`) over a 4096-sample buffer (~85 ms at 48 kHz), searching the 60–1200 Hz range — low E on a guitar up to flute/mandolin territory. Results pass through a confidence gate and exponential smoothing before display.
+- **Pitch detection** runs in a dedicated Web Worker (`src/app/services/pitch-detector.worker.ts`, DSP logic in `pitch-detection.ts`) over an 8192-sample buffer (~170 ms at 48 kHz), searching the 27–1500 Hz range — 5-string bass low B through 24th-fret high-E bends. Results pass through a confidence gate and exponential smoothing before display.
 - **Audio capture** uses `AnalyserNode.getFloatTimeDomainData` (see `audio-capture-service.ts`).
 - **Playback** uses recorded guitar samples with pitch-rate shifting, falling back to synthesized tones when samples are unavailable (`scale-playback.ts`).
 - **State** is signal-based. Tuner, scale, metronome, and instrument preferences persist to `localStorage` behind injectable storage tokens, which keeps services testable.
