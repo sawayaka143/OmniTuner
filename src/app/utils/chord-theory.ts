@@ -127,6 +127,10 @@ const QUALITY_ALIASES: Readonly<Record<string, string>> = {
   m7: 'm7',
   mMaj7: 'mMaj7',
   'm(maj7)': 'mMaj7',
+  mmaj: 'mMaj7',
+  'm(maj)': 'mMaj7',
+  mM7: 'mMaj7',
+  mΔ7: 'mMaj7',
   dim: 'dim',
   '°': 'dim',
   o: 'dim',
@@ -326,16 +330,41 @@ export interface ParsedChord {
 
   readonly optionalPcs: readonly number[];
   readonly flats: boolean;
+
+  readonly bassPc?: number;
 }
 
 export type ChordParseResult =
   | { readonly ok: true; readonly chord: ParsedChord }
   | { readonly ok: false; readonly symbol: string; readonly error: string };
 
-const normalizeQuality = (raw: string): string =>
-  raw.replace(/♯/g, '#').replace(/♭/g, 'b').toLowerCase();
+const stripParens = (raw: string): string | null => {
+  let depth = 0;
+  let out = '';
+  for (const char of raw) {
+    if (char === '(') {
+      depth++;
+      continue;
+    }
+    if (char === ')') {
+      depth--;
+      if (depth < 0) return null;
+      continue;
+    }
+    if (depth > 0 && (char === ',' || /\s/.test(char))) continue;
+    out += char;
+  }
+  return depth === 0 ? out : null;
+};
 
-const ALTERATION_RE = /(?:b|#)?(?:5|9|11|13)|add(?:9|11)/g;
+const normalizeQuality = (raw: string): string | null => {
+  const stripped = stripParens(raw.replace(/♯/g, '#').replace(/♭/g, 'b'));
+  return stripped === null ? null : stripped.toLowerCase();
+};
+
+const ALTERATION_RE = /(?:b|#)?(?:5|9|11|13)|[b#]6|add(?:9|11)|sus(?:2|4)?|[+-]5/g;
+
+const CANONICAL_TOKENS: Readonly<Record<string, string>> = { '+5': '#5', '-5': 'b5', sus: 'sus4' };
 
 interface ComposedQuality {
   readonly key: string;
@@ -356,9 +385,14 @@ function composeQuality(raw: string): ComposedQuality | null {
       prefixLength = lowerKey.length;
     }
   }
-  if (baseKey === null && normalized.startsWith('m')) {
-    baseKey = 'min';
-    prefixLength = 1;
+  if (baseKey === null) {
+    if (normalized.startsWith('m')) {
+      baseKey = 'min';
+      prefixLength = 1;
+    } else if (normalized.startsWith('sus')) {
+      baseKey = 'sus4';
+      prefixLength = 3;
+    }
   }
   if (baseKey === null) return null;
 
@@ -397,11 +431,13 @@ function composeQuality(raw: string): ComposedQuality | null {
   for (const token of tokens) {
     switch (token) {
       case 'b5':
+      case '-5':
         drop(7);
         add(6);
         removeOptional(6);
         break;
       case '#5':
+      case '+5':
         drop(7);
         add(8);
         removeOptional(8);
@@ -431,6 +467,23 @@ function composeQuality(raw: string): ComposedQuality | null {
       case 'b13':
         addOptional(20);
         break;
+      case 'b6':
+        add(8);
+        break;
+      case '#6':
+        add(10);
+        break;
+      case 'sus2':
+        drop(3);
+        drop(4);
+        add(2);
+        break;
+      case 'sus4':
+      case 'sus':
+        drop(3);
+        drop(4);
+        add(5);
+        break;
       case 'add9':
         add(14);
         break;
@@ -443,20 +496,34 @@ function composeQuality(raw: string): ComposedQuality | null {
   }
 
   return {
-    key: `${baseKey}${tokens.join('')}`,
+    key: `${baseKey}${tokens.map((token) => CANONICAL_TOKENS[token] ?? token).join('')}`,
     intervals: [...new Set(intervals)].sort((a, b) => a - b),
     optional: [...new Set(optional)].sort((a, b) => a - b),
   };
 }
 
+const ROOT_RE = /^([A-Ga-g])\s*([#b♯♭]?)\s*(.*?)\s*$/;
+const BASS_NOTE_RE = /^\s*([A-Ga-g])\s*([#b♯♭]?)\s*$/;
+
+const pcOf = (letter: string, accidental: string): number => {
+  let pc = PC_LETTER[letter.toUpperCase()];
+  if (accidental === '#' || accidental === '♯') pc += 1;
+  if (accidental === 'b' || accidental === '♭') pc -= 1;
+  return mod12(pc);
+};
+
+const isFlat = (accidental: string): boolean => accidental === 'b' || accidental === '♭';
+
 export function parseChord(raw: string): ChordParseResult {
   const symbol = String(raw).trim();
-  const match = symbol.match(/^([A-Ga-g])\s*([#b♯♭]?)\s*(.*?)\s*$/);
+  const slash = symbol.lastIndexOf('/');
+  const bassMatch = slash >= 0 ? symbol.slice(slash + 1).match(BASS_NOTE_RE) : null;
+  const chordPart = bassMatch ? symbol.slice(0, slash) : symbol;
+  const bassPc = bassMatch ? pcOf(bassMatch[1], bassMatch[2]) : undefined;
+
+  const match = chordPart.match(ROOT_RE);
   if (!match) return { ok: false, symbol, error: `'${symbol}' is not a chord symbol` };
-  let rootPc = PC_LETTER[match[1].toUpperCase()];
-  if (match[2] === '#' || match[2] === '♯') rootPc += 1;
-  if (match[2] === 'b' || match[2] === '♭') rootPc -= 1;
-  rootPc = mod12(rootPc);
+  const rootPc = pcOf(match[1], match[2]);
   const qualityRaw = match[3];
   const hasAlias = (key: string): boolean =>
     Object.prototype.hasOwnProperty.call(QUALITY_ALIASES, key);
@@ -490,19 +557,69 @@ export function parseChord(raw: string): ChordParseResult {
       intervals,
       pcs: intervals.map((interval) => mod12(rootPc + interval)),
       optionalPcs: optionalIntervals.map((interval) => mod12(rootPc + interval)),
-      flats: match[2] === 'b' || match[2] === '♭',
+      flats: isFlat(match[2]) || (bassMatch ? isFlat(bassMatch[2]) : false),
+      bassPc,
     },
   };
 }
 
+const STRONG_SEPARATORS = new Set([',', ';', '|', '→', '—', '–']);
+const NOTE_OR_END = String.raw`(?=$|[\s,;|→—–]|->)`;
+const BASS_SLASH_RE = new RegExp(String.raw`^\s*[A-Ga-g][#b♯♭]?${NOTE_OR_END}`);
+const BASS_SLASH_SPACES_RE = new RegExp(String.raw`\s*\/\s*(?=[A-Ga-g][#b♯♭]?${NOTE_OR_END})`, 'g');
+const DIGIT_RE = /^\s*\d/;
+
 export function tokenizeProgression(raw: string): string[] {
-  const trimmed = String(raw).trim();
-  if (!trimmed) return [];
-  const tokens = trimmed
-    .split(/(?:->|→|—|–|,|;|\|)|\/(?![0-9])/)
-    .flatMap((part) => part.split(/\s+/))
-    .map((t) => t.trim())
-    .filter(Boolean);
+  const text = String(raw).replace(BASS_SLASH_SPACES_RE, '/');
+  const tokens: string[] = [];
+  const balanced = text.split('(').length === text.split(')').length;
+  let current = '';
+  let depth = 0;
+
+  const flush = (): void => {
+    const token = current.trim();
+    if (token && token !== '/') tokens.push(token);
+    current = '';
+  };
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    if (balanced && char === '(') {
+      depth++;
+      current += char;
+      continue;
+    }
+    if (balanced && char === ')') {
+      depth = Math.max(0, depth - 1);
+      current += char;
+      continue;
+    }
+    if (depth > 0) {
+      current += char;
+      continue;
+    }
+    if (STRONG_SEPARATORS.has(char)) {
+      flush();
+      continue;
+    }
+    if (char === '-' && text[i + 1] === '>') {
+      flush();
+      i++;
+      continue;
+    }
+    if (char === '/') {
+      const rest = text.slice(i + 1);
+      if (BASS_SLASH_RE.test(rest) || DIGIT_RE.test(rest)) current += '/';
+      else flush();
+      continue;
+    }
+    if (/\s/.test(char)) {
+      flush();
+      continue;
+    }
+    current += char;
+  }
+  flush();
   return tokens;
 }
 

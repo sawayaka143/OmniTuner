@@ -76,6 +76,19 @@ describe('KeyFinder', () => {
     expect(keyText()).not.toContain('NOTACHORD');
   });
 
+  it('parses a progression with slash chords and parenthesized alterations', () => {
+    setInput('Fmaj7 – Fm(maj7) – C/E – A7(#5)/C# – Dm9 – Fmaj7sus2(#11) – Cmaj9');
+    const hint = el().querySelector('.hint')?.textContent ?? '';
+    expect(hint).toContain('7 chords parsed · 7 readable');
+    expect(keyText()).not.toBe('');
+  });
+
+  it('counts a slash chord as a single chord', () => {
+    setInput('C/E, G');
+    const hint = el().querySelector('.hint')?.textContent ?? '';
+    expect(hint).toContain('2 chords parsed · 2 readable');
+  });
+
   it('shows an error state when no chord is readable', () => {
     setInput('NOTACHORD');
     expect(el().querySelector('.key-primary')).toBeNull();

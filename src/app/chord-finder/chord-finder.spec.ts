@@ -104,6 +104,18 @@ describe('ChordFinder', () => {
     expect(el().textContent).toContain('tones C E G A# D (F) (A)');
   });
 
+  it('generates a single card for slash chords and parenthesized alterations', () => {
+    const progressionInput = fieldInput('chords, comma-separated');
+    if (!progressionInput) throw new Error('progression input missing');
+    progressionInput.value = 'A7(#5)/C#, Dm9';
+    progressionInput.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    click('.generate');
+    expect(el().querySelectorAll('.chord-card').length).toBe(2);
+    expect(el().querySelectorAll('.chord-card .card-note.error').length).toBe(0);
+  });
+
   it('reports a tuning parse error instead of generating', () => {
     const tuningInput = fieldInput('custom');
     if (!tuningInput) throw new Error('tuning input missing');

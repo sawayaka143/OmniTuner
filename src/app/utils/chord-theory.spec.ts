@@ -139,6 +139,79 @@ describe('parseChord', () => {
 
     const theoretical = parseChord('Cm♭9');
     expect(theoretical.ok && theoretical.chord.intervals).toEqual([0, 3, 7, 13]);
+
+    const plus = parseChord('A7+5');
+    expect(plus.ok && plus.chord.quality).toBe('7#5');
+    expect(plus.ok && plus.chord.intervals).toEqual([0, 4, 8, 10]);
+
+    const minus = parseChord('C7-5');
+    expect(minus.ok && minus.chord.intervals).toEqual([0, 4, 6, 10]);
+  });
+
+  it('parses parenthesized alterations and modifiers', () => {
+    const sharp5 = parseChord('A7(#5)');
+    expect(sharp5.ok && sharp5.chord.quality).toBe('7#5');
+    expect(sharp5.ok && sharp5.chord.intervals).toEqual([0, 4, 8, 10]);
+
+    const sus2 = parseChord('Fmaj7sus2(#11)');
+    expect(sus2.ok && sus2.chord.intervals).toEqual([0, 2, 7, 11, 18]);
+    expect(sus2.ok && sus2.chord.optionalPcs).toEqual([11]);
+
+    const list = parseChord('C7(b9, 13)');
+    expect(list.ok && list.chord.intervals).toEqual([0, 4, 7, 10, 13, 21]);
+    expect(list.ok && list.chord.optionalPcs).toEqual([9]);
+
+    const sus4 = parseChord('Cm7sus4');
+    expect(sus4.ok && sus4.chord.quality).toBe('m7sus4');
+    expect(sus4.ok && sus4.chord.intervals).toEqual([0, 5, 7, 10]);
+
+    const sus9 = parseChord('Csus9');
+    expect(sus9.ok && sus9.chord.intervals).toEqual([0, 5, 7, 14]);
+  });
+
+  it('accepts sixth alterations in both spellings', () => {
+    const bare = parseChord('Emb6');
+    const wrapped = parseChord('Em(b6)');
+    expect(bare.ok && bare.chord.quality).toBe('minb6');
+    expect(bare.ok && bare.chord.intervals).toEqual([0, 3, 7, 8]);
+    expect(wrapped.ok && wrapped.chord.intervals).toEqual([0, 3, 7, 8]);
+
+    const sharp6 = parseChord('Cadd9#6');
+    expect(sharp6.ok && sharp6.chord.intervals).toEqual([0, 4, 7, 10, 14]);
+  });
+
+  it('accepts every minor-major spelling', () => {
+    for (const symbol of ['Fmmaj7', 'Fm(maj7)', 'Fm(maj)', 'FmM7', 'FmΔ7']) {
+      const result = parseChord(symbol);
+      expect(result.ok, symbol).toBe(true);
+      expect(result.ok && result.chord.quality, symbol).toBe('mMaj7');
+      expect(result.ok && result.chord.intervals, symbol).toEqual([0, 3, 7, 11]);
+    }
+  });
+
+  it('parses slash chords and keeps the bass out of the chord tones', () => {
+    const overE = parseChord('C/E');
+    expect(overE.ok && overE.chord.rootPc).toBe(0);
+    expect(overE.ok && overE.chord.quality).toBe('maj');
+    expect(overE.ok && overE.chord.pcs).toEqual([0, 4, 7]);
+    expect(overE.ok && overE.chord.bassPc).toBe(4);
+
+    const altered = parseChord('A7(#5)/C#');
+    expect(altered.ok && altered.chord.rootPc).toBe(9);
+    expect(altered.ok && altered.chord.bassPc).toBe(1);
+    expect(altered.ok && altered.chord.intervals).toEqual([0, 4, 8, 10]);
+
+    const sixthNine = parseChord('C6/9/G');
+    expect(sixthNine.ok && sixthNine.chord.quality).toBe('6/9');
+    expect(sixthNine.ok && sixthNine.chord.bassPc).toBe(7);
+    expect(sixthNine.ok && sixthNine.chord.intervals).toEqual([0, 4, 7, 9, 14]);
+
+    const flatBass = parseChord('C/Bb');
+    expect(flatBass.ok && flatBass.chord.bassPc).toBe(10);
+    expect(flatBass.ok && flatBass.chord.flats).toBe(true);
+
+    const plain = parseChord('C');
+    expect(plain.ok && plain.chord.bassPc).toBeUndefined();
   });
 
   it('rejects unknown qualities and non-symbols', () => {
@@ -148,6 +221,12 @@ describe('parseChord', () => {
     expect(notAChord.ok).toBe(false);
     const gibberish = parseChord('C7x9');
     expect(gibberish.ok).toBe(false);
+    const twoBasses = parseChord('C/E/G');
+    expect(twoBasses.ok).toBe(false);
+    const unbalanced = parseChord('C7(#5');
+    expect(unbalanced.ok).toBe(false);
+    const badBass = parseChord('C/H');
+    expect(badBass.ok).toBe(false);
   });
 });
 
@@ -177,6 +256,42 @@ describe('tokenizeProgression', () => {
   it('keeps minor-suffix dashes glued to their root', () => {
     expect(tokenizeProgression('C- G')).toEqual(['C-', 'G']);
     expect(tokenizeProgression('C- -> F')).toEqual(['C-', 'F']);
+  });
+
+  it('keeps slash chords glued, with or without spaces', () => {
+    expect(tokenizeProgression('C/E, Am')).toEqual(['C/E', 'Am']);
+    expect(tokenizeProgression('A7(#5) / C# – Dm9')).toEqual(['A7(#5)/C#', 'Dm9']);
+    expect(tokenizeProgression('Cmaj9 / G')).toEqual(['Cmaj9/G']);
+    expect(tokenizeProgression('C6/9/G')).toEqual(['C6/9/G']);
+  });
+
+  it('still treats a slash between chords as a separator', () => {
+    expect(tokenizeProgression('Cm/Gmaj')).toEqual(['Cm', 'Gmaj']);
+    expect(tokenizeProgression('C/Fm7')).toEqual(['C', 'Fm7']);
+  });
+
+  it('keeps commas and spaces inside parentheses', () => {
+    expect(tokenizeProgression('C7(b9, 13), Gm7')).toEqual(['C7(b9, 13)', 'Gm7']);
+  });
+
+  it('splits normally when parentheses are unbalanced', () => {
+    expect(tokenizeProgression('C7(#9, Dm7')).toEqual(['C7(#9', 'Dm7']);
+  });
+
+  it('tokenizes a real-world jazz progression', () => {
+    const tokens = tokenizeProgression(
+      'Fmaj7 – Fm(maj7) – C/E – A7(#5)/C# – Dm9 – Fmaj7sus2(#11) – Cmaj9',
+    );
+    expect(tokens).toEqual([
+      'Fmaj7',
+      'Fm(maj7)',
+      'C/E',
+      'A7(#5)/C#',
+      'Dm9',
+      'Fmaj7sus2(#11)',
+      'Cmaj9',
+    ]);
+    for (const token of tokens) expect(parseChord(token).ok, token).toBe(true);
   });
 });
 
