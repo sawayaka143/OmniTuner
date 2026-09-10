@@ -8,6 +8,7 @@ import {
   NavigationError,
   PreloadAllModules,
   Router,
+  TitleStrategy,
   provideRouter,
   withComponentInputBinding,
   withNavigationErrorHandler,
@@ -17,6 +18,7 @@ import {
 import { Capacitor } from '@capacitor/core';
 
 import { routes } from './app.routes';
+import { SeoTitleStrategy } from './services/seo-title-strategy';
 import { provideServiceWorker } from '@angular/service-worker';
 
 export const appConfig: ApplicationConfig = {
@@ -37,5 +39,6 @@ export const appConfig: ApplicationConfig = {
       enabled: !isDevMode() && !Capacitor.isNativePlatform(),
       registrationStrategy: 'registerWhenStable:30000',
     }),
+    { provide: TitleStrategy, useClass: SeoTitleStrategy },
   ],
 };

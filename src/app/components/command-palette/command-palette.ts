@@ -37,6 +37,10 @@ const PAGE_COMMANDS: readonly {
   { id: 'go-chords', label: 'Go to Chords', route: '/chords', icon: 'ti-grid-dots' },
   { id: 'go-scales', label: 'Go to Scales', route: '/scales', icon: 'ti-music' },
   { id: 'go-metronome', label: 'Go to Metronome', route: '/metronome', icon: 'ti-metronome' },
+  { id: 'go-about', label: 'Go to About', route: '/about', icon: 'ti-info-circle' },
+  { id: 'go-privacy', label: 'Go to Privacy policy', route: '/privacy', icon: 'ti-shield-lock' },
+  { id: 'go-terms', label: 'Go to Terms of service', route: '/terms', icon: 'ti-file-text' },
+  { id: 'go-contact', label: 'Go to Contact', route: '/contact', icon: 'ti-mail' },
 ];
 
 @Component({

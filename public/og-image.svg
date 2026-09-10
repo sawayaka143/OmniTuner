@@ -1,0 +1,135 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="1200"
+  height="630"
+  viewBox="0 0 1200 630"
+  role="img"
+  aria-label="OmniTuner — chromatic instrument tuner"
+>
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="34%" r="58%">
+      <stop offset="0%" stop-color="#ede8d0" stop-opacity="0.1" />
+      <stop offset="100%" stop-color="#ede8d0" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="blade" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#ede8d0" stop-opacity="0.25" />
+      <stop offset="55%" stop-color="#ede8d0" stop-opacity="0.75" />
+      <stop offset="100%" stop-color="#f5f5f3" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="#121211" />
+  <rect width="1200" height="630" fill="url(#glow)" />
+
+  <rect
+    x="40"
+    y="40"
+    width="1120"
+    height="550"
+    rx="26"
+    fill="#181817"
+    stroke="#2c2c29"
+    stroke-width="2"
+  />
+
+  <text
+    x="96"
+    y="128"
+    fill="#9a9a94"
+    font-family="'Instrument Sans', 'Segoe UI', system-ui, sans-serif"
+    font-size="19"
+    font-weight="600"
+    letter-spacing="6"
+  >
+    CHROMATIC INSTRUMENT TUNER
+  </text>
+
+  <g fill="#3c3c38">
+    <rect x="398" y="228" width="3" height="30" rx="1.5" />
+    <rect x="418" y="212" width="3" height="46" rx="1.5" />
+    <rect x="438" y="228" width="3" height="30" rx="1.5" />
+    <rect x="458" y="212" width="3" height="46" rx="1.5" />
+    <rect x="478" y="228" width="3" height="30" rx="1.5" />
+    <rect x="498" y="212" width="3" height="46" rx="1.5" />
+    <rect x="518" y="228" width="3" height="30" rx="1.5" />
+    <rect x="538" y="212" width="3" height="46" rx="1.5" />
+    <rect x="558" y="228" width="3" height="30" rx="1.5" />
+  </g>
+
+  <g fill="#4a4a45">
+    <rect x="578" y="204" width="4" height="62" rx="2" />
+    <rect x="618" y="204" width="4" height="62" rx="2" />
+  </g>
+
+  <g fill="#3c3c38">
+    <rect x="638" y="228" width="3" height="30" rx="1.5" />
+    <rect x="658" y="212" width="3" height="46" rx="1.5" />
+    <rect x="678" y="228" width="3" height="30" rx="1.5" />
+    <rect x="698" y="212" width="3" height="46" rx="1.5" />
+    <rect x="718" y="228" width="3" height="30" rx="1.5" />
+    <rect x="738" y="212" width="3" height="46" rx="1.5" />
+    <rect x="758" y="228" width="3" height="30" rx="1.5" />
+    <rect x="778" y="212" width="3" height="46" rx="1.5" />
+    <rect x="798" y="228" width="3" height="30" rx="1.5" />
+  </g>
+
+  <rect x="599" y="196" width="2" height="66" rx="1" fill="#ede8d0" />
+
+  <g transform="rotate(-12 600 296)">
+    <polygon points="598.6,214 601.4,214 603,296 597,296" fill="url(#blade)" />
+  </g>
+  <circle cx="600" cy="296" r="8" fill="#2c2c29" stroke="#ede8d0" stroke-width="2.5" />
+
+  <text
+    x="600"
+    y="434"
+    text-anchor="middle"
+    fill="#f5f5f3"
+    font-family="'Instrument Sans', 'Segoe UI', system-ui, sans-serif"
+    font-size="104"
+    font-weight="600"
+    letter-spacing="-3"
+  >
+    OmniTuner
+  </text>
+
+  <text
+    x="600"
+    y="492"
+    text-anchor="middle"
+    fill="#9a9a94"
+    font-family="'Instrument Sans', 'Segoe UI', system-ui, sans-serif"
+    font-size="27"
+    font-weight="500"
+    letter-spacing="7"
+  >
+    TUNER · SCALES · CHORDS · METRONOME
+  </text>
+
+  <line x1="96" y1="528" x2="1104" y2="528" stroke="#2c2c29" stroke-width="2" />
+
+  <text
+    x="96"
+    y="566"
+    fill="#94948e"
+    font-family="'Instrument Sans', 'Segoe UI', system-ui, sans-serif"
+    font-size="21"
+    font-weight="500"
+    letter-spacing="2"
+  >
+    omni-tuner.vercel.app
+  </text>
+
+  <text
+    x="1104"
+    y="566"
+    text-anchor="end"
+    fill="#94948e"
+    font-family="'Instrument Sans', 'Segoe UI', system-ui, sans-serif"
+    font-size="21"
+    font-weight="500"
+    letter-spacing="2"
+  >
+    Works offline · Installable
+  </text>
+</svg>

@@ -1,0 +1,42 @@
+<app-info-page kicker="About" title="OmniTuner" updated="September 2026">
+  <div class="prose">
+    <p>
+      OmniTuner is a free, installable practice workbench for guitar and other acoustic instruments.
+      It listens through your microphone, detects pitch in real time, and pairs a chromatic tuner
+      with three practice tools — all in a single web app that works offline after the first visit.
+    </p>
+
+    <h3>What's inside</h3>
+    <ul>
+      <li>
+        <strong>Tuner</strong> — real-time pitch detection with a cents readout, automatic or manual
+        string targeting, an adjustable reference pitch (A4), and in-tune sound and glow feedback.
+      </li>
+      <li>
+        <strong>Scales</strong> — an interactive fretboard for any root note and scale, with
+        playback, custom tunings, and note or degree labels.
+      </li>
+      <li>
+        <strong>Chords</strong> — voicing search across your tuning, shown as tab, dots, or a neck
+        diagram, plus progression building and key detection.
+      </li>
+      <li>
+        <strong>Metronome</strong> — tap tempo, meter and polyrhythm patterns, count-in,
+        subdivisions, and per-role sounds.
+      </li>
+    </ul>
+
+    <h3>How it works</h3>
+    <p>
+      OmniTuner is an Angular progressive web app. Pitch detection runs in a Web Worker over the Web
+      Audio API, so your audio is analysed on your device and never uploaded. There are no accounts,
+      no analytics, and no tracking — your settings live in your browser's local storage.
+    </p>
+
+    <h3>Source code</h3>
+    <p>
+      OmniTuner is open source. Browse the code, report an issue, or follow development on
+      <a [href]="repoUrl" target="_blank" rel="noopener noreferrer">GitHub</a>.
+    </p>
+  </div>
+</app-info-page>

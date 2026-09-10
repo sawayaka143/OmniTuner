@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://omni-tuner.vercel.app/sitemap.xml

@@ -448,3 +448,94 @@ describe('AudioCaptureService auto-start', () => {
     expect(service.isCapturing()).toBe(true);
   });
 });
+
+describe('AudioCaptureService capture errors', () => {
+  let service: AudioCaptureService;
+  let getUserMedia: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    vi.stubGlobal('Worker', MockWorker);
+    vi.stubGlobal('AudioContext', FakeAudioContext);
+    getUserMedia = vi.fn().mockResolvedValue(new FakeMediaStream());
+    Object.defineProperty(globalThis.navigator, 'mediaDevices', {
+      configurable: true,
+      value: { getUserMedia },
+    });
+    TestBed.configureTestingModule({});
+    service = TestBed.inject(AudioCaptureService);
+    service.isCapturing.set(false);
+    service.trackingState.set('idle');
+  });
+
+  afterEach(() => {
+    TestBed.resetTestingModule();
+    vi.unstubAllGlobals();
+    delete (globalThis.navigator as { mediaDevices?: unknown }).mediaDevices;
+  });
+
+  const rejectingWith = (name: string): void => {
+    getUserMedia.mockRejectedValue(Object.assign(new Error(name), { name }));
+  };
+
+  it('reports a denied permission distinctly and tells the user how to unblock it', async () => {
+    rejectingWith('NotAllowedError');
+
+    await service.startCapture();
+
+    expect(service.captureErrorCode()).toBe('denied');
+    expect(service.captureError()).toContain('blocked');
+    expect(service.isCapturing()).toBe(false);
+  });
+
+  it('reports a missing device as not-found', async () => {
+    rejectingWith('NotFoundError');
+
+    await service.startCapture();
+
+    expect(service.captureErrorCode()).toBe('not-found');
+    expect(service.captureError()).toContain('No microphone');
+  });
+
+  it('reports a busy device as in-use', async () => {
+    rejectingWith('NotReadableError');
+
+    await service.startCapture();
+
+    expect(service.captureErrorCode()).toBe('in-use');
+    expect(service.captureError()).toContain('in use');
+  });
+
+  it('falls back to a generic code for unrecognised failures', async () => {
+    rejectingWith('WeirdError');
+
+    await service.startCapture();
+
+    expect(service.captureErrorCode()).toBe('unknown');
+    expect(service.captureError()).toBeTruthy();
+  });
+
+  it('flags unsupported browsers instead of blaming permissions', async () => {
+    Object.defineProperty(globalThis.navigator, 'mediaDevices', {
+      configurable: true,
+      value: undefined,
+    });
+
+    await service.startCapture();
+
+    expect(service.captureErrorCode()).toBe('unsupported');
+    expect(getUserMedia).not.toHaveBeenCalled();
+  });
+
+  it('clears a previous error when capture starts successfully', async () => {
+    rejectingWith('NotAllowedError');
+    await service.startCapture();
+    expect(service.captureError()).not.toBeNull();
+
+    getUserMedia.mockResolvedValue(new FakeMediaStream());
+    await service.startCapture();
+
+    expect(service.captureError()).toBeNull();
+    expect(service.captureErrorCode()).toBeNull();
+    expect(service.isCapturing()).toBe(true);
+  });
+});

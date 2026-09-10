@@ -1,0 +1,23 @@
+<main class="app-main">
+  <article class="info-sheet" aria-labelledby="info-title">
+    <header class="info-head">
+      @if (kicker()) {
+        <p class="section-label">{{ kicker() }}</p>
+      }
+      <h2 class="info-title" id="info-title">{{ title() }}</h2>
+      @if (updated()) {
+        <p class="info-updated">Last updated {{ updated() }}</p>
+      }
+    </header>
+
+    <div class="info-body">
+      <ng-content />
+    </div>
+
+    <nav class="info-footer" aria-label="About OmniTuner">
+      @for (link of links; track link.path) {
+        <a [routerLink]="link.path">{{ link.label }}</a>
+      }
+    </nav>
+  </article>
+</main>

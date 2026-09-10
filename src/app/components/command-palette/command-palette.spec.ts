@@ -81,7 +81,8 @@ describe('CommandPalette', () => {
     expect(labels.some((label) => label.includes('Go to Tuner'))).toBe(true);
     expect(labels.some((label) => label.includes('Root note: C'))).toBe(true);
     expect(labels.some((label) => label.includes('Toggle theme'))).toBe(true);
-    expect(options().length).toBe(4 + 12 + 3);
+    expect(labels.some((label) => label.includes('Go to Privacy policy'))).toBe(true);
+    expect(options().length).toBe(4 + 4 + 12 + 3);
   });
 
   it('filters commands by query', async () => {

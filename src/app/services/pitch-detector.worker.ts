@@ -11,6 +11,7 @@ interface AnalyseResponse {
   confidence: number;
   inputLevel: number;
   sessionId: number;
+  error?: string;
 }
 
 self.onmessage = (event: MessageEvent<AnalyseRequest>) => {
@@ -20,12 +21,12 @@ self.onmessage = (event: MessageEvent<AnalyseRequest>) => {
     const result = analyseBuffer(buffer, sampleRate);
     self.postMessage({ ...result, sessionId } satisfies AnalyseResponse);
   } catch (err) {
-    console.error('[PitchDetectorWorker] analysis failed:', err);
     self.postMessage({
       frequency: null,
       confidence: 0,
       inputLevel: 0,
       sessionId,
+      error: err instanceof Error ? err.message : String(err),
     } satisfies AnalyseResponse);
   }
 };

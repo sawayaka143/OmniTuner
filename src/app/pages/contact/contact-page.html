@@ -1,0 +1,35 @@
+<app-info-page kicker="Support" title="Contact & feedback" updated="September 2026">
+  <div class="prose">
+    <p>
+      Found a bug, have an idea, or need a hand? Pick whichever channel suits you — both are read.
+    </p>
+
+    <h3>Report an issue on GitHub</h3>
+    <p>
+      Best for bugs and feature requests, since you can track progress and discuss in the open.
+      <a [href]="issuesUrl" target="_blank" rel="noopener noreferrer">Open an issue</a>.
+    </p>
+
+    <h3>Send an email</h3>
+    <p>
+      Prefer email? Write to <a [href]="'mailto:' + email">{{ email }}</a
+      >.
+    </p>
+
+    <h3>What to include</h3>
+    <ul>
+      <li>what you expected to happen, and what happened instead</li>
+      <li>your browser and version, and your operating system</li>
+      <li>the instrument and tuning involved, if relevant</li>
+      <li>steps to reproduce, plus a screenshot if you have one</li>
+    </ul>
+
+    <h3>Microphone not working?</h3>
+    <p>
+      Most microphone problems are a permission issue. Check your browser's site permissions for
+      OmniTuner and make sure microphone access is allowed — you may need to reload the page after
+      changing it. On iOS, Safari asks for permission again for each site, and the page must be
+      served over HTTPS.
+    </p>
+  </div>
+</app-info-page>

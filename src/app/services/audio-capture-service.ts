@@ -1,15 +1,28 @@
-import { Service, signal, DestroyRef, inject } from '@angular/core';
+import { Service, signal, DestroyRef, inject, isDevMode } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { KeepAwake } from '@capacitor-community/keep-awake';
 import { SILENCE_RMS } from './pitch-detection';
 
 export type PitchTrackingState = 'idle' | 'listening' | 'locked';
 
+export type CaptureErrorCode = 'unsupported' | 'denied' | 'not-found' | 'in-use' | 'unknown';
+
+const CAPTURE_ERROR_MESSAGES: Record<CaptureErrorCode, string> = {
+  unsupported:
+    "This browser can't access the microphone. Try the latest Chrome, Safari, Edge, or Firefox.",
+  denied:
+    'Microphone access was blocked. Allow it in your browser\u2019s site settings, then try again.',
+  'not-found': 'No microphone was found. Connect one and try again.',
+  'in-use': 'Your microphone is in use by another app. Close it and try again.',
+  unknown: 'Microphone access is unavailable. Check browser permissions and try again.',
+};
+
 interface PitchAnalysisResponse {
   frequency: number | null;
   confidence: number;
   inputLevel: number;
   sessionId: number;
+  error?: string;
 }
 
 const ANALYSIS_INTERVAL_MS = 45;
@@ -38,6 +51,7 @@ export class AudioCaptureService {
   readonly isCapturing = signal(false);
   readonly trackingState = signal<PitchTrackingState>('idle');
   readonly captureError = signal<string | null>(null);
+  readonly captureErrorCode = signal<CaptureErrorCode | null>(null);
 
   private audioContext: AudioContext | null = null;
   private analyser: AnalyserNode | null = null;
@@ -70,11 +84,15 @@ export class AudioCaptureService {
     this.worker = new Worker(new URL('./pitch-detector.worker', import.meta.url));
 
     this.worker.onmessage = (event: MessageEvent<PitchAnalysisResponse>) => {
-      const { frequency, confidence, inputLevel, sessionId } = event.data;
+      const { frequency, confidence, inputLevel, sessionId, error } = event.data;
       if (!this.isCapturing() || sessionId !== this.captureSession) return;
 
       this.analysisInFlight = false;
       this.clearAnalysisTimeout();
+
+      if (error && isDevMode()) {
+        console.error('[AudioCaptureService] analysis failed:', error);
+      }
 
       if (frequency === null || confidence <= 0) {
         this.handleDropout(inputLevel);
@@ -84,7 +102,7 @@ export class AudioCaptureService {
     };
 
     this.worker.onerror = (err: ErrorEvent) => {
-      console.error('[AudioCaptureService] worker error:', err.message);
+      if (isDevMode()) console.error('[AudioCaptureService] worker error:', err.message);
       this.analysisInFlight = false;
       this.clearAnalysisTimeout();
     };
@@ -102,8 +120,15 @@ export class AudioCaptureService {
     this.startInFlight = true;
     this.userStopped = false;
     this.captureError.set(null);
+    this.captureErrorCode.set(null);
 
     try {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw Object.assign(new Error('microphone API unavailable'), {
+          name: 'NotSupportedError',
+        });
+      }
+
       this.stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: false,
@@ -112,6 +137,10 @@ export class AudioCaptureService {
           channelCount: 1,
         },
       });
+
+      if (typeof AudioContext === 'undefined') {
+        throw Object.assign(new Error('AudioContext unavailable'), { name: 'NotSupportedError' });
+      }
 
       const ctx = new AudioContext({ latencyHint: 'interactive' });
 
@@ -139,7 +168,7 @@ export class AudioCaptureService {
       const source = ctx.createMediaStreamSource(this.stream);
 
       const trackSettings = this.stream.getAudioTracks()[0]?.getSettings();
-      if (trackSettings && (trackSettings.channelCount ?? 1) > 1) {
+      if (trackSettings && (trackSettings.channelCount ?? 1) > 1 && isDevMode()) {
         console.warn('[AudioCaptureService] mic delivered multi-channel; forcing mono downmix.');
       }
 
@@ -189,14 +218,37 @@ export class AudioCaptureService {
         }
       };
       document.addEventListener('visibilitychange', this.onVisibilityChange);
-    } catch {
+    } catch (error) {
       this.releaseAudioResources();
-      this.captureError.set(
-        'Microphone access is unavailable. Check browser permissions and try again.',
-      );
+      this.setCaptureError(this.captureErrorCodeFor(error));
       this.trackingState.set('idle');
     } finally {
       this.startInFlight = false;
+    }
+  }
+
+  private setCaptureError(code: CaptureErrorCode): void {
+    this.captureErrorCode.set(code);
+    this.captureError.set(CAPTURE_ERROR_MESSAGES[code]);
+    this.trackingState.set('idle');
+  }
+
+  private captureErrorCodeFor(error: unknown): CaptureErrorCode {
+    const name = error instanceof Error ? error.name : '';
+    switch (name) {
+      case 'NotAllowedError':
+      case 'SecurityError':
+        return 'denied';
+      case 'NotFoundError':
+      case 'OverconstrainedError':
+        return 'not-found';
+      case 'NotReadableError':
+      case 'AbortError':
+        return 'in-use';
+      case 'NotSupportedError':
+        return 'unsupported';
+      default:
+        return 'unknown';
     }
   }
 

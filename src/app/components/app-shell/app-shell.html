@@ -74,6 +74,8 @@
 
 <router-outlet />
 
+<app-offline-banner />
+
 <app-update-banner />
 
 <nav class="bottom-nav" aria-label="Primary navigation">
@@ -111,6 +113,7 @@
   (autoStartChange)="setAutoStart($event)"
   (themeChange)="setThemeFromSettings($event)"
   (openShortcuts)="openShortcutsFromSettings()"
+  (openPage)="openPageFromSettings($event)"
   (inTuneEnabledChange)="setInTuneEnabled($event)"
   (inTuneSoundChange)="setInTuneSound($event)"
   (inTuneGlowChange)="setInTuneGlow($event)"

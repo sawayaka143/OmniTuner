@@ -23,6 +23,7 @@ import { Brand } from '../brand/brand';
 import { SettingsPanel, type ThemeChangeEvent } from '../settings-panel/settings-panel';
 import { ShortcutHelp } from '../shortcut-help/shortcut-help';
 import { CommandPalette } from '../command-palette/command-palette';
+import { OfflineBanner } from '../offline-banner';
 import { UpdateBanner } from '../update-banner/update-banner';
 import { IconButton } from '../../ui/icon-button/icon-button';
 
@@ -57,6 +58,7 @@ const PAGE_ROUTES: readonly string[] = NAV_ITEMS.map((item) => item.path);
     ShortcutHelp,
     CommandPalette,
     UpdateBanner,
+    OfflineBanner,
     Brand,
     IconButton,
   ],
@@ -212,6 +214,11 @@ export class AppShell {
   protected openShortcutsFromSettings(): void {
     this.settingsOpen.set(false);
     this.shortcutOpen.set(true);
+  }
+
+  protected openPageFromSettings(path: string): void {
+    this.settingsOpen.set(false);
+    void this.router.navigate([path]);
   }
 
   private applyThemeWithReveal(

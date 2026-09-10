@@ -1,0 +1,19 @@
+@if (visible()) {
+  <section class="intro-card" aria-labelledby="intro-title">
+    <span class="app-icon ti ti-microphone intro-icon" aria-hidden="true"></span>
+
+    <div class="intro-copy">
+      <h3 id="intro-title">First time here?</h3>
+      <p>
+        Tap <strong>Start</strong> and allow microphone access when your browser asks. Your audio is
+        analysed on this device — it is never recorded or uploaded.
+      </p>
+      <p>
+        Then play a single string. OmniTuner shows the note it hears and which way to tune, and auto
+        mode picks the nearest string for you.
+      </p>
+    </div>
+
+    <button type="button" class="btn small" (click)="dismiss()">Got it</button>
+  </section>
+}

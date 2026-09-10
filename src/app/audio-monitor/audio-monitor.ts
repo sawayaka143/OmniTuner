@@ -14,6 +14,7 @@ import { TuningEditor, TuningEditorValue } from '../components/tunings-editor/tu
 import { PitchDisplay } from '../components/pitch-display/pitch-display';
 import { PitchMeter, Tick } from '../components/pitch-meter/pitch-meter';
 import { StringList } from '../components/string-list/string-list';
+import { TunerIntro } from './tuner-intro';
 import { Toggle } from '../ui/toggle/toggle';
 import { Tuning } from '../models/instrument.model';
 import {
@@ -60,6 +61,7 @@ const RELEASE_HYSTERESIS_MS = 135;
     PitchMeter,
     PitchDisplay,
     StringList,
+    TunerIntro,
     Toggle,
   ],
   templateUrl: './audio-monitor.html',
