@@ -7,3 +7,8 @@ bazel-out/
 .eslintcache
 android/
 assets/
+.vercel/
+AGENTS.md
+skills/
+tests/
+training_data*.json

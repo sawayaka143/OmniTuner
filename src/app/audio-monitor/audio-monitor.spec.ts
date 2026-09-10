@@ -24,8 +24,6 @@ describe('AudioMonitor', () => {
     impact = vi.fn().mockResolvedValue(undefined);
     notification = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal('Worker', MockWorker);
-    HTMLDialogElement.prototype.showModal = vi.fn();
-    HTMLDialogElement.prototype.close = vi.fn();
     getUserMedia = vi.fn().mockReturnValue(new Promise(() => {}));
     Object.defineProperty(navigator, 'mediaDevices', {
       configurable: true,

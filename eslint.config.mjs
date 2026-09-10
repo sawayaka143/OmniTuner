@@ -32,6 +32,10 @@ export default ts.config(
     ...config,
     files: HTML_FILES,
   })),
+  ...angular.configs.templateAccessibility.map((config) => ({
+    ...config,
+    files: HTML_FILES,
+  })),
   {
     files: TS_FILES,
     languageOptions: {
@@ -56,12 +60,21 @@ export default ts.config(
     },
   },
   {
-    files: ['**/*.spec.ts'],
+    files: ['**/*.spec.ts', 'src/test-setup.ts'],
     rules: {
       // jsdom dialog stubs assign prototype methods; fine for tests.
       '@typescript-eslint/unbound-method': 'off',
     },
   },
-  { files: HTML_FILES },
+  {
+    files: HTML_FILES,
+    rules: {
+      // Click-outside-to-dismiss and `stopPropagation` handlers live on
+      // non-focusable containers and panels by design — the focusable target
+      // is always a real button or link inside them.
+      '@angular-eslint/template/click-events-have-key-events': 'off',
+      '@angular-eslint/template/interactive-supports-focus': 'off',
+    },
+  },
   prettier,
 );

@@ -33,9 +33,6 @@ describe('AppShell', () => {
         { provide: HAPTICS_PLUGIN, useValue: { impact, notification: vi.fn() } },
       ],
     });
-    // jsdom does not implement <dialog> — stub what the panels call on open.
-    HTMLDialogElement.prototype.showModal = vi.fn();
-    HTMLDialogElement.prototype.close = vi.fn();
     router = TestBed.inject(Router);
     fixture = TestBed.createComponent(AppShell);
     await fixture.whenStable();
