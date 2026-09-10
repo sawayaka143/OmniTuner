@@ -14,7 +14,8 @@
         #input
         type="text"
         role="combobox"
-        aria-expanded="true"
+        aria-haspopup="listbox"
+        [attr.aria-expanded]="filteredCommands().length > 0"
         aria-controls="command-palette-listbox"
         [attr.aria-activedescendant]="activeOptionId()"
         aria-label="Search commands"
@@ -48,7 +49,7 @@
           <span class="option-group">{{ command.group }}</span>
         </li>
       } @empty {
-        <li class="palette-empty">No matching commands</li>
+        <li class="palette-empty" role="presentation">No matching commands</li>
       }
     </ul>
   </section>

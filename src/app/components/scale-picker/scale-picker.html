@@ -34,7 +34,7 @@
       (keydown)="onMenuKeydown($event)"
     >
       @for (group of groupedScales(); track group.label) {
-        <div class="dropdown-group">{{ group.label }}</div>
+        <div class="dropdown-group" role="presentation">{{ group.label }}</div>
         @for (scale of group.scales; track scale.id) {
           <button
             type="button"

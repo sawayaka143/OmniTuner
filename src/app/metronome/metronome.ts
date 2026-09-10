@@ -143,6 +143,8 @@ export class Metronome {
   readonly identityOption = (o: SelectOption<string>): string => o.label;
   readonly trackPatternOption = (o: SelectOption<string>): unknown => o.value;
   readonly trackPreset = (o: SelectOption<string>): unknown => o.value;
+  readonly compareSelectOption = (a: SelectOption<string>, b: SelectOption<string>): boolean =>
+    a.value === b.value;
 
   readonly soundRoles: readonly {
     key: 'downbeat' | 'beat' | 'subdivision' | 'poly';
@@ -169,10 +171,58 @@ export class Metronome {
   }
 
   toggleSoundOpen(key: string): void {
-    if (key === 'downbeat') this.soundDownbeatOpen.update((v) => !v);
-    else if (key === 'beat') this.soundBeatOpen.update((v) => !v);
-    else if (key === 'subdivision') this.soundSubdivOpen.update((v) => !v);
-    else this.soundPolyOpen.update((v) => !v);
+    const wasOpen = this.soundOpenFor(key)();
+    this.closeAllListboxes();
+    if (!wasOpen) this.soundOpenFor(key).set(true);
+  }
+
+  protected closeAllListboxes(): void {
+    this.denomOpen.set(false);
+    this.meterPresetOpen.set(false);
+    this.subdivOpen.set(false);
+    this.barPresetOpen.set(false);
+    this.polyPresetOpen.set(false);
+    this.soundDownbeatOpen.set(false);
+    this.soundBeatOpen.set(false);
+    this.soundSubdivOpen.set(false);
+    this.soundPolyOpen.set(false);
+    this.presetListOpen.set(false);
+  }
+
+  protected toggleDenom(): void {
+    const wasOpen = this.denomOpen();
+    this.closeAllListboxes();
+    if (!wasOpen) this.denomOpen.set(true);
+  }
+
+  protected toggleMeterPreset(): void {
+    const wasOpen = this.meterPresetOpen();
+    this.closeAllListboxes();
+    if (!wasOpen) this.meterPresetOpen.set(true);
+  }
+
+  protected toggleSubdiv(): void {
+    const wasOpen = this.subdivOpen();
+    this.closeAllListboxes();
+    if (!wasOpen) this.subdivOpen.set(true);
+  }
+
+  protected toggleBarPreset(): void {
+    const wasOpen = this.barPresetOpen();
+    this.closeAllListboxes();
+    if (!wasOpen) this.barPresetOpen.set(true);
+  }
+
+  protected togglePolyPreset(): void {
+    const wasOpen = this.polyPresetOpen();
+    this.closeAllListboxes();
+    if (!wasOpen) this.polyPresetOpen.set(true);
+  }
+
+  protected togglePresetList(): void {
+    const wasOpen = this.presetListOpen();
+    this.closeAllListboxes();
+    if (!wasOpen) this.presetListOpen.set(true);
   }
 
   readonly meterModel = computed(() =>

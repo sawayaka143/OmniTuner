@@ -46,15 +46,27 @@ export class TuningSelector {
   }
 
   protected onTriggerKeydown(event: KeyboardEvent): void {
-    if (this.open()) return;
-    if (event.key === 'Enter' || event.key === ' ' || event.key === 'ArrowDown') {
+    if (!this.open()) {
+      if (event.key === 'Enter' || event.key === ' ' || event.key === 'ArrowDown') {
+        event.preventDefault();
+        this.toggle.emit();
+      }
+      return;
+    }
+    if (event.key === 'Escape') {
       event.preventDefault();
-      this.toggle.emit();
+      this.requestClose();
     }
   }
 
+  protected requestClose(): void {
+    if (this.open()) this.toggle.emit();
+  }
+
   protected onMenuKeydown(event: KeyboardEvent): void {
-    const options = this.menu()?.nativeElement.querySelectorAll<HTMLElement>('[data-nav-item]');
+    const options = this.menu()?.nativeElement.querySelectorAll<HTMLElement>(
+      '[data-nav-item]:not([disabled])',
+    );
     if (!options || options.length === 0) return;
     const currentIdx = [...options].indexOf(event.target as HTMLElement);
 
@@ -72,11 +84,10 @@ export class TuningSelector {
       options[options.length - 1]?.focus();
     } else if (event.key === 'Escape') {
       event.preventDefault();
-      this.toggle.emit();
+      this.requestClose();
       this.triggerBtn()?.nativeElement.focus();
     } else if (event.key === 'Tab') {
-      this.toggle.emit();
-      this.triggerBtn()?.nativeElement.focus();
+      this.requestClose();
     }
   }
 }

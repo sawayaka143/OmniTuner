@@ -37,12 +37,14 @@
 
   <div class="dropdown-wrapper">
     <button
+      #trigger
       class="btn tuning-trigger"
       type="button"
       [attr.aria-expanded]="dropdownOpen()"
       aria-haspopup="listbox"
-      aria-controls="tuning-selector-menu"
+      [attr.aria-controls]="dropdownOpen() ? 'tuning-selector-menu' : null"
       (click)="toggleDropdown.emit(); $event.stopPropagation()"
+      (keydown)="onTriggerKeydown($event)"
     >
       <span class="value-wrap">
         <span class="dropdown-label">{{ currentTuning().label }}</span>
@@ -55,17 +57,25 @@
     </button>
 
     @if (dropdownOpen()) {
-      <div id="tuning-selector-menu" class="dropdown-menu card" (click)="$event.stopPropagation()">
+      <div
+        #menu
+        id="tuning-selector-menu"
+        class="dropdown-menu card"
+        role="menu"
+        aria-label="Choose or manage tuning"
+        (click)="$event.stopPropagation()"
+        (keydown)="onMenuKeydown($event)"
+      >
         <section class="menu-section" aria-labelledby="preset-tunings-heading">
           <h3 id="preset-tunings-heading">Presets</h3>
-          <ul class="tuning-options" role="listbox" aria-labelledby="preset-tunings-heading">
+          <ul class="tuning-options" role="none">
             @for (tuning of presetTunings(); track tuning.id) {
               <li role="none">
                 <button
                   class="tuning-option"
                   type="button"
-                  role="option"
-                  [attr.aria-selected]="selectedTuningId() === tuning.id"
+                  role="menuitemradio"
+                  [attr.aria-checked]="selectedTuningId() === tuning.id"
                   [class.selected]="selectedTuningId() === tuning.id"
                   (click)="chooseTuning($event, tuning.id)"
                 >
@@ -79,14 +89,14 @@
         <section class="menu-section custom-section" aria-labelledby="custom-tunings-heading">
           <h3 id="custom-tunings-heading">Saved custom</h3>
           @if (customTunings().length > 0) {
-            <ul class="tuning-options" role="listbox" aria-labelledby="custom-tunings-heading">
+            <ul class="tuning-options" role="none">
               @for (tuning of customTunings(); track tuning.id) {
                 <li role="none" class="custom-row">
                   <button
                     class="tuning-option"
                     type="button"
-                    role="option"
-                    [attr.aria-selected]="selectedTuningId() === tuning.id"
+                    role="menuitemradio"
+                    [attr.aria-checked]="selectedTuningId() === tuning.id"
                     [class.selected]="selectedTuningId() === tuning.id"
                     (click)="chooseTuning($event, tuning.id)"
                   >

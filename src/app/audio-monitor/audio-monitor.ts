@@ -446,6 +446,7 @@ export class AudioMonitor implements OnInit {
 
   protected deleteCustomTuning(tuningId: string): void {
     this.registry.deleteTuning(tuningId);
+    this.dropdownOpen.set(false);
   }
 
   protected saveCustomTuning(value: TuningEditorValue): void {

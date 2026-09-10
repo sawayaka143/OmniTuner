@@ -16,6 +16,11 @@
   top: var(--dropdown-menu-top, calc(100% + var(--space-2)));
   bottom: var(--dropdown-menu-bottom, auto);
   max-height: var(--dropdown-menu-max-height, 45vh);
+
+  &.open-up {
+    top: auto;
+    bottom: calc(100% + var(--space-2));
+  }
 }
 
 // Native <select> presentation (phones): the real control is invisible and

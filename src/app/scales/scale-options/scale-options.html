@@ -75,6 +75,7 @@
         [class.active]="labelOpen()"
         aria-haspopup="menu"
         [attr.aria-expanded]="labelOpen()"
+        [attr.aria-controls]="labelOpen() ? 'label-display-menu' : null"
         (click)="toggleLabelDropdown()"
         (keydown)="onLabelKeydown($event)"
       >
@@ -84,6 +85,7 @@
 
       @if (labelOpen()) {
         <div
+          id="label-display-menu"
           class="label-menu"
           role="menu"
           aria-label="Label display mode"

@@ -1,5 +1,6 @@
 import {
   Component,
+  DOCUMENT,
   ElementRef,
   computed,
   effect,
@@ -45,12 +46,15 @@ const PAGE_COMMANDS: readonly {
   styleUrl: './command-palette.scss',
 })
 export class CommandPalette {
+  private readonly document = inject(DOCUMENT);
   private readonly router = inject(Router);
   private readonly preferences = inject(ScalePreferences);
   private readonly themeService = inject(ThemeService);
 
   readonly open = input(false);
   readonly dismiss = output<void>();
+
+  private invoker: HTMLElement | null = null;
 
   protected readonly query = signal('');
   protected readonly activeIndex = signal(0);
@@ -128,12 +132,17 @@ export class CommandPalette {
       const dialog = this.dialog()?.nativeElement;
       if (!dialog) return;
       if (this.open() && !dialog.open) {
+        this.invoker = this.document.activeElement as HTMLElement | null;
         this.query.set('');
         this.activeIndex.set(0);
         dialog.showModal();
         this.input()?.nativeElement.focus();
       }
-      if (!this.open() && dialog.open) dialog.close();
+      if (!this.open() && dialog.open) {
+        dialog.close();
+        this.invoker?.focus?.();
+        this.invoker = null;
+      }
     });
 
     effect(() => {

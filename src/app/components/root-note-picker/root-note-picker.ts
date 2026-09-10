@@ -38,10 +38,16 @@ export class RootNotePicker {
   }
 
   protected onTriggerKeydown(event: KeyboardEvent): void {
-    if (this.open()) return;
-    if (event.key === 'Enter' || event.key === ' ' || event.key === 'ArrowDown') {
+    if (!this.open()) {
+      if (event.key === 'Enter' || event.key === ' ' || event.key === 'ArrowDown') {
+        event.preventDefault();
+        this.toggle.emit();
+      }
+      return;
+    }
+    if (event.key === 'Escape') {
       event.preventDefault();
-      this.toggle.emit();
+      this.close.emit();
     }
   }
 
@@ -63,10 +69,12 @@ export class RootNotePicker {
     } else if (event.key === 'End') {
       event.preventDefault();
       options[options.length - 1]?.focus();
-    } else if (event.key === 'Escape' || event.key === 'Tab') {
+    } else if (event.key === 'Escape') {
       event.preventDefault();
       this.close.emit();
       this.triggerBtn()?.nativeElement.focus();
+    } else if (event.key === 'Tab') {
+      this.close.emit();
     }
   }
 }

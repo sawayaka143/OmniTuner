@@ -70,21 +70,7 @@ export class ScaleOptions {
       return;
     }
 
-    const options = this.labelOptions;
-    const currentIdx = options.findIndex((opt) => opt.value === this.labelMode());
-
-    if (event.key === 'ArrowDown') {
-      event.preventDefault();
-      const nextIdx = (currentIdx + 1) % options.length;
-      this.labelModeChange.emit(options[nextIdx].value);
-    } else if (event.key === 'ArrowUp') {
-      event.preventDefault();
-      const nextIdx = (currentIdx - 1 + options.length) % options.length;
-      this.labelModeChange.emit(options[nextIdx].value);
-    } else if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      this.selectLabel(this.labelMode());
-    } else if (event.key === 'Escape') {
+    if (event.key === 'Escape') {
       event.preventDefault();
       this.labelOpen.set(false);
       this.triggerBtn()?.nativeElement.focus();

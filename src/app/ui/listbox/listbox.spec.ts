@@ -30,6 +30,8 @@ const FRUITS: readonly Fruit[] = [
       [optionAlt]="altFn"
       [optionGroup]="groupFn"
       [trackByFn]="trackFn"
+      [compareWith]="compareFn"
+      [disabled]="disabled()"
       [open]="open()"
       (toggle)="open.set(!open())"
       (select)="onSelect($event)"
@@ -42,10 +44,12 @@ class LbHost {
   readonly selected = signal<Fruit | null>(FRUITS[0]);
   readonly open = signal(false);
   readonly useGroups = signal(true);
+  readonly disabled = signal(false);
   readonly labelFn = (f: Fruit) => f.label;
   readonly altFn = (f: Fruit) => f.alt ?? null;
   readonly groupFn = (f: Fruit) => (this.useGroups() ? f.kind : null);
   readonly trackFn = (f: Fruit) => f.id;
+  readonly compareFn = (a: Fruit, b: Fruit): boolean => a.id === b.id;
   onSelect(f: Fruit): void {
     this.selected.set(f);
     this.open.set(false);
@@ -148,6 +152,75 @@ describe('Listbox', () => {
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelectorAll('.dropdown-group').length).toBe(0);
     expect(fixture.nativeElement.querySelectorAll('[role="option"]').length).toBe(4);
+  });
+
+  it('marks group headers as presentational', () => {
+    host.open.set(true);
+    fixture.detectChanges();
+    const groups = [...fixture.nativeElement.querySelectorAll('.dropdown-group')];
+    expect(groups.length).toBeGreaterThan(0);
+    for (const group of groups) {
+      expect((group as HTMLElement).getAttribute('role')).toBe('presentation');
+    }
+  });
+
+  it('opens on ArrowDown and closes on Escape from the trigger', () => {
+    const triggerEl = trigger();
+    triggerEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    expect(host.open()).toBe(true);
+    fixture.detectChanges();
+
+    const reopened = trigger();
+    reopened.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(host.open()).toBe(false);
+  });
+
+  it('moves focus with arrows and restores the trigger on Escape', () => {
+    host.open.set(true);
+    fixture.detectChanges();
+    const options = [
+      ...fixture.nativeElement.querySelectorAll('[role="option"]'),
+    ] as HTMLButtonElement[];
+    options[0].focus();
+    options[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    expect(document.activeElement).toBe(options[1]);
+
+    options[1].dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    fixture.detectChanges();
+    expect(host.open()).toBe(false);
+    expect(document.activeElement).toBe(trigger());
+  });
+
+  it('closes without stealing focus on Tab', () => {
+    host.open.set(true);
+    fixture.detectChanges();
+    const options = fixture.nativeElement.querySelectorAll('[role="option"]');
+    const first = options[0] as HTMLButtonElement;
+    first.focus();
+    first.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+    expect(host.open()).toBe(false);
+    expect(document.activeElement).toBe(first);
+  });
+
+  it('closes on outside pointerdown', () => {
+    host.open.set(true);
+    fixture.detectChanges();
+    document.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    expect(host.open()).toBe(false);
+  });
+
+  it('uses compareWith for selection instead of reference equality', () => {
+    host.selected.set({ ...FRUITS[2] });
+    host.open.set(true);
+    fixture.detectChanges();
+    const selected = fixture.nativeElement.querySelector('[role="option"][aria-selected="true"]');
+    expect(selected?.textContent).toContain('Raspberry');
+  });
+
+  it('disables the trigger when disabled', () => {
+    host.disabled.set(true);
+    fixture.detectChanges();
+    expect(trigger().disabled).toBe(true);
   });
 });
 

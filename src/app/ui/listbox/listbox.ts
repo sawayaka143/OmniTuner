@@ -3,6 +3,7 @@ import {
   DestroyRef,
   DOCUMENT,
   computed,
+  effect,
   ElementRef,
   inject,
   input,
@@ -34,6 +35,7 @@ const NATIVE_SELECT_QUERY = '(max-width: 760px)';
         <select
           class="native-select"
           [attr.aria-label]="ariaLabel()"
+          [disabled]="disabled()"
           (change)="onNativeChange($event)"
         >
           @for (group of grouped(); track group.label ?? '') {
@@ -62,6 +64,7 @@ const NATIVE_SELECT_QUERY = '(max-width: 760px)';
           [attr.aria-expanded]="open()"
           aria-haspopup="listbox"
           [attr.aria-controls]="open() ? menuId : null"
+          [disabled]="disabled()"
           (click)="toggle.emit(); $event.stopPropagation()"
           (keydown)="onTriggerKeydown($event)"
         >
@@ -85,6 +88,7 @@ const NATIVE_SELECT_QUERY = '(max-width: 760px)';
             #menu
             [id]="menuId"
             class="dropdown-menu card"
+            [class.open-up]="openUp()"
             role="listbox"
             [attr.aria-label]="ariaLabel()"
             (click)="$event.stopPropagation()"
@@ -92,7 +96,7 @@ const NATIVE_SELECT_QUERY = '(max-width: 760px)';
           >
             @for (group of grouped(); track group.label ?? '') {
               @if (group.label) {
-                <div class="dropdown-group">{{ group.label }}</div>
+                <div class="dropdown-group" role="presentation">{{ group.label }}</div>
               }
               @for (option of group.items; track trackByFn()(option)) {
                 <button
@@ -116,10 +120,14 @@ const NATIVE_SELECT_QUERY = '(max-width: 760px)';
     </div>
   `,
   styleUrl: './listbox.scss',
+  host: {
+    '(document:pointerdown)': 'onDocumentPointerdown($event)',
+  },
 })
 export class Listbox<T> {
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly hostRef = inject(ElementRef);
 
   readonly options = input.required<readonly T[]>();
   readonly value = input.required<T>();
@@ -131,6 +139,8 @@ export class Listbox<T> {
   readonly optionGroup = input<(o: T) => string | null>(() => null);
   readonly trackByFn = input.required<(o: T) => unknown>();
   readonly open = input.required<boolean>();
+  readonly disabled = input(false);
+  readonly compareWith = input<(a: T, b: T) => boolean>((a, b) => a === b);
 
   readonly toggle = output<void>();
   readonly select = output<T>();
@@ -138,6 +148,7 @@ export class Listbox<T> {
   protected readonly menuId = `app-listbox-menu-${nextListboxId++}`;
   protected readonly triggerBtn = viewChild<ElementRef<HTMLElement>>('trigger');
   protected readonly menu = viewChild<ElementRef<HTMLElement>>('menu');
+  protected readonly openUp = signal(false);
 
   // On phones the listbox renders a real <select> so the picker popup is the
   // platform's own UI. The custom menu remains the desktop presentation.
@@ -145,18 +156,35 @@ export class Listbox<T> {
 
   constructor() {
     const view = this.document.defaultView;
-    if (!view?.matchMedia) return;
-    try {
-      const media = view.matchMedia(NATIVE_SELECT_QUERY);
-      this.useNativeSelect.set(media.matches);
-      const listener = (event: MediaQueryListEvent): void => {
-        this.useNativeSelect.set(event.matches);
-      };
-      media.addEventListener('change', listener);
-      this.destroyRef.onDestroy(() => media.removeEventListener('change', listener));
-    } catch {
-      // matchMedia unavailable — keep the custom menu everywhere.
+    if (view?.matchMedia) {
+      try {
+        const media = view.matchMedia(NATIVE_SELECT_QUERY);
+        this.useNativeSelect.set(media.matches);
+        const listener = (event: MediaQueryListEvent): void => {
+          this.useNativeSelect.set(event.matches);
+        };
+        media.addEventListener('change', listener);
+        this.destroyRef.onDestroy(() => media.removeEventListener('change', listener));
+      } catch {
+        // matchMedia unavailable — keep the custom menu everywhere.
+      }
     }
+
+    effect(() => {
+      const menu = this.open() && !this.useNativeSelect() ? this.menu() : undefined;
+      if (!menu) {
+        this.openUp.set(false);
+        return;
+      }
+      const el = menu.nativeElement;
+      const selected =
+        el.querySelector<HTMLButtonElement>('[aria-selected="true"]') ??
+        el.querySelector<HTMLButtonElement>('[role="option"]');
+      selected?.focus();
+      const rect = el.getBoundingClientRect();
+      const viewportHeight = this.document.defaultView?.innerHeight ?? 0;
+      this.openUp.set(viewportHeight > 0 && rect.bottom > viewportHeight - 8);
+    });
   }
 
   protected readonly grouped = computed(() => {
@@ -179,8 +207,20 @@ export class Listbox<T> {
   });
 
   protected onTriggerKeydown(event: KeyboardEvent): void {
-    if (this.open()) return;
-    if (event.key === 'Enter' || event.key === ' ' || event.key === 'ArrowDown') {
+    if (this.disabled()) return;
+    if (!this.open()) {
+      if (
+        event.key === 'Enter' ||
+        event.key === ' ' ||
+        event.key === 'ArrowDown' ||
+        event.key === 'ArrowUp'
+      ) {
+        event.preventDefault();
+        this.toggle.emit();
+      }
+      return;
+    }
+    if (event.key === 'Escape') {
       event.preventDefault();
       this.toggle.emit();
     }
@@ -213,19 +253,31 @@ export class Listbox<T> {
       event.preventDefault();
       this.closeMenu();
     } else if (event.key === 'Tab') {
-      this.closeMenu();
+      this.requestClose();
     }
   }
 
+  protected onDocumentPointerdown(event: PointerEvent): void {
+    if (!this.open() || this.useNativeSelect()) return;
+    const host = this.hostRef.nativeElement as HTMLElement;
+    if (host.contains(event.target as Node)) return;
+    this.toggle.emit();
+  }
+
   protected closeMenu(): void {
-    if (this.open()) {
-      this.toggle.emit();
+    if (this.requestClose()) {
       this.triggerBtn()?.nativeElement.focus();
     }
   }
 
+  protected requestClose(): boolean {
+    if (!this.open()) return false;
+    this.toggle.emit();
+    return true;
+  }
+
   protected isSelected(option: T): boolean {
-    return this.value() === option;
+    return this.compareWith()(this.value(), option);
   }
 
   protected nativeValue(option: T): string {

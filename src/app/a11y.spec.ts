@@ -7,6 +7,9 @@ import { Segmented } from './ui/segmented/segmented';
 import { Toggle } from './ui/toggle/toggle';
 import { TextField } from './ui/text-field/text-field';
 import { IconButton } from './ui/icon-button/icon-button';
+import { PillButton } from './ui/pill-button/pill-button';
+import { StepButton } from './ui/step-button/step-button';
+import { ColorField } from './ui/color-field/color-field';
 
 const ELEMENTS: readonly string[] = ['Peach', 'Plum', 'Lemon', 'Lime'];
 
@@ -35,8 +38,11 @@ const ELEMENTS: readonly string[] = ['Peach', 'Plum', 'Lemon', 'Lime'];
     <app-toggle [checked]="toggled()" label="Enable sound" (change)="toggled.set($event)" />
     <app-text-field label="Name" [value]="name()" (valueChange)="name.set($event)" />
     <app-icon-button icon="x" label="Close" (activate)="closed.set(true)" />
+    <app-pill-button label="Apply" />
+    <app-step-button ariaLabel="Step" [direction]="1" [value]="1" [min]="0" [max]="10" />
+    <app-color-field label="Accent color" [value]="color()" (valueChange)="color.set($event)" />
   `,
-  imports: [Listbox, Segmented, Toggle, TextField, IconButton],
+  imports: [Listbox, Segmented, Toggle, TextField, IconButton, PillButton, StepButton, ColorField],
 })
 class A11yHost {
   readonly items = ELEMENTS.map((label, id) => ({ id, label }));
@@ -47,6 +53,8 @@ class A11yHost {
   readonly toggled = signal(false);
   readonly name = signal('');
   readonly closed = signal(false);
+  readonly stepped = signal(false);
+  readonly color = signal('#ff0000');
   readonly labelFn = (f: { id: number; label: string }) => f.label;
   readonly trackFn = (f: { id: number; label: string }) => f.id;
   readonly identityFn = <T>(value: T): T => value;

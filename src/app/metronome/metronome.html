@@ -1,4 +1,4 @@
-<main class="app-main">
+<main class="app-main" (click)="closeAllListboxes()">
   <section class="workbench" aria-label="Metronome">
     <header class="workbench-header">
       <div>
@@ -69,7 +69,7 @@
               [optionLabel]="denomLabel"
               [trackByFn]="trackDenom"
               [open]="denomOpen()"
-              (toggle)="denomOpen.update((v) => !v)"
+              (toggle)="toggleDenom()"
               (select)="setDenom($event)"
             />
           </div>
@@ -82,7 +82,7 @@
             [optionLabel]="meterLabel"
             [trackByFn]="trackMeter"
             [open]="meterPresetOpen()"
-            (toggle)="meterPresetOpen.update((v) => !v)"
+            (toggle)="toggleMeterPreset()"
             (select)="applyMeterPreset($event)"
           />
         </div>
@@ -98,7 +98,7 @@
             [optionLabel]="subdivOptionLabel"
             [trackByFn]="trackSubdiv"
             [open]="subdivOpen()"
-            (toggle)="subdivOpen.update((v) => !v)"
+            (toggle)="toggleSubdiv()"
             (select)="setDivisions($event)"
           />
         </div>
@@ -113,8 +113,9 @@
             [triggerLabel]="barPreset()"
             [optionLabel]="identityOption"
             [trackByFn]="trackPatternOption"
+            [compareWith]="compareSelectOption"
             [open]="barPresetOpen()"
-            (toggle)="barPresetOpen.update((v) => !v)"
+            (toggle)="toggleBarPreset()"
             (select)="applyBarPresetOption($event)"
           />
           <div class="pat-edit">
@@ -184,8 +185,9 @@
                 [triggerLabel]="timeSig().numerator + ':' + poly().events"
                 [optionLabel]="identityOption"
                 [trackByFn]="trackPatternOption"
+                [compareWith]="compareSelectOption"
                 [open]="polyPresetOpen()"
-                (toggle)="polyPresetOpen.update((v) => !v)"
+                (toggle)="togglePolyPreset()"
                 (select)="applyPolyPresetOption($event)"
               />
             </div>
@@ -212,7 +214,7 @@
               [options]="presetOptions()"
               [value]="
                 presetOptions().find((o) => o.value === selectedPresetId()) ?? {
-                  value: '',
+                  value: selectedPresetId() ?? '',
                   label: presetTriggerLabel(),
                 }
               "
@@ -221,8 +223,9 @@
               [triggerLabel]="presetTriggerLabel()"
               [optionLabel]="identityOption"
               [trackByFn]="trackPreset"
+              [compareWith]="compareSelectOption"
               [open]="presetListOpen()"
-              (toggle)="presetListOpen.update((v) => !v)"
+              (toggle)="togglePresetList()"
               (select)="applyPresetOption($event)"
             />
             <div class="pat-btns">
