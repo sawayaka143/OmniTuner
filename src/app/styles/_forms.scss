@@ -20,8 +20,8 @@
   font-family: var(--font);
   font-size: var(--text-sm);
   transition:
-    box-shadow var(--dur-med) ease,
-    filter var(--dur-med) ease;
+    box-shadow var(--dur-med) var(--ease-standard),
+    filter var(--dur-med) var(--ease-standard);
 
   &::placeholder {
     color: var(--text-dim);

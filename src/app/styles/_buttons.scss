@@ -15,10 +15,10 @@
   letter-spacing: var(--tracking-narrow);
   cursor: pointer;
   transition:
-    filter var(--dur-med) ease,
-    box-shadow var(--dur-med) ease,
-    transform var(--dur-fast) ease,
-    opacity var(--dur-med) ease;
+    filter var(--dur-med) var(--ease-standard),
+    box-shadow var(--dur-med) var(--ease-standard),
+    transform var(--dur-fast) var(--ease-standard),
+    opacity var(--dur-med) var(--ease-standard);
 
   &:hover {
     filter: brightness(1.08);
@@ -75,10 +75,10 @@
   font-family: var(--font);
   cursor: pointer;
   transition:
-    filter var(--dur-med) ease,
-    box-shadow var(--dur-med) ease,
-    color var(--dur-med) ease,
-    transform var(--dur-fast) ease;
+    filter var(--dur-med) var(--ease-standard),
+    box-shadow var(--dur-med) var(--ease-standard),
+    color var(--dur-med) var(--ease-standard),
+    transform var(--dur-fast) var(--ease-standard);
 
   .app-icon {
     font-size: var(--text-lg);
@@ -121,8 +121,13 @@
   cursor: pointer;
   text-align: start;
   transition:
-    background-color var(--dur-med) ease,
-    color var(--dur-med) ease;
+    background-color var(--dur-med) var(--ease-standard),
+    color var(--dur-med) var(--ease-standard),
+    transform var(--dur-fast) var(--ease-standard);
+
+  &:active {
+    transform: scale(0.98);
+  }
 
   &:hover {
     background-color: var(--surface-container);

@@ -83,7 +83,11 @@
   --dur-fast: 100ms;
   --dur-med: 150ms;
   --dur-slow: 250ms;
+  --dur-menu: 200ms;
+  --dur-exit: 120ms;
   --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
 
   --shadow-flat: 0 2px 8px rgba(0, 0, 0, 0.4);
   --shadow-lift: 0 22px 62px rgba(0, 0, 0, 0.28);
@@ -184,6 +188,9 @@ html[data-theme='light'] {
   --chord-stage-glow: 0 0 34px color-mix(in srgb, var(--scale-accent) 18%, transparent);
   --workbench-inset: var(--surface-container);
 
+  --glass-bg: color-mix(in srgb, var(--surface-container-low) 35%, transparent);
+  --glass-bg-hover: color-mix(in srgb, var(--surface-container) 48%, transparent);
+  --glass-bg-strong: color-mix(in srgb, var(--surface-container-low) 62%, transparent);
   --glass-sheen: inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
@@ -352,10 +359,10 @@ h3 {
   text-decoration: none;
   cursor: pointer;
   transition:
-    filter var(--dur-med) ease,
-    box-shadow var(--dur-med) ease,
-    color var(--dur-med) ease,
-    transform var(--dur-fast) ease;
+    filter var(--dur-med) var(--ease-standard),
+    box-shadow var(--dur-med) var(--ease-standard),
+    color var(--dur-med) var(--ease-standard),
+    transform var(--dur-fast) var(--ease-standard);
   user-select: none;
 }
 

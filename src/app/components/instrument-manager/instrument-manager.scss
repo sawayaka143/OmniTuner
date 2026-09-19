@@ -18,6 +18,22 @@
     background: var(--backdrop);
     backdrop-filter: blur(5px);
   }
+
+  &.closing {
+    pointer-events: none;
+
+    .manager-card {
+      animation: omni-dialog-out var(--dur-exit) var(--ease-exit) forwards;
+    }
+
+    @media (max-width: 760px) {
+      animation: omni-sheet-down var(--dur-exit) var(--ease-exit) forwards;
+
+      .manager-card {
+        animation: none;
+      }
+    }
+  }
 }
 
 .manager-card {

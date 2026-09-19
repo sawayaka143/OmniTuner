@@ -2,8 +2,10 @@
   #dialog
   class="shortcut-dialog"
   aria-labelledby="shortcut-help-title"
+  [class.closing]="exit.closing()"
   (cancel)="requestDismiss($event)"
   (click)="onDialogClick($event)"
+  (animationend)="onDialogAnimationend($event)"
 >
   <section class="shortcut-sheet">
     <header class="shortcut-header">

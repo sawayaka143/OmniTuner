@@ -16,6 +16,11 @@ let nextListboxId = 0;
 
 const NATIVE_SELECT_QUERY = '(max-width: 760px)';
 
+// Matches the --dur-exit token used by the .closing exit animation, plus a
+// safety buffer so the menu always unmounts even if animationend never fires
+// (e.g. prefers-reduced-motion removes the animation).
+const MENU_EXIT_FALLBACK_MS = 250;
+
 @Component({
   selector: 'app-listbox',
   template: `
@@ -65,7 +70,7 @@ const NATIVE_SELECT_QUERY = '(max-width: 760px)';
           aria-haspopup="listbox"
           [attr.aria-controls]="open() ? menuId : null"
           [disabled]="disabled()"
-          (click)="toggle.emit(); $event.stopPropagation()"
+          (click)="onTriggerClick($event)"
           (keydown)="onTriggerKeydown($event)"
         >
           <span class="button-copy">
@@ -83,16 +88,18 @@ const NATIVE_SELECT_QUERY = '(max-width: 760px)';
           ></span>
         </button>
 
-        @if (open()) {
+        @if (open() || closing()) {
           <div
             #menu
             [id]="menuId"
             class="dropdown-menu card"
             [class.open-up]="openUp()"
+            [class.closing]="closing()"
             role="listbox"
             [attr.aria-label]="ariaLabel()"
             (click)="$event.stopPropagation()"
             (keydown)="onMenuKeydown($event)"
+            (animationend)="onMenuAnimationend($event)"
           >
             @for (group of grouped(); track group.label ?? '') {
               @if (group.label) {
@@ -105,7 +112,7 @@ const NATIVE_SELECT_QUERY = '(max-width: 760px)';
                   class="dropdown-item"
                   [class.selected]="isSelected(option)"
                   [attr.aria-selected]="isSelected(option)"
-                  (click)="select.emit(option)"
+                  (click)="onItemSelect(option)"
                 >
                   <span>{{ optionLabel()(option) }}</span>
                   @if (optionAlt()?.(option); as alt) {
@@ -150,6 +157,10 @@ export class Listbox<T> {
   protected readonly menu = viewChild<ElementRef<HTMLElement>>('menu');
   protected readonly openUp = signal(false);
 
+  // Keeps the menu mounted for the exit animation after open() flips false.
+  protected readonly closing = signal(false);
+  private closeTimer: ReturnType<typeof setTimeout> | null = null;
+
   // On phones the listbox renders a real <select> so the picker popup is the
   // platform's own UI. The custom menu remains the desktop presentation.
   protected readonly useNativeSelect = signal(false);
@@ -171,9 +182,14 @@ export class Listbox<T> {
     }
 
     effect(() => {
-      const menu = this.open() && !this.useNativeSelect() ? this.menu() : undefined;
+      if (this.open()) this.finishMenuExit();
+      const menu = this.open() || this.closing() ? this.menu() : undefined;
       if (!menu) {
         this.openUp.set(false);
+        return;
+      }
+      if (!this.open()) {
+        // Exit animation in flight — keep the menu geometry, skip focus.
         return;
       }
       const el = menu.nativeElement;
@@ -185,6 +201,8 @@ export class Listbox<T> {
       const viewportHeight = this.document.defaultView?.innerHeight ?? 0;
       this.openUp.set(viewportHeight > 0 && rect.bottom > viewportHeight - 8);
     });
+
+    this.destroyRef.onDestroy(() => this.finishMenuExit());
   }
 
   protected readonly grouped = computed(() => {
@@ -222,7 +240,7 @@ export class Listbox<T> {
     }
     if (event.key === 'Escape') {
       event.preventDefault();
-      this.toggle.emit();
+      this.requestClose();
     }
   }
 
@@ -261,7 +279,22 @@ export class Listbox<T> {
     if (!this.open() || this.useNativeSelect()) return;
     const host = this.hostRef.nativeElement as HTMLElement;
     if (host.contains(event.target as Node)) return;
+    this.requestClose();
+  }
+
+  protected onTriggerClick(event: MouseEvent): void {
+    event.stopPropagation();
+    if (this.open()) this.beginMenuExit();
     this.toggle.emit();
+  }
+
+  protected onItemSelect(option: T): void {
+    this.beginMenuExit();
+    this.select.emit(option);
+  }
+
+  protected onMenuAnimationend(event: AnimationEvent): void {
+    if (event.animationName === 'dropdown-disappear') this.finishMenuExit();
   }
 
   protected closeMenu(): void {
@@ -272,8 +305,24 @@ export class Listbox<T> {
 
   protected requestClose(): boolean {
     if (!this.open()) return false;
+    this.beginMenuExit();
     this.toggle.emit();
     return true;
+  }
+
+  private beginMenuExit(): void {
+    if (this.closing() || this.useNativeSelect()) return;
+    this.closing.set(true);
+    const view = this.document.defaultView;
+    this.closeTimer = view?.setTimeout(() => this.finishMenuExit(), MENU_EXIT_FALLBACK_MS) ?? null;
+  }
+
+  private finishMenuExit(): void {
+    if (this.closeTimer !== null) {
+      this.document.defaultView?.clearTimeout(this.closeTimer);
+      this.closeTimer = null;
+    }
+    this.closing.set(false);
   }
 
   protected isSelected(option: T): boolean {

@@ -49,11 +49,21 @@
 @keyframes omni-sheet-up {
   from {
     transform: translateY(48px);
-    opacity: 0;
   }
 
   to {
     transform: translateY(0);
-    opacity: 1;
+  }
+}
+
+@keyframes omni-sheet-down {
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes omni-dialog-out {
+  to {
+    transform: scale(0.98) translateY(6px);
   }
 }

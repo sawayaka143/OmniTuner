@@ -1,24 +1,35 @@
 @use './glass' as *;
 
 @keyframes dropdown-appear {
-  from {
-    opacity: 0;
-    transform: translateY(calc(var(--space-1) * -1));
+  0% {
+    transform: translateY(-5px) scale(0.98, 0.9);
   }
+
+  60% {
+    transform: translateY(1px) scale(1.005, 1.015);
+  }
+
+  100% {
+    transform: translateY(0) scale(1, 1);
+  }
+}
+
+@keyframes dropdown-disappear {
+  from {
+    transform: translateY(0) scale(1, 1);
+  }
+
   to {
-    opacity: 1;
-    transform: translateY(0);
+    transform: translateY(-2px) scale(0.99, 0.95);
   }
 }
 
 @keyframes dropdown-sheet-appear {
   from {
-    opacity: 0;
     transform: translateY(32px);
   }
 
   to {
-    opacity: 1;
     transform: translateY(0);
   }
 }
@@ -43,8 +54,8 @@
   font-size: var(--text-sm);
   cursor: pointer;
   transition:
-    box-shadow var(--dur-med) ease,
-    transform var(--dur-fast) ease;
+    box-shadow var(--dur-med) var(--ease-standard),
+    transform var(--dur-fast) var(--ease-standard);
 
   &:hover {
     background: var(--glass-bg-hover);
@@ -82,7 +93,8 @@
   border-radius: var(--r-md);
   @include glass-surface(var(--glass-bg-strong));
   box-shadow: var(--glass-sheen), var(--shadow-flat);
-  animation: dropdown-appear var(--dur-med) ease-out;
+  transform-origin: top center;
+  animation: dropdown-appear var(--dur-menu) ease-out;
 
   @media (prefers-reduced-motion: reduce) {
     animation: none;
@@ -103,6 +115,7 @@
     padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom));
     border: 0;
     border-radius: 20px 20px 0 0;
+    transform-origin: bottom center;
     box-shadow: 0 -24px 70px rgba(0, 0, 0, 0.55);
     animation: dropdown-sheet-appear var(--dur-slow) var(--ease-spring);
 
@@ -140,8 +153,13 @@
   text-align: left;
   cursor: pointer;
   transition:
-    background-color var(--dur-med) ease,
-    color var(--dur-med) ease;
+    background-color var(--dur-med) var(--ease-standard),
+    color var(--dur-med) var(--ease-standard),
+    transform var(--dur-fast) var(--ease-standard);
+
+  &:active {
+    transform: scale(0.98);
+  }
 
   &:hover,
   &:focus-visible,

@@ -1,5 +1,7 @@
 import {
   Component,
+  DestroyRef,
+  DOCUMENT,
   computed,
   effect,
   ElementRef,
@@ -19,6 +21,7 @@ import {
 import { InstrumentRegistry } from '../../services/instrument-registry';
 import { StringEditor, StringEditorValue } from '../string-editor/string-editor';
 import { IconButton } from '../../ui/icon-button/icon-button';
+import { createDialogExit } from '../../ui/dialog-exit';
 
 type ManagerMode = 'list' | 'create' | 'edit';
 
@@ -84,7 +87,14 @@ export class InstrumentManager {
 
   private readonly dialog = viewChild<ElementRef<HTMLDialogElement>>('dialog');
 
+  private readonly document = inject(DOCUMENT);
+  private readonly destroyRef = inject(DestroyRef);
+
+  protected readonly exit = createDialogExit(this.document.defaultView, () => this.dismiss.emit());
+
   constructor() {
+    this.destroyRef.onDestroy(() => this.exit.destroy());
+
     effect(() => {
       const dialog = this.dialog()?.nativeElement;
       if (!dialog) return;
@@ -136,8 +146,14 @@ export class InstrumentManager {
 
   protected requestDismiss(event?: Event): void {
     event?.preventDefault();
+    const dialog = this.dialog()?.nativeElement;
+    if (!dialog?.open || this.exit.closing()) return;
     this.mode.set('list');
-    this.dismiss.emit();
+    this.exit.begin();
+  }
+
+  protected onDialogAnimationend(event: AnimationEvent): void {
+    if (this.exit.ownsAnimation(event)) this.exit.finish();
   }
 
   protected onDialogClick(event: MouseEvent): void {

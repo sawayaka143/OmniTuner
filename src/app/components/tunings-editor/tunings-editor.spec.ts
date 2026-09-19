@@ -91,6 +91,7 @@ describe('TuningEditor', () => {
       'button[aria-label="Close tuning editor"]',
     ) as HTMLButtonElement;
     close.click();
+    await new Promise((resolve) => setTimeout(resolve, 300));
     await fixture.whenStable();
     fixture.detectChanges();
 
@@ -122,6 +123,7 @@ describe('TuningEditor', () => {
     const editor = fixture.debugElement.query(By.css('app-string-editor'))
       .componentInstance as StringEditor;
     editor.cancel.emit();
+    await new Promise((resolve) => setTimeout(resolve, 300));
     await fixture.whenStable();
     fixture.detectChanges();
 

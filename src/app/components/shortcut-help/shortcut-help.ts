@@ -1,5 +1,16 @@
-import { Component, effect, ElementRef, input, output, viewChild } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  DOCUMENT,
+  effect,
+  ElementRef,
+  inject,
+  input,
+  output,
+  viewChild,
+} from '@angular/core';
 import { IconButton } from '../../ui/icon-button/icon-button';
+import { createDialogExit } from '../../ui/dialog-exit';
 
 interface ShortcutEntry {
   readonly keys: readonly string[];
@@ -16,7 +27,11 @@ export class ShortcutHelp {
   readonly open = input(false);
   readonly dismiss = output<void>();
 
+  private readonly document = inject(DOCUMENT);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly dialog = viewChild<ElementRef<HTMLDialogElement>>('dialog');
+
+  protected readonly exit = createDialogExit(this.document.defaultView, () => this.dismiss.emit());
 
   protected readonly entries: readonly ShortcutEntry[] = [
     { keys: ['Ctrl', 'K'], description: 'Command palette' },
@@ -30,6 +45,8 @@ export class ShortcutHelp {
   ];
 
   constructor() {
+    this.destroyRef.onDestroy(() => this.exit.destroy());
+
     effect(() => {
       const dialog = this.dialog()?.nativeElement;
       if (!dialog) return;
@@ -40,7 +57,13 @@ export class ShortcutHelp {
 
   protected requestDismiss(event?: Event): void {
     event?.preventDefault();
-    this.dismiss.emit();
+    const dialog = this.dialog()?.nativeElement;
+    if (!dialog?.open || this.exit.closing()) return;
+    this.exit.begin();
+  }
+
+  protected onDialogAnimationend(event: AnimationEvent): void {
+    if (this.exit.ownsAnimation(event)) this.exit.finish();
   }
 
   protected onDialogClick(event: MouseEvent): void {

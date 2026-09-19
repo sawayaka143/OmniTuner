@@ -20,6 +20,16 @@
   &.open-up {
     top: auto;
     bottom: calc(100% + var(--space-2));
+    transform-origin: bottom center;
+  }
+
+  &.closing {
+    pointer-events: none;
+    animation: dropdown-disappear var(--dur-exit) var(--ease-exit) forwards;
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+    }
   }
 }
 

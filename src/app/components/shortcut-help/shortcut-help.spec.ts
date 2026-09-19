@@ -61,7 +61,7 @@ describe('ShortcutHelp', () => {
     expect(dialog().open).toBe(false);
   });
 
-  it('emits dismiss from the close button', () => {
+  it('emits dismiss from the close button', async () => {
     fixture.componentInstance.open.set(true);
     fixture.detectChanges();
 
@@ -69,6 +69,7 @@ describe('ShortcutHelp', () => {
       '.shortcut-header app-icon-button button',
     ) as HTMLButtonElement;
     close.click();
+    await new Promise((resolve) => setTimeout(resolve, 300));
 
     expect(fixture.componentInstance.closed).toBe(true);
   });

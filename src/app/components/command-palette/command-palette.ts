@@ -1,5 +1,6 @@
 import {
   Component,
+  DestroyRef,
   DOCUMENT,
   ElementRef,
   computed,
@@ -15,6 +16,7 @@ import { Router } from '@angular/router';
 import { ScalePreferences } from '../../services/scale-preferences';
 import { ThemeService } from '../../services/theme.service';
 import { FLAT_NAMES, SHARP_NAMES } from '../../data/scale.constants';
+import { createDialogExit } from '../../ui/dialog-exit';
 
 type CommandGroup = 'Go to' | 'Root note' | 'Theme';
 
@@ -51,12 +53,15 @@ const PAGE_COMMANDS: readonly {
 })
 export class CommandPalette {
   private readonly document = inject(DOCUMENT);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly router = inject(Router);
   private readonly preferences = inject(ScalePreferences);
   private readonly themeService = inject(ThemeService);
 
   readonly open = input(false);
   readonly dismiss = output<void>();
+
+  protected readonly exit = createDialogExit(this.document.defaultView, () => this.dismiss.emit());
 
   private invoker: HTMLElement | null = null;
 
@@ -132,6 +137,8 @@ export class CommandPalette {
   });
 
   constructor() {
+    this.destroyRef.onDestroy(() => this.exit.destroy());
+
     effect(() => {
       const dialog = this.dialog()?.nativeElement;
       if (!dialog) return;
@@ -163,7 +170,13 @@ export class CommandPalette {
 
   protected requestDismiss(event?: Event): void {
     event?.preventDefault();
-    this.dismiss.emit();
+    const dialog = this.dialog()?.nativeElement;
+    if (!dialog?.open || this.exit.closing()) return;
+    this.exit.begin();
+  }
+
+  protected onDialogAnimationend(event: AnimationEvent): void {
+    if (this.exit.ownsAnimation(event)) this.exit.finish();
   }
 
   protected onDialogClick(event: MouseEvent): void {

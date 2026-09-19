@@ -138,9 +138,9 @@
 }
 
 .chord-card {
-  --card-in-delay: calc(var(--card-in-index) * 75ms);
+  --card-in-delay: calc(min(var(--card-in-index), 8) * 75ms);
 
-  animation: card-in var(--dur-med) ease both;
+  animation: card-in var(--dur-med) var(--ease-standard) both;
   animation-delay: var(--card-in-delay);
   padding: var(--space-4);
   margin-bottom: var(--space-3);

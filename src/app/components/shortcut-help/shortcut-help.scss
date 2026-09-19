@@ -19,6 +19,22 @@
     background: transparent;
     backdrop-filter: blur(1px);
   }
+
+  &.closing {
+    pointer-events: none;
+
+    .shortcut-sheet {
+      animation: omni-dialog-out var(--dur-exit) var(--ease-exit) forwards;
+    }
+
+    @media (max-width: 760px) {
+      animation: omni-sheet-down var(--dur-exit) var(--ease-exit) forwards;
+
+      .shortcut-sheet {
+        animation: none;
+      }
+    }
+  }
 }
 
 .shortcut-sheet {

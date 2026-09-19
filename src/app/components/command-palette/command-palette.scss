@@ -19,6 +19,14 @@
     background: transparent;
     backdrop-filter: blur(1px);
   }
+
+  &.closing {
+    pointer-events: none;
+
+    .palette-sheet {
+      animation: omni-dialog-out var(--dur-exit) var(--ease-exit) forwards;
+    }
+  }
 }
 
 .palette-sheet {

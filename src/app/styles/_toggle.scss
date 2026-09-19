@@ -16,9 +16,9 @@
   font-size: var(--text-xs);
   cursor: pointer;
   transition:
-    background-color var(--dur-med) ease,
-    border-color var(--dur-med) ease,
-    color var(--dur-med) ease;
+    background-color var(--dur-med) var(--ease-standard),
+    border-color var(--dur-med) var(--ease-standard),
+    color var(--dur-med) var(--ease-standard);
 
   @if $with-label {
     width: auto;
@@ -37,7 +37,7 @@
     height: var(--space-2);
     border-radius: 50%;
     background: var(--text-dim);
-    transition: background-color var(--dur-med) ease;
+    transition: background-color var(--dur-med) var(--ease-standard);
   }
 
   &:hover {

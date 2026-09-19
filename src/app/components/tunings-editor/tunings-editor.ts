@@ -1,4 +1,14 @@
-import { Component, effect, ElementRef, input, output, viewChild } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  DOCUMENT,
+  effect,
+  ElementRef,
+  inject,
+  input,
+  output,
+  viewChild,
+} from '@angular/core';
 import { AccidentalPreference } from '../../models/scale-preferences.model';
 import {
   MAX_CUSTOM_TUNING_NAME_LENGTH,
@@ -7,6 +17,7 @@ import {
 } from '../../models/tuner-preferences.model';
 import { PresetOption, StringEditor, StringEditorValue } from '../string-editor/string-editor';
 import { IconButton } from '../../ui/icon-button/icon-button';
+import { createDialogExit } from '../../ui/dialog-exit';
 
 export type TuningEditorValue = StringEditorValue;
 export type TuningPresetOption = PresetOption;
@@ -36,7 +47,14 @@ export class TuningEditor {
 
   private readonly dialog = viewChild<ElementRef<HTMLDialogElement>>('dialog');
 
+  private readonly document = inject(DOCUMENT);
+  private readonly destroyRef = inject(DestroyRef);
+
+  protected readonly exit = createDialogExit(this.document.defaultView, () => this.dismiss.emit());
+
   constructor() {
+    this.destroyRef.onDestroy(() => this.exit.destroy());
+
     effect(() => {
       const dialog = this.dialog()?.nativeElement;
       if (!dialog) return;
@@ -51,7 +69,13 @@ export class TuningEditor {
 
   protected requestDismiss(event?: Event): void {
     event?.preventDefault();
-    this.dismiss.emit();
+    const dialog = this.dialog()?.nativeElement;
+    if (!dialog?.open || this.exit.closing()) return;
+    this.exit.begin();
+  }
+
+  protected onDialogAnimationend(event: AnimationEvent): void {
+    if (this.exit.ownsAnimation(event)) this.exit.finish();
   }
 
   protected onDialogClick(event: MouseEvent): void {

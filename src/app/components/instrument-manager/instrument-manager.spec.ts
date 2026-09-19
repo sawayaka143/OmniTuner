@@ -116,6 +116,7 @@ describe('InstrumentManager', () => {
     const editor = fixture.debugElement.query(By.css('app-string-editor'))
       .componentInstance as StringEditor;
     editor.save.emit({ name: 'Baritone', notes: [35, 40, 45, 50, 54, 59] });
+    await new Promise((resolve) => setTimeout(resolve, 300));
     await fixture.whenStable();
     fixture.detectChanges();
 
@@ -171,6 +172,7 @@ describe('InstrumentManager', () => {
       'button[aria-label="Close instrument manager"]',
     ) as HTMLButtonElement;
     close.click();
+    await new Promise((resolve) => setTimeout(resolve, 300));
     await fixture.whenStable();
     fixture.detectChanges();
 

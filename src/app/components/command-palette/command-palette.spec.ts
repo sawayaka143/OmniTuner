@@ -107,6 +107,7 @@ describe('CommandPalette', () => {
     fixture.detectChanges();
 
     input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    await new Promise((resolve) => setTimeout(resolve, 300));
     fixture.detectChanges();
 
     expect(navigate).toHaveBeenCalledWith(['/chords']);
@@ -122,6 +123,7 @@ describe('CommandPalette', () => {
     if (!rootOption) throw new Error('Root note command not rendered');
 
     rootOption.click();
+    await new Promise((resolve) => setTimeout(resolve, 300));
     fixture.detectChanges();
 
     expect(preferences.state().rootPitchClass).toBe(0);
@@ -158,6 +160,7 @@ describe('CommandPalette', () => {
     await openPalette();
     const dialog = fixture.nativeElement.querySelector('dialog') as HTMLDialogElement;
     dialog.dispatchEvent(new Event('cancel', { bubbles: false, cancelable: true }));
+    await new Promise((resolve) => setTimeout(resolve, 300));
     fixture.detectChanges();
 
     expect(fixture.componentInstance.closed).toBe(true);

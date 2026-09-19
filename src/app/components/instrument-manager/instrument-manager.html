@@ -3,8 +3,10 @@
   class="manager-dialog"
   aria-labelledby="manager-title"
   aria-describedby="manager-subtitle"
+  [class.closing]="exit.closing()"
   (cancel)="requestDismiss($event)"
   (click)="onDialogClick($event)"
+  (animationend)="onDialogAnimationend($event)"
 >
   <div class="manager-card">
     <header class="manager-header">

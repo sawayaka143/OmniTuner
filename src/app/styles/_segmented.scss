@@ -76,8 +76,13 @@
     }
 
     transition:
-      color 250ms ease,
-      text-shadow 250ms ease;
+      color 250ms var(--ease-standard),
+      text-shadow 250ms var(--ease-standard),
+      transform var(--dur-fast) var(--ease-standard);
+
+    &:active {
+      transform: scale(0.98);
+    }
 
     &:hover {
       color: var(--text);

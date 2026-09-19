@@ -138,6 +138,7 @@ export class SettingsPanel {
   private readonly sheet = viewChild<ElementRef<HTMLElement>>('sheet');
   private readonly destroyRef = inject(DestroyRef);
   private readonly basePosition = signal<PanelPosition | null>(null);
+
   private dragState: {
     readonly pointerId: number;
     readonly startX: number;
