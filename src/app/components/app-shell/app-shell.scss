@@ -1,3 +1,5 @@
+@use '../../styles' as *;
+
 :host {
   display: flex;
   flex-direction: column;
@@ -8,7 +10,8 @@
 }
 
 .app-header {
-  background-color: var(--surface-container-low);
+  @include glass-surface(var(--glass-bg-strong));
+  box-shadow: var(--glass-sheen);
   border-bottom: 1px solid var(--border-subtle);
   position: sticky;
   top: 0;
@@ -49,9 +52,10 @@
     gap: var(--space-1);
     padding: var(--space-1);
     border-radius: var(--r-pill);
-    background: var(--seg-track-bg);
+    @include glass-surface(var(--seg-track-bg));
     box-shadow:
       inset 0 0 0 1px var(--border-subtle),
+      var(--glass-sheen),
       var(--shadow-recess);
     white-space: nowrap;
   }
@@ -119,10 +123,8 @@
   width: 0;
   height: calc(100% - var(--space-2));
   border-radius: var(--r-pill);
-  background: color-mix(in srgb, var(--scale-accent) 22%, var(--seg-pill-bg));
-  box-shadow:
-    var(--seg-pill-shadow),
-    inset 0 0 0 1px color-mix(in srgb, var(--scale-accent) 40%, transparent);
+  background: var(--seg-pill-bg);
+  box-shadow: var(--seg-pill-shadow);
   opacity: 0;
   pointer-events: none;
   z-index: 0;
@@ -200,9 +202,9 @@
     gap: var(--space-3);
     min-height: calc(var(--top-bar-h) + env(safe-area-inset-top));
     padding: env(safe-area-inset-top) var(--space-4) 0;
-    background: color-mix(in srgb, var(--canvas) 88%, transparent);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: var(--glass-bg-strong);
+    backdrop-filter: var(--glass-filter);
+    -webkit-backdrop-filter: var(--glass-filter);
     border-bottom: 1px solid var(--border-subtle);
 
     .mobile-page-title {
@@ -240,9 +242,9 @@
     display: flex;
     align-items: stretch;
     padding-bottom: env(safe-area-inset-bottom);
-    background: color-mix(in srgb, var(--surface-container-low) 90%, transparent);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
+    background: var(--glass-bg-strong);
+    backdrop-filter: var(--glass-filter);
+    -webkit-backdrop-filter: var(--glass-filter);
     border-top: 1px solid var(--border-subtle);
   }
 

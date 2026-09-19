@@ -1,3 +1,5 @@
+@use '../styles' as *;
+
 :host {
   display: contents;
 }
@@ -15,8 +17,8 @@
   padding: var(--space-2) var(--space-4);
   border: 1px solid var(--border-subtle);
   border-radius: var(--r-pill);
-  background: var(--surface-container-high);
-  box-shadow: var(--shadow-lift);
+  @include glass-surface(var(--glass-bg-strong));
+  box-shadow: var(--glass-sheen), var(--shadow-lift);
   color: var(--text-muted);
   font-size: var(--text-xs);
   letter-spacing: var(--tracking-narrow);

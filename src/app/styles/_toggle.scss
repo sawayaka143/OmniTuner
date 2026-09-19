@@ -1,3 +1,5 @@
+@use './glass' as *;
+
 @mixin toggle-switch($with-label: false) {
   flex-shrink: 0;
   min-height: var(--ctrl-h-lg);
@@ -5,9 +7,10 @@
   align-items: center;
   gap: var(--space-2);
   padding: 0 var(--space-2);
+  @include glass-surface();
+  box-shadow: var(--glass-sheen);
   border: 1px solid var(--border-subtle);
   border-radius: var(--r-pill);
-  background: var(--surface-container-low);
   color: var(--text-muted);
   font-family: var(--font);
   font-size: var(--text-xs);
@@ -43,7 +46,7 @@
 
   &.active {
     border-color: var(--border-medium);
-    background: var(--surface-container-high);
+    background: var(--glass-bg-hover);
     color: var(--text);
 
     .toggle-lamp {

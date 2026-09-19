@@ -1,3 +1,5 @@
+@use './glass' as *;
+
 @mixin page-chrome() {
   .app-main {
     flex: 1;
@@ -25,8 +27,8 @@
     zoom: var(--workbench-scale, 1);
     border: 1px solid var(--border-subtle);
     border-radius: var(--r-md);
-    background: var(--surface-container-low);
-    box-shadow: var(--shadow-lift);
+    @include glass-surface();
+    box-shadow: var(--glass-sheen), var(--shadow-lift);
   }
 
   .workbench-header {

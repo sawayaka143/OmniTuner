@@ -1,3 +1,5 @@
+@use '../styles' as *;
+
 :host {
   display: block;
   width: 100%;
@@ -11,8 +13,8 @@
   padding: var(--space-5);
   border: 1px solid var(--border-subtle);
   border-radius: var(--r-md);
-  background: var(--surface-container);
-  box-shadow: var(--shadow-recess);
+  @include glass-surface();
+  box-shadow: var(--glass-sheen), var(--shadow-recess);
 }
 
 .intro-icon {

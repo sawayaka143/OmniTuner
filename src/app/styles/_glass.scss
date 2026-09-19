@@ -1,0 +1,5 @@
+@mixin glass-surface($bg: var(--glass-bg)) {
+  background: $bg;
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+}

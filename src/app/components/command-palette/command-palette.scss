@@ -25,8 +25,8 @@
   overflow: hidden;
   border: 1px solid var(--border-medium);
   border-radius: var(--r-md);
-  background: var(--surface-container-low);
-  box-shadow: var(--shadow-dialog);
+  @include glass-surface(var(--glass-bg-strong));
+  box-shadow: var(--glass-sheen), var(--shadow-dialog);
 }
 
 .palette-title {

@@ -1,13 +1,16 @@
+@use './glass' as *;
+
 @mixin seg-control($indicator: 'plain', $indicator-class: 'seg-indicator') {
   position: relative;
   display: inline-flex;
   padding: var(--space-1);
   border: 0;
   border-radius: var(--r-pill);
-  background: var(--seg-track-bg);
+  @include glass-surface(var(--seg-track-bg));
 
   box-shadow:
     inset 0 0 0 1px var(--border-subtle),
+    var(--glass-sheen),
     var(--shadow-recess);
 
   overflow: hidden;

@@ -92,6 +92,13 @@
   --shadow-inset-panel: inset 0 2px 6px rgba(0, 0, 0, 0.5);
 
   --shadow-recess: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+
+  --glass-bg: color-mix(in srgb, var(--surface-container-low) 55%, transparent);
+  --glass-bg-hover: color-mix(in srgb, var(--surface-container) 65%, transparent);
+  --glass-bg-strong: color-mix(in srgb, var(--surface-container-low) 80%, transparent);
+  --glass-filter: blur(2px);
+  --glass-sheen: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+
   --seg-track-bg: var(--surface-container-low);
   --seg-pill-bg: var(--surface-container-high);
   --seg-pill-shadow:
@@ -176,6 +183,18 @@ html[data-theme='light'] {
   --seg-etch: none;
   --chord-stage-glow: 0 0 34px color-mix(in srgb, var(--scale-accent) 18%, transparent);
   --workbench-inset: var(--surface-container);
+
+  --glass-sheen: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --glass-bg: var(--surface-container-low);
+    --glass-bg-hover: var(--surface-container);
+    --glass-bg-strong: var(--surface-container-low);
+    --glass-filter: none;
+    --glass-sheen: inset 0 0 0 0 transparent;
+  }
 }
 
 html[data-theme='light'] ::selection {
@@ -318,9 +337,12 @@ h3 {
   padding: 0 var(--space-4);
   border: 0;
   border-radius: var(--r-pill);
-  background: var(--surface-container-low);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
   box-shadow:
     inset 0 0 0 1px var(--border-subtle),
+    var(--glass-sheen),
     var(--shadow-recess);
   color: var(--text);
   font-family: var(--font);
@@ -338,8 +360,10 @@ h3 {
 }
 
 .btn:hover {
+  background: var(--glass-bg-hover);
   box-shadow:
     inset 0 0 0 1px var(--border-medium),
+    var(--glass-sheen),
     var(--shadow-recess);
   filter: brightness(1.08);
 }
@@ -365,7 +389,7 @@ h3 {
   color: var(--scale-accent-ink);
   box-shadow:
     inset 0 0 0 1px var(--ring-primary),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    var(--glass-sheen);
   font-weight: var(--fw-semibold);
   letter-spacing: var(--tracking-label);
 }
@@ -374,7 +398,7 @@ h3 {
   filter: brightness(1.1);
   box-shadow:
     inset 0 0 0 1px var(--ring-primary),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    var(--glass-sheen);
 }
 
 .btn.primary.active {
@@ -382,11 +406,13 @@ h3 {
   color: var(--scale-accent-ink);
   box-shadow:
     inset 0 0 0 1px var(--ring-primary),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    var(--glass-sheen);
 }
 
 .btn.ghost {
   background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   box-shadow: inset 0 0 0 1px transparent;
   color: var(--text-muted);
 }
@@ -407,10 +433,12 @@ h3 {
 
 .card,
 .pane {
-  background: var(--surface-container-low);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
   border: 1px solid var(--border-subtle);
   border-radius: var(--r-md);
-  box-shadow: var(--shadow-flat);
+  box-shadow: var(--glass-sheen), var(--shadow-flat);
 }
 
 .prose {

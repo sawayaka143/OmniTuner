@@ -1,3 +1,5 @@
+@use './glass' as *;
+
 @keyframes dropdown-appear {
   from {
     opacity: 0;
@@ -31,9 +33,10 @@
   padding: var(--space-2) var(--space-3) var(--space-2) var(--space-4);
   border: 0;
   border-radius: var(--r-pill);
-  background: var(--surface-container-low);
+  @include glass-surface();
   box-shadow:
     inset 0 0 0 1px var(--border-subtle),
+    var(--glass-sheen),
     var(--shadow-recess);
   color: var(--text);
   font-family: var(--font);
@@ -44,14 +47,18 @@
     transform var(--dur-fast) ease;
 
   &:hover {
+    background: var(--glass-bg-hover);
     box-shadow:
       inset 0 0 0 1px var(--border-medium),
+      var(--glass-sheen),
       var(--shadow-recess);
   }
 
   &[aria-expanded='true'] {
+    background: var(--glass-bg-hover);
     box-shadow:
       inset 0 0 0 1px var(--border-medium),
+      var(--glass-sheen),
       var(--shadow-recess);
   }
 
@@ -73,8 +80,8 @@
   padding: var(--space-2);
   border: 1px solid var(--border-medium);
   border-radius: var(--r-md);
-  background: var(--surface-container-low);
-  box-shadow: var(--shadow-flat);
+  @include glass-surface(var(--glass-bg-strong));
+  box-shadow: var(--glass-sheen), var(--shadow-flat);
   animation: dropdown-appear var(--dur-med) ease-out;
 
   @media (prefers-reduced-motion: reduce) {

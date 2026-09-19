@@ -17,8 +17,8 @@
   padding: 6px 8px 6px 16px;
   border: 1px solid var(--border-medium);
   border-radius: var(--r-pill);
-  background: var(--surface-container-high);
-  box-shadow: var(--shadow-dialog);
+  @include glass-surface(var(--glass-bg-strong));
+  box-shadow: var(--glass-sheen), var(--shadow-dialog);
 }
 
 .message {

@@ -1,3 +1,5 @@
+@use './glass' as *;
+
 // Mobile (<= 760px) bottom-sheet presentation shared by the dialog components.
 // Include at the END of a dialog's stylesheet, inside its dialog/sheet class,
 // so these rules win the cascade over the desktop layout above.
@@ -17,8 +19,10 @@
     overflow: hidden;
     border-bottom: 0;
     border-radius: 20px 20px 0 0;
-    background: var(--surface-container-low);
-    box-shadow: 0 -24px 70px rgba(0, 0, 0, 0.55);
+    @include glass-surface(var(--glass-bg-strong));
+    box-shadow:
+      var(--glass-sheen),
+      0 -24px 70px rgba(0, 0, 0, 0.55);
     animation-name: omni-sheet-up;
     animation-duration: var(--dur-slow);
     animation-timing-function: var(--ease-spring);
