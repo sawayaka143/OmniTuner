@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  computeBadgeForPc,
+  DiatonicBadge,
   midiName,
+  ModeName,
   parseChord,
+  ParsedChord,
   parseNoteToken,
   parseTuning,
   pcName,
@@ -301,5 +305,46 @@ describe('note names', () => {
     expect(pcName(1, true)).toBe('Db');
     expect(midiName(60, false)).toBe('C4');
     expect(midiName(58, true)).toBe('Bb3');
+  });
+});
+
+describe('computeBadgeForPc', () => {
+  const parsed = (symbol: string): ParsedChord => {
+    const result = parseChord(symbol);
+    if (!result.ok) throw new Error(`parse failed: ${symbol}`);
+    return result.chord;
+  };
+
+  const badge = (symbol: string, tonicPc: number, mode: ModeName): DiatonicBadge =>
+    computeBadgeForPc(parsed(symbol), tonicPc, mode, false, false)!;
+
+  it('marks diatonic chords good', () => {
+    expect(badge('Fmaj7', 0, 'Ionian').kind).toBe('good');
+    expect(badge('C', 0, 'Ionian').kind).toBe('good');
+  });
+
+  it('marks a diatonic root with an altered quality as warn', () => {
+    const fMinorMajor = badge('Fm(maj7)', 0, 'Ionian');
+    expect(fMinorMajor.kind).toBe('warn');
+    expect(fMinorMajor.text).toContain('IV — borrowed');
+  });
+
+  it('marks a chord outside the scale but diatonic to the parallel mode as borrowed', () => {
+    const leadingTone = badge('C#dim', 2, 'Aeolian');
+    expect(leadingTone.kind).toBe('borrowed');
+    expect(leadingTone.text).toContain('borrowed from D major');
+  });
+
+  it('marks fully chromatic chords bad', () => {
+    const chromatic = badge('C#dim', 0, 'Ionian');
+    expect(chromatic.kind).toBe('bad');
+    expect(chromatic.text).toContain('chromatic');
+  });
+
+  it('numbers degrees without spurious accidentals for diatonic roots', () => {
+    expect(badge('Em', 0, 'Ionian').text).toContain('iii —');
+    expect(badge('Fmaj7', 0, 'Ionian').text).toContain('IV —');
+    expect(badge('Db', 0, 'Phrygian').text).toContain('bII —');
+    expect(badge('C#dim', 2, 'Aeolian').text).toContain('vii°');
   });
 });

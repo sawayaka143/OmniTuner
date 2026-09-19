@@ -81,6 +81,10 @@ export class KeyFinder {
   protected readonly alternativesLabel = computed<string>(() => {
     const key = this.analysis().key;
     if (!key) return '';
-    return key.alternatives.map((alt) => `${alt.tonicName} ${alt.mode}`).join(', ');
+    const names = key.alternatives.map((alt) => `${alt.tonicName} ${alt.mode}`).join(', ');
+    if (!names) return '';
+    return key.confidence === 'strong'
+      ? `also fits: ${names}`
+      : `not sure — also possible: ${names}`;
   });
 }

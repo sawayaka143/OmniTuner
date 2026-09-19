@@ -25,7 +25,7 @@
           <span class="key-confidence">{{ key.confidence }}</span>
         </p>
         @if (alternativesLabel()) {
-          <p class="key-alternatives">also fits: {{ alternativesLabel() }}</p>
+          <p class="key-alternatives">{{ alternativesLabel() }}</p>
         }
       } @else if (analysis().total > 0) {
         <p class="key-empty bad">no readable chords — check the spelling above</p>

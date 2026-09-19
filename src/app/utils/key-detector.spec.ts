@@ -88,4 +88,43 @@ describe('detectKey', () => {
     const dk = detectKey(chords('Bb', 'Eb'));
     expect(dk!.tonicName).toMatch(/b/);
   });
+
+  it('detects C Ionian for the mixture progression Fmaj7 Fm(maj7) C/E C#dim/E', () => {
+    const dk = detectKey(chords('Fmaj7', 'Fm(maj7)', 'C/E', 'C#dim/E'));
+    expect(dk).not.toBeNull();
+    expect(dk!.tonicName).toBe('C');
+    expect(dk!.mode).toBe('Ionian');
+    expect(dk!.confidence).toBe('weak');
+    expect(dk!.alternatives).toHaveLength(2);
+    expect([
+      `${dk!.tonicName} ${dk!.mode}`,
+      ...dk!.alternatives.map((alt) => `${alt.tonicName} ${alt.mode}`),
+    ]).toEqual(['C Ionian', 'F Ionian', 'D Aeolian']);
+  });
+
+  it('detects C Ionian for the extended progression with slash chords', () => {
+    const dk = detectKey(
+      chords('Fmaj7', 'Fm(maj7)', 'C/E', 'A7(#5)/C#', 'Dm9', 'Fmaj7sus2(#11)', 'Cmaj9'),
+    );
+    expect(dk).not.toBeNull();
+    expect(dk!.tonicName).toBe('C');
+    expect(dk!.mode).toBe('Ionian');
+  });
+
+  it('does not credit a parallel-mode borrow when the tonic chord never sounds', () => {
+    // C#dim is the leading-tone chord of D, but Dm never appears, so the borrow is
+    // chromaticism rather than evidence for D Aeolian.
+    const ranked = rankKeys(chords('Fmaj7', 'Fm(maj7)', 'C/E', 'C#dim/E'));
+    const dAeolian = ranked.find((k) => k.tonicName === 'D' && k.mode === 'Aeolian');
+    const cIonian = ranked.find((k) => k.tonicName === 'C' && k.mode === 'Ionian');
+    expect(cIonian!.score).toBeGreaterThanOrEqual(dAeolian!.score);
+    expect(ranked[0].tonicName).toBe('C');
+  });
+
+  it('still credits a parallel-mode borrow when the tonic chord sounds', () => {
+    // C#dim is the leading tone back to Dm, a textbook minor-key cadence.
+    const ranked = rankKeys(chords('Dm', 'C#dim', 'Dm'));
+    expect(ranked[0].tonicName).toBe('D');
+    expect(ranked[0].mode).toBe('Aeolian');
+  });
 });

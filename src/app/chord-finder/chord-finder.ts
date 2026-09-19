@@ -119,6 +119,11 @@ export class ChordFinder {
 
   protected readonly results = signal<GenerationResult | null>(null);
   protected readonly detectedKey = computed(() => this.results()?.detectedKey ?? null);
+  protected readonly alternativeKeys = computed<string>(() => {
+    const key = this.detectedKey();
+    if (!key) return '';
+    return key.alternatives.map((alt) => `${alt.tonicName} ${alt.mode}`).join(', ');
+  });
   protected readonly copied = signal(false);
   private copyBuffer = '';
   private copyResetTimer: ReturnType<typeof setTimeout> | null = null;

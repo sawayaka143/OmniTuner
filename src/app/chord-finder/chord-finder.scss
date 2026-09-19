@@ -201,6 +201,10 @@
     color: var(--accent-text);
   }
 
+  &.borrowed {
+    color: var(--info);
+  }
+
   &.bad {
     color: var(--warn);
   }

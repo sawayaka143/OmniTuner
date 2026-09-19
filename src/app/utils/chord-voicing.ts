@@ -1,3 +1,4 @@
+import { CHORD_FORMS, ChordForm } from '../data/chord-forms';
 import { ParsedChord, ParsedTuning } from './chord-theory';
 
 export const MAX_FRET = 12;
@@ -7,6 +8,12 @@ const MAX_SPAN = 4;
 const MAX_THUMB_REACH = 4;
 const MIN_NOTES = 3;
 const MIN_DISTINCT = 3;
+// Highest fretted note at which a shape still counts as an open-position voicing.
+const OPEN_IDIOM_MAX_POSITION = 2;
+// A grip is only idiomatic while it sits low enough on the neck to be a shape a player
+// reaches for, so the library bonus decays with the fret it lands on: the E-shape Eb at
+// fret 6 is a first choice, the same grip at fret 11 is not.
+const FORM_POSITION_TAPER = 2;
 
 export interface SoundingNote {
   readonly stringIndex: number;
@@ -32,6 +39,29 @@ type Diagram = (number | null)[];
 const diagramToKey = (diagram: Diagram): string =>
   diagram.map((f) => (f === null ? 'x' : String(f))).join(',');
 
+// A form is stored as fret offsets from the string carrying the root, so one entry
+// generates its shape in every key. Returns null when the grip does not fit the tuning
+// (non-six-string instruments) or would run off the neck in this key.
+export function instantiateForm(
+  form: ChordForm,
+  tuning: ParsedTuning,
+  rootPc: number,
+): Diagram | null {
+  if (form.offsets.length !== tuning.midi.length) return null;
+  const anchorFret = mod12(rootPc - mod12(tuning.midi[form.anchor]));
+  const diagram: Diagram = [];
+  for (const offset of form.offsets) {
+    if (offset === null) {
+      diagram.push(null);
+      continue;
+    }
+    const fret = anchorFret + offset;
+    if (fret < 0 || fret > MAX_FRET) return null;
+    diagram.push(fret);
+  }
+  return diagram;
+}
+
 interface ChordOptions {
   readonly note_curve: Readonly<Record<number, number>>;
   readonly default_note_penalty: number;
@@ -39,80 +69,31 @@ interface ChordOptions {
   readonly open_penalty_per: number;
   readonly upper_span_limit: number;
   readonly upper_span_penalty_per_semitone: number;
-  readonly low_halfstep_penalty: number;
-  readonly low_wholestep_penalty: number;
+  readonly position_penalty_per_fret: number;
   readonly root_bias: number;
-  readonly doubling_multiplier: number;
 }
 
 const VOICING_STYLES: Readonly<Record<string, ChordOptions>> = {
   open_pop: {
     note_curve: { 3: 50, 4: 80, 5: 92, 6: 96 },
     default_note_penalty: -25,
-    open_penalty_threshold: 3,
+    open_penalty_threshold: 5,
     open_penalty_per: 25,
-    upper_span_limit: 17,
+    upper_span_limit: 24,
     upper_span_penalty_per_semitone: 2,
-    low_halfstep_penalty: 12,
-    low_wholestep_penalty: 6,
+    position_penalty_per_fret: 6,
     root_bias: 120,
-    doubling_multiplier: 1.0,
   },
   jazz_comping: {
-    note_curve: { 3: 45, 4: 92, 5: 40, 6: -35 },
+    note_curve: { 3: 45, 4: 92, 5: 80, 6: -35 },
     default_note_penalty: -35,
-    open_penalty_threshold: 3,
+    open_penalty_threshold: 5,
     open_penalty_per: 30,
-    upper_span_limit: 12,
+    upper_span_limit: 18,
     upper_span_penalty_per_semitone: 5,
-    low_halfstep_penalty: 25,
-    low_wholestep_penalty: 10,
+    position_penalty_per_fret: 6,
     root_bias: 140,
-    doubling_multiplier: 1.2,
   },
-};
-
-const TEMPLATE_BONUSES: Readonly<Record<string, Readonly<Record<string, number>>>> = {
-  Cm: {
-    'x,3,5,5,4,3': 300,
-    '8,10,10,8,8,8': 300,
-    'x,3,5,5,4,x': 250,
-    '8,10,10,8,x,x': 220,
-  },
-  C: {
-    'x,3,2,0,1,0': 300,
-    '8,10,10,9,8,8': 300,
-    'x,3,5,5,5,3': 280,
-  },
-  G: {
-    '3,2,0,0,0,3': 300,
-    '3,2,0,0,3,3': 300,
-    '3,5,5,4,3,3': 280,
-  },
-  Cm7: {
-    'x,3,5,3,4,3': 300,
-    '8,10,8,8,8,8': 300,
-    'x,3,5,3,4,x': 270,
-    'x,3,1,3,4,x': 260,
-    '8,x,8,8,8,x': 250,
-    '8,10,8,8,x,x': 240,
-  },
-  Cm9: {
-    'x,3,1,3,3,x': 350,
-    '8,6,8,8,8,x': 320,
-    'x,3,5,3,3,3': 220,
-  },
-  Dm9: {
-    'x,5,3,5,5,x': 350,
-    '10,8,10,10,10,x': 320,
-    'x,5,7,5,6,5': 220,
-  },
-  Gmaj7: { '3,x,4,4,3,x': 250 },
-  B7: { 'x,2,1,2,0,2': 250 },
-  C7: { 'x,3,2,3,1,0': 250, 'x,3,2,3,1,x': 250 },
-  Em7: { '0,2,0,0,0,0': 250 },
-  'C#m7b5': { 'x,4,5,4,5,x': 250 },
-  D7: { 'x,x,0,2,1,2': 250 },
 };
 
 const JAZZ_QUALITIES = new Set(['maj7', 'm7', 'm7b5', 'dim7', '7']);
@@ -126,6 +107,31 @@ const resolveStyle = (chord: ParsedChord): ChordOptions => {
     return VOICING_STYLES['jazz_comping'];
   return VOICING_STYLES['open_pop'];
 };
+
+export const EXTENSION_INTERVALS: readonly number[] = [13, 14, 15, 17, 18, 20, 21];
+
+// The natural fifth becomes voicing-neutral once the chord carries its guide tones
+// (third plus seventh/sixth). Altered fifths are colour tones and stay required.
+// Extension tones are handled by requiredExtensionChoices: a voicing needs one of them,
+// not all of them, so 13 chords can be voiced R-b7-3-13 as well as R-3-b7-9.
+export function requiredPitchClasses(chord: ParsedChord): ReadonlySet<number> {
+  const optional = new Set(chord.optionalPcs);
+  const hasThird = chord.intervals.includes(3) || chord.intervals.includes(4);
+  const hasGuideTone = [9, 10, 11].some((interval) => chord.intervals.includes(interval));
+  const dropFifth = hasThird && hasGuideTone;
+  return new Set(
+    chord.pcs.filter((pc, index) => {
+      if (optional.has(pc)) return false;
+      const interval = chord.intervals[index];
+      if (EXTENSION_INTERVALS.includes(interval)) return false;
+      return !(dropFifth && interval === 7);
+    }),
+  );
+}
+
+export function requiredExtensionChoices(chord: ParsedChord): readonly number[] {
+  return chord.pcs.filter((_, index) => EXTENSION_INTERVALS.includes(chord.intervals[index]));
+}
 
 function makeShape(
   frets: (number | null)[],
@@ -161,18 +167,48 @@ class BiomechanicalEngine {
   private readonly tuning: ParsedTuning;
   private readonly chord: ParsedChord;
   private readonly pcs: Set<number>;
-  private readonly requiredPcs: Set<number>;
+  private readonly requiredPcs: ReadonlySet<number>;
+  private readonly requiredAnyOf: readonly number[];
+  private readonly enforceExtensions: boolean;
   private readonly style: ChordOptions;
   private readonly options: (number | null)[][];
+  private readonly bassPc: number | undefined;
+  private readonly slashBass: number | undefined;
+  private readonly formWeights: ReadonlyMap<string, number>;
+  private readonly formDiagrams: ReadonlyMap<string, Diagram>;
 
-  constructor(tuning: ParsedTuning, chord: ParsedChord) {
+  constructor(
+    tuning: ParsedTuning,
+    chord: ParsedChord,
+    enforceBass: boolean = false,
+    enforceExtensions: boolean = true,
+  ) {
     this.tuning = tuning;
     this.chord = chord;
     this.pcs = new Set(chord.pcs);
-    const optional = new Set(chord.optionalPcs);
-    this.requiredPcs = new Set(chord.pcs.filter((pc) => !optional.has(pc)));
+    this.requiredPcs = requiredPitchClasses(chord);
+    this.requiredAnyOf = requiredExtensionChoices(chord);
+    this.enforceExtensions = enforceExtensions;
     this.style = resolveStyle(chord);
+    this.bassPc = enforceBass ? chord.bassPc : undefined;
+    // A slash bass is usually not a chord tone (G under Am, D under C), so it is offered on
+    // every string; the bass filter and the lowest-string rule in the search place it.
+    this.slashBass =
+      this.bassPc !== undefined && !this.pcs.has(this.bassPc) ? this.bassPc : undefined;
     this.options = this.buildStringOptions();
+
+    const formWeights = new Map<string, number>();
+    const formDiagrams = new Map<string, Diagram>();
+    for (const form of CHORD_FORMS) {
+      if (!form.qualities.includes(chord.quality)) continue;
+      const diagram = instantiateForm(form, tuning, chord.rootPc);
+      if (!diagram) continue;
+      const key = diagramToKey(diagram);
+      formWeights.set(key, form.weight);
+      formDiagrams.set(key, diagram);
+    }
+    this.formWeights = formWeights;
+    this.formDiagrams = formDiagrams;
   }
 
   private buildStringOptions(): (number | null)[][] {
@@ -180,7 +216,8 @@ class BiomechanicalEngine {
     for (let s = 0; s < this.tuning.midi.length; s++) {
       const stringOpts: (number | null)[] = [null];
       for (let fret = 0; fret <= MAX_FRET; fret++) {
-        if (this.pcs.has(mod12(this.tuning.midi[s] + fret))) stringOpts.push(fret);
+        const pc = mod12(this.tuning.midi[s] + fret);
+        if (this.pcs.has(pc) || pc === this.slashBass) stringOpts.push(fret);
       }
       options.push(stringOpts);
     }
@@ -206,9 +243,15 @@ class BiomechanicalEngine {
 
     const dfs = (idx: number, voiced: number): void => {
       for (const pc of this.requiredPcs) if (!covered.has(pc) && !suffixCover[idx].has(pc)) return;
+      if (
+        this.enforceExtensions &&
+        this.requiredAnyOf.length &&
+        !this.requiredAnyOf.some((pc) => covered.has(pc) || suffixCover[idx].has(pc))
+      )
+        return;
       if (voiced + (n - idx) < MIN_NOTES) return;
       const pcsNow = this.pcsForPartial(current, covered);
-      if (pcsNow.size + (n - idx) < MIN_DISTINCT) return;
+      if (pcsNow.size + (n - idx) < MIN_DISTINCT && this.requiredPcs.size >= MIN_DISTINCT) return;
 
       if (idx === n) {
         const key = diagramToKey(current);
@@ -225,7 +268,9 @@ class BiomechanicalEngine {
         let pc: number | null = null;
         if (fret !== null) {
           pc = mod12(this.tuning.midi[idx] + fret);
-          if (this.requiredPcs.has(pc) && !covered.has(pc)) {
+          // Extensions must be tracked here as well: the prune below asks whether an
+          // extension has been covered, and suffixCover is empty past the last string.
+          if ((this.requiredPcs.has(pc) || this.requiredAnyOf.includes(pc)) && !covered.has(pc)) {
             covered.add(pc);
             added = true;
           }
@@ -237,6 +282,33 @@ class BiomechanicalEngine {
     };
 
     dfs(0, 0);
+
+    // Which idiom fits this chord: a ringing open voicing, or a movable grip? The grips
+    // exist for chords that have no open shape to fall back on. When the engine's best raw
+    // result is an open-position voicing, promoting a barre above it would be a downgrade,
+    // so the grips stay where the playability model put them; otherwise they take precedence.
+    let bestRaw: [number, Diagram] | null = null;
+    for (const entry of scored) if (!bestRaw || entry[0] > bestRaw[0]) bestRaw = entry;
+    const applyForms = !bestRaw || !this.fitsOpenPosition(bestRaw[1]);
+
+    // Library grips are injected rather than left to the DFS. A prune that rejects the
+    // whole space would otherwise drop the standard shape silently. `seen` is filled at the
+    // base case before isValid, so a key missing here means the DFS pruned the diagram,
+    // never that it was already scored.
+    for (const [key, diagram] of this.formDiagrams) {
+      if (seen.has(key)) continue;
+      seen.add(key);
+      if (!this.isValid(diagram)) continue;
+      scored.push([this.score(diagram), [...diagram]]);
+    }
+
+    if (applyForms) {
+      for (const entry of scored) {
+        const weight = this.formWeights.get(diagramToKey(entry[1]));
+        if (weight === undefined) continue;
+        entry[0] += Math.max(0, weight - this.frettedPosition(entry[1]) * FORM_POSITION_TAPER);
+      }
+    }
 
     scored.sort((a, b) => {
       const ka = this.sortKey(a[0], a[1]);
@@ -281,6 +353,42 @@ class BiomechanicalEngine {
     return new Set(this.playedIndices(diagram).map((i) => this.pcAt(i, diagram[i]!)));
   }
 
+  private soundingMidi(diagram: Diagram): number[] {
+    return this.playedIndices(diagram).map((i) => this.tuning.midi[i] + diagram[i]!);
+  }
+
+  private topSoundingIndex(diagram: Diagram): number {
+    for (let i = diagram.length - 1; i >= 0; i--) if (diagram[i] !== null) return i;
+    return -1;
+  }
+
+  // An open-position voicing: everything fretted lies in the first couple of frets and at
+  // least one string rings open. These are their own idiom, not something to be displaced.
+  private fitsOpenPosition(diagram: Diagram): boolean {
+    const positives = diagram.filter((f): f is number => f !== null && f > 0);
+    if (!positives.length) return true;
+    if (Math.min(...positives) > OPEN_IDIOM_MAX_POSITION) return false;
+    return diagram.some((f) => f === 0);
+  }
+
+  private frettedPosition(diagram: Diagram): number {
+    const positives = diagram.filter((f): f is number => f !== null && f > 0);
+    return positives.length ? Math.min(...positives) : 0;
+  }
+
+  // A shape resting on three or more open strings rings like an open chord whatever the chord
+  // quality: borrow the open voicing curve and range instead of the closed shell model.
+  private styleFor(diagram: Diagram): ChordOptions {
+    const openCount = diagram.filter((f) => f === 0).length;
+    if (openCount < 3) return this.style;
+    const openPop = VOICING_STYLES['open_pop'];
+    return {
+      ...this.style,
+      note_curve: openPop.note_curve,
+      upper_span_limit: openPop.upper_span_limit,
+    };
+  }
+
   private bassIntervalForDiagram(diagram: Diagram): number | null {
     const played = this.playedIndices(diagram);
     if (!played.length) return null;
@@ -288,7 +396,13 @@ class BiomechanicalEngine {
     return mod12(bassPc - this.chord.rootPc);
   }
 
-  private isSubset(sub: Set<number>, sup: Set<number>): boolean {
+  private soundingBassPc(diagram: Diagram): number | null {
+    const sounding = this.soundingMidi(diagram);
+    if (!sounding.length) return null;
+    return mod12(Math.min(...sounding));
+  }
+
+  private isSubset(sub: ReadonlySet<number>, sup: ReadonlySet<number>): boolean {
     for (const item of sub) if (!sup.has(item)) return false;
     return true;
   }
@@ -296,9 +410,16 @@ class BiomechanicalEngine {
   private isValid(diagram: Diagram): boolean {
     const played = this.playedIndices(diagram);
     if (played.length < MIN_NOTES) return false;
+    if (this.bassPc !== undefined && this.soundingBassPc(diagram) !== this.bassPc) return false;
     const pcs = this.pcsForDiagram(diagram);
     if (pcs.size < MIN_DISTINCT && this.requiredPcs.size >= MIN_DISTINCT) return false;
     if (!this.isSubset(this.requiredPcs, pcs)) return false;
+    if (
+      this.enforceExtensions &&
+      this.requiredAnyOf.length &&
+      !this.requiredAnyOf.some((pc) => pcs.has(pc))
+    )
+      return false;
     if (!this.dampingOk(diagram, played)) return false;
     if (!this.frettedCountOk(diagram)) return false;
     if (!this.spanOk(diagram)) return false;
@@ -350,30 +471,33 @@ class BiomechanicalEngine {
     return this.minFingersRequired(diagram) <= 4;
   }
 
+  // One finger can barre a fret as long as nothing lower sits under it. A string fretted
+  // below that fret would be stopped by the barre, and an open string would be damped by it,
+  // so both split the group; muted strings do not.
   private minFingersRequired(diagram: Diagram): number {
-    const n = diagram.length;
-    const INF = 99;
-    const dp = Array(n + 1).fill(INF);
-    dp[n] = 0;
-    for (let i = n - 1; i >= 0; i--) {
-      const v = diagram[i];
-      if (v === null || v === 0) {
-        dp[i] = dp[i + 1];
-        continue;
-      }
-      const f = v;
-      let best = INF;
-      for (let j = i; j < n; j++) {
-        const w = diagram[j];
-        if (w === 0 || (w !== null && w > 0 && w !== f)) break;
-        if (w === f) {
-          const candidate = 1 + dp[j + 1];
-          if (candidate < best) best = candidate;
+    const fretted: number[] = [];
+    for (let i = 0; i < diagram.length; i++) {
+      const f = diagram[i];
+      if (f !== null && f > 0) fretted.push(i);
+    }
+    if (!fretted.length) return 0;
+    const fretValues = [...new Set(fretted.map((i) => diagram[i]!))].sort((a, b) => a - b);
+    let fingers = 0;
+    for (const fret of fretValues) {
+      const strings = fretted.filter((i) => diagram[i] === fret);
+      let groups = 1;
+      for (let k = 1; k < strings.length; k++) {
+        for (let s = strings[k - 1] + 1; s < strings[k]; s++) {
+          const v = diagram[s];
+          if (v === 0 || (v !== null && v < fret)) {
+            groups++;
+            break;
+          }
         }
       }
-      dp[i] = best;
+      fingers += groups;
     }
-    return dp[0];
+    return fingers;
   }
 
   private score(diagram: Diagram): number {
@@ -381,28 +505,34 @@ class BiomechanicalEngine {
     const pcs = this.pcsForDiagram(diagram);
     const noteCount = played.length;
     const distinct = pcs.size;
-    const style = this.style;
+    const style = this.styleFor(diagram);
     let score = 0;
     score += style.note_curve[noteCount] ?? style.default_note_penalty;
-    score += distinct * 28;
+    score += distinct * 8;
 
     const bassInterval = this.bassIntervalForDiagram(diagram);
-    if (bassInterval === 0) score += style.root_bias;
-    else score -= 150;
+    if (this.bassPc === undefined) {
+      if (bassInterval === 0) score += style.root_bias;
+      else score -= 150;
+    }
 
-    const hasExtension = this.chord.intervals.some((iv) => [13, 14, 15, 18, 20, 21].includes(iv));
+    const extensionPcs = new Set(
+      this.chord.intervals
+        .filter((iv) => EXTENSION_INTERVALS.includes(iv))
+        .map((iv) => mod12(this.chord.rootPc + iv)),
+    );
     const hi = diagram.length - 1;
     const hiPrev = diagram.length - 2;
-    if (hasExtension && diagram.length >= 2) {
-      if (diagram[hi] === null) score += 60;
-      else if (diagram[hi] !== null && diagram[hi] === diagram[hiPrev] && diagram[hi] > 0)
-        score -= 70;
+    if (extensionPcs.size && diagram.length >= 2) {
+      // Reward actually voicing a tension on top rather than merely muting the top string.
+      const top = this.topSoundingIndex(diagram);
+      if (top >= 0 && extensionPcs.has(this.pcAt(top, diagram[top]!))) score += 40;
     }
 
     for (let i = 0; i < diagram.length - 1; i++) {
       if (diagram[i] !== null && diagram[i]! > 0) {
         for (let j = i + 1; j < Math.min(i + 3, diagram.length); j++) {
-          if (diagram[j] !== null && diagram[j]! > 0 && diagram[i]! > diagram[j]! + 1) {
+          if (diagram[j] !== null && diagram[j]! > 0 && diagram[i]! > diagram[j]! + 3) {
             score -= (diagram[i]! - diagram[j]!) * 50;
           }
         }
@@ -416,11 +546,13 @@ class BiomechanicalEngine {
 
     if (diagram.length >= 2 && diagram[hi] !== null && diagram[hiPrev] === null) score -= 40;
 
-    if (diagram.length === 6) {
-      const bonuses = TEMPLATE_BONUSES[this.chord.symbol] ?? {};
-      const key = diagramToKey(diagram);
-      if (bonuses[key] !== undefined) score += bonuses[key];
+    const sounding = this.soundingMidi(diagram);
+    if (sounding.length >= 2) {
+      const range = Math.max(...sounding) - Math.min(...sounding);
+      score -= Math.max(0, range - style.upper_span_limit) * style.upper_span_penalty_per_semitone;
     }
+    const position = positives.length ? Math.min(...positives) : 0;
+    score -= position * style.position_penalty_per_fret;
 
     score -= this.minFingersRequired(diagram) * 10;
     return score;
@@ -437,7 +569,12 @@ class BiomechanicalEngine {
 }
 
 export function searchChord(tuning: ParsedTuning, chord: ParsedChord): VoicingShape[] {
-  const engine = new BiomechanicalEngine(tuning, chord);
-  const ranked = engine.generate(RESULTS_PER_CHORD);
+  let ranked = new BiomechanicalEngine(tuning, chord, true, true).generate(RESULTS_PER_CHORD);
+  if (!ranked.length) {
+    ranked = new BiomechanicalEngine(tuning, chord, true, false).generate(RESULTS_PER_CHORD);
+  }
+  if (!ranked.length && chord.bassPc !== undefined) {
+    ranked = new BiomechanicalEngine(tuning, chord, false, false).generate(RESULTS_PER_CHORD);
+  }
   return ranked.map(([score, diagram]) => makeShape(diagram.slice(), tuning, chord, score));
 }

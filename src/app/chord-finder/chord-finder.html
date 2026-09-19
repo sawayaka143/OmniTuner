@@ -182,11 +182,8 @@
               >
                 Detected key: {{ detectedKey()!.tonicName }} {{ detectedKey()!.mode }} ·
                 {{ detectedKey()!.confidence }}
-                @if (detectedKey()!.alternatives.length) {
-                  <span>
-                    · also: {{ detectedKey()!.alternatives[0].tonicName }}
-                    {{ detectedKey()!.alternatives[0].mode }}</span
-                  >
+                @if (alternativeKeys()) {
+                  <span> · also: {{ alternativeKeys() }}</span>
                 }
               </p>
             }
@@ -217,6 +214,7 @@
                       class="card-note"
                       [class.good]="entry.badge.kind === 'good'"
                       [class.warn]="entry.badge.kind === 'warn'"
+                      [class.borrowed]="entry.badge.kind === 'borrowed'"
                       [class.bad]="entry.badge.kind === 'bad'"
                     >
                       {{ entry.badge.text }}

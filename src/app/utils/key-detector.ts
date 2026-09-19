@@ -33,12 +33,16 @@ export function rankKeys(
 ): DetectedKey[] {
   if (!chords.length) return [];
   const hasFlatChord = chords.some((c) => c.flats);
+  const tonicPcs = new Set(chords.map((chord) => chord.rootPc));
   const candidates: DetectedKey[] = [];
 
   for (let tonicPc = 0; tonicPc < 12; tonicPc++) {
     const flatsForTonic = flatsForPc(tonicPc);
     const useFlats = hasFlatChord ? true : (opts?.tuningFlats ?? flatsForTonic);
     const tonicName = pcName(tonicPc, useFlats || !!opts?.tuningFlats);
+    // A chord borrowed from the parallel major/minor only supports a key that otherwise
+    // sounds: if the tonic chord never appears, the borrow is mere chromaticism.
+    const tonicPresent = tonicPcs.has(tonicPc);
     for (const mode of MODE_NAMES) {
       let score = 0;
       let good = 0;
@@ -49,6 +53,8 @@ export function rankKeys(
           score += 2;
           good++;
         } else if (badge.kind === 'warn') {
+          score += 1;
+        } else if (badge.kind === 'borrowed' && tonicPresent) {
           score += 1;
         }
       }

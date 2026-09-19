@@ -158,6 +158,21 @@ describe('ChordFinder', () => {
     expect(el().textContent).toContain('C');
   });
 
+  it('lists the candidate keys alongside the detected key', () => {
+    const input = fieldInput('chords, comma-separated')!;
+    input.value = 'Fmaj7, Fm(maj7), C/E, C#dim/E';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    click('.generate');
+
+    const note = [...el().querySelectorAll('.card-note')].find((node) =>
+      node.textContent?.includes('Detected key:'),
+    );
+    expect(note?.textContent).toContain('C Ionian');
+    expect(note?.textContent).toContain('F Ionian');
+    expect(note?.textContent).toContain('D Aeolian');
+  });
+
   it('clears results back to an empty stage', () => {
     click('.generate');
     expect(el().querySelectorAll('.chord-card').length).toBeGreaterThan(0);

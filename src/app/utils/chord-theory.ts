@@ -624,7 +624,7 @@ export function tokenizeProgression(raw: string): string[] {
 }
 
 export interface DiatonicBadge {
-  readonly kind: 'good' | 'warn' | 'bad';
+  readonly kind: 'good' | 'warn' | 'borrowed' | 'bad';
   readonly text: string;
 }
 
@@ -677,19 +677,6 @@ export function computeBadgeForPc(
     return `${prefix}${lower}${suffix}`;
   };
 
-  const accidentalPrefixFor = (steps: readonly number[]): string => {
-    if (chord.rootPc === mod12(tonicPc + steps[0])) return '';
-    let flats = 0;
-    let sharps = 0;
-    for (let i = 0; i < 7; i++) {
-      if (mod12(tonicPc + steps[i] - 1) === chord.rootPc) flats++;
-      if (mod12(tonicPc + steps[i] + 1) === chord.rootPc) sharps++;
-    }
-    if (flats && !sharps) return 'b';
-    if (sharps && !flats) return '#';
-    return '';
-  };
-
   const lookupIn = (steps: readonly number[]): DegreeLookup | null => {
     let degreeIndex = -1;
     for (let i = 0; i < 7; i++) {
@@ -702,8 +689,7 @@ export function computeBadgeForPc(
     const third = mod12(steps[(degreeIndex + 2) % 7] - steps[degreeIndex]);
     const fifth = mod12(steps[(degreeIndex + 4) % 7] - steps[degreeIndex]);
     const expectedQuality = EXPECTED[`${third},${fifth}`] ?? 'maj';
-    const prefix = accidentalPrefixFor(steps);
-    const numeral = `${prefix}${numeralFor(degreeIndex, expectedQuality, steps)}`;
+    const numeral = numeralFor(degreeIndex, expectedQuality, steps);
     return { degreeIndex, third, fifth, expectedQuality, numeral };
   };
 
@@ -738,7 +724,7 @@ export function computeBadgeForPc(
     const lookup = lookupIn(steps);
     if (lookup && qualityMatches(lookup)) {
       return {
-        kind: 'warn',
+        kind: 'borrowed',
         text: `◈ ${lookup.numeral} — borrowed from ${scaleRootName} ${label}`,
       };
     }

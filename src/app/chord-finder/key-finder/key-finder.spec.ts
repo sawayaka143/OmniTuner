@@ -69,6 +69,17 @@ describe('KeyFinder', () => {
     expect(el().querySelector('.key-alternatives')?.textContent).toContain('also fits:');
   });
 
+  it('offers three candidate scales when the key is not certain', () => {
+    setInput('Fmaj7, Fm(maj7), C/E, C#dim/E');
+    expect(keyText()).toContain('C Ionian');
+    expect(keyText()).toContain('weak');
+
+    const alternatives = el().querySelector('.key-alternatives')?.textContent ?? '';
+    expect(alternatives).toContain('not sure');
+    expect(alternatives).toContain('F Ionian');
+    expect(alternatives).toContain('D Aeolian');
+  });
+
   it('reports unreadable tokens in the live hint', () => {
     setInput('Cm, NOTACHORD, G');
     const hint = el().querySelector('.hint')?.textContent ?? '';
