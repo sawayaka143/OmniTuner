@@ -15,7 +15,11 @@
       "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
     },
     {
-      "source": "/(icons/(.*)|og-image.png|apple-touch-icon.png|favicon.ico|favicon.png|favicon.svg)",
+      "source": "/icons/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=604800" }]
+    },
+    {
+      "source": "/(og-image.png|apple-touch-icon.png|favicon.ico|favicon.png|favicon.svg)",
       "headers": [{ "key": "Cache-Control", "value": "public, max-age=604800" }]
     },
     {
