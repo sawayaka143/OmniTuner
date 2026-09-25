@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { DEFAULT_SCALE_PREFERENCES } from '../data/scale-tuning.constants';
 import {
+  LEGACY_SCALE_PREFERENCES_STORAGE_KEY,
   SCALE_PREFERENCES_STORAGE,
   SCALE_PREFERENCES_STORAGE_KEY,
   ScalePreferences,
@@ -155,38 +156,77 @@ describe('ScalePreferences', () => {
   describe('surface colors', () => {
     it('defaults to null so surfaces follow the theme', () => {
       const state = createService().state();
-      expect(state.bgColor).toBeNull();
-      expect(state.cardColor).toBeNull();
+      expect(state.bgColorDark).toBeNull();
+      expect(state.cardColorDark).toBeNull();
+      expect(state.bgColorLight).toBeNull();
+      expect(state.cardColorLight).toBeNull();
     });
 
-    it('persists custom surface colors across reload', () => {
+    it('stores each theme surface colors independently and persists across reload', () => {
       const service = createService();
-      service.setBgColor('#1a1a2e');
-      service.setCardColor('#24243E');
+      service.setBgColor('dark', '#1a1a2e');
+      service.setCardColor('dark', '#24243E');
+      service.setBgColor('light', '#eef2ff');
 
       TestBed.resetTestingModule();
       expect(createService().state()).toMatchObject({
-        bgColor: '#1a1a2e',
-        cardColor: '#24243e',
+        bgColorDark: '#1a1a2e',
+        cardColorDark: '#24243e',
+        bgColorLight: '#eef2ff',
+        cardColorLight: null,
       });
     });
 
-    it('rejects invalid surface colors', () => {
+    it('rejects invalid surface colors per theme', () => {
       const service = createService();
-      service.setBgColor('blue');
-      service.setCardColor('#12345');
-      expect(service.state().bgColor).toBeNull();
-      expect(service.state().cardColor).toBeNull();
+      service.setBgColor('dark', 'blue');
+      service.setCardColor('light', '#12345');
+      service.setBgColor('light', '#1a1a2e');
+      expect(service.state().bgColorDark).toBeNull();
+      expect(service.state().cardColorLight).toBeNull();
+      expect(service.state().bgColorLight).toBe('#1a1a2e');
     });
 
     it('resets surface colors back to the theme', () => {
       const service = createService();
-      service.setBgColor('#1a1a2e');
-      service.setCardColor('#24243e');
-      service.setBgColor(null);
-      service.setCardColor(null);
-      expect(service.state().bgColor).toBeNull();
-      expect(service.state().cardColor).toBeNull();
+      service.setBgColor('dark', '#1a1a2e');
+      service.setCardColor('dark', '#24243e');
+      service.setBgColor('dark', null);
+      service.setCardColor('dark', null);
+      expect(service.state().bgColorDark).toBeNull();
+      expect(service.state().cardColorDark).toBeNull();
+    });
+
+    it('migrates legacy v1 surface colors into the dark theme', () => {
+      storage.setItem(
+        LEGACY_SCALE_PREFERENCES_STORAGE_KEY,
+        JSON.stringify({
+          version: 1,
+          state: { bgColor: '#1a1a2e', cardColor: '#24243E' },
+        }),
+      );
+      expect(createService().state()).toMatchObject({
+        bgColorDark: '#1a1a2e',
+        cardColorDark: '#24243e',
+        bgColorLight: null,
+        cardColorLight: null,
+      });
+    });
+
+    it('reads v2 payloads with per-theme surface colors', () => {
+      storage.setItem(
+        SCALE_PREFERENCES_STORAGE_KEY,
+        JSON.stringify({
+          version: 2,
+          state: { bgColorDark: '#101018', cardColorLight: '#fafafa' },
+        }),
+      );
+      expect(createService().state()).toMatchObject({
+        bgColorDark: '#101018',
+        cardColorDark: null,
+        bgColorLight: null,
+        cardColorLight: '#fafafa',
+      });
     });
 
     it('falls back to null for missing or invalid persisted surface colors', () => {
@@ -197,7 +237,12 @@ describe('ScalePreferences', () => {
           state: { bgColor: 'white', cardColor: 5 },
         }),
       );
-      expect(createService().state()).toMatchObject({ bgColor: null, cardColor: null });
+      expect(createService().state()).toMatchObject({
+        bgColorDark: null,
+        cardColorDark: null,
+        bgColorLight: null,
+        cardColorLight: null,
+      });
     });
   });
 

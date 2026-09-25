@@ -12,8 +12,10 @@ export interface ScalePreferencesState {
   readonly accent: string;
   readonly rootNoteColor: string;
   readonly noteColor: string;
-  readonly bgColor: string | null;
-  readonly cardColor: string | null;
+  readonly bgColorDark: string | null;
+  readonly cardColorDark: string | null;
+  readonly bgColorLight: string | null;
+  readonly cardColorLight: string | null;
   readonly workbenchScale: number;
   readonly chordRandomProgression: boolean;
 }

@@ -19,7 +19,7 @@
 
   &::backdrop {
     background: transparent;
-    backdrop-filter: blur(1px);
+    backdrop-filter: none;
   }
 }
 
@@ -52,7 +52,7 @@
   .settings-dialog {
     &::backdrop {
       background: var(--backdrop);
-      backdrop-filter: blur(5px);
+      backdrop-filter: none;
     }
   }
 
@@ -293,7 +293,9 @@
     letter-spacing: var(--tracking-label);
     text-transform: uppercase;
   }
+}
 
+.theme-picker {
   .seg {
     justify-self: stretch;
     width: 100%;

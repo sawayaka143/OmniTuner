@@ -69,8 +69,10 @@ export class SettingsPanel {
   readonly accent = input('#ede8d0');
   readonly rootNoteColor = input('#ede8d0');
   readonly noteColor = input('#3b3b3b');
-  readonly bgColor = input<string | null>(null);
-  readonly cardColor = input<string | null>(null);
+  readonly bgColorDark = input<string | null>(null);
+  readonly cardColorDark = input<string | null>(null);
+  readonly bgColorLight = input<string | null>(null);
+  readonly cardColorLight = input<string | null>(null);
   readonly tunerSettings = input<TunerSettings>(DEFAULT_TUNER_SETTINGS);
   readonly theme = input<Theme>('dark');
 
@@ -126,6 +128,14 @@ export class SettingsPanel {
     const index = this.themeOptions.findIndex((option) => option.value === this.theme());
     return `translateX(${Math.max(0, index) * 100}%)`;
   });
+
+  protected readonly activeBgColor = computed(() =>
+    this.theme() === 'light' ? this.bgColorLight() : this.bgColorDark(),
+  );
+
+  protected readonly activeCardColor = computed(() =>
+    this.theme() === 'light' ? this.cardColorLight() : this.cardColorDark(),
+  );
 
   protected readonly startupIndicatorTransform = computed(() => {
     const index = this.startupModeOptions.findIndex(

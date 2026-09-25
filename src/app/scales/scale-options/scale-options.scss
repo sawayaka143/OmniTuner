@@ -39,6 +39,10 @@
   &.frets {
     --seg-count: 3;
     grid-template-columns: repeat(3, 48px);
+
+    button {
+      padding-top: 2px;
+    }
   }
 
   button {

@@ -122,9 +122,14 @@ export class AppShell {
     effect(() => {
       const state = this.preferencesState();
       const theme = this.themeService.theme();
+      const dark = theme === 'dark';
       applySurfaceOverrides(
         this.document.documentElement.style,
-        surfaceOverrides(state.bgColor, state.cardColor, theme),
+        surfaceOverrides(
+          dark ? state.bgColorDark : state.bgColorLight,
+          dark ? state.cardColorDark : state.cardColorLight,
+          theme,
+        ),
       );
     });
   }
@@ -148,11 +153,11 @@ export class AppShell {
   }
 
   protected setBgColor(color: string | null): void {
-    this.preferences.setBgColor(color);
+    this.preferences.setBgColor(this.themeService.theme(), color);
   }
 
   protected setCardColor(color: string | null): void {
-    this.preferences.setCardColor(color);
+    this.preferences.setCardColor(this.themeService.theme(), color);
   }
 
   protected setTunerStartupMode(startupMode: TunerStartupMode): void {

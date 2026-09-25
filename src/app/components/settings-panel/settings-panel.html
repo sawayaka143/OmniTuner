@@ -74,10 +74,10 @@
           <div class="with-reset">
             <app-color-field
               label="Background"
-              [value]="bgColor()"
+              [value]="activeBgColor()"
               (valueChange)="bgColorChange.emit($event)"
             />
-            @if (bgColor()) {
+            @if (activeBgColor()) {
               <app-icon-button
                 icon="refresh"
                 label="Reset background color"
@@ -89,10 +89,10 @@
           <div class="with-reset">
             <app-color-field
               label="Cards"
-              [value]="cardColor()"
+              [value]="activeCardColor()"
               (valueChange)="cardColorChange.emit($event)"
             />
-            @if (cardColor()) {
+            @if (activeCardColor()) {
               <app-icon-button
                 icon="refresh"
                 label="Reset card color"

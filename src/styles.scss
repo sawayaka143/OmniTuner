@@ -100,8 +100,8 @@
   --glass-bg: color-mix(in srgb, var(--surface-container-low) 55%, transparent);
   --glass-bg-hover: color-mix(in srgb, var(--surface-container) 65%, transparent);
   --glass-bg-strong: color-mix(in srgb, var(--surface-container-low) 80%, transparent);
-  --glass-filter: blur(2px);
-  --glass-sheen: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  --glass-filter: none;
+  --glass-sheen: inset 0 0 0 0 transparent;
 
   --seg-track-bg: var(--surface-container-low);
   --seg-pill-bg: var(--surface-container-high);

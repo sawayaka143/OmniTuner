@@ -7,8 +7,10 @@ import {
   ScaleFretCount,
   ScalePreferencesState,
 } from '../models/scale-preferences.model';
+import type { SurfaceTheme } from '../utils/surface-theme';
 
-export const SCALE_PREFERENCES_STORAGE_KEY = 'omnituner.scales.v1';
+export const SCALE_PREFERENCES_STORAGE_KEY = 'omnituner.scales.v2';
+export const LEGACY_SCALE_PREFERENCES_STORAGE_KEY = 'omnituner.scales.v1';
 
 export const SCALE_PREFERENCES_STORAGE = new InjectionToken<Storage | null>(
   'Scale preferences storage',
@@ -24,7 +26,7 @@ export const SCALE_PREFERENCES_STORAGE = new InjectionToken<Storage | null>(
 );
 
 interface PersistedScalePreferences {
-  readonly version: 1;
+  readonly version: 2;
   readonly state: ScalePreferencesState;
 }
 
@@ -61,7 +63,9 @@ const upgradeLegacyColors = (state: ScalePreferencesState): ScalePreferencesStat
 });
 
 const parseState = (value: unknown): ScalePreferencesState | null => {
-  if (!isRecord(value) || value['version'] !== 1 || !isRecord(value['state'])) return null;
+  if (!isRecord(value) || !isRecord(value['state'])) return null;
+  const version = value['version'];
+  if (version !== 1 && version !== 2) return null;
 
   const state = value['state'];
   const rootPitchClass = state['rootPitchClass'];
@@ -71,6 +75,25 @@ const parseState = (value: unknown): ScalePreferencesState | null => {
   const accent = state['accent'];
   const rootNoteColor = state['rootNoteColor'];
   const noteColor = state['noteColor'];
+
+  const parseSurfaceColor = (raw: unknown): string | null =>
+    typeof raw === 'string' && HEX_COLOR.test(raw) ? raw.toLowerCase() : null;
+
+  // v1 stored one theme-independent pair; seed it into the dark theme.
+  const surfaceColors =
+    version === 1
+      ? {
+          bgColorDark: parseSurfaceColor(state['bgColor']),
+          cardColorDark: parseSurfaceColor(state['cardColor']),
+          bgColorLight: null,
+          cardColorLight: null,
+        }
+      : {
+          bgColorDark: parseSurfaceColor(state['bgColorDark']),
+          cardColorDark: parseSurfaceColor(state['cardColorDark']),
+          bgColorLight: parseSurfaceColor(state['bgColorLight']),
+          cardColorLight: parseSurfaceColor(state['cardColorLight']),
+        };
 
   return {
     rootPitchClass:
@@ -111,14 +134,7 @@ const parseState = (value: unknown): ScalePreferencesState | null => {
       typeof noteColor === 'string' && HEX_COLOR.test(noteColor)
         ? noteColor.toLowerCase()
         : DEFAULT_SCALE_PREFERENCES.noteColor,
-    bgColor:
-      typeof state['bgColor'] === 'string' && HEX_COLOR.test(state['bgColor'])
-        ? state['bgColor'].toLowerCase()
-        : null,
-    cardColor:
-      typeof state['cardColor'] === 'string' && HEX_COLOR.test(state['cardColor'])
-        ? state['cardColor'].toLowerCase()
-        : null,
+    ...surfaceColors,
     chordRandomProgression:
       typeof state['chordRandomProgression'] === 'boolean'
         ? state['chordRandomProgression']
@@ -179,22 +195,24 @@ export class ScalePreferences {
     this.update({ noteColor: noteColor.toLowerCase() });
   }
 
-  setBgColor(bgColor: string | null): void {
+  setBgColor(theme: SurfaceTheme, bgColor: string | null): void {
     if (bgColor === null) {
-      this.update({ bgColor: null });
+      this.update(theme === 'light' ? { bgColorLight: null } : { bgColorDark: null });
       return;
     }
     if (!HEX_COLOR.test(bgColor)) return;
-    this.update({ bgColor: bgColor.toLowerCase() });
+    const value = bgColor.toLowerCase();
+    this.update(theme === 'light' ? { bgColorLight: value } : { bgColorDark: value });
   }
 
-  setCardColor(cardColor: string | null): void {
+  setCardColor(theme: SurfaceTheme, cardColor: string | null): void {
     if (cardColor === null) {
-      this.update({ cardColor: null });
+      this.update(theme === 'light' ? { cardColorLight: null } : { cardColorDark: null });
       return;
     }
     if (!HEX_COLOR.test(cardColor)) return;
-    this.update({ cardColor: cardColor.toLowerCase() });
+    const value = cardColor.toLowerCase();
+    this.update(theme === 'light' ? { cardColorLight: value } : { cardColorDark: value });
   }
 
   setWorkbenchScale(scale: number): void {
@@ -218,17 +236,25 @@ export class ScalePreferences {
     if (!this.storage) return DEFAULT_SCALE_PREFERENCES;
     try {
       const raw = this.storage.getItem(SCALE_PREFERENCES_STORAGE_KEY);
-      if (!raw) return DEFAULT_SCALE_PREFERENCES;
-      const parsed = parseState(JSON.parse(raw) as unknown);
+      const parsed = raw ? parseState(JSON.parse(raw) as unknown) : this.loadLegacyState();
       return parsed ? upgradeLegacyColors(parsed) : DEFAULT_SCALE_PREFERENCES;
     } catch {
       return DEFAULT_SCALE_PREFERENCES;
     }
   }
 
+  private loadLegacyState(): ScalePreferencesState | null {
+    try {
+      const legacy = this.storage?.getItem(LEGACY_SCALE_PREFERENCES_STORAGE_KEY);
+      return legacy ? parseState(JSON.parse(legacy) as unknown) : null;
+    } catch {
+      return null;
+    }
+  }
+
   private persist(): void {
     if (!this.storage) return;
-    const persisted: PersistedScalePreferences = { version: 1, state: this.stateSignal() };
+    const persisted: PersistedScalePreferences = { version: 2, state: this.stateSignal() };
     try {
       this.storage.setItem(SCALE_PREFERENCES_STORAGE_KEY, JSON.stringify(persisted));
     } catch {}
