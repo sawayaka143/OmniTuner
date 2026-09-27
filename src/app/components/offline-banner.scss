@@ -6,7 +6,7 @@
 
 .offline-banner {
   position: fixed;
-  top: calc(var(--space-7) * 2 + var(--space-3));
+  top: calc(var(--nav-block-h) + var(--space-3));
   left: 50%;
   z-index: var(--z-float);
   transform: translateX(-50%);
@@ -32,6 +32,6 @@
 
 @media (max-width: 760px) {
   .offline-banner {
-    top: calc(var(--top-bar-h) + var(--space-3));
+    top: calc(env(safe-area-inset-top) + var(--nav-gap) + var(--top-bar-h) + var(--space-3));
   }
 }

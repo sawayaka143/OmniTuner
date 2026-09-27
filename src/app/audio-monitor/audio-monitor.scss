@@ -170,7 +170,9 @@ app-string-list {
   // Always reachable: pins above the nav bar while the meter area scrolls.
   .capture-btn {
     position: sticky;
-    bottom: calc(var(--nav-bar-h) + env(safe-area-inset-bottom) + var(--space-1));
+    bottom: calc(
+      var(--nav-bar-h) + var(--nav-gap) * 2 + env(safe-area-inset-bottom) + var(--space-1)
+    );
     z-index: var(--z-float);
     width: 100%;
   }

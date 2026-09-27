@@ -6,7 +6,7 @@
 
 .update-banner {
   position: fixed;
-  top: 12px;
+  top: calc(var(--nav-block-h) + var(--space-3));
   left: 50%;
   transform: translateX(-50%);
   z-index: var(--z-menu);
@@ -41,9 +41,9 @@
 
 @media (max-width: 760px) {
   .update-banner {
-    top: 8px;
-    right: 12px;
-    left: 12px;
+    top: calc(env(safe-area-inset-top) + var(--nav-gap) + var(--top-bar-h) + var(--space-3));
+    right: var(--nav-gap);
+    left: var(--nav-gap);
     transform: none;
   }
 

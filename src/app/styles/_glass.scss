@@ -3,3 +3,11 @@
   backdrop-filter: var(--glass-filter);
   -webkit-backdrop-filter: var(--glass-filter);
 }
+
+@mixin nav-glass() {
+  border-radius: var(--r-pill);
+  background-color: var(--nav-glass-bg);
+  box-shadow: var(--nav-shadow);
+  backdrop-filter: blur(var(--nav-glass-blur)) saturate(var(--nav-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--nav-glass-blur)) saturate(var(--nav-glass-saturate));
+}
