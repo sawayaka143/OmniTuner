@@ -87,9 +87,7 @@
       ariaCurrentWhenActive="page"
       (click)="onNavActivate()"
     >
-      <span class="nav-well" aria-hidden="true">
-        <span class="app-icon ti" [class]="item.icon"></span>
-      </span>
+      <span class="app-icon ti" [class]="item.icon" aria-hidden="true"></span>
       <span class="nav-label">{{ item.label }}</span>
     </a>
   }
@@ -97,20 +95,8 @@
 
 <app-settings-panel
   [open]="settingsOpen()"
-  [accent]="preferencesState().accent"
-  [rootNoteColor]="preferencesState().rootNoteColor"
-  [noteColor]="preferencesState().noteColor"
-  [bgColorDark]="preferencesState().bgColorDark"
-  [cardColorDark]="preferencesState().cardColorDark"
-  [bgColorLight]="preferencesState().bgColorLight"
-  [cardColorLight]="preferencesState().cardColorLight"
   [tunerSettings]="tunerSettings()"
   [theme]="theme()"
-  (accentChange)="setAccent($event)"
-  (rootNoteColorChange)="setRootNoteColor($event)"
-  (noteColorChange)="setNoteColor($event)"
-  (bgColorChange)="setBgColor($event)"
-  (cardColorChange)="setCardColor($event)"
   (startupModeChange)="setTunerStartupMode($event)"
   (autoStartChange)="setAutoStart($event)"
   (themeChange)="setThemeFromSettings($event)"
@@ -119,8 +105,6 @@
   (inTuneEnabledChange)="setInTuneEnabled($event)"
   (inTuneSoundChange)="setInTuneSound($event)"
   (inTuneGlowChange)="setInTuneGlow($event)"
-  (inTuneColorChange)="setInTuneColor($event)"
-  (outOfTuneColorChange)="setOutOfTuneColor($event)"
   (inTuneToleranceChange)="setInTuneTolerance($event)"
   (inTuneHoldMsChange)="setInTuneHoldMs($event)"
   (referencePitchChange)="setReferencePitch($event)"

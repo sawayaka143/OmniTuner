@@ -7,6 +7,11 @@
     @include toggle-switch($with-label: true);
   }
 
+  &.full-width {
+    width: 100%;
+    justify-content: space-between;
+  }
+
   &.prominent {
     min-height: var(--ctrl-h-xl);
     padding: 0 var(--space-4);

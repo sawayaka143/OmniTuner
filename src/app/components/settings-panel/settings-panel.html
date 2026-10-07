@@ -61,62 +61,6 @@
             }
           </div>
         </div>
-
-        <app-color-field
-          label="Accent"
-          [value]="accent()"
-          (valueChange)="accentChange.emit($event)"
-        />
-
-        <section class="surface-colors" aria-labelledby="surface-colors-title">
-          <h4 id="surface-colors-title">Background</h4>
-
-          <div class="with-reset">
-            <app-color-field
-              label="Background"
-              [value]="activeBgColor()"
-              (valueChange)="bgColorChange.emit($event)"
-            />
-            @if (activeBgColor()) {
-              <app-icon-button
-                icon="refresh"
-                label="Reset background color"
-                (activate)="bgColorChange.emit(null)"
-              />
-            }
-          </div>
-
-          <div class="with-reset">
-            <app-color-field
-              label="Cards"
-              [value]="activeCardColor()"
-              (valueChange)="cardColorChange.emit($event)"
-            />
-            @if (activeCardColor()) {
-              <app-icon-button
-                icon="refresh"
-                label="Reset card color"
-                (activate)="cardColorChange.emit(null)"
-              />
-            }
-          </div>
-        </section>
-
-        <section class="note-colors" aria-labelledby="note-colors-title">
-          <h4 id="note-colors-title">Scale notes</h4>
-
-          <app-color-field
-            label="Root note"
-            [value]="rootNoteColor()"
-            (valueChange)="rootNoteColorChange.emit($event)"
-          />
-
-          <app-color-field
-            label="Other notes"
-            [value]="noteColor()"
-            (valueChange)="noteColorChange.emit($event)"
-          />
-        </section>
       </section>
 
       <section class="tuner-settings" aria-label="Tuner settings">
@@ -214,22 +158,6 @@
             />
           </div>
         </div>
-
-        <section class="in-tune-color" aria-labelledby="in-tune-color-title">
-          <h4 id="in-tune-color-title">Tuner colors</h4>
-
-          <app-color-field
-            label="In-tune color"
-            [value]="tunerSettings().inTune.color"
-            (valueChange)="chooseInTuneColor($event)"
-          />
-
-          <app-color-field
-            label="Out-of-tune color"
-            [value]="tunerSettings().inTune.outOfTuneColor"
-            (valueChange)="outOfTuneColorChange.emit($event)"
-          />
-        </section>
 
         <section class="in-tune-ranges" aria-labelledby="in-tune-ranges-title">
           <h4 id="in-tune-ranges-title">Confirmation window</h4>

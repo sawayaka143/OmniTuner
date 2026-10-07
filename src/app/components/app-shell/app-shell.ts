@@ -13,7 +13,11 @@ import {
 import { DOCUMENT } from '@angular/common';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { textColorOn } from '../../data/interval-colors';
-import { TunerStartupMode } from '../../models/tuner-preferences.model';
+import { DEFAULT_SCALE_PREFERENCES } from '../../data/scale-tuning.constants';
+import {
+  DEFAULT_IN_TUNE_PREFERENCES,
+  TunerStartupMode,
+} from '../../models/tuner-preferences.model';
 import { HapticsService } from '../../services/haptics.service';
 import { ScalePreferences } from '../../services/scale-preferences';
 import { TunerPreferences } from '../../services/tuner-preferences';
@@ -119,6 +123,32 @@ export class AppShell {
     this.destroyRef.onDestroy(() => this.navigationEvents.unsubscribe());
     this.scheduleIndicatorMeasure();
     this.scheduleIndicatorFontMeasure();
+    const state = this.preferences.state();
+    if (
+      state.accent !== DEFAULT_SCALE_PREFERENCES.accent ||
+      state.rootNoteColor !== DEFAULT_SCALE_PREFERENCES.rootNoteColor ||
+      state.noteColor !== DEFAULT_SCALE_PREFERENCES.noteColor ||
+      state.bgColorDark !== null ||
+      state.cardColorDark !== null ||
+      state.bgColorLight !== null ||
+      state.cardColorLight !== null
+    ) {
+      this.preferences.setAccent(DEFAULT_SCALE_PREFERENCES.accent);
+      this.preferences.setRootNoteColor(DEFAULT_SCALE_PREFERENCES.rootNoteColor);
+      this.preferences.setNoteColor(DEFAULT_SCALE_PREFERENCES.noteColor);
+      this.preferences.setBgColor('dark', null);
+      this.preferences.setBgColor('light', null);
+      this.preferences.setCardColor('dark', null);
+      this.preferences.setCardColor('light', null);
+    }
+    const tuner = this.tunerPreferences.tunerSettings();
+    if (
+      tuner.inTune.color !== DEFAULT_IN_TUNE_PREFERENCES.color ||
+      tuner.inTune.outOfTuneColor !== DEFAULT_IN_TUNE_PREFERENCES.outOfTuneColor
+    ) {
+      this.tunerPreferences.setInTuneColor(DEFAULT_IN_TUNE_PREFERENCES.color);
+      this.tunerPreferences.setOutOfTuneColor(DEFAULT_IN_TUNE_PREFERENCES.outOfTuneColor);
+    }
     effect(() => {
       const state = this.preferencesState();
       const theme = this.themeService.theme();
@@ -140,26 +170,6 @@ export class AppShell {
 
   protected readonly outOfTuneColor = computed(() => this.tunerSettings().inTune.outOfTuneColor);
 
-  protected setAccent(accent: string): void {
-    this.preferences.setAccent(accent);
-  }
-
-  protected setRootNoteColor(color: string): void {
-    this.preferences.setRootNoteColor(color);
-  }
-
-  protected setNoteColor(color: string): void {
-    this.preferences.setNoteColor(color);
-  }
-
-  protected setBgColor(color: string | null): void {
-    this.preferences.setBgColor(this.themeService.theme(), color);
-  }
-
-  protected setCardColor(color: string | null): void {
-    this.preferences.setCardColor(this.themeService.theme(), color);
-  }
-
   protected setTunerStartupMode(startupMode: TunerStartupMode): void {
     this.tunerPreferences.setStartupMode(startupMode);
   }
@@ -178,14 +188,6 @@ export class AppShell {
 
   protected setInTuneGlow(glow: boolean): void {
     this.tunerPreferences.setInTuneGlow(glow);
-  }
-
-  protected setInTuneColor(color: string): void {
-    this.tunerPreferences.setInTuneColor(color);
-  }
-
-  protected setOutOfTuneColor(color: string): void {
-    this.tunerPreferences.setOutOfTuneColor(color);
   }
 
   protected setInTuneTolerance(tolerance: number): void {

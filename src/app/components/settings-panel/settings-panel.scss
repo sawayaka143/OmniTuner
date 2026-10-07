@@ -149,23 +149,6 @@
   }
 }
 
-.note-colors {
-  display: grid;
-  gap: var(--space-2);
-  padding-top: var(--space-5);
-  border-top: 1px solid var(--border-subtle);
-
-  h4 {
-    margin: 0;
-    color: var(--text-muted);
-    font-family: var(--font);
-    font-size: var(--text-xs);
-    font-weight: var(--fw-semibold);
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
-  }
-}
-
 .custom-copy {
   display: grid;
   gap: 2px;
@@ -179,30 +162,6 @@
     color: var(--text-dim);
     font-size: var(--text-3xs);
   }
-}
-
-.surface-colors {
-  display: grid;
-  gap: var(--space-2);
-  padding-top: var(--space-5);
-  border-top: 1px solid var(--border-subtle);
-
-  h4 {
-    margin: 0;
-    color: var(--text-muted);
-    font-family: var(--font);
-    font-size: var(--text-xs);
-    font-weight: var(--fw-semibold);
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
-  }
-}
-
-.with-reset {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: var(--space-2);
 }
 
 .workbench-size-control {
@@ -335,7 +294,6 @@
   }
 }
 
-.in-tune-color,
 .in-tune-ranges {
   display: grid;
   gap: var(--space-2);

@@ -66,7 +66,8 @@
     </div>
   </div>
 
-  <div class="control-group-right">
+  <div class="option-group">
+    <span class="option-label">Display</span>
     <div class="label-select">
       <button
         #labelTrigger
@@ -110,11 +111,16 @@
         </div>
       }
     </div>
+  </div>
 
+  <div class="option-group">
+    <span class="option-label">Visibility</span>
     <app-toggle
+      class="outside-scale-toggle"
       [checked]="showOutsideScale()"
       label="Outside scale"
       [inline]="true"
+      [fullWidth]="true"
       (change)="showOutsideScaleChange.emit($event)"
     />
   </div>
