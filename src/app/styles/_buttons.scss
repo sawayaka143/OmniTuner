@@ -45,15 +45,13 @@
     color: var(--text);
     box-shadow:
       inset 0 0 0 1px var(--border-subtle),
-      var(--glass-sheen),
-      var(--shadow-recess);
+      var(--glass-sheen);
 
     &:hover {
       background: var(--glass-bg-hover);
       box-shadow:
         inset 0 0 0 1px var(--border-medium),
-        var(--glass-sheen),
-        var(--shadow-recess);
+        var(--glass-sheen);
     }
   }
 }
@@ -69,8 +67,7 @@
   @include glass-surface();
   box-shadow:
     inset 0 0 0 1px var(--border-subtle),
-    var(--glass-sheen),
-    var(--shadow-recess);
+    var(--glass-sheen);
   color: var(--text-muted);
   font-family: var(--font);
   cursor: pointer;
@@ -88,8 +85,7 @@
     background: var(--glass-bg-hover);
     box-shadow:
       inset 0 0 0 1px var(--border-medium),
-      var(--glass-sheen),
-      var(--shadow-recess);
+      var(--glass-sheen);
     color: var(--text);
   }
 

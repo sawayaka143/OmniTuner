@@ -17,19 +17,6 @@
   padding: var(--nav-gap) var(--nav-gap) 0;
   pointer-events: none;
 
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0 0 auto;
-    height: var(--nav-block-h);
-    background-image: linear-gradient(
-      to bottom,
-      var(--canvas) 0%,
-      color-mix(in srgb, var(--canvas) 72%, transparent) 62%,
-      transparent 100%
-    );
-  }
-
   .header-inner {
     max-width: none;
     width: 100%;
@@ -137,10 +124,10 @@
   width: 0;
   height: calc(100% - var(--space-2));
   border-radius: var(--r-pill);
-  background: color-mix(in srgb, var(--scale-accent) 22%, var(--seg-pill-bg));
+  background: color-mix(in srgb, var(--scale-accent) 15%, var(--seg-pill-bg));
   box-shadow:
     var(--seg-pill-shadow),
-    inset 0 0 0 1px color-mix(in srgb, var(--scale-accent) 40%, transparent);
+    inset 0 0 0 1px color-mix(in srgb, var(--scale-accent) 25%, transparent);
   opacity: 0;
   pointer-events: none;
   z-index: 0;

@@ -13,8 +13,7 @@
   padding: var(--space-3);
   border: 1px solid var(--border-subtle);
   border-radius: var(--r-md);
-  @include glass-surface();
-  box-shadow: var(--glass-sheen);
+  background: var(--surface-container);
 }
 
 .swatch {
@@ -23,7 +22,7 @@
   padding: 2px;
   border: 1px solid var(--border-medium);
   border-radius: var(--r-md);
-  @include glass-surface(var(--glass-bg-hover));
+  background: transparent;
   cursor: pointer;
 
   &::-webkit-color-swatch-wrapper {

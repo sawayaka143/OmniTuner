@@ -16,9 +16,7 @@
 
     &:hover {
       color: var(--danger-hover);
-      box-shadow:
-        inset 0 0 0 1px var(--danger),
-        var(--shadow-recess);
+      box-shadow: inset 0 0 0 1px var(--danger);
     }
 
     &:focus-visible {
@@ -33,10 +31,8 @@
     box-shadow: inset 0 0 0 1px transparent;
 
     &:hover {
-      background: var(--surface-container-low);
-      box-shadow:
-        inset 0 0 0 1px var(--border-subtle),
-        var(--shadow-recess);
+      background: var(--glass-bg-hover);
+      box-shadow: inset 0 0 0 1px var(--border-subtle);
     }
 
     &:focus-visible {

@@ -14,7 +14,7 @@
   border: 1px solid var(--border-subtle);
   border-radius: var(--r-md);
   @include glass-surface();
-  box-shadow: var(--glass-sheen), var(--shadow-recess);
+  box-shadow: var(--glass-sheen);
 }
 
 .intro-icon {

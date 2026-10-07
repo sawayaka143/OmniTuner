@@ -97,26 +97,32 @@
 
   --shadow-recess: inset 0 2px 4px rgba(0, 0, 0, 0.4);
 
-  --glass-bg: color-mix(in srgb, var(--surface-container-low) 55%, transparent);
-  --glass-bg-hover: color-mix(in srgb, var(--surface-container) 65%, transparent);
-  --glass-bg-strong: color-mix(in srgb, var(--surface-container-low) 80%, transparent);
-  --glass-filter: none;
-  --glass-sheen: inset 0 0 0 0 transparent;
+  --glass-bg: rgba(255, 255, 255, 0.035);
+  --glass-bg-hover: rgba(255, 255, 255, 0.07);
+  --glass-bg-strong: color-mix(
+    in srgb,
+    var(--surface-container-low) 88%,
+    rgba(255, 255, 255, 0.04)
+  );
+  --glass-blur: 8px;
+  --glass-saturate: 125%;
+  --glass-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  --glass-sheen:
+    inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 -0.5px 0 rgba(255, 255, 255, 0.04);
 
   --nav-gap: var(--space-3);
-  --nav-block-h: calc(var(--nav-gap) + var(--space-7) * 2 + var(--space-6));
-  --nav-glass-bg: color-mix(in srgb, var(--surface-container-low) 78%, transparent);
+  --nav-block-h: calc(var(--nav-gap) + var(--space-7) * 2);
+  --nav-glass-bg: rgba(255, 255, 255, 0.04);
   --nav-glass-blur: 10px;
-  --nav-glass-saturate: 140%;
+  --nav-glass-saturate: 130%;
   --nav-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.22), inset 0 -1px 0 rgba(255, 255, 255, 0.08),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.07), 0 10px 30px rgba(0, 0, 0, 0.34);
+    inset 0 1px 0 rgba(255, 255, 255, 0.22), inset 0 -1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 
-  --seg-track-bg: var(--surface-container-low);
-  --seg-pill-bg: var(--surface-container-high);
+  --seg-track-bg: rgba(255, 255, 255, 0.035);
+  --seg-pill-bg: rgba(255, 255, 255, 0.09);
   --seg-pill-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.25),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+    inset 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 
   --seg-etch: 0 1px 2px rgba(0, 0, 0, 0.6);
 
@@ -188,24 +194,28 @@ html[data-theme='light'] {
   --shadow-inset-panel: inset 0 2px 6px rgba(0, 0, 0, 0.08);
   --shadow-recess: inset 0 1px 2px rgba(0, 0, 0, 0.1);
 
-  --seg-track-bg: var(--surface-container);
+  --seg-track-bg: rgba(0, 0, 0, 0.04);
   --seg-pill-bg: #ffffff;
-  --seg-pill-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.16), 0 2px 8px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+  --seg-pill-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), inset 0 0 0 1px rgba(0, 0, 0, 0.08);
   --seg-etch: none;
   --chord-stage-glow: 0 0 34px color-mix(in srgb, var(--scale-accent) 18%, transparent);
   --workbench-inset: var(--surface-container);
 
-  --glass-bg: color-mix(in srgb, var(--surface-container-low) 35%, transparent);
-  --glass-bg-hover: color-mix(in srgb, var(--surface-container) 48%, transparent);
-  --glass-bg-strong: color-mix(in srgb, var(--surface-container-low) 62%, transparent);
-  --glass-sheen: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  --glass-bg: rgba(255, 255, 255, 0.5);
+  --glass-bg-hover: rgba(255, 255, 255, 0.7);
+  --glass-bg-strong: color-mix(in srgb, var(--surface-container-low) 88%, rgba(255, 255, 255, 0.5));
+  --glass-blur: 8px;
+  --glass-saturate: 125%;
+  --glass-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  --glass-sheen:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85), inset 0 -0.5px 0 rgba(255, 255, 255, 0.25);
 
-  --nav-glass-bg: color-mix(in srgb, var(--surface-container-low) 58%, transparent);
+  --nav-glass-bg: rgba(255, 255, 255, 0.6);
+  --nav-glass-blur: 10px;
+  --nav-glass-saturate: 130%;
   --nav-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 -1px 0 rgba(255, 255, 255, 0.5),
-    inset 0 0 0 1px rgba(0, 0, 0, 0.06), 0 10px 30px rgba(0, 0, 0, 0.12);
+    inset 0 1px 0 rgba(255, 255, 255, 0.95), inset 0 -1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.08);
 }
 
 @media (prefers-reduced-transparency: reduce) {
@@ -218,7 +228,19 @@ html[data-theme='light'] {
 
     --nav-glass-bg: var(--surface-container-low);
     --nav-glass-blur: 0px;
-    --nav-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+    --nav-shadow: inset 0 0 0 1px var(--border-medium);
+  }
+
+  html[data-theme='light'] {
+    --glass-bg: var(--surface-container-low);
+    --glass-bg-hover: var(--surface-container);
+    --glass-bg-strong: var(--surface-container-low);
+    --glass-filter: none;
+    --glass-sheen: inset 0 0 0 0 transparent;
+
+    --nav-glass-bg: var(--surface-container-low);
+    --nav-glass-blur: 0px;
+    --nav-shadow: inset 0 0 0 1px var(--border-medium);
   }
 }
 
@@ -367,8 +389,7 @@ h3 {
   -webkit-backdrop-filter: var(--glass-filter);
   box-shadow:
     inset 0 0 0 1px var(--border-subtle),
-    var(--glass-sheen),
-    var(--shadow-recess);
+    var(--glass-sheen);
   color: var(--text);
   font-family: var(--font);
   font-size: var(--text-xs);
@@ -388,8 +409,7 @@ h3 {
   background: var(--glass-bg-hover);
   box-shadow:
     inset 0 0 0 1px var(--border-medium),
-    var(--glass-sheen),
-    var(--shadow-recess);
+    var(--glass-sheen);
   filter: brightness(1.08);
 }
 
@@ -443,10 +463,8 @@ h3 {
 }
 
 .btn.ghost:hover {
-  background: var(--surface-container-low);
-  box-shadow:
-    inset 0 0 0 1px var(--border-subtle),
-    var(--shadow-recess);
+  background: var(--glass-bg-hover);
+  box-shadow: inset 0 0 0 1px var(--border-subtle);
   color: var(--text);
 }
 

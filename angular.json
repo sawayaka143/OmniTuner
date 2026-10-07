@@ -79,6 +79,11 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "test-unit": {
+              "loader": {
+                ".scss": "text"
+              }
             }
           },
           "defaultConfiguration": "production"
@@ -98,6 +103,7 @@
         "test": {
           "builder": "@angular/build:unit-test",
           "options": {
+            "buildTarget": "tuner-app:build:development,test-unit",
             "setupFiles": ["src/test-setup.ts"],
             "coverage": false,
             "coverageExclude": [

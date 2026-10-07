@@ -1,6 +1,4 @@
-import { readFileSync } from 'node:fs';
-
-const stylesheet = readFileSync(`${process.cwd()}/src/styles.scss`, 'utf8');
+import stylesheet from '../../styles.scss';
 
 const AA_MIN = 4.5;
 
