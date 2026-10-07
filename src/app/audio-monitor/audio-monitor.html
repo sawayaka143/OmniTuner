@@ -40,6 +40,10 @@
 
     <app-tuner-intro />
 
+    @if (showDiagnostics) {
+      <app-tuner-diagnostics />
+    }
+
     <div class="tuner-controls">
       <app-instrument-selector
         [instruments]="instruments()"

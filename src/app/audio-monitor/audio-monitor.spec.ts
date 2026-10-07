@@ -102,4 +102,30 @@ describe('AudioMonitor', () => {
     fixture.destroy();
     expect(service.isCapturing()).toBe(true);
   });
+
+  it('hides the diagnostics panel by default', () => {
+    const fixture = TestBed.createComponent(AudioMonitor);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('app-tuner-diagnostics')).toBeNull();
+  });
+
+  it('shows the diagnostics panel when the URL has a diagnostics flag', () => {
+    const original = window.location.href;
+    window.history.replaceState(null, '', '/tuner?diagnostics');
+    try {
+      const fixture = TestBed.createComponent(AudioMonitor);
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('app-tuner-diagnostics')).not.toBeNull();
+    } finally {
+      window.history.replaceState(null, '', original);
+    }
+  });
+
+  it('tells the capture service the lowest string of the current tuning', () => {
+    const setLowestNote = vi.spyOn(TestBed.inject(AudioCaptureService), 'setLowestNote');
+    const component = create();
+    const lowest = Math.min(...component.currentStrings().map((string) => string.freq));
+
+    expect(setLowestNote).toHaveBeenLastCalledWith(lowest);
+  });
 });

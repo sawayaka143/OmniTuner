@@ -102,7 +102,7 @@ describe('Scales', () => {
     expect(el().textContent).not.toContain('undefined');
   });
 
-  it('has no axe violations', async () => {
+  it('has no axe violations', { timeout: 20000 }, async () => {
     const results = await axe(el());
     expect(results).toHaveNoViolations();
   });

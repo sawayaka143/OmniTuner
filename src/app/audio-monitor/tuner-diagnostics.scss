@@ -1,0 +1,117 @@
+@use '../styles' as *;
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+.diagnostics {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin: var(--space-5) var(--space-5) 0;
+  padding: var(--space-5);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-md);
+  @include glass-surface();
+  box-shadow: var(--glass-sheen);
+}
+
+.diagnostics-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+
+  h3 {
+    font-size: var(--text-md);
+    font-weight: var(--fw-semibold);
+    letter-spacing: var(--tracking-tight);
+  }
+}
+
+.diagnostics-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.level-meter {
+  position: relative;
+  height: var(--space-2);
+  border-radius: var(--r-pill);
+  background: var(--surface-container-high);
+  overflow: hidden;
+}
+
+.level-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--good);
+  transition: width var(--dur-fast) var(--ease-standard);
+}
+
+.level-gate {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-left: 1px solid var(--warn);
+}
+
+.readout {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--space-3) var(--space-5);
+  margin: 0;
+
+  div {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  dt {
+    @include micro-label();
+  }
+
+  dd {
+    margin: 0;
+    color: var(--text);
+    font-size: var(--text-sm);
+    font-variant-numeric: tabular-nums;
+    line-height: var(--leading-snug);
+    overflow-wrap: anywhere;
+  }
+
+  small {
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+  }
+
+  [data-outcome='detected'] {
+    color: var(--good);
+  }
+
+  [data-outcome='unclear'] {
+    color: var(--warn);
+  }
+}
+
+.diagnostics-empty,
+.status {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.status:empty {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .diagnostics {
+    margin: var(--space-4) var(--space-4) 0;
+    padding: var(--space-4);
+  }
+}

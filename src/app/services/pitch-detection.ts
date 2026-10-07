@@ -1,7 +1,11 @@
+import { differenceFunction } from './yin-difference';
+
 export interface PitchEstimate {
   frequency: number | null;
   confidence: number;
   inputLevel: number;
+  clarity?: number;
+  candidateFrequency?: number | null;
 }
 
 export const MIN_FREQUENCY = 27;
@@ -12,6 +16,27 @@ export const YIN_THRESHOLD = 0.15;
 export const MIN_CONFIDENCE = 0.58;
 
 export const SILENCE_RMS = 0.004;
+
+export const DIP_MARGIN = 0.05;
+
+export const DEFAULT_HIGHPASS_HZ = 20;
+export const DETECTION_FLOOR_RATIO = 0.6;
+export const HIGHPASS_RATIO = 0.5;
+
+export interface DetectionRange {
+  readonly minFrequency: number;
+  readonly highpassHz: number;
+}
+
+export function detectionRangeFor(lowestNoteHz: number | null): DetectionRange {
+  if (lowestNoteHz === null || !Number.isFinite(lowestNoteHz) || lowestNoteHz <= 0) {
+    return { minFrequency: MIN_FREQUENCY, highpassHz: DEFAULT_HIGHPASS_HZ };
+  }
+  return {
+    minFrequency: Math.max(MIN_FREQUENCY, lowestNoteHz * DETECTION_FLOOR_RATIO),
+    highpassHz: Math.max(DEFAULT_HIGHPASS_HZ, lowestNoteHz * HIGHPASS_RATIO),
+  };
+}
 
 // Sub-harmonic guard (preferLowerFundamental): above this frequency the legacy
 // single-step x2 check applies unchanged; below it an iterative descent runs.
@@ -29,14 +54,19 @@ const SUBHARMONIC_CEILING = 0.3;
 const SUBHARMONIC_ALIGNMENT_FLOOR = 0.005;
 const SUBHARMONIC_MULTIPLES = [2, 3, 4] as const;
 
-export function analyseBuffer(buffer: Float32Array, sampleRate: number): PitchEstimate {
+export function analyseBuffer(
+  buffer: Float32Array,
+  sampleRate: number,
+  silenceGate = SILENCE_RMS,
+  minFrequency = MIN_FREQUENCY,
+): PitchEstimate {
   const inputLevel = computeRMS(buffer);
-  if (inputLevel < SILENCE_RMS) {
+  if (inputLevel < silenceGate) {
     return { frequency: null, confidence: 0, inputLevel };
   }
 
   removeDCOffset(buffer);
-  const result = yinDetect(buffer, sampleRate);
+  const result = yinDetect(buffer, sampleRate, Math.max(MIN_FREQUENCY, minFrequency));
   return { ...result, inputLevel };
 }
 
@@ -63,10 +93,10 @@ function removeDCOffset(buffer: Float32Array): void {
 let yinBuffer: Float64Array | null = null;
 let yinBufferSize = 0;
 
-function yinDetect(buffer: Float32Array, sampleRate: number): PitchEstimate {
+function yinDetect(buffer: Float32Array, sampleRate: number, minFrequency: number): PitchEstimate {
   const N = buffer.length;
   const minLag = Math.max(1, Math.floor(sampleRate / MAX_FREQUENCY));
-  const maxLag = Math.min(Math.floor(N / 2), Math.ceil(sampleRate / MIN_FREQUENCY));
+  const maxLag = Math.min(Math.floor(N / 2), Math.ceil(sampleRate / minFrequency));
 
   if (maxLag <= minLag + 2) {
     return { frequency: null, confidence: 0, inputLevel: 0 };
@@ -78,40 +108,21 @@ function yinDetect(buffer: Float32Array, sampleRate: number): PitchEstimate {
   }
   const yin = yinBuffer;
 
-  const W = N - maxLag;
+  differenceFunction(buffer, maxLag, yin);
   yin[0] = 1;
   let runningSum = 0;
 
   for (let lag = 1; lag <= maxLag; lag++) {
-    let sum = 0;
-    for (let i = 0; i < W; i++) {
-      const delta = buffer[i] - buffer[i + lag];
-      sum += delta * delta;
-    }
+    const sum = yin[lag];
     runningSum += sum;
     yin[lag] = runningSum > 0 ? (sum * lag) / runningSum : 1;
   }
 
-  let tau = -1;
+  let deepestDip = Infinity;
   for (let lag = minLag; lag <= maxLag; lag++) {
-    if (yin[lag] < YIN_THRESHOLD) {
-      while (lag + 1 <= maxLag && yin[lag + 1] < yin[lag]) {
-        lag++;
-      }
-      tau = lag;
-      break;
-    }
+    deepestDip = Math.min(deepestDip, yin[lag]);
   }
-
-  if (tau === -1) {
-    let minVal = Infinity;
-    for (let lag = minLag; lag <= maxLag; lag++) {
-      if (yin[lag] < minVal) {
-        minVal = yin[lag];
-        tau = lag;
-      }
-    }
-  }
+  let tau = firstDipBelow(yin, Math.max(YIN_THRESHOLD, deepestDip + DIP_MARGIN), minLag, maxLag);
 
   if (tau <= 0) {
     return { frequency: null, confidence: 0, inputLevel: 0 };
@@ -139,10 +150,39 @@ function yinDetect(buffer: Float32Array, sampleRate: number): PitchEstimate {
   const confidence = Math.max(0, 1 - yin[tau]);
 
   if (confidence < MIN_CONFIDENCE) {
-    return { frequency: null, confidence: 0, inputLevel: 0 };
+    return {
+      frequency: null,
+      confidence: 0,
+      inputLevel: 0,
+      clarity: confidence,
+      candidateFrequency: frequency,
+    };
   }
 
-  return { frequency, confidence, inputLevel: 0 };
+  return {
+    frequency,
+    confidence,
+    inputLevel: 0,
+    clarity: confidence,
+    candidateFrequency: frequency,
+  };
+}
+
+export function firstDipBelow(
+  yin: Float64Array,
+  threshold: number,
+  minLag: number,
+  maxLag: number,
+): number {
+  for (let lag = minLag; lag <= maxLag; lag++) {
+    if (yin[lag] < threshold) {
+      while (lag + 1 <= maxLag && yin[lag + 1] < yin[lag]) {
+        lag++;
+      }
+      return lag;
+    }
+  }
+  return -1;
 }
 
 export function preferLowerFundamental(

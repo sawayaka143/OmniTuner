@@ -15,6 +15,7 @@ import { PitchDisplay } from '../components/pitch-display/pitch-display';
 import { PitchMeter, Tick } from '../components/pitch-meter/pitch-meter';
 import { StringList } from '../components/string-list/string-list';
 import { TunerIntro } from './tuner-intro';
+import { TunerDiagnostics } from './tuner-diagnostics';
 import { Toggle } from '../ui/toggle/toggle';
 import { Tuning } from '../models/instrument.model';
 import {
@@ -62,6 +63,7 @@ const RELEASE_HYSTERESIS_MS = 135;
     PitchDisplay,
     StringList,
     TunerIntro,
+    TunerDiagnostics,
     Toggle,
   ],
   templateUrl: './audio-monitor.html',
@@ -83,6 +85,10 @@ export class AudioMonitor implements OnInit {
   readonly frequency = this.audioCapture.frequency;
   readonly trackingState = this.audioCapture.trackingState;
   readonly captureError = this.audioCapture.captureError;
+
+  protected readonly showDiagnostics = new URLSearchParams(globalThis.location?.search ?? '').has(
+    'diagnostics',
+  );
 
   readonly instruments = this.registry.instruments;
   readonly selectedInstrumentId = this.registry.selectedInstrumentId;
@@ -290,6 +296,11 @@ export class AudioMonitor implements OnInit {
   });
 
   constructor() {
+    effect(() => {
+      const frequencies = this.currentStrings().map((string) => string.freq);
+      this.audioCapture.setLowestNote(frequencies.length > 0 ? Math.min(...frequencies) : null);
+    });
+
     effect(() => {
       this.mode();
       this.selectedTuningId();

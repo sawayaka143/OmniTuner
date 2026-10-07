@@ -1,7 +1,14 @@
 import { Service, signal, DestroyRef, inject, isDevMode } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { KeepAwake } from '@capacitor-community/keep-awake';
-import { SILENCE_RMS } from './pitch-detection';
+import { AdaptiveNoiseGate } from './noise-gate';
+import { DetectionRange, detectionRangeFor } from './pitch-detection';
+import {
+  CaptureDiagnostics,
+  CaptureDiagnosticsTracker,
+  RecordedSample,
+  describeMic,
+} from './capture-diagnostics';
 
 export type PitchTrackingState = 'idle' | 'listening' | 'locked';
 
@@ -21,6 +28,9 @@ interface PitchAnalysisResponse {
   frequency: number | null;
   confidence: number;
   inputLevel: number;
+  clarity?: number;
+  candidateFrequency?: number | null;
+  analysisMs?: number;
   sessionId: number;
   error?: string;
 }
@@ -36,9 +46,7 @@ const MAX_DROPOUT_HOLD_FRAMES = 6;
 
 const AUDIBLE_HOLD_FRAMES = 60;
 
-// Biquad cutoffs must bracket the worker's detection band (MIN_FREQUENCY /
-// MAX_FREQUENCY) with margin so edge notes pass unattenuated.
-const HIGHPASS_FREQUENCY_HZ = 20;
+const HIGHPASS_STAGE_Q = [0.5412, 1.3066] as const;
 const LOWPASS_FREQUENCY_HZ = 1800;
 
 const ANALYSIS_TIMEOUT_MS = 500;
@@ -52,11 +60,27 @@ export class AudioCaptureService {
   readonly trackingState = signal<PitchTrackingState>('idle');
   readonly captureError = signal<string | null>(null);
   readonly captureErrorCode = signal<CaptureErrorCode | null>(null);
+  readonly diagnostics = signal<CaptureDiagnostics | null>(null);
+
+  readonly recordingProgress = signal<number | null>(null);
+
+  private readonly diagnosticsTracker = new CaptureDiagnosticsTracker();
+  private readonly noiseGate = new AdaptiveNoiseGate();
+  private recording: {
+    frames: Float32Array[];
+    gates: number[];
+    total: number;
+    sampleRate: number;
+    resolve: (sample: RecordedSample) => void;
+    reject: (error: Error) => void;
+  } | null = null;
 
   private audioContext: AudioContext | null = null;
   private analyser: AnalyserNode | null = null;
   private source: MediaStreamAudioSourceNode | null = null;
-  private highpass: BiquadFilterNode | null = null;
+  private splitter: ChannelSplitterNode | null = null;
+  private highpassStages: BiquadFilterNode[] = [];
+  private detectionRange: DetectionRange = detectionRangeFor(null);
   private lowpass: BiquadFilterNode | null = null;
   private stream: MediaStream | null = null;
   private animationFrameId: number | null = null;
@@ -89,6 +113,8 @@ export class AudioCaptureService {
 
       this.analysisInFlight = false;
       this.clearAnalysisTimeout();
+      this.recordDiagnostics(event.data);
+      this.noiseGate.update(inputLevel, frequency !== null && confidence > 0);
 
       if (error && isDevMode()) {
         console.error('[AudioCaptureService] analysis failed:', error);
@@ -166,18 +192,17 @@ export class AudioCaptureService {
       );
 
       const source = ctx.createMediaStreamSource(this.stream);
+      const splitter = ctx.createChannelSplitter(2);
 
-      const trackSettings = this.stream.getAudioTracks()[0]?.getSettings();
-      if (trackSettings && (trackSettings.channelCount ?? 1) > 1 && isDevMode()) {
-        console.warn('[AudioCaptureService] mic delivered multi-channel; forcing mono downmix.');
-      }
-
-      const highpass = ctx.createBiquadFilter();
-      highpass.type = 'highpass';
-      highpass.frequency.value = HIGHPASS_FREQUENCY_HZ;
-      highpass.Q.value = 0.7;
-      highpass.channelCount = 1;
-      highpass.channelCountMode = 'explicit';
+      const highpassStages = HIGHPASS_STAGE_Q.map((q) => {
+        const stage = ctx.createBiquadFilter();
+        stage.type = 'highpass';
+        stage.frequency.value = this.detectionRange.highpassHz;
+        stage.Q.value = q;
+        stage.channelCount = 1;
+        stage.channelCountMode = 'explicit';
+        return stage;
+      });
 
       const lowpass = ctx.createBiquadFilter();
       lowpass.type = 'lowpass';
@@ -188,18 +213,25 @@ export class AudioCaptureService {
       analyser.fftSize = 8192;
       analyser.smoothingTimeConstant = 0;
 
-      source.connect(highpass);
-      highpass.connect(lowpass);
+      source.connect(splitter);
+      splitter.connect(highpassStages[0], 0);
+      highpassStages[0].connect(highpassStages[1]);
+      highpassStages[1].connect(lowpass);
       lowpass.connect(analyser);
 
       this.audioContext = ctx;
       this.analyser = analyser;
       this.source = source;
-      this.highpass = highpass;
+      this.splitter = splitter;
+      this.highpassStages = highpassStages;
       this.lowpass = lowpass;
 
       this.captureSession += 1;
       this.resetTracking();
+      this.noiseGate.reset();
+      this.diagnosticsTracker.resetStats();
+      this.diagnosticsTracker.setMic(describeMic(this.stream.getAudioTracks()[0], ctx.sampleRate));
+      this.diagnostics.set(this.diagnosticsTracker.snapshot());
       this.isCapturing.set(true);
       this.trackingState.set('listening');
       void this.acquireKeepAwake();
@@ -262,12 +294,83 @@ export class AudioCaptureService {
     this.captureSession += 1;
     this.analysisInFlight = false;
     this.startInFlight = false;
+    this.abortRecording();
     void this.releaseKeepAwake();
     this.releaseAudioResources();
     this.frequency.set(null);
     this.isCapturing.set(false);
     this.trackingState.set('idle');
     this.resetTracking();
+  }
+
+  setLowestNote(frequencyHz: number | null): void {
+    this.detectionRange = detectionRangeFor(frequencyHz);
+    this.highpassStages.forEach((stage) => {
+      stage.frequency.value = this.detectionRange.highpassHz;
+    });
+    this.diagnosticsTracker.setRange(this.detectionRange);
+    this.diagnostics.update((current) => (current ? this.diagnosticsTracker.snapshot() : current));
+  }
+
+  resetDiagnostics(): void {
+    this.diagnosticsTracker.resetStats();
+    this.diagnostics.set(this.diagnosticsTracker.snapshot());
+  }
+
+  recordSample(frameCount: number): Promise<RecordedSample> {
+    if (!this.isCapturing() || !this.audioContext) {
+      return Promise.reject(new Error('Start the tuner before recording a sample.'));
+    }
+    this.abortRecording();
+    const sampleRate = this.audioContext.sampleRate;
+    return new Promise<RecordedSample>((resolve, reject) => {
+      this.recording = { frames: [], gates: [], total: frameCount, sampleRate, resolve, reject };
+      this.recordingProgress.set(0);
+    });
+  }
+
+  private captureRecordingFrame(frame: Float32Array, gate: number): void {
+    const recording = this.recording;
+    if (!recording) return;
+
+    recording.frames.push(frame);
+    recording.gates.push(gate);
+    this.recordingProgress.set(recording.frames.length / recording.total);
+
+    if (recording.frames.length >= recording.total) {
+      this.recording = null;
+      this.recordingProgress.set(null);
+      recording.resolve({
+        frames: recording.frames,
+        gates: recording.gates,
+        sampleRate: recording.sampleRate,
+        frameSize: frame.length,
+        hopMs: ANALYSIS_INTERVAL_MS,
+        range: this.detectionRange,
+      });
+    }
+  }
+
+  private abortRecording(): void {
+    const recording = this.recording;
+    if (!recording) return;
+    this.recording = null;
+    this.recordingProgress.set(null);
+    recording.reject(new Error('Recording stopped before it finished.'));
+  }
+
+  private recordDiagnostics(response: PitchAnalysisResponse): void {
+    this.diagnosticsTracker.record({
+      inputLevel: response.inputLevel,
+      clarity: response.clarity ?? null,
+      candidateFrequency: response.candidateFrequency ?? null,
+      accepted: response.frequency !== null && response.confidence > 0,
+      analysisMs: response.analysisMs ?? null,
+      receivedAt: performance.now(),
+      gate: this.noiseGate.gate,
+      noiseFloor: this.noiseGate.noiseFloor,
+    });
+    this.diagnostics.set(this.diagnosticsTracker.snapshot());
   }
 
   attemptAutoStart(): void {
@@ -289,7 +392,8 @@ export class AudioCaptureService {
     this.removeUnlockListeners();
 
     this.source?.disconnect();
-    this.highpass?.disconnect();
+    this.splitter?.disconnect();
+    this.highpassStages.forEach((stage) => stage.disconnect());
     this.lowpass?.disconnect();
     this.analyser?.disconnect();
     void this.audioContext?.close();
@@ -297,7 +401,8 @@ export class AudioCaptureService {
     this.audioContext = null;
     this.analyser = null;
     this.source = null;
-    this.highpass = null;
+    this.splitter = null;
+    this.highpassStages = [];
     this.lowpass = null;
     this.stream = null;
   }
@@ -347,11 +452,16 @@ export class AudioCaptureService {
         this.analysisInFlight = true;
         lastAnalysisAt = timestamp;
 
+        const frame = buffer.slice();
+        const silenceGate = this.noiseGate.gate;
         this.worker?.postMessage({
-          buffer: buffer.slice(),
+          buffer: frame,
           sampleRate: this.audioContext.sampleRate,
+          silenceGate,
+          minFrequency: this.detectionRange.minFrequency,
           sessionId: this.captureSession,
         });
+        this.captureRecordingFrame(frame, silenceGate);
 
         this.clearAnalysisTimeout();
         this.analysisTimeout = setTimeout(() => {
@@ -392,7 +502,7 @@ export class AudioCaptureService {
 
   private handleDropout(inputLevel: number): void {
     this.missedFrames += 1;
-    const audible = inputLevel >= SILENCE_RMS;
+    const audible = inputLevel >= this.noiseGate.gate;
 
     if (audible && this.missedFrames <= AUDIBLE_HOLD_FRAMES) return;
 

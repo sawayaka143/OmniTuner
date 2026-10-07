@@ -22,7 +22,12 @@ class MockWorker {
     MockWorker.latest = this;
   }
 
-  postMessage(): void {}
+  readonly messages: unknown[] = [];
+
+  postMessage(message: unknown): void {
+    this.messages.push(message);
+  }
+
   terminate(): void {}
 
   emit(response: PitchAnalysisResponse): void {
@@ -318,8 +323,10 @@ describe('AudioCaptureService', () => {
 });
 
 class FakeMediaStreamTrack {
-  getSettings(): { channelCount: number } {
-    return { channelCount: 1 };
+  readonly label = 'Test Microphone';
+
+  getSettings(): { channelCount: number; echoCancellation: boolean; sampleRate: number } {
+    return { channelCount: 2, echoCancellation: false, sampleRate: 48000 };
   }
 
   stop(): void {}
@@ -336,6 +343,8 @@ class FakeMediaStream {
 }
 
 class FakeAudioContext {
+  static latest: FakeAudioContext | null = null;
+
   readonly state = 'running';
   readonly sampleRate = 48000;
 
@@ -343,12 +352,27 @@ class FakeAudioContext {
   readonly close = vi.fn().mockResolvedValue(undefined);
   readonly addEventListener = vi.fn();
   readonly removeEventListener = vi.fn();
+  readonly source = { connect: vi.fn(), disconnect: vi.fn() };
+  readonly splitter = { connect: vi.fn(), disconnect: vi.fn() };
+  readonly createChannelSplitter = vi.fn(() => this.splitter);
 
-  createMediaStreamSource(): { connect: () => void; disconnect: () => void } {
-    return { connect: () => undefined, disconnect: () => undefined };
+  constructor() {
+    FakeAudioContext.latest = this;
   }
 
-  createBiquadFilter(): {
+  createMediaStreamSource(): { connect: () => void; disconnect: () => void } {
+    return this.source;
+  }
+
+  readonly createdFilters: ReturnType<FakeAudioContext['makeFilter']>[] = [];
+
+  createBiquadFilter(): ReturnType<FakeAudioContext['makeFilter']> {
+    const filter = this.makeFilter();
+    this.createdFilters.push(filter);
+    return filter;
+  }
+
+  makeFilter(): {
     type: string;
     frequency: { value: number };
     Q: { value: number };
@@ -537,5 +561,149 @@ describe('AudioCaptureService capture errors', () => {
     expect(service.captureError()).toBeNull();
     expect(service.captureErrorCode()).toBeNull();
     expect(service.isCapturing()).toBe(true);
+  });
+});
+
+describe('AudioCaptureService diagnostics', () => {
+  let service: AudioCaptureService;
+
+  beforeEach(() => {
+    MockWorker.latest = null;
+    FakeAudioContext.latest = null;
+    vi.stubGlobal('Worker', MockWorker);
+    vi.stubGlobal('AudioContext', FakeAudioContext);
+    Object.defineProperty(globalThis.navigator, 'mediaDevices', {
+      configurable: true,
+      value: {
+        getUserMedia: vi.fn().mockResolvedValue(new FakeMediaStream()),
+        getSupportedConstraints: () => ({ echoCancellation: true, channelCount: true }),
+      },
+    });
+    TestBed.configureTestingModule({});
+    service = TestBed.inject(AudioCaptureService);
+  });
+
+  afterEach(() => {
+    service.stopCapture();
+    TestBed.resetTestingModule();
+    vi.unstubAllGlobals();
+    delete (globalThis.navigator as { mediaDevices?: unknown }).mediaDevices;
+  });
+
+  it('feeds only the first input channel into the filter chain', async () => {
+    await service.startCapture();
+    const ctx = FakeAudioContext.latest!;
+
+    expect(ctx.createChannelSplitter).toHaveBeenCalledWith(2);
+    expect(ctx.source.connect).toHaveBeenCalledWith(ctx.splitter);
+    expect(ctx.splitter.connect).toHaveBeenCalledWith(expect.anything(), 0);
+  });
+
+  it('captures what the browser actually applied to the microphone', async () => {
+    await service.startCapture();
+
+    const mic = service.diagnostics()?.mic;
+    expect(mic?.label).toBe('Test Microphone');
+    expect(mic?.channelCount).toBe(2);
+    expect(mic?.echoCancellation).toBe(false);
+    expect(mic?.noiseSuppression).toBeNull();
+    expect(mic?.contextSampleRate).toBe(48000);
+    expect(mic?.supportedConstraints).toEqual(['echoCancellation', 'channelCount']);
+  });
+
+  it('lowers the silence gate to just above a quiet room', async () => {
+    await service.startCapture();
+    const worker = MockWorker.latest!;
+    for (let i = 0; i < 20; i++) {
+      worker.emit({ frequency: null, confidence: 0, inputLevel: 0.0005, sessionId: 1 });
+    }
+
+    const last = service.diagnostics()!.last!;
+    expect(20 * Math.log10(last.noiseFloor!)).toBeCloseTo(-66, 0);
+    expect(20 * Math.log10(last.gate)).toBeCloseTo(-60, 0);
+    expect(last.outcome).toBe('silent');
+
+    worker.emit({ frequency: null, confidence: 0, inputLevel: 0.002, sessionId: 1 });
+    expect(service.diagnostics()!.last!.outcome).toBe('unclear');
+  });
+
+  it('retunes the low cut and search range to the lowest string', async () => {
+    const stages: { frequency: { value: number }; Q: { value: number } }[] = [];
+    const frameCallbacks: FrameRequestCallback[] = [];
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+      frameCallbacks.push(callback);
+      return frameCallbacks.length;
+    });
+    vi.stubGlobal('cancelAnimationFrame', () => undefined);
+    await service.startCapture();
+    const ctx = FakeAudioContext.latest!;
+    expect(ctx.createdFilters.filter((f) => f.type === 'highpass')).toHaveLength(2);
+    stages.push(...ctx.createdFilters.filter((f) => f.type === 'highpass'));
+    expect(stages.map((stage) => stage.Q.value)).toEqual([0.5412, 1.3066]);
+    expect(stages.every((stage) => stage.frequency.value === 20)).toBe(true);
+
+    service.setLowestNote(82.41);
+
+    expect(stages.every((stage) => Math.abs(stage.frequency.value - 41.205) < 1e-9)).toBe(true);
+    expect(service.diagnostics()?.range.minFrequency).toBeCloseTo(49.45, 2);
+
+    frameCallbacks.at(-1)!(1000);
+
+    expect(MockWorker.latest!.messages.at(-1)).toMatchObject({
+      minFrequency: expect.closeTo(49.45, 2),
+      silenceGate: expect.any(Number),
+      sessionId: 1,
+    });
+  });
+
+  it('collects analysis frames into a recorded sample', async () => {
+    await service.startCapture();
+    const capture = service as unknown as {
+      captureRecordingFrame(frame: Float32Array, gate: number): void;
+    };
+    const pending = service.recordSample(2);
+    expect(service.recordingProgress()).toBe(0);
+
+    capture.captureRecordingFrame(new Float32Array(8).fill(0.1), 0.001);
+    expect(service.recordingProgress()).toBe(0.5);
+    capture.captureRecordingFrame(new Float32Array(8).fill(0.2), 0.002);
+
+    const sample = await pending;
+    expect(sample.frames).toHaveLength(2);
+    expect(sample.gates).toEqual([0.001, 0.002]);
+    expect(sample.frameSize).toBe(8);
+    expect(sample.sampleRate).toBe(48000);
+    expect(service.recordingProgress()).toBeNull();
+  });
+
+  it('refuses to record while idle and aborts a recording when capture stops', async () => {
+    await expect(service.recordSample(2)).rejects.toThrow('Start the tuner');
+
+    await service.startCapture();
+    const pending = service.recordSample(5);
+    service.stopCapture();
+
+    await expect(pending).rejects.toThrow('stopped');
+    expect(service.recordingProgress()).toBeNull();
+  });
+
+  it('classifies analysed frames and can reset the running stats', async () => {
+    await service.startCapture();
+    const worker = MockWorker.latest!;
+    const sessionId = 1;
+
+    worker.emit({ frequency: 110, confidence: 0.9, inputLevel: AUDIBLE, sessionId });
+    worker.emit({ frequency: null, confidence: 0, inputLevel: AUDIBLE, sessionId });
+    worker.emit({ frequency: null, confidence: 0, inputLevel: SILENT, sessionId });
+
+    const stats = service.diagnostics()!;
+    expect(stats.frames).toBe(3);
+    expect(stats.outcomes).toEqual({ detected: 1, unclear: 1, silent: 1 });
+    expect(stats.peakLevel).toBe(AUDIBLE);
+    expect(stats.last?.outcome).toBe('silent');
+
+    service.resetDiagnostics();
+    expect(service.diagnostics()?.frames).toBe(0);
+    expect(service.diagnostics()?.mic).not.toBeNull();
   });
 });
