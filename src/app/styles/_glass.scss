@@ -15,3 +15,22 @@
   border-radius: var(--r-pill);
   @include glass-panel();
 }
+
+@mixin glass-card() {
+  position: relative;
+  box-shadow: var(--glass-drop);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    corner-shape: inherit;
+    background-color: var(--nav-glass-bg);
+    box-shadow: var(--glass-rim);
+    backdrop-filter: blur(var(--nav-glass-blur)) saturate(var(--nav-glass-saturate));
+    -webkit-backdrop-filter: blur(var(--nav-glass-blur)) saturate(var(--nav-glass-saturate));
+    pointer-events: none;
+  }
+}

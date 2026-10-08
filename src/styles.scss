@@ -115,10 +115,11 @@
   --nav-glass-bg: rgba(255, 255, 255, 0.07);
   --nav-glass-blur: 10px;
   --nav-glass-saturate: 150%;
-  --nav-shadow:
+  --glass-rim:
     inset 0 1px 1px rgba(255, 255, 255, 0.28), inset 0 -1px 1px rgba(255, 255, 255, 0.08),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 0 18px rgba(255, 255, 255, 0.04),
-    0 8px 24px rgba(0, 0, 0, 0.4);
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 0 18px rgba(255, 255, 255, 0.04);
+  --glass-drop: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --nav-shadow: var(--glass-rim), var(--glass-drop);
 
   --wallpaper: url('/wallpaper-dark.svg');
 
@@ -218,10 +219,11 @@ html[data-theme='light'] {
   --nav-glass-bg: rgba(255, 255, 255, 0.3);
   --nav-glass-blur: 8px;
   --nav-glass-saturate: 150%;
-  --nav-shadow:
+  --glass-rim:
     inset 0 1px 1px rgba(255, 255, 255, 0.95), inset 0 -1px 1px rgba(255, 255, 255, 0.55),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.4),
-    0 0 0 0.5px rgba(0, 0, 0, 0.07), 0 8px 22px rgba(0, 0, 0, 0.12);
+    inset 0 0 0 1px rgba(255, 255, 255, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.4);
+  --glass-drop: 0 0 0 0.5px rgba(0, 0, 0, 0.07), 0 8px 22px rgba(0, 0, 0, 0.12);
+  --nav-shadow: var(--glass-rim), var(--glass-drop);
 
   --wallpaper: url('/wallpaper-light.svg');
 }
@@ -236,7 +238,9 @@ html[data-theme='light'] {
 
     --nav-glass-bg: var(--surface-container-low);
     --nav-glass-blur: 0px;
-    --nav-shadow: inset 0 0 0 1px var(--border-medium);
+    --glass-rim: inset 0 0 0 1px var(--border-medium);
+    --glass-drop: none;
+    --nav-shadow: var(--glass-rim);
   }
 
   html[data-theme='light'] {
@@ -248,7 +252,9 @@ html[data-theme='light'] {
 
     --nav-glass-bg: var(--surface-container-low);
     --nav-glass-blur: 0px;
-    --nav-shadow: inset 0 0 0 1px var(--border-medium);
+    --glass-rim: inset 0 0 0 1px var(--border-medium);
+    --glass-drop: none;
+    --nav-shadow: var(--glass-rim);
   }
 }
 

@@ -109,10 +109,12 @@
 
     position: fixed;
     inset: auto 0 0;
+    width: 100%;
+    max-height: var(--dropdown-menu-max-height);
     margin: 0;
     padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom));
     border: 0;
-    border-radius: 20px 20px 0 0;
+    border-radius: var(--r-card) var(--r-card) 0 0;
     corner-shape: squircle;
     transform-origin: bottom center;
     box-shadow: 0 -24px 70px rgba(0, 0, 0, 0.55);
@@ -134,6 +136,12 @@
     @media (prefers-reduced-motion: reduce) {
       animation: none;
     }
+  }
+}
+
+@mixin dropdown-menu-anchor() {
+  @media (min-width: 761px) {
+    @content;
   }
 }
 

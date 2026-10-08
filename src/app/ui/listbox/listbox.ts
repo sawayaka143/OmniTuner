@@ -14,7 +14,7 @@ import {
 
 let nextListboxId = 0;
 
-const NATIVE_SELECT_QUERY = '(max-width: 760px)';
+const SHEET_LAYOUT_QUERY = '(max-width: 760px)';
 
 // Matches the --dur-exit token used by the .closing exit animation, plus a
 // safety buffer so the menu always unmounts even if animationend never fires
@@ -25,104 +25,66 @@ const MENU_EXIT_FALLBACK_MS = 250;
   selector: 'app-listbox',
   template: `
     <div class="dropdown-wrapper">
-      @if (useNativeSelect()) {
-        <span class="btn native-trigger" aria-hidden="true">
-          <span class="button-copy">
-            @if (triggerKicker()) {
-              <span class="button-kicker">{{ triggerKicker() }}</span>
-            }
-            <span class="value-wrap">
-              <strong>{{ triggerLabel() }}</strong>
-            </span>
+      <button
+        #trigger
+        type="button"
+        class="btn"
+        [attr.aria-expanded]="open()"
+        aria-haspopup="listbox"
+        [attr.aria-controls]="open() ? menuId : null"
+        [disabled]="disabled()"
+        (click)="onTriggerClick($event)"
+        (keydown)="onTriggerKeydown($event)"
+      >
+        <span class="button-copy">
+          @if (triggerKicker()) {
+            <span class="button-kicker">{{ triggerKicker() }}</span>
+          }
+          <span class="value-wrap">
+            <strong>{{ triggerLabel() }}</strong>
           </span>
-          <span class="app-icon ti ti-chevron-down dropdown-icon" aria-hidden="true"></span>
         </span>
-        <select
-          class="native-select"
+        <span
+          class="app-icon ti ti-chevron-down dropdown-icon"
+          [class.rotated]="open()"
+          aria-hidden="true"
+        ></span>
+      </button>
+
+      @if (open() || closing()) {
+        <div
+          #menu
+          [id]="menuId"
+          class="dropdown-menu card"
+          [class.open-up]="openUp()"
+          [class.closing]="closing()"
+          role="listbox"
           [attr.aria-label]="ariaLabel()"
-          [disabled]="disabled()"
-          (change)="onNativeChange($event)"
+          (click)="$event.stopPropagation()"
+          (keydown)="onMenuKeydown($event)"
+          (animationend)="onMenuAnimationend($event)"
         >
           @for (group of grouped(); track group.label ?? '') {
             @if (group.label) {
-              <optgroup [label]="group.label">
-                @for (option of group.items; track nativeValue(option)) {
-                  <option [value]="nativeValue(option)" [selected]="isSelected(option)">
-                    {{ nativeOptionLabel(option) }}
-                  </option>
+              <div class="dropdown-group" role="presentation">{{ group.label }}</div>
+            }
+            @for (option of group.items; track trackByFn()(option)) {
+              <button
+                type="button"
+                role="option"
+                class="dropdown-item"
+                [class.selected]="isSelected(option)"
+                [attr.aria-selected]="isSelected(option)"
+                (click)="onItemSelect(option)"
+              >
+                <span>{{ optionLabel()(option) }}</span>
+                @if (optionAlt()?.(option); as alt) {
+                  <span class="item-alt">{{ alt }}</span>
                 }
-              </optgroup>
-            } @else {
-              @for (option of group.items; track nativeValue(option)) {
-                <option [value]="nativeValue(option)" [selected]="isSelected(option)">
-                  {{ nativeOptionLabel(option) }}
-                </option>
-              }
+              </button>
             }
           }
-        </select>
-      } @else {
-        <button
-          #trigger
-          type="button"
-          class="btn"
-          [attr.aria-expanded]="open()"
-          aria-haspopup="listbox"
-          [attr.aria-controls]="open() ? menuId : null"
-          [disabled]="disabled()"
-          (click)="onTriggerClick($event)"
-          (keydown)="onTriggerKeydown($event)"
-        >
-          <span class="button-copy">
-            @if (triggerKicker()) {
-              <span class="button-kicker">{{ triggerKicker() }}</span>
-            }
-            <span class="value-wrap">
-              <strong>{{ triggerLabel() }}</strong>
-            </span>
-          </span>
-          <span
-            class="app-icon ti ti-chevron-down dropdown-icon"
-            [class.rotated]="open()"
-            aria-hidden="true"
-          ></span>
-        </button>
-
-        @if (open() || closing()) {
-          <div
-            #menu
-            [id]="menuId"
-            class="dropdown-menu card"
-            [class.open-up]="openUp()"
-            [class.closing]="closing()"
-            role="listbox"
-            [attr.aria-label]="ariaLabel()"
-            (click)="$event.stopPropagation()"
-            (keydown)="onMenuKeydown($event)"
-            (animationend)="onMenuAnimationend($event)"
-          >
-            @for (group of grouped(); track group.label ?? '') {
-              @if (group.label) {
-                <div class="dropdown-group" role="presentation">{{ group.label }}</div>
-              }
-              @for (option of group.items; track trackByFn()(option)) {
-                <button
-                  type="button"
-                  role="option"
-                  class="dropdown-item"
-                  [class.selected]="isSelected(option)"
-                  [attr.aria-selected]="isSelected(option)"
-                  (click)="onItemSelect(option)"
-                >
-                  <span>{{ optionLabel()(option) }}</span>
-                  @if (optionAlt()?.(option); as alt) {
-                    <span class="item-alt">{{ alt }}</span>
-                  }
-                </button>
-              }
-            }
-          </div>
-        }
+        </div>
       }
     </div>
   `,
@@ -161,18 +123,16 @@ export class Listbox<T> {
   protected readonly closing = signal(false);
   private closeTimer: ReturnType<typeof setTimeout> | null = null;
 
-  // On phones the listbox renders a real <select> so the picker popup is the
-  // platform's own UI. The custom menu remains the desktop presentation.
-  protected readonly useNativeSelect = signal(false);
+  private readonly sheetLayout = signal(false);
 
   constructor() {
     const view = this.document.defaultView;
     if (view?.matchMedia) {
       try {
-        const media = view.matchMedia(NATIVE_SELECT_QUERY);
-        this.useNativeSelect.set(media.matches);
+        const media = view.matchMedia(SHEET_LAYOUT_QUERY);
+        this.sheetLayout.set(media.matches);
         const listener = (event: MediaQueryListEvent): void => {
-          this.useNativeSelect.set(event.matches);
+          this.sheetLayout.set(event.matches);
         };
         media.addEventListener('change', listener);
         this.destroyRef.onDestroy(() => media.removeEventListener('change', listener));
@@ -199,7 +159,9 @@ export class Listbox<T> {
       selected?.focus();
       const rect = el.getBoundingClientRect();
       const viewportHeight = this.document.defaultView?.innerHeight ?? 0;
-      this.openUp.set(viewportHeight > 0 && rect.bottom > viewportHeight - 8);
+      this.openUp.set(
+        !this.sheetLayout() && viewportHeight > 0 && rect.bottom > viewportHeight - 8,
+      );
     });
 
     this.destroyRef.onDestroy(() => this.finishMenuExit());
@@ -276,7 +238,7 @@ export class Listbox<T> {
   }
 
   protected onDocumentPointerdown(event: PointerEvent): void {
-    if (!this.open() || this.useNativeSelect()) return;
+    if (!this.open()) return;
     const host = this.hostRef.nativeElement as HTMLElement;
     if (host.contains(event.target as Node)) return;
     this.requestClose();
@@ -311,7 +273,7 @@ export class Listbox<T> {
   }
 
   private beginMenuExit(): void {
-    if (this.closing() || this.useNativeSelect()) return;
+    if (this.closing()) return;
     this.closing.set(true);
     const view = this.document.defaultView;
     this.closeTimer = view?.setTimeout(() => this.finishMenuExit(), MENU_EXIT_FALLBACK_MS) ?? null;
@@ -327,21 +289,5 @@ export class Listbox<T> {
 
   protected isSelected(option: T): boolean {
     return this.compareWith()(this.value(), option);
-  }
-
-  protected nativeValue(option: T): string {
-    return String(this.trackByFn()(option));
-  }
-
-  protected nativeOptionLabel(option: T): string {
-    const label = this.optionLabel()(option);
-    const alt = this.optionAlt()?.(option);
-    return alt ? `${label} — ${alt}` : label;
-  }
-
-  protected onNativeChange(event: Event): void {
-    const value = (event.target as HTMLSelectElement).value;
-    const option = this.options().find((candidate) => this.nativeValue(candidate) === value);
-    if (option !== undefined) this.select.emit(option);
   }
 }

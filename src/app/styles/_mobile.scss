@@ -18,7 +18,7 @@
     padding-bottom: env(safe-area-inset-bottom);
     overflow: hidden;
     border-bottom: 0;
-    border-radius: 20px 20px 0 0;
+    border-radius: var(--r-card) var(--r-card) 0 0;
     corner-shape: squircle;
     @include glass-surface(var(--glass-bg-strong));
     box-shadow:

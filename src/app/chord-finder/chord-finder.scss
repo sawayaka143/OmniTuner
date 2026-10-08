@@ -92,8 +92,7 @@
   padding: var(--space-4);
   overflow: auto;
   border: 1px solid var(--border-subtle);
-  background: var(--workbench-inset);
-  box-shadow: var(--shadow-inset-panel);
+  background: var(--glass-bg);
 
   &:focus-visible {
     outline: 2px solid var(--border-active);
@@ -148,8 +147,7 @@
   border: 1px solid var(--border-subtle);
   border-radius: var(--r-md);
   corner-shape: squircle;
-  background: var(--surface-container-low);
-  box-shadow: var(--shadow-flat);
+  background: var(--glass-bg);
 }
 
 @keyframes card-in {
@@ -240,8 +238,7 @@
   padding: var(--space-3) var(--space-4);
   border-radius: var(--r-md);
   corner-shape: squircle;
-  background: var(--surface-container-low);
-  box-shadow: var(--shadow-flat);
+  background: var(--glass-bg);
   filter: drop-shadow(var(--chord-stage-glow));
 }
 

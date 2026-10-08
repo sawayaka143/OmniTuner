@@ -12,9 +12,12 @@
 
 .dropdown-menu {
   @include dropdown-menu();
-  left: 0;
-  width: 100%;
-  max-height: min(470px, calc(100dvh - 150px));
+
+  @include dropdown-menu-anchor {
+    left: 0;
+    width: 100%;
+    max-height: min(470px, calc(100dvh - 150px));
+  }
 }
 
 .dropdown-item {

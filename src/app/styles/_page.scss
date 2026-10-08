@@ -27,7 +27,7 @@
     zoom: var(--workbench-scale, 1);
     border-radius: var(--r-card);
     corner-shape: squircle;
-    @include glass-panel();
+    @include glass-card();
   }
 
   .workbench-header {

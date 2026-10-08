@@ -16,9 +16,12 @@
 
 .selector-menu {
   @include dropdown-menu();
-  right: 0;
-  width: min(360px, calc(100vw - 32px));
-  max-height: min(520px, calc(100dvh - 150px));
+
+  @include dropdown-menu-anchor {
+    right: 0;
+    width: min(360px, calc(100vw - 32px));
+    max-height: min(520px, calc(100dvh - 150px));
+  }
 }
 
 .selector-group {

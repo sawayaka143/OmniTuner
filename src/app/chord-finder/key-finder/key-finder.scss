@@ -5,18 +5,16 @@
   width: min(1180px, 100%);
   overflow: hidden;
   zoom: var(--workbench-scale, 1);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--r-md);
+  border-radius: var(--r-card);
   corner-shape: squircle;
-  background: var(--surface-container-low);
-  box-shadow: var(--shadow-lift);
+  @include glass-card();
 }
 
 .key-finder-header {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  padding: var(--space-4) var(--space-5);
+  padding: calc(var(--card-pad) * 0.75) var(--card-pad) var(--space-4);
   border-bottom: 1px solid var(--border-subtle);
 
   h2 {
@@ -39,7 +37,7 @@
 .key-finder-body {
   display: grid;
   gap: var(--space-3);
-  padding: var(--space-4) var(--space-5) var(--space-5);
+  padding: var(--space-4) var(--card-pad) var(--card-pad);
 }
 
 .key-result {
@@ -48,7 +46,7 @@
   border: 1px solid var(--border-subtle);
   border-radius: var(--r-md);
   corner-shape: squircle;
-  background: var(--workbench-inset);
+  background: var(--glass-bg);
 }
 
 .key-primary {

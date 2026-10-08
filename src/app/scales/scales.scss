@@ -133,6 +133,7 @@
     z-index: var(--z-float);
     padding: var(--space-3);
     border-top: 1px solid var(--border-subtle);
+    @include glass-surface(var(--glass-bg-strong));
   }
 }
 

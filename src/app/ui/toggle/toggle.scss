@@ -1,10 +1,16 @@
 @use '../../styles' as *;
 
+:host {
+  display: inline-flex;
+}
+
 .toggle-button {
   @include toggle-switch();
 
   &.inline {
     @include toggle-switch($with-label: true);
+    width: 100%;
+    justify-content: center;
   }
 
   &.prominent {
