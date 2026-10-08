@@ -245,28 +245,38 @@
       <section class="metro-console" aria-label="Metronome console">
         <div class="console-display">
           <span class="tempo-marking">{{ tempoMarking() }}</span>
+          <div class="bpm-stepper">
+            <button
+              type="button"
+              class="step-btn"
+              aria-label="Decrease tempo"
+              (click)="nudgeBpm(-1)"
+            >
+              −
+            </button>
+            <input
+              class="bpm-input"
+              type="number"
+              min="1"
+              max="800"
+              step="1"
+              [value]="bpm()"
+              (change)="setBpm($any($event.target).valueAsNumber)"
+              aria-label="Tempo BPM"
+            />
+            <button
+              type="button"
+              class="step-btn"
+              aria-label="Increase tempo"
+              (click)="nudgeBpm(1)"
+            >
+              +
+            </button>
+          </div>
+          <span class="console-bpm-unit">BPM</span>
         </div>
 
         <app-bpm-dial [bpm]="bpm()" (bpmChange)="setBpm($event)" (tap)="onTap()" />
-
-        <div class="bpm-stepper">
-          <button type="button" class="step-btn" aria-label="Decrease tempo" (click)="nudgeBpm(-1)">
-            −
-          </button>
-          <input
-            class="bpm-input"
-            type="number"
-            min="1"
-            max="800"
-            step="1"
-            [value]="bpm()"
-            (change)="setBpm($any($event.target).valueAsNumber)"
-            aria-label="Tempo BPM"
-          />
-          <button type="button" class="step-btn" aria-label="Increase tempo" (click)="nudgeBpm(1)">
-            +
-          </button>
-        </div>
 
         <button
           class="btn primary metro-play"
