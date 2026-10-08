@@ -148,6 +148,21 @@ describe('ScalePreferences', () => {
     });
   });
 
+  it('migrates the previous blue default to the current default', () => {
+    storage.setItem(
+      SCALE_PREFERENCES_STORAGE_KEY,
+      JSON.stringify({
+        version: 2,
+        state: { accent: '#86b9ff', rootNoteColor: '#86b9ff' },
+      }),
+    );
+
+    expect(createService().state()).toMatchObject({
+      accent: DEFAULT_SCALE_PREFERENCES.accent,
+      rootNoteColor: DEFAULT_SCALE_PREFERENCES.rootNoteColor,
+    });
+  });
+
   it('leaves customized colors untouched while upgrading stale defaults', () => {
     storage.setItem(
       SCALE_PREFERENCES_STORAGE_KEY,

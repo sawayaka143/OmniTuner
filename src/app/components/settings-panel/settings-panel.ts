@@ -66,8 +66,8 @@ const DRAG_KEYBOARD_STEP_PX = 20;
 })
 export class SettingsPanel {
   readonly open = input(false);
-  readonly accent = input('#86b9ff');
-  readonly rootNoteColor = input('#86b9ff');
+  readonly accent = input('#9fb6d1');
+  readonly rootNoteColor = input('#9fb6d1');
   readonly noteColor = input('#3b3b3b');
   readonly bgColorDark = input<string | null>(null);
   readonly cardColorDark = input<string | null>(null);

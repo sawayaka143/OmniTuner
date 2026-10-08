@@ -13,7 +13,7 @@
   --text-muted: #9a9a94;
   --text-dim: #94948e;
 
-  --scale-accent: #86b9ff;
+  --scale-accent: #9fb6d1;
   --scale-accent-ink: #121211;
 
   --accent-text: color-mix(in srgb, var(--scale-accent) 40%, #f5f5f3);
@@ -98,35 +98,33 @@
   --shadow-recess: inset 0 2px 4px rgba(0, 0, 0, 0.4);
 
   --glass-bg: var(--nav-glass-bg);
-  --glass-bg-hover: rgba(255, 255, 255, 0.07);
+  --glass-bg-hover: rgba(255, 255, 255, 0.045);
   --glass-bg-strong: color-mix(
     in srgb,
     var(--surface-container-low) 88%,
-    rgba(255, 255, 255, 0.04)
+    rgba(255, 255, 255, 0.02)
   );
-  --glass-blur: 8px;
+  --glass-blur: 4px;
   --glass-saturate: 125%;
   --glass-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   --glass-sheen:
-    inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 -0.5px 0 rgba(255, 255, 255, 0.04);
+    inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 -0.5px 0 rgba(255, 255, 255, 0.02);
 
   --nav-gap: var(--space-3);
   --nav-block-h: calc(var(--nav-gap) + var(--space-7) * 2);
-  --nav-glass-bg: rgba(255, 255, 255, 0.07);
-  --nav-glass-blur: 10px;
-  --nav-glass-saturate: 150%;
+  --nav-glass-bg: rgba(255, 255, 255, 0.01);
+  --nav-glass-blur: 4px;
+  --nav-glass-saturate: 125%;
   --glass-rim:
-    inset 0 1px 1px rgba(255, 255, 255, 0.28), inset 0 -1px 1px rgba(255, 255, 255, 0.08),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 0 18px rgba(255, 255, 255, 0.04);
+    inset 0 1px 1px rgba(255, 255, 255, 0.14), inset 0 -1px 1px rgba(255, 255, 255, 0.04),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06), inset 0 0 18px rgba(255, 255, 255, 0.02);
   --glass-drop: 0 8px 24px rgba(0, 0, 0, 0.4);
   --nav-shadow: var(--glass-rim), var(--glass-drop);
 
-  --wallpaper: url('/wallpaper-dark.svg');
-
   --seg-track-bg: var(--nav-glass-bg);
-  --seg-pill-bg: rgba(255, 255, 255, 0.09);
+  --seg-pill-bg: rgba(255, 255, 255, 0.05);
   --seg-pill-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
 
   --seg-etch: 0 1px 2px rgba(0, 0, 0, 0.6);
 
@@ -210,22 +208,20 @@ html[data-theme='light'] {
   --glass-bg: rgba(255, 255, 255, 0.6);
   --glass-bg-hover: rgba(255, 255, 255, 0.7);
   --glass-bg-strong: color-mix(in srgb, var(--surface-container-low) 88%, rgba(255, 255, 255, 0.5));
-  --glass-blur: 8px;
+  --glass-blur: 4px;
   --glass-saturate: 125%;
   --glass-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   --glass-sheen:
     inset 0 1px 0 rgba(255, 255, 255, 0.85), inset 0 -0.5px 0 rgba(255, 255, 255, 0.25);
 
   --nav-glass-bg: rgba(255, 255, 255, 0.3);
-  --nav-glass-blur: 8px;
-  --nav-glass-saturate: 150%;
+  --nav-glass-blur: 4px;
+  --nav-glass-saturate: 125%;
   --glass-rim:
     inset 0 1px 1px rgba(255, 255, 255, 0.95), inset 0 -1px 1px rgba(255, 255, 255, 0.55),
     inset 0 0 0 1px rgba(255, 255, 255, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.4);
   --glass-drop: 0 0 0 0.5px rgba(0, 0, 0, 0.07), 0 8px 22px rgba(0, 0, 0, 0.12);
   --nav-shadow: var(--glass-rim), var(--glass-drop);
-
-  --wallpaper: url('/wallpaper-light.svg');
 }
 
 @media (prefers-reduced-transparency: reduce) {

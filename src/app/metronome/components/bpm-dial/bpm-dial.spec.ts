@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { axe } from 'vitest-axe';
 
 import { BpmDial } from './bpm-dial';
 
@@ -35,6 +36,22 @@ describe('BpmDial', () => {
     fixture.componentRef.setInput('bpm', 56);
     fixture.detectChanges();
     expect(face.getAttribute('transform')).toContain('rotate(360 150 150)');
+  });
+
+  it('shows the bpm inside the tap button and labels it as tap tempo', () => {
+    const tapBtn = fixture.nativeElement.querySelector('.tap-btn') as HTMLButtonElement;
+    expect(tapBtn.querySelector('.tap-value')?.textContent?.trim()).toBe('100');
+    expect(tapBtn.querySelector('.tap-unit')?.textContent?.trim()).toBe('BPM');
+    expect(tapBtn.getAttribute('aria-label')).toBe('Tap tempo, 100 BPM');
+    fixture.componentRef.setInput('bpm', 128);
+    fixture.detectChanges();
+    expect(tapBtn.querySelector('.tap-value')?.textContent?.trim()).toBe('128');
+    expect(tapBtn.getAttribute('aria-label')).toBe('Tap tempo, 128 BPM');
+  });
+
+  it('has no accessibility violations', async () => {
+    const results = await axe(fixture.nativeElement);
+    expect(results).toHaveNoViolations();
   });
 
   it('emits bpmChange on arrow keys with shift multiplier', () => {

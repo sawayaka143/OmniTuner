@@ -132,11 +132,6 @@
   display: none;
 }
 
-.mobile-hidden {
-  // Only honoured on phones; both sections stay visible on desktop.
-  display: contents;
-}
-
 .chord-card {
   --card-in-delay: calc(min(var(--card-in-index), 8) * 75ms);
 

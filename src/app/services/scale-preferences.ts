@@ -43,8 +43,8 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null;
 
 const LEGACY_COLOR_DEFAULTS = {
-  accent: ['#ffffff', '#ede8d0'],
-  rootNoteColor: ['#ffffff', '#ede8d0'],
+  accent: ['#ffffff', '#ede8d0', '#86b9ff'],
+  rootNoteColor: ['#ffffff', '#ede8d0', '#86b9ff'],
   noteColor: ['#2e2e28'],
 };
 
