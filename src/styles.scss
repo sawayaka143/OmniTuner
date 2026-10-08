@@ -136,9 +136,8 @@
   --z-menu: 100;
 
   --r-sm: 4px;
-  --r-md: 8px;
-  // --r-card: 120px;
-  --r-card: 70px;
+  // --r-card: 48px;
+  --r-card: 48px;
   --card-pad: clamp(var(--space-6), calc(var(--r-card) * 0.33), var(--space-8));
   --r-pill: 9999px;
   --scrollbar-track: var(--surface-container-low);
