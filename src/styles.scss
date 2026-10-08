@@ -97,7 +97,7 @@
 
   --shadow-recess: inset 0 2px 4px rgba(0, 0, 0, 0.4);
 
-  --glass-bg: rgba(255, 255, 255, 0.035);
+  --glass-bg: var(--nav-glass-bg);
   --glass-bg-hover: rgba(255, 255, 255, 0.07);
   --glass-bg-strong: color-mix(
     in srgb,
@@ -112,17 +112,17 @@
 
   --nav-gap: var(--space-3);
   --nav-block-h: calc(var(--nav-gap) + var(--space-7) * 2);
-  --nav-glass-bg: rgba(255, 255, 255, 0.1);
+  --nav-glass-bg: rgba(255, 255, 255, 0.07);
   --nav-glass-blur: 10px;
   --nav-glass-saturate: 150%;
   --nav-shadow:
-    inset 0 1px 1px rgba(255, 255, 255, 0.4), inset 0 -1px 1px rgba(255, 255, 255, 0.12),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.14), inset 0 0 18px rgba(255, 255, 255, 0.07),
+    inset 0 1px 1px rgba(255, 255, 255, 0.28), inset 0 -1px 1px rgba(255, 255, 255, 0.08),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 0 18px rgba(255, 255, 255, 0.04),
     0 8px 24px rgba(0, 0, 0, 0.4);
 
   --wallpaper: url('/wallpaper-dark.svg');
 
-  --seg-track-bg: rgba(255, 255, 255, 0.035);
+  --seg-track-bg: var(--nav-glass-bg);
   --seg-pill-bg: rgba(255, 255, 255, 0.09);
   --seg-pill-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
