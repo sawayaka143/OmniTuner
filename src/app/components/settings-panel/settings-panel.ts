@@ -25,7 +25,6 @@ import {
 } from '../../models/tuner-preferences.model';
 import { Toggle } from '../../ui/toggle/toggle';
 import { IconButton } from '../../ui/icon-button/icon-button';
-import { ColorField } from '../../ui/color-field/color-field';
 import { RovingRadioGroup } from '../../ui/keyboard-nav';
 import type { Theme } from '../../services/theme.service';
 
@@ -59,36 +58,22 @@ const DRAG_KEYBOARD_STEP_PX = 20;
   selector: 'app-settings-panel',
   templateUrl: './settings-panel.html',
   styleUrl: './settings-panel.scss',
-  imports: [Toggle, IconButton, ColorField, RovingRadioGroup],
+  imports: [Toggle, IconButton, RovingRadioGroup],
   host: {
     '(window:resize)': 'onWindowResize()',
   },
 })
 export class SettingsPanel {
   readonly open = input(false);
-  readonly accent = input('#9fb6d1');
-  readonly rootNoteColor = input('#9fb6d1');
-  readonly noteColor = input('#3b3b3b');
-  readonly bgColorDark = input<string | null>(null);
-  readonly cardColorDark = input<string | null>(null);
-  readonly bgColorLight = input<string | null>(null);
-  readonly cardColorLight = input<string | null>(null);
   readonly tunerSettings = input<TunerSettings>(DEFAULT_TUNER_SETTINGS);
   readonly theme = input<Theme>('dark');
 
-  readonly accentChange = output<string>();
-  readonly rootNoteColorChange = output<string>();
-  readonly noteColorChange = output<string>();
-  readonly bgColorChange = output<string | null>();
-  readonly cardColorChange = output<string | null>();
   readonly startupModeChange = output<TunerStartupMode>();
   readonly autoStartChange = output<boolean>();
   readonly themeChange = output<ThemeChangeEvent>();
   readonly inTuneEnabledChange = output<boolean>();
   readonly inTuneSoundChange = output<boolean>();
   readonly inTuneGlowChange = output<boolean>();
-  readonly inTuneColorChange = output<string>();
-  readonly outOfTuneColorChange = output<string>();
   readonly inTuneToleranceChange = output<number>();
   readonly inTuneHoldMsChange = output<number>();
   readonly referencePitchChange = output<number>();
@@ -128,14 +113,6 @@ export class SettingsPanel {
     const index = this.themeOptions.findIndex((option) => option.value === this.theme());
     return `translateX(${Math.max(0, index) * 100}%)`;
   });
-
-  protected readonly activeBgColor = computed(() =>
-    this.theme() === 'light' ? this.bgColorLight() : this.bgColorDark(),
-  );
-
-  protected readonly activeCardColor = computed(() =>
-    this.theme() === 'light' ? this.cardColorLight() : this.cardColorDark(),
-  );
 
   protected readonly startupIndicatorTransform = computed(() => {
     const index = this.startupModeOptions.findIndex(
@@ -238,10 +215,6 @@ export class SettingsPanel {
     this.dragOffset.update((position) => this.clampPosition(position));
   }
 
-  protected chooseAccent(value: string): void {
-    this.accentChange.emit(value);
-  }
-
   protected chooseStartupMode(value: TunerStartupMode): void {
     if (this.tunerSettings().startupMode === value) return;
     this.startupModeChange.emit(value);
@@ -257,10 +230,6 @@ export class SettingsPanel {
         ? { x: Math.round(rect.left + rect.width / 2), y: Math.round(rect.top + rect.height / 2) }
         : null,
     });
-  }
-
-  protected chooseInTuneColor(value: string): void {
-    this.inTuneColorChange.emit(value);
   }
 
   protected onTolerance(event: Event): void {

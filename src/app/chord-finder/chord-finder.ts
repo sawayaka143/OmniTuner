@@ -2,7 +2,6 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { ScalePreferences } from '../services/scale-preferences';
 import { InstrumentRegistry } from '../services/instrument-registry';
 import { Instrument } from '../models/instrument.model';
-import { textColorOn } from '../data/interval-colors';
 import { PROGRESSION_PRESETS } from '../data/chord-progression-presets';
 import { degreesToProgression } from '../utils/degree-to-chord';
 import {
@@ -68,7 +67,6 @@ export class ChordFinder {
   private readonly registry = inject(InstrumentRegistry);
 
   protected readonly preferencesState = this.preferences.state;
-  protected readonly accentInk = computed(() => textColorOn(this.preferencesState().accent));
 
   protected readonly tuningOptions = computed<readonly TuningOption[]>(() =>
     this.registry.availableTunings().map((tuning) => ({

@@ -33,10 +33,6 @@ export interface InTunePreferences {
 
   readonly glow: boolean;
 
-  readonly color: string;
-
-  readonly outOfTuneColor: string;
-
   readonly tolerance: number;
 
   readonly holdMs: number;
@@ -52,12 +48,13 @@ export interface TunerSettings {
   readonly referencePitch: number;
 }
 
+export const IN_TUNE_COLOR = '#7ecba8';
+export const OUT_OF_TUNE_COLOR = '#ff8aab';
+
 export const DEFAULT_IN_TUNE_PREFERENCES: InTunePreferences = {
   enabled: true,
   sound: true,
   glow: true,
-  color: '#7ecba8',
-  outOfTuneColor: '#ff8aab',
   tolerance: 5,
   holdMs: 500,
 };

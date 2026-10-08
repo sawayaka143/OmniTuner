@@ -66,9 +66,6 @@ describe('ScalePreferences', () => {
     service.setFretCount(21);
     service.setLabelMode('scale-degrees');
     service.setShowOutsideScale(true);
-    service.setAccent('#227799');
-    service.setRootNoteColor('#fefefe');
-    service.setNoteColor('#30302a');
 
     TestBed.resetTestingModule();
     const restored = createService();
@@ -79,9 +76,6 @@ describe('ScalePreferences', () => {
       fretCount: 21,
       labelMode: 'scale-degrees',
       showOutsideScale: true,
-      accent: '#227799',
-      rootNoteColor: '#fefefe',
-      noteColor: '#30302a',
     });
   });
 
@@ -103,9 +97,6 @@ describe('ScalePreferences', () => {
           fretCount: 18,
           labelMode: 'invalid',
           showOutsideScale: null,
-          accent: 'red',
-          rootNoteColor: 'white',
-          noteColor: '#12345',
         },
       }),
     );
@@ -113,166 +104,17 @@ describe('ScalePreferences', () => {
     expect(createService().state()).toEqual(DEFAULT_SCALE_PREFERENCES);
   });
 
-  it('upgrades persisted legacy default colors to the current palette', () => {
+  it('still reads the legacy v1 storage key', () => {
     storage.setItem(
-      SCALE_PREFERENCES_STORAGE_KEY,
+      LEGACY_SCALE_PREFERENCES_STORAGE_KEY,
       JSON.stringify({
         version: 1,
-        state: {
-          accent: '#ffffff',
-          rootNoteColor: '#ffffff',
-          noteColor: '#2e2e28',
-        },
+        state: { scaleId: 'dorian' },
       }),
     );
 
     expect(createService().state()).toMatchObject({
-      accent: DEFAULT_SCALE_PREFERENCES.accent,
-      rootNoteColor: DEFAULT_SCALE_PREFERENCES.rootNoteColor,
-      noteColor: DEFAULT_SCALE_PREFERENCES.noteColor,
-    });
-  });
-
-  it('migrates the previous cream accent to the current default and keeps custom accents', () => {
-    storage.setItem(
-      SCALE_PREFERENCES_STORAGE_KEY,
-      JSON.stringify({
-        version: 2,
-        state: { accent: '#ede8d0', rootNoteColor: '#123456' },
-      }),
-    );
-
-    expect(createService().state()).toMatchObject({
-      accent: DEFAULT_SCALE_PREFERENCES.accent,
-      rootNoteColor: '#123456',
-    });
-  });
-
-  it('migrates the previous blue default to the current default', () => {
-    storage.setItem(
-      SCALE_PREFERENCES_STORAGE_KEY,
-      JSON.stringify({
-        version: 2,
-        state: { accent: '#86b9ff', rootNoteColor: '#86b9ff' },
-      }),
-    );
-
-    expect(createService().state()).toMatchObject({
-      accent: DEFAULT_SCALE_PREFERENCES.accent,
-      rootNoteColor: DEFAULT_SCALE_PREFERENCES.rootNoteColor,
-    });
-  });
-
-  it('leaves customized colors untouched while upgrading stale defaults', () => {
-    storage.setItem(
-      SCALE_PREFERENCES_STORAGE_KEY,
-      JSON.stringify({
-        version: 1,
-        state: {
-          accent: '#123456',
-          rootNoteColor: '#ffffff',
-          noteColor: '#445566',
-        },
-      }),
-    );
-
-    expect(createService().state()).toMatchObject({
-      accent: '#123456',
-      rootNoteColor: DEFAULT_SCALE_PREFERENCES.rootNoteColor,
-      noteColor: '#445566',
-    });
-  });
-
-  describe('surface colors', () => {
-    it('defaults to null so surfaces follow the theme', () => {
-      const state = createService().state();
-      expect(state.bgColorDark).toBeNull();
-      expect(state.cardColorDark).toBeNull();
-      expect(state.bgColorLight).toBeNull();
-      expect(state.cardColorLight).toBeNull();
-    });
-
-    it('stores each theme surface colors independently and persists across reload', () => {
-      const service = createService();
-      service.setBgColor('dark', '#1a1a2e');
-      service.setCardColor('dark', '#24243E');
-      service.setBgColor('light', '#eef2ff');
-
-      TestBed.resetTestingModule();
-      expect(createService().state()).toMatchObject({
-        bgColorDark: '#1a1a2e',
-        cardColorDark: '#24243e',
-        bgColorLight: '#eef2ff',
-        cardColorLight: null,
-      });
-    });
-
-    it('rejects invalid surface colors per theme', () => {
-      const service = createService();
-      service.setBgColor('dark', 'blue');
-      service.setCardColor('light', '#12345');
-      service.setBgColor('light', '#1a1a2e');
-      expect(service.state().bgColorDark).toBeNull();
-      expect(service.state().cardColorLight).toBeNull();
-      expect(service.state().bgColorLight).toBe('#1a1a2e');
-    });
-
-    it('resets surface colors back to the theme', () => {
-      const service = createService();
-      service.setBgColor('dark', '#1a1a2e');
-      service.setCardColor('dark', '#24243e');
-      service.setBgColor('dark', null);
-      service.setCardColor('dark', null);
-      expect(service.state().bgColorDark).toBeNull();
-      expect(service.state().cardColorDark).toBeNull();
-    });
-
-    it('migrates legacy v1 surface colors into the dark theme', () => {
-      storage.setItem(
-        LEGACY_SCALE_PREFERENCES_STORAGE_KEY,
-        JSON.stringify({
-          version: 1,
-          state: { bgColor: '#1a1a2e', cardColor: '#24243E' },
-        }),
-      );
-      expect(createService().state()).toMatchObject({
-        bgColorDark: '#1a1a2e',
-        cardColorDark: '#24243e',
-        bgColorLight: null,
-        cardColorLight: null,
-      });
-    });
-
-    it('reads v2 payloads with per-theme surface colors', () => {
-      storage.setItem(
-        SCALE_PREFERENCES_STORAGE_KEY,
-        JSON.stringify({
-          version: 2,
-          state: { bgColorDark: '#101018', cardColorLight: '#fafafa' },
-        }),
-      );
-      expect(createService().state()).toMatchObject({
-        bgColorDark: '#101018',
-        cardColorDark: null,
-        bgColorLight: null,
-        cardColorLight: '#fafafa',
-      });
-    });
-
-    it('falls back to null for missing or invalid persisted surface colors', () => {
-      storage.setItem(
-        SCALE_PREFERENCES_STORAGE_KEY,
-        JSON.stringify({
-          version: 1,
-          state: { bgColor: 'white', cardColor: 5 },
-        }),
-      );
-      expect(createService().state()).toMatchObject({
-        bgColorDark: null,
-        cardColorDark: null,
-        bgColorLight: null,
-        cardColorLight: null,
-      });
+      scaleId: 'dorian',
     });
   });
 

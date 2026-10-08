@@ -1,10 +1,10 @@
+import { IN_TUNE_COLOR } from '../../models/tuner-preferences.model';
 import {
   Component,
   DestroyRef,
   ElementRef,
   WritableSignal,
   computed,
-  effect,
   inject,
   signal,
   viewChild,
@@ -12,13 +12,11 @@ import {
 } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { textColorOn } from '../../data/interval-colors';
 import { TunerStartupMode } from '../../models/tuner-preferences.model';
 import { HapticsService } from '../../services/haptics.service';
 import { ScalePreferences } from '../../services/scale-preferences';
 import { TunerPreferences } from '../../services/tuner-preferences';
 import { ThemeService } from '../../services/theme.service';
-import { applySurfaceOverrides, surfaceOverrides } from '../../utils/surface-theme';
 import { Brand } from '../brand/brand';
 import { SettingsPanel, type ThemeChangeEvent } from '../settings-panel/settings-panel';
 import { ShortcutHelp } from '../shortcut-help/shortcut-help';
@@ -65,10 +63,7 @@ const PAGE_ROUTES: readonly string[] = NAV_ITEMS.map((item) => item.path);
   templateUrl: './app-shell.html',
   styleUrl: './app-shell.scss',
   host: {
-    '[style.--scale-accent]': 'preferencesState().accent',
-    '[style.--scale-accent-ink]': 'accentInk()',
     '[style.--in-tune-color]': 'inTuneColor()',
-    '[style.--out-of-tune-color]': 'outOfTuneColor()',
     '(window:resize)': 'scheduleIndicatorMeasure()',
     '(window:keydown)': 'onWindowKeydown($event)',
   },
@@ -97,7 +92,6 @@ export class AppShell {
   protected readonly shortcutOpen = signal(false);
   protected readonly paletteOpen = signal(false);
   protected readonly preferencesState = this.preferences.state;
-  protected readonly accentInk = computed(() => textColorOn(this.preferencesState().accent));
   protected readonly tunerSettings = this.tunerPreferences.tunerSettings;
   protected readonly theme = this.themeService.theme;
   protected readonly themeIcon = computed(() =>
@@ -119,46 +113,11 @@ export class AppShell {
     this.destroyRef.onDestroy(() => this.navigationEvents.unsubscribe());
     this.scheduleIndicatorMeasure();
     this.scheduleIndicatorFontMeasure();
-    effect(() => {
-      const state = this.preferencesState();
-      const theme = this.themeService.theme();
-      const dark = theme === 'dark';
-      applySurfaceOverrides(
-        this.document.documentElement.style,
-        surfaceOverrides(
-          dark ? state.bgColorDark : state.bgColorLight,
-          dark ? state.cardColorDark : state.cardColorLight,
-          theme,
-        ),
-      );
-    });
   }
 
   protected readonly inTuneColor = computed(() =>
-    this.tunerSettings().inTune.enabled ? this.tunerSettings().inTune.color : null,
+    this.tunerSettings().inTune.enabled ? IN_TUNE_COLOR : null,
   );
-
-  protected readonly outOfTuneColor = computed(() => this.tunerSettings().inTune.outOfTuneColor);
-
-  protected setAccent(accent: string): void {
-    this.preferences.setAccent(accent);
-  }
-
-  protected setRootNoteColor(color: string): void {
-    this.preferences.setRootNoteColor(color);
-  }
-
-  protected setNoteColor(color: string): void {
-    this.preferences.setNoteColor(color);
-  }
-
-  protected setBgColor(color: string | null): void {
-    this.preferences.setBgColor(this.themeService.theme(), color);
-  }
-
-  protected setCardColor(color: string | null): void {
-    this.preferences.setCardColor(this.themeService.theme(), color);
-  }
 
   protected setTunerStartupMode(startupMode: TunerStartupMode): void {
     this.tunerPreferences.setStartupMode(startupMode);
@@ -178,14 +137,6 @@ export class AppShell {
 
   protected setInTuneGlow(glow: boolean): void {
     this.tunerPreferences.setInTuneGlow(glow);
-  }
-
-  protected setInTuneColor(color: string): void {
-    this.tunerPreferences.setInTuneColor(color);
-  }
-
-  protected setOutOfTuneColor(color: string): void {
-    this.tunerPreferences.setOutOfTuneColor(color);
   }
 
   protected setInTuneTolerance(tolerance: number): void {

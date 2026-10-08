@@ -1,3 +1,4 @@
+import { NOTE_COLOR, ROOT_NOTE_COLOR } from '../data/scale-tuning.constants';
 import { Component, computed, DestroyRef, effect, inject, signal, untracked } from '@angular/core';
 import { RootNotePicker } from '../components/root-note-picker/root-note-picker';
 import { ScalePicker } from '../components/scale-picker/scale-picker';
@@ -6,7 +7,6 @@ import { FretCell, IntervalEntry, ScaleTone } from '../models/scale.model';
 import { AccidentalPreference, LabelMode, ScaleFretCount } from '../models/scale-preferences.model';
 import { FLAT_NAMES, SCALES, SHARP_NAMES } from '../data/scale.constants';
 import { MAX_TUNING_MIDI_NOTE, MIN_TUNING_MIDI_NOTE } from '../data/scale-tuning.constants';
-import { textColorOn } from '../data/interval-colors';
 import { computeFretboard, noteName, parseNote } from '../utils/scale-theory';
 import { frequencyToMidiNote } from '../utils/pitch-utils';
 import { InstrumentRegistry } from '../services/instrument-registry';
@@ -132,7 +132,6 @@ export class Scales {
   ]);
   protected readonly preferFlats = computed(() => this.preferencesState().accidental === 'flat');
   protected readonly fretCount = computed(() => this.preferencesState().fretCount);
-  protected readonly accentInk = computed(() => textColorOn(this.preferencesState().accent));
 
   protected readonly activeTuning = computed<PreviewTuning>(() => {
     const preview = this.previewTuning();
@@ -171,9 +170,7 @@ export class Scales {
         cell.interval
           ? {
               ...cell,
-              color: cell.isRoot
-                ? this.preferencesState().rootNoteColor
-                : this.preferencesState().noteColor,
+              color: cell.isRoot ? ROOT_NOTE_COLOR : NOTE_COLOR,
             }
           : cell,
       ),
@@ -193,10 +190,7 @@ export class Scales {
         midi,
         noteName: noteName(pitchClass, this.preferFlats()),
         interval,
-        color:
-          interval.semitones % 12 === 0
-            ? this.preferencesState().rootNoteColor
-            : this.preferencesState().noteColor,
+        color: interval.semitones % 12 === 0 ? ROOT_NOTE_COLOR : NOTE_COLOR,
         isRoot: interval.semitones % 12 === 0,
       };
     }),

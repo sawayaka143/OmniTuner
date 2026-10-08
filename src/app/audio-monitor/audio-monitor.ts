@@ -1,3 +1,4 @@
+import { IN_TUNE_COLOR, OUT_OF_TUNE_COLOR } from '../models/tuner-preferences.model';
 import {
   Component,
   computed,
@@ -226,10 +227,9 @@ export class AudioMonitor implements OnInit {
   readonly tuneColorHex = computed(() => {
     const cents = this.frameCents();
     if (cents === null || Math.abs(cents) <= this.tolerance()) return null;
-    const settings = this.tunerSettings().inTune;
     const blended = interpolateColor(
-      settings.outOfTuneColor,
-      settings.color,
+      OUT_OF_TUNE_COLOR,
+      IN_TUNE_COLOR,
       tuneColorProgress(cents, this.tolerance()),
     );
     if (blended && this.themeService.theme() === 'light') {

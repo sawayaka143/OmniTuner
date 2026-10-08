@@ -34,8 +34,6 @@ interface PersistedTunerPreferences {
   readonly tuner?: TunerSettings;
 }
 
-const HEX_COLOR = /^#[0-9a-f]{6}$/i;
-
 const isTunerMode = (value: unknown): value is TunerMode => value === 'auto' || value === 'manual';
 
 const isStartupMode = (value: unknown): value is TunerStartupMode =>
@@ -61,15 +59,6 @@ const readTunerSettings = (value: unknown): TunerSettings => {
   const tuner = value['tuner'];
   const rawInTune = isRecord(tuner['inTune']) ? tuner['inTune'] : {};
   const defaults = DEFAULT_TUNER_SETTINGS;
-
-  const color =
-    typeof rawInTune['color'] === 'string' && HEX_COLOR.test(rawInTune['color'])
-      ? rawInTune['color'].toLowerCase()
-      : defaults.inTune.color;
-  const outOfTuneColor =
-    typeof rawInTune['outOfTuneColor'] === 'string' && HEX_COLOR.test(rawInTune['outOfTuneColor'])
-      ? rawInTune['outOfTuneColor'].toLowerCase()
-      : defaults.inTune.outOfTuneColor;
   const tolerance =
     typeof rawInTune['tolerance'] === 'number' && Number.isFinite(rawInTune['tolerance'])
       ? clampTolerance(rawInTune['tolerance'])
@@ -92,8 +81,6 @@ const readTunerSettings = (value: unknown): TunerSettings => {
         typeof rawInTune['enabled'] === 'boolean' ? rawInTune['enabled'] : defaults.inTune.enabled,
       sound: typeof rawInTune['sound'] === 'boolean' ? rawInTune['sound'] : defaults.inTune.sound,
       glow: typeof rawInTune['glow'] === 'boolean' ? rawInTune['glow'] : defaults.inTune.glow,
-      color,
-      outOfTuneColor,
       tolerance,
       holdMs,
     },
@@ -137,16 +124,6 @@ export class TunerPreferences {
 
   setInTuneGlow(glow: boolean): void {
     this.updateInTune({ glow });
-  }
-
-  setInTuneColor(color: string): void {
-    if (!HEX_COLOR.test(color)) return;
-    this.updateInTune({ color: color.toLowerCase() });
-  }
-
-  setOutOfTuneColor(color: string): void {
-    if (!HEX_COLOR.test(color)) return;
-    this.updateInTune({ outOfTuneColor: color.toLowerCase() });
   }
 
   setInTuneTolerance(tolerance: number): void {

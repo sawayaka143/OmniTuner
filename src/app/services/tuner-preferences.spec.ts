@@ -67,7 +67,7 @@ describe('TunerPreferences', () => {
     storage.setItem(
       TUNER_PREFERENCES_STORAGE_KEY,
       JSON.stringify({
-        version: 3,
+        version: TUNER_PREFERENCES_VERSION,
         tuner: {
           mode: 'manual',
           startupMode: 'auto',
@@ -76,8 +76,6 @@ describe('TunerPreferences', () => {
             enabled: false,
             sound: false,
             glow: true,
-            color: '#EE6600',
-            outOfTuneColor: '#3366AA',
             tolerance: 900,
             holdMs: -42,
           },
@@ -94,8 +92,6 @@ describe('TunerPreferences', () => {
         enabled: false,
         sound: false,
         glow: true,
-        color: '#ee6600',
-        outOfTuneColor: '#3366aa',
         tolerance: 15,
         holdMs: 0,
       },
@@ -109,8 +105,6 @@ describe('TunerPreferences', () => {
     service.setInTuneEnabled(false);
     service.setInTuneSound(false);
     service.setInTuneGlow(true);
-    service.setInTuneColor('#ff9900');
-    service.setOutOfTuneColor('#00aacc');
     service.setInTuneTolerance(12);
     service.setInTuneHoldMs(800);
     service.setReferencePitch(442);
@@ -127,24 +121,14 @@ describe('TunerPreferences', () => {
         enabled: false,
         sound: false,
         glow: true,
-        color: '#ff9900',
-        outOfTuneColor: '#00aacc',
         tolerance: 12,
         holdMs: 800,
       },
     });
   });
 
-  it('validates setter inputs: invalid colors and modes are ignored, ranges clamp', () => {
+  it('validates setter inputs: invalid modes are ignored, ranges clamp', () => {
     const service = createService();
-
-    service.setInTuneColor('not-a-color');
-    expect(service.tunerSettings().inTune.color).toBe(DEFAULT_TUNER_SETTINGS.inTune.color);
-
-    service.setOutOfTuneColor('not-a-color');
-    expect(service.tunerSettings().inTune.outOfTuneColor).toBe(
-      DEFAULT_TUNER_SETTINGS.inTune.outOfTuneColor,
-    );
 
     service.setMode('magic' as never);
     expect(service.tunerSettings().mode).toBe('auto');
