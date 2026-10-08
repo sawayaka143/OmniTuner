@@ -5,8 +5,18 @@
   flex-direction: column;
   min-height: 100dvh;
   background-color: var(--canvas);
+  isolation: isolate;
   color: var(--text);
   font-family: var(--font);
+}
+
+:host::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--wallpaper) center / cover no-repeat;
+  pointer-events: none;
 }
 
 .app-header {
@@ -26,8 +36,8 @@
     align-items: center;
     align-content: center;
     padding-block: var(--space-2);
-    padding-left: max(var(--space-2), var(--safe-area-inset-left, env(safe-area-inset-left)));
-    padding-right: max(var(--space-2), var(--safe-area-inset-right, env(safe-area-inset-right)));
+    padding-left: max(var(--space-3), var(--safe-area-inset-left, env(safe-area-inset-left)));
+    padding-right: max(var(--space-3), var(--safe-area-inset-right, env(safe-area-inset-right)));
     height: calc(var(--space-7) * 2);
     box-sizing: border-box;
     pointer-events: none;
@@ -246,65 +256,46 @@
   }
 
   .bottom-nav-item {
-    position: relative;
     flex: 1 1 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 3px;
+    gap: var(--space-1);
     min-height: var(--nav-bar-h);
-    padding: var(--space-1) var(--space-1);
+    padding: var(--space-2) var(--space-1);
     color: var(--text-muted);
     text-decoration: none;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
-    transition: color var(--dur-med) ease;
 
-    &::before {
-      content: '';
-      position: absolute;
-      inset: 6px 6px;
+    .nav-well {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 60px;
+      height: 32px;
       border-radius: var(--r-pill);
-      background: color-mix(in srgb, var(--scale-accent) 18%, transparent);
-      opacity: 0;
-      transform: scale(0.92);
-      transition:
-        opacity var(--dur-med) cubic-bezier(0.2, 0, 0, 1),
-        transform var(--dur-med) cubic-bezier(0.2, 0, 0, 1),
-        background-color var(--dur-med) ease;
-      pointer-events: none;
-      z-index: 0;
+      transition: background var(--dur-med) ease;
     }
 
     .app-icon {
-      position: relative;
-      z-index: 1;
-      font-size: 20px;
+      font-size: 22px;
       line-height: 1;
-      transition:
-        color var(--dur-med) ease,
-        transform var(--dur-med) ease;
     }
 
     .nav-label {
-      position: relative;
-      z-index: 1;
       font-size: var(--text-xs);
       font-weight: var(--fw-medium);
       letter-spacing: var(--tracking-narrow);
       line-height: 1;
-      transition:
-        color var(--dur-med) ease,
-        font-weight var(--dur-med) ease;
     }
 
     &.active {
       color: var(--text);
 
-      &::before {
-        opacity: 1;
-        transform: scale(1);
+      .nav-well {
+        background: color-mix(in srgb, var(--scale-accent) 16%, transparent);
       }
 
       .app-icon {
@@ -312,7 +303,6 @@
       }
 
       .nav-label {
-        color: var(--text);
         font-weight: var(--fw-semibold);
       }
     }
@@ -320,7 +310,8 @@
     &:focus-visible {
       outline: 2px solid var(--border-active);
       outline-offset: -2px;
-      border-radius: var(--r-pill);
+      border-radius: var(--r-md);
+      corner-shape: squircle;
     }
   }
 
@@ -330,11 +321,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .nav-indicator.ready,
-  .bottom-nav-item,
-  .bottom-nav-item::before,
-  .bottom-nav-item .app-icon,
-  .bottom-nav-item .nav-label {
+  .nav-indicator.ready {
     transition-duration: 0.01ms;
   }
 }

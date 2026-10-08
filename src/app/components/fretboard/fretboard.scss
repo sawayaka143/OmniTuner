@@ -111,6 +111,7 @@
     left: 0;
     width: var(--open-w);
     border-radius: var(--r-md) 0 0 var(--r-md);
+    corner-shape: squircle;
     background: var(--surface-container-low);
     box-shadow: var(--open-shadow);
     pointer-events: none;

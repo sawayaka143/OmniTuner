@@ -13,6 +13,7 @@
   padding: var(--space-3);
   border: 1px solid var(--border-subtle);
   border-radius: var(--r-md);
+  corner-shape: squircle;
   background: var(--surface-container);
 }
 
@@ -22,6 +23,7 @@
   padding: 2px;
   border: 1px solid var(--border-medium);
   border-radius: var(--r-md);
+  corner-shape: squircle;
   background: transparent;
   cursor: pointer;
 
@@ -32,11 +34,13 @@
   &::-webkit-color-swatch {
     border: none;
     border-radius: calc(var(--r-md) - 2px);
+    corner-shape: squircle;
   }
 
   &::-moz-color-swatch {
     border: none;
     border-radius: calc(var(--r-md) - 2px);
+    corner-shape: squircle;
   }
 
   &:focus-visible {

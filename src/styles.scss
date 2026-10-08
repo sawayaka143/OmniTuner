@@ -13,7 +13,7 @@
   --text-muted: #9a9a94;
   --text-dim: #94948e;
 
-  --scale-accent: #ede8d0;
+  --scale-accent: #86b9ff;
   --scale-accent-ink: #121211;
 
   --accent-text: color-mix(in srgb, var(--scale-accent) 40%, #f5f5f3);
@@ -112,12 +112,15 @@
 
   --nav-gap: var(--space-3);
   --nav-block-h: calc(var(--nav-gap) + var(--space-7) * 2);
-  --nav-glass-bg: rgba(255, 255, 255, 0.04);
+  --nav-glass-bg: rgba(255, 255, 255, 0.1);
   --nav-glass-blur: 10px;
-  --nav-glass-saturate: 130%;
+  --nav-glass-saturate: 150%;
   --nav-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.22), inset 0 -1px 0 rgba(255, 255, 255, 0.05),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    inset 0 1px 1px rgba(255, 255, 255, 0.4), inset 0 -1px 1px rgba(255, 255, 255, 0.12),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14), inset 0 0 18px rgba(255, 255, 255, 0.07),
+    0 8px 24px rgba(0, 0, 0, 0.4);
+
+  --wallpaper: url('/wallpaper-dark.svg');
 
   --seg-track-bg: rgba(255, 255, 255, 0.035);
   --seg-pill-bg: rgba(255, 255, 255, 0.09);
@@ -134,6 +137,9 @@
 
   --r-sm: 4px;
   --r-md: 8px;
+  // --r-card: 120px;
+  --r-card: 70px;
+  --card-pad: clamp(var(--space-6), calc(var(--r-card) * 0.33), var(--space-8));
   --r-pill: 9999px;
   --scrollbar-track: var(--surface-container-low);
   --scrollbar-thumb: #4a4a45;
@@ -156,7 +162,7 @@
 html[data-theme='light'] {
   color-scheme: light;
 
-  --canvas: #f1f0ec;
+  --canvas: #e3e1da;
   --surface-container-low: #fbfaf8;
   --surface-container: #e9e7e2;
   --surface-container-high: #dedbd4;
@@ -171,9 +177,9 @@ html[data-theme='light'] {
   --danger: #b01645;
   --danger-hover: #8f1138;
 
-  --border-subtle: rgba(0, 0, 0, 0.1);
-  --border-medium: rgba(0, 0, 0, 0.17);
-  --border-active: rgba(0, 0, 0, 0.32);
+  --border-subtle: rgba(0, 0, 0, 0.13);
+  --border-medium: rgba(0, 0, 0, 0.2);
+  --border-active: rgba(0, 0, 0, 0.34);
   --meter-tick-minor: rgba(0, 0, 0, 0.14);
   --meter-tick-major: rgba(0, 0, 0, 0.3);
   --dial-well: var(--surface-container-high);
@@ -189,7 +195,7 @@ html[data-theme='light'] {
   --scrollbar-thumb-hover: #a8a6a1;
 
   --shadow-flat: 0 1px 3px rgba(0, 0, 0, 0.07), 0 4px 14px rgba(0, 0, 0, 0.06);
-  --shadow-lift: 0 12px 34px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.05);
+  --shadow-lift: 0 18px 44px rgba(0, 0, 0, 0.14), 0 4px 14px rgba(0, 0, 0, 0.08);
   --shadow-dialog: 0 18px 48px rgba(0, 0, 0, 0.14);
   --shadow-inset-panel: inset 0 2px 6px rgba(0, 0, 0, 0.08);
   --shadow-recess: inset 0 1px 2px rgba(0, 0, 0, 0.1);
@@ -201,7 +207,7 @@ html[data-theme='light'] {
   --chord-stage-glow: 0 0 34px color-mix(in srgb, var(--scale-accent) 18%, transparent);
   --workbench-inset: var(--surface-container);
 
-  --glass-bg: rgba(255, 255, 255, 0.5);
+  --glass-bg: rgba(255, 255, 255, 0.6);
   --glass-bg-hover: rgba(255, 255, 255, 0.7);
   --glass-bg-strong: color-mix(in srgb, var(--surface-container-low) 88%, rgba(255, 255, 255, 0.5));
   --glass-blur: 8px;
@@ -210,12 +216,15 @@ html[data-theme='light'] {
   --glass-sheen:
     inset 0 1px 0 rgba(255, 255, 255, 0.85), inset 0 -0.5px 0 rgba(255, 255, 255, 0.25);
 
-  --nav-glass-bg: rgba(255, 255, 255, 0.6);
-  --nav-glass-blur: 10px;
-  --nav-glass-saturate: 130%;
+  --nav-glass-bg: rgba(255, 255, 255, 0.3);
+  --nav-glass-blur: 8px;
+  --nav-glass-saturate: 150%;
   --nav-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.95), inset 0 -1px 0 rgba(255, 255, 255, 0.35),
-    inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+    inset 0 1px 1px rgba(255, 255, 255, 0.95), inset 0 -1px 1px rgba(255, 255, 255, 0.55),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.4),
+    0 0 0 0.5px rgba(0, 0, 0, 0.07), 0 8px 22px rgba(0, 0, 0, 0.12);
+
+  --wallpaper: url('/wallpaper-light.svg');
 }
 
 @media (prefers-reduced-transparency: reduce) {
@@ -481,6 +490,7 @@ h3 {
   -webkit-backdrop-filter: var(--glass-filter);
   border: 1px solid var(--border-subtle);
   border-radius: var(--r-md);
+  corner-shape: squircle;
   box-shadow: var(--glass-sheen), var(--shadow-flat);
 }
 
@@ -540,6 +550,7 @@ h3 {
     padding: var(--space-1) var(--space-2);
     border: 1px solid var(--border-subtle);
     border-radius: var(--r-sm);
+    corner-shape: squircle;
     background: var(--canvas);
     font-family: ui-monospace, 'Cascadia Mono', 'Segoe UI Mono', monospace;
     font-size: var(--text-xs);
@@ -571,4 +582,5 @@ h3 {
   position: absolute;
   inset: -6px;
   border-radius: inherit;
+  corner-shape: inherit;
 }

@@ -69,6 +69,7 @@
       background-color var(--dur-med) ease;
     z-index: var(--z-float);
     border-radius: var(--r-sm);
+    corner-shape: squircle;
 
     &.in-tune {
       background: var(--in-tune-text);

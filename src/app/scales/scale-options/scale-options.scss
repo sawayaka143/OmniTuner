@@ -9,8 +9,8 @@
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  justify-content: center;
-  gap: var(--space-4);
+  justify-content: flex-start;
+  gap: var(--space-2);
   width: 100%;
 }
 
@@ -51,6 +51,21 @@
     font-size: var(--text-xs);
     border-radius: var(--r-pill);
   }
+}
+
+.divider {
+  align-self: flex-end;
+  width: 1px;
+  height: var(--ctrl-h-lg);
+  margin: 0 2px;
+  background: var(--border-subtle);
+}
+
+.control-group-right {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+  margin-left: auto;
 }
 
 .label-select {
@@ -108,42 +123,30 @@
   }
 }
 
-.outside-scale-toggle {
-  display: block;
+@media (max-width: 680px) {
+  .divider {
+    display: none;
+  }
 }
 
-@media (max-width: 680px) {
+@media (max-width: 480px) {
+  // Keep a wrapping row layout on phones so the options take two compact
+  // rows instead of stacking every group full-width.
   .scale-options {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-3);
-    align-items: start;
-    width: 100%;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
   }
 
   .option-group {
-    width: 100%;
     min-width: 0;
   }
 
-  .segmented {
-    width: 100%;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .control-group-right {
+    margin-left: 0;
   }
 
-  .segmented.frets {
-    width: 100%;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .label-select,
   .label-trigger {
-    width: 100%;
     justify-content: space-between;
-  }
-
-  .outside-scale-toggle {
-    width: 100%;
   }
 }
 

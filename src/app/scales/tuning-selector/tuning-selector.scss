@@ -53,6 +53,7 @@
   grid-template-columns: minmax(0, 1fr) 36px 36px;
   align-items: stretch;
   border-radius: var(--r-sm);
+  corner-shape: squircle;
 
   &.selected {
     background: color-mix(in srgb, var(--scale-accent) 9%, var(--surface-container));

@@ -133,6 +133,21 @@ describe('ScalePreferences', () => {
     });
   });
 
+  it('migrates the previous cream accent to the current default and keeps custom accents', () => {
+    storage.setItem(
+      SCALE_PREFERENCES_STORAGE_KEY,
+      JSON.stringify({
+        version: 2,
+        state: { accent: '#ede8d0', rootNoteColor: '#123456' },
+      }),
+    );
+
+    expect(createService().state()).toMatchObject({
+      accent: DEFAULT_SCALE_PREFERENCES.accent,
+      rootNoteColor: '#123456',
+    });
+  });
+
   it('leaves customized colors untouched while upgrading stale defaults', () => {
     storage.setItem(
       SCALE_PREFERENCES_STORAGE_KEY,

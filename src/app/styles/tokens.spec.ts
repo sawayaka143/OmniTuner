@@ -22,7 +22,7 @@ const LIGHT_TEXT_TOKENS: Record<string, string> = {
 };
 
 const LIGHT_SURFACE_TOKENS: Record<string, string> = {
-  '--canvas': '#f1f0ec',
+  '--canvas': '#e3e1da',
   '--surface-container-low': '#fbfaf8',
   '--surface-container': '#e9e7e2',
   '--surface-container-high': '#dedbd4',

@@ -11,6 +11,7 @@
   overflow: auto;
   border: 0;
   border-radius: var(--r-md);
+  corner-shape: squircle;
   background: transparent;
   color: var(--text);
 
@@ -40,6 +41,7 @@
   overflow: hidden;
   border: 1px solid var(--border-medium);
   border-radius: var(--r-md);
+  corner-shape: squircle;
   @include glass-surface(var(--glass-bg-strong));
   box-shadow: var(--glass-sheen), var(--shadow-dialog);
 }

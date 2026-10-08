@@ -43,23 +43,22 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null;
 
 const LEGACY_COLOR_DEFAULTS = {
-  accent: '#ffffff',
-  rootNoteColor: '#ffffff',
-  noteColor: '#2e2e28',
+  accent: ['#ffffff', '#ede8d0'],
+  rootNoteColor: ['#ffffff', '#ede8d0'],
+  noteColor: ['#2e2e28'],
 };
 
 const upgradeLegacyColors = (state: ScalePreferencesState): ScalePreferencesState => ({
   ...state,
-  accent:
-    state.accent === LEGACY_COLOR_DEFAULTS.accent ? DEFAULT_SCALE_PREFERENCES.accent : state.accent,
-  rootNoteColor:
-    state.rootNoteColor === LEGACY_COLOR_DEFAULTS.rootNoteColor
-      ? DEFAULT_SCALE_PREFERENCES.rootNoteColor
-      : state.rootNoteColor,
-  noteColor:
-    state.noteColor === LEGACY_COLOR_DEFAULTS.noteColor
-      ? DEFAULT_SCALE_PREFERENCES.noteColor
-      : state.noteColor,
+  accent: LEGACY_COLOR_DEFAULTS.accent.includes(state.accent)
+    ? DEFAULT_SCALE_PREFERENCES.accent
+    : state.accent,
+  rootNoteColor: LEGACY_COLOR_DEFAULTS.rootNoteColor.includes(state.rootNoteColor)
+    ? DEFAULT_SCALE_PREFERENCES.rootNoteColor
+    : state.rootNoteColor,
+  noteColor: LEGACY_COLOR_DEFAULTS.noteColor.includes(state.noteColor)
+    ? DEFAULT_SCALE_PREFERENCES.noteColor
+    : state.noteColor,
 });
 
 const parseState = (value: unknown): ScalePreferencesState | null => {

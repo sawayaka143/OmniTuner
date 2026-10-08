@@ -99,10 +99,4 @@ describe('Toggle', () => {
   it('omits the prominent class by default', () => {
     expect(button.classList.contains('prominent')).toBe(false);
   });
-
-  it('applies the full-width class when fullWidth is true', () => {
-    fixture.componentRef.setInput('fullWidth', true);
-    fixture.detectChanges();
-    expect(button.classList.contains('full-width')).toBe(true);
-  });
 });

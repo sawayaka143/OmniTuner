@@ -7,6 +7,7 @@
   zoom: var(--workbench-scale, 1);
   border: 1px solid var(--border-subtle);
   border-radius: var(--r-md);
+  corner-shape: squircle;
   background: var(--surface-container-low);
   box-shadow: var(--shadow-lift);
 }
@@ -46,6 +47,7 @@
   padding: var(--space-3) var(--space-4);
   border: 1px solid var(--border-subtle);
   border-radius: var(--r-md);
+  corner-shape: squircle;
   background: var(--workbench-inset);
 }
 

@@ -25,10 +25,9 @@
     width: min(1180px, 100%);
     overflow: hidden;
     zoom: var(--workbench-scale, 1);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--r-md);
-    @include glass-surface();
-    box-shadow: var(--glass-sheen), var(--shadow-lift);
+    border-radius: var(--r-card);
+    corner-shape: squircle;
+    @include glass-panel();
   }
 
   .workbench-header {
@@ -37,7 +36,7 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--space-6);
-    padding: var(--space-4) var(--space-5);
+    padding: calc(var(--card-pad) * 0.75) var(--card-pad);
 
     h2 {
       font-family: var(--font);

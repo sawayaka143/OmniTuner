@@ -13,8 +13,9 @@
   @include dropdown-menu();
   left: 0;
   right: 0;
-  top: calc(100% + var(--space-2));
-  max-height: min(460px, 45vh);
+  top: var(--dropdown-menu-top, calc(100% + var(--space-2)));
+  bottom: var(--dropdown-menu-bottom, auto);
+  max-height: var(--dropdown-menu-max-height, 45vh);
 
   &.open-up {
     top: auto;
@@ -30,6 +31,36 @@
       animation: none;
     }
   }
+}
+
+// Native <select> presentation (phones): the real control is invisible and
+// covers the decorative trigger, so tapping anywhere opens the platform picker.
+.native-trigger {
+  display: flex;
+}
+
+.native-select {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  font-family: var(--font);
+  font-size: var(--text-sm);
+  color: var(--text);
+  background: transparent;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+.dropdown-wrapper:has(.native-select:focus-visible) .native-trigger {
+  outline: 2px solid var(--border-active);
+  outline-offset: 2px;
 }
 
 .dropdown-group {

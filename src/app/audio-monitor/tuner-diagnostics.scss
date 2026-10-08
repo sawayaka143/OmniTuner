@@ -13,6 +13,7 @@
   padding: var(--space-5);
   border: 1px solid var(--border-subtle);
   border-radius: var(--r-md);
+  corner-shape: squircle;
   @include glass-surface();
   box-shadow: var(--glass-sheen);
 }
