@@ -10,15 +10,6 @@
   font-family: var(--font);
 }
 
-:host::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background: var(--wallpaper) center / cover no-repeat;
-  pointer-events: none;
-}
-
 .app-header {
   position: sticky;
   top: 0;

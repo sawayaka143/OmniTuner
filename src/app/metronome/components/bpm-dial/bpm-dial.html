@@ -36,7 +36,15 @@
     </svg>
   </div>
 
-  <button type="button" class="tap-btn" (click)="onTapClick()" aria-label="Tap tempo">
-    <span class="tap-inner">Tap</span>
+  <button
+    type="button"
+    class="tap-btn"
+    (click)="onTapClick()"
+    [attr.aria-label]="'Tap tempo, ' + bpm() + ' BPM'"
+  >
+    <span class="tap-inner">
+      <span class="tap-value">{{ bpm() }}</span>
+      <span class="tap-unit">BPM</span>
+    </span>
   </button>
 </div>
