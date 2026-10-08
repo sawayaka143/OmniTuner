@@ -1,4 +1,5 @@
 import { Component, ElementRef, input, output, viewChild } from '@angular/core';
+import { SheetSwipe } from '../../ui/sheet-swipe';
 import { AccidentalPreference } from '../../models/scale-preferences.model';
 import { midiDisplayName } from '../../data/note-display-names';
 
@@ -16,7 +17,7 @@ export interface TuningOption {
   selector: 'app-tuning-selector',
   templateUrl: './tuning-selector.html',
   styleUrl: './tuning-selector.scss',
-  imports: [IconButton],
+  imports: [IconButton, SheetSwipe],
 })
 export class TuningSelector {
   readonly presets = input.required<readonly TuningOption[]>();

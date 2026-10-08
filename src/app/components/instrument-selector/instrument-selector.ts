@@ -1,4 +1,5 @@
 import { Component, computed, ElementRef, input, output, viewChild } from '@angular/core';
+import { SheetSwipe } from '../../ui/sheet-swipe';
 import { Instrument, Tuning } from '../../models/instrument.model';
 import { IconButton } from '../../ui/icon-button/icon-button';
 import { RovingRadioGroup } from '../../ui/keyboard-nav';
@@ -7,7 +8,7 @@ import { RovingRadioGroup } from '../../ui/keyboard-nav';
   selector: 'app-instrument-selector',
   templateUrl: './instrument-selector.html',
   styleUrl: './instrument-selector.scss',
-  imports: [IconButton, RovingRadioGroup],
+  imports: [IconButton, RovingRadioGroup, SheetSwipe],
 })
 export class InstrumentSelector {
   readonly instruments = input.required<readonly Instrument[]>();

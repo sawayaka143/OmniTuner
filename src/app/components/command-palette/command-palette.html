@@ -3,6 +3,8 @@
   class="palette-dialog"
   aria-labelledby="command-palette-title"
   [class.closing]="exit.closing()"
+  appSheetSwipe
+  (swipeDismiss)="requestDismiss()"
   (cancel)="requestDismiss($event)"
   (click)="onDialogClick($event)"
   (animationend)="onDialogAnimationend($event)"

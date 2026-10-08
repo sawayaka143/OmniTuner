@@ -24,6 +24,12 @@
   }
 }
 
+@keyframes dropdown-sheet-disappear {
+  to {
+    transform: translateY(100%);
+  }
+}
+
 @keyframes dropdown-sheet-appear {
   from {
     transform: translateY(32px);
@@ -94,8 +100,19 @@
   transform-origin: top center;
   animation: dropdown-appear var(--dur-menu) ease-out;
 
+  &.menu-leaving,
+  &.closing {
+    pointer-events: none;
+    animation: dropdown-disappear var(--dur-exit) var(--ease-exit) forwards;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     animation: none;
+
+    &.menu-leaving,
+    &.closing {
+      animation: none;
+    }
   }
 
   // Native-picker presentation on phones: menus dock to the bottom edge as
@@ -119,6 +136,11 @@
     transform-origin: bottom center;
     box-shadow: 0 -24px 70px rgba(0, 0, 0, 0.55);
     animation: dropdown-sheet-appear var(--dur-slow) var(--ease-spring);
+
+    &.menu-leaving,
+    &.closing {
+      animation: dropdown-sheet-disappear var(--dur-exit) var(--ease-exit) forwards;
+    }
 
     &::before {
       content: '';

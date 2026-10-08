@@ -30,6 +30,9 @@
       class="selector-menu"
       role="listbox"
       aria-label="Choose or manage guitar tuning"
+      appSheetSwipe
+      animate.leave="menu-leaving"
+      (swipeDismiss)="requestClose()"
       (click)="$event.stopPropagation()"
       (keydown)="onMenuKeydown($event)"
     >

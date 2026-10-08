@@ -1,4 +1,5 @@
 import { Component, ElementRef, input, output, viewChild } from '@angular/core';
+import { SheetSwipe } from '../../ui/sheet-swipe';
 
 const ALTERNATE_NOTES: Readonly<Record<string, string>> = {
   'C#': 'D♭',
@@ -19,6 +20,7 @@ let nextMenuId = 0;
   selector: 'app-root-note-picker',
   templateUrl: './root-note-picker.html',
   styleUrl: './root-note-picker.scss',
+  imports: [SheetSwipe],
 })
 export class RootNotePicker {
   readonly notes = input.required<readonly string[]>();

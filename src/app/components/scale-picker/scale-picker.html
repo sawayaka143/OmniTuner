@@ -30,6 +30,9 @@
       class="dropdown-menu card"
       role="listbox"
       aria-label="Scale selection"
+      appSheetSwipe
+      animate.leave="menu-leaving"
+      (swipeDismiss)="close.emit()"
       (click)="$event.stopPropagation()"
       (keydown)="onMenuKeydown($event)"
     >

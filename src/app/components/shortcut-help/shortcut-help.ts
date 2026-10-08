@@ -9,6 +9,7 @@ import {
   output,
   viewChild,
 } from '@angular/core';
+import { SheetSwipe } from '../../ui/sheet-swipe';
 import { IconButton } from '../../ui/icon-button/icon-button';
 import { createDialogExit } from '../../ui/dialog-exit';
 
@@ -19,7 +20,7 @@ interface ShortcutEntry {
 
 @Component({
   selector: 'app-shortcut-help',
-  imports: [IconButton],
+  imports: [IconButton, SheetSwipe],
   templateUrl: './shortcut-help.html',
   styleUrl: './shortcut-help.scss',
 })

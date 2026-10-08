@@ -9,6 +9,7 @@ import {
   output,
   viewChild,
 } from '@angular/core';
+import { SheetSwipe } from '../../ui/sheet-swipe';
 import { AccidentalPreference } from '../../models/scale-preferences.model';
 import {
   MAX_CUSTOM_TUNING_NAME_LENGTH,
@@ -26,7 +27,7 @@ export type TuningPresetOption = PresetOption;
   selector: 'app-tuning-editor',
   templateUrl: './tunings-editor.html',
   styleUrl: './tunings-editor.scss',
-  imports: [StringEditor, IconButton],
+  imports: [StringEditor, IconButton, SheetSwipe],
 })
 export class TuningEditor {
   readonly open = input(false);

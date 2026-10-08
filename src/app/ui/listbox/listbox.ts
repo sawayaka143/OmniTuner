@@ -12,6 +12,8 @@ import {
   viewChild,
 } from '@angular/core';
 
+import { SheetSwipe } from '../sheet-swipe';
+
 let nextListboxId = 0;
 
 const SHEET_LAYOUT_QUERY = '(max-width: 760px)';
@@ -60,6 +62,8 @@ const MENU_EXIT_FALLBACK_MS = 250;
           [class.closing]="closing()"
           role="listbox"
           [attr.aria-label]="ariaLabel()"
+          appSheetSwipe
+          (swipeDismiss)="requestClose()"
           (click)="$event.stopPropagation()"
           (keydown)="onMenuKeydown($event)"
           (animationend)="onMenuAnimationend($event)"
@@ -89,6 +93,7 @@ const MENU_EXIT_FALLBACK_MS = 250;
     </div>
   `,
   styleUrl: './listbox.scss',
+  imports: [SheetSwipe],
   host: {
     '(document:pointerdown)': 'onDocumentPointerdown($event)',
   },
@@ -256,7 +261,7 @@ export class Listbox<T> {
   }
 
   protected onMenuAnimationend(event: AnimationEvent): void {
-    if (event.animationName === 'dropdown-disappear') this.finishMenuExit();
+    if (event.animationName.includes('disappear')) this.finishMenuExit();
   }
 
   protected closeMenu(): void {

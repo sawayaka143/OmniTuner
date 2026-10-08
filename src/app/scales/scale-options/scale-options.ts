@@ -1,4 +1,5 @@
 import { Component, ElementRef, inject, input, output, signal, viewChild } from '@angular/core';
+import { SheetSwipe } from '../../ui/sheet-swipe';
 import {
   AccidentalPreference,
   LabelMode,
@@ -11,7 +12,7 @@ import { RovingRadioGroup } from '../../ui/keyboard-nav';
   selector: 'app-scale-options',
   templateUrl: './scale-options.html',
   styleUrl: './scale-options.scss',
-  imports: [Toggle, RovingRadioGroup],
+  imports: [Toggle, RovingRadioGroup, SheetSwipe],
   host: {
     '(document:mousedown)': 'onDocumentMouseDown($event)',
   },

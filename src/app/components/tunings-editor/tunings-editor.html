@@ -4,6 +4,8 @@
   aria-labelledby="tuning-editor-title"
   aria-describedby="tuning-editor-subtitle"
   [class.closing]="exit.closing()"
+  appSheetSwipe
+  (swipeDismiss)="requestDismiss()"
   (cancel)="requestDismiss($event)"
   (click)="onDialogClick($event)"
   (animationend)="onDialogAnimationend($event)"

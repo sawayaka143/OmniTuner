@@ -11,6 +11,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { SheetSwipe } from '../../ui/sheet-swipe';
 import { Instrument } from '../../models/instrument.model';
 import {
   MAX_STRING_COUNT,
@@ -29,7 +30,7 @@ type ManagerMode = 'list' | 'create' | 'edit';
   selector: 'app-instrument-manager',
   templateUrl: './instrument-manager.html',
   styleUrl: './instrument-manager.scss',
-  imports: [StringEditor, IconButton],
+  imports: [StringEditor, IconButton, SheetSwipe],
 })
 export class InstrumentManager {
   private readonly registry = inject(InstrumentRegistry);

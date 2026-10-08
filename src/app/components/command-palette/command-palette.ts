@@ -12,6 +12,7 @@ import {
   viewChild,
   viewChildren,
 } from '@angular/core';
+import { SheetSwipe } from '../../ui/sheet-swipe';
 import { Router } from '@angular/router';
 import { ScalePreferences } from '../../services/scale-preferences';
 import { ThemeService } from '../../services/theme.service';
@@ -47,7 +48,7 @@ const PAGE_COMMANDS: readonly {
 
 @Component({
   selector: 'app-command-palette',
-  imports: [],
+  imports: [SheetSwipe],
   templateUrl: './command-palette.html',
   styleUrl: './command-palette.scss',
 })

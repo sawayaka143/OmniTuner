@@ -1,4 +1,5 @@
 import { Component, computed, ElementRef, input, output, viewChild } from '@angular/core';
+import { SheetSwipe } from '../../ui/sheet-swipe';
 import { Scale } from '../../models/scale.model';
 
 interface ScaleGroup {
@@ -12,6 +13,7 @@ let nextMenuId = 0;
   selector: 'app-scale-picker',
   templateUrl: './scale-picker.html',
   styleUrl: './scale-picker.scss',
+  imports: [SheetSwipe],
 })
 export class ScalePicker {
   readonly scales = input.required<readonly Scale[]>();

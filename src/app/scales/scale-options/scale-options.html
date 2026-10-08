@@ -89,6 +89,9 @@
           class="label-menu"
           role="menu"
           aria-label="Label display mode"
+          appSheetSwipe
+          animate.leave="menu-leaving"
+          (swipeDismiss)="labelOpen.set(false)"
           (keydown)="onLabelKeydown($event)"
         >
           @for (opt of labelOptions; track opt.value) {

@@ -63,6 +63,9 @@
         class="dropdown-menu card"
         role="menu"
         aria-label="Choose or manage tuning"
+        appSheetSwipe
+        animate.leave="menu-leaving"
+        (swipeDismiss)="closeDropdown.emit()"
         (click)="$event.stopPropagation()"
         (keydown)="onMenuKeydown($event)"
       >
