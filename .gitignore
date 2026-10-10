@@ -92,10 +92,8 @@ serve-dist.cjs*
 .zcode/
 skills-lock.json
 /skills/
-.impeccable/
 .commandcode/
 AGENTS.md
-
 
 # ------------------------------------------------------------------------------
 # 7. Operating System & System Files
