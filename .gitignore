@@ -85,7 +85,7 @@ serve-dist.cjs*
 # 6. AI Assistants & Tooling Caches
 # ------------------------------------------------------------------------------
 /codebase-audit/
-.agents/
+/.agent/
 .claude/
 .codex/
 .gemini/
@@ -95,6 +95,7 @@ skills-lock.json
 .impeccable/
 .commandcode/
 AGENTS.md
+
 
 # ------------------------------------------------------------------------------
 # 7. Operating System & System Files
