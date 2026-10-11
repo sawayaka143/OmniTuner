@@ -1,4 +1,5 @@
 import { ScalePreferencesState } from '../models/scale-preferences.model';
+import { DEFAULT_VOICING_COUNT } from './chord-voicing.constants';
 
 export const MIN_TUNING_MIDI_NOTE = 24;
 export const MAX_TUNING_MIDI_NOTE = 84;
@@ -19,4 +20,5 @@ export const DEFAULT_SCALE_PREFERENCES: ScalePreferencesState = {
   cardColorLight: null,
   workbenchScale: 1,
   chordRandomProgression: true,
+  chordVoicingCount: DEFAULT_VOICING_COUNT,
 };

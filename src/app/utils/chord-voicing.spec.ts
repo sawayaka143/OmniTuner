@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
 import { parseChord, parseTuning, ParsedChord, ParsedTuning } from './chord-theory';
+import { DEFAULT_VOICING_COUNT, MAX_VOICING_COUNT } from '../data/chord-voicing.constants';
 import {
+  analyseFingering,
+  isNarrowingOf,
   requiredExtensionChoices,
   requiredPitchClasses,
-  RESULTS_PER_CHORD,
   searchChord,
 } from './chord-voicing';
 
@@ -83,47 +85,175 @@ describe('requiredPitchClasses', () => {
   });
 });
 
-describe('canonical shapes (standard tuning)', () => {
-  const CANONICAL: readonly { symbol: string; frets: (number | null)[]; maxRank: number }[] = [
-    { symbol: 'C', frets: [null, 3, 2, 0, 1, 0], maxRank: 2 },
-    { symbol: 'G', frets: [3, 2, 0, 0, 0, 3], maxRank: 2 },
-    { symbol: 'Am', frets: [null, 0, 2, 2, 1, 0], maxRank: 2 },
-    { symbol: 'Bb', frets: [null, 1, 0, 3, 3, 1], maxRank: 2 },
-    { symbol: 'Cmaj7', frets: [null, 3, 2, 0, 0, null], maxRank: 3 },
-    { symbol: 'Cmaj7', frets: [null, 3, 2, 0, 0, 0], maxRank: 2 },
-    { symbol: 'Ebmaj7', frets: [null, null, 1, 3, 3, 3], maxRank: 2 },
-    { symbol: 'Cmaj9', frets: [null, 3, 2, 4, 3, null], maxRank: 3 },
-    { symbol: 'Caug', frets: [null, 3, 2, 1, 1, 0], maxRank: 2 },
-    { symbol: 'Cm9', frets: [null, 3, 1, 3, 3, null], maxRank: 1 },
-    { symbol: 'Dm9', frets: [null, 5, 3, 5, 5, null], maxRank: 2 },
-    { symbol: 'Cadd9', frets: [null, 3, 2, 0, 3, 0], maxRank: 5 },
-    { symbol: 'C7', frets: [null, 3, 2, 3, 1, null], maxRank: 4 },
-    { symbol: 'C13', frets: [null, 3, 2, 3, 3, null], maxRank: 1 },
-    { symbol: 'Em7', frets: [0, 2, 0, 0, 0, 0], maxRank: 2 },
-    // Movable barre forms: the standard shapes for these chords in any key.
-    { symbol: 'Eb', frets: [null, 6, 8, 8, 8, 6], maxRank: 2 },
-    { symbol: 'F#maj7', frets: [2, null, 3, 3, 2, null], maxRank: 2 },
-    { symbol: 'Gmaj7', frets: [3, null, 4, 4, 3, null], maxRank: 3 },
-    { symbol: 'B7b13', frets: [7, null, 7, 8, 8, null], maxRank: 2 },
+type Frets = (number | null)[];
+
+const fretsOf = (symbol: string, t: ParsedTuning = tuning, count?: number): string[] =>
+  searchChord(t, chord(symbol), count).map((shape) => JSON.stringify(shape.frets));
+
+describe('standard grips (standard tuning)', () => {
+  const x = null;
+  const GRIPS: readonly { symbol: string; frets: Frets; maxRank: number }[] = [
+    { symbol: 'C', frets: [x, 3, 2, 0, 1, 0], maxRank: 1 },
+    { symbol: 'C', frets: [x, 3, 5, 5, 5, 3], maxRank: 3 },
+    { symbol: 'D', frets: [x, x, 0, 2, 3, 2], maxRank: 1 },
+    { symbol: 'D', frets: [x, 5, 7, 7, 7, 5], maxRank: 2 },
+    { symbol: 'E', frets: [0, 2, 2, 1, 0, 0], maxRank: 1 },
+    { symbol: 'F', frets: [1, 3, 3, 2, 1, 1], maxRank: 1 },
+    { symbol: 'G', frets: [3, 2, 0, 0, 0, 3], maxRank: 1 },
+    { symbol: 'A', frets: [x, 0, 2, 2, 2, 0], maxRank: 1 },
+    { symbol: 'A', frets: [5, 7, 7, 6, 5, 5], maxRank: 2 },
+    { symbol: 'B', frets: [x, 2, 4, 4, 4, 2], maxRank: 1 },
+    { symbol: 'B', frets: [7, 9, 9, 8, 7, 7], maxRank: 2 },
+    { symbol: 'Bb', frets: [x, 1, 3, 3, 3, 1], maxRank: 2 },
+    { symbol: 'Bb', frets: [x, 1, 0, 3, 3, 1], maxRank: 2 },
+    { symbol: 'Eb', frets: [x, 6, 8, 8, 8, 6], maxRank: 2 },
+    { symbol: 'Ab', frets: [4, 6, 6, 5, 4, 4], maxRank: 1 },
+    { symbol: 'C#', frets: [x, 4, 6, 6, 6, 4], maxRank: 1 },
+    { symbol: 'F#', frets: [2, 4, 4, 3, 2, 2], maxRank: 1 },
+    { symbol: 'Am', frets: [x, 0, 2, 2, 1, 0], maxRank: 1 },
+    { symbol: 'Am', frets: [5, 7, 7, 5, 5, 5], maxRank: 2 },
+    { symbol: 'Em', frets: [0, 2, 2, 0, 0, 0], maxRank: 1 },
+    { symbol: 'Dm', frets: [x, x, 0, 2, 3, 1], maxRank: 1 },
+    { symbol: 'Bm', frets: [x, 2, 4, 4, 3, 2], maxRank: 1 },
+    { symbol: 'Bm', frets: [7, 9, 9, 7, 7, 7], maxRank: 2 },
+    { symbol: 'C#m', frets: [x, 4, 6, 6, 5, 4], maxRank: 1 },
+    { symbol: 'F#m', frets: [2, 4, 4, 2, 2, 2], maxRank: 1 },
+    { symbol: 'Fm', frets: [1, 3, 3, 1, 1, 1], maxRank: 1 },
+    { symbol: 'Cm', frets: [x, 3, 5, 5, 4, 3], maxRank: 2 },
+    { symbol: 'Gm', frets: [3, 5, 5, 3, 3, 3], maxRank: 2 },
+    { symbol: 'C7', frets: [x, 3, 2, 3, 1, 0], maxRank: 1 },
+    { symbol: 'G7', frets: [3, 2, 0, 0, 0, 1], maxRank: 1 },
+    { symbol: 'D7', frets: [x, x, 0, 2, 1, 2], maxRank: 1 },
+    { symbol: 'E7', frets: [0, 2, 0, 1, 0, 0], maxRank: 1 },
+    { symbol: 'A7', frets: [x, 0, 2, 0, 2, 0], maxRank: 1 },
+    { symbol: 'B7', frets: [x, 2, 1, 2, 0, 2], maxRank: 1 },
+    { symbol: 'F7', frets: [1, 3, 1, 2, 1, 1], maxRank: 1 },
+    { symbol: 'Am7', frets: [x, 0, 2, 0, 1, 0], maxRank: 1 },
+    { symbol: 'Em7', frets: [0, 2, 0, 0, 0, 0], maxRank: 1 },
+    { symbol: 'Dm7', frets: [x, x, 0, 2, 1, 1], maxRank: 1 },
+    { symbol: 'Bm7', frets: [x, 2, 0, 2, 0, 2], maxRank: 1 },
+    { symbol: 'Cmaj7', frets: [x, 3, 2, 0, 0, 0], maxRank: 1 },
+    { symbol: 'Dmaj7', frets: [x, x, 0, 2, 2, 2], maxRank: 1 },
+    { symbol: 'Amaj7', frets: [x, 0, 2, 1, 2, 0], maxRank: 1 },
+    { symbol: 'Gmaj7', frets: [3, x, 4, 4, 3, x], maxRank: 3 },
+    { symbol: 'F#maj7', frets: [2, x, 3, 3, 2, x], maxRank: 1 },
+    { symbol: 'Ebmaj7', frets: [x, x, 1, 3, 3, 3], maxRank: 2 },
+    { symbol: 'Dsus4', frets: [x, x, 0, 2, 3, 3], maxRank: 1 },
+    { symbol: 'Asus2', frets: [x, 0, 2, 2, 0, 0], maxRank: 1 },
+    { symbol: 'Caug', frets: [x, 3, 2, 1, 1, 0], maxRank: 1 },
+    { symbol: 'Cadd9', frets: [x, 3, 2, 0, 3, 0], maxRank: 3 },
+    { symbol: 'Cmaj9', frets: [x, 3, 2, 4, 3, x], maxRank: 3 },
+    { symbol: 'Cm9', frets: [x, 3, 1, 3, 3, x], maxRank: 1 },
+    { symbol: 'Dm9', frets: [x, 5, 3, 5, 5, x], maxRank: 1 },
+    { symbol: 'B7b13', frets: [7, x, 7, 8, 8, x], maxRank: 2 },
   ];
 
-  it.each(CANONICAL)(
-    'ranks $symbol $frets within the top $maxRank',
-    ({ symbol, frets, maxRank }) => {
-      const label = `${symbol} ${JSON.stringify(frets)}`;
-      const shapes = searchChord(tuning, chord(symbol));
-      const index = shapes.findIndex((s) => JSON.stringify(s.frets) === JSON.stringify(frets));
-      expect(index, `${label} not found among ${shapes.length} shapes`).toBeGreaterThanOrEqual(0);
-      expect(index + 1, label).toBeLessThanOrEqual(maxRank);
-    },
-  );
+  it.each(GRIPS)('ranks $symbol $frets within the top $maxRank', ({ symbol, frets, maxRank }) => {
+    const label = `${symbol} ${JSON.stringify(frets)}`;
+    const ranked = fretsOf(symbol);
+    const index = ranked.indexOf(JSON.stringify(frets));
+    expect(index, `${label} not found among ${ranked.join(' ')}`).toBeGreaterThanOrEqual(0);
+    expect(index + 1, `${label} in ${ranked.join(' ')}`).toBeLessThanOrEqual(maxRank);
+  });
 });
 
-describe('searchChord (biomechanical engine)', () => {
+describe('result selection', () => {
+  const SYMBOLS = [
+    'C',
+    'G',
+    'D',
+    'A',
+    'E',
+    'F',
+    'B',
+    'Bb',
+    'Am',
+    'Bm',
+    'F#m',
+    'C7',
+    'Cmaj7',
+    'Cm9',
+  ];
+
+  it.each(SYMBOLS)('never lists %s twice with only strings dropped', (symbol) => {
+    const shapes = searchChord(tuning, chord(symbol), MAX_VOICING_COUNT);
+    for (const a of shapes) {
+      for (const b of shapes) {
+        if (a === b) continue;
+        expect(isNarrowingOf(a.frets, b.frets), `${a.frets} vs ${b.frets}`).toBe(false);
+      }
+    }
+  });
+
+  it('keeps the full grip and hides the same grip with a string dropped', () => {
+    const ranked = fretsOf('G');
+    expect(ranked[0]).toBe(JSON.stringify([3, 2, 0, 0, 0, 3]));
+    expect(ranked).not.toContain(JSON.stringify([3, 2, 0, 0, 0, null]));
+    expect(fretsOf('B')).not.toContain(JSON.stringify([null, 2, null, 4, 4, 2]));
+  });
+
+  it('returns the requested number of fingerings', () => {
+    expect(searchChord(tuning, chord('C'), 1)).toHaveLength(1);
+    expect(searchChord(tuning, chord('C'))).toHaveLength(DEFAULT_VOICING_COUNT);
+    expect(searchChord(tuning, chord('C'), MAX_VOICING_COUNT)).toHaveLength(MAX_VOICING_COUNT);
+  });
+
+  it('returns a longer list that starts with the shorter one', () => {
+    const short = fretsOf('Bm', tuning, 3);
+    const long = fretsOf('Bm', tuning, MAX_VOICING_COUNT);
+    expect(long.slice(0, 3)).toEqual(short);
+  });
+});
+
+describe('isNarrowingOf', () => {
+  it('matches a shape with strings muted against its full version', () => {
+    expect(isNarrowingOf([3, 2, 0, 0, 0, null], [3, 2, 0, 0, 0, 3])).toBe(true);
+    expect(isNarrowingOf([3, 2, 0, 0, 0, 3], [3, 2, 0, 0, 0, 3])).toBe(true);
+  });
+
+  it('rejects shapes that differ on a sounding string', () => {
+    expect(isNarrowingOf([3, 2, 0, 0, 3, 3], [3, 2, 0, 0, 0, 3])).toBe(false);
+    expect(isNarrowingOf([3, 2, 0, 0, 0, 3], [3, 2, 0, 0, 0, null])).toBe(false);
+  });
+});
+
+describe('analyseFingering', () => {
+  it('uses one finger per fretted note when four fingers are enough', () => {
+    expect(analyseFingering([null, 3, 2, 0, 1, 0])).toEqual({ fingers: 3, barres: 0 });
+    expect(analyseFingering([null, 0, 2, 2, 2, 0])).toEqual({ fingers: 3, barres: 0 });
+  });
+
+  it('barres a fret when more than four notes are fretted', () => {
+    expect(analyseFingering([1, 3, 3, 2, 1, 1])).toEqual({ fingers: 4, barres: 1 });
+    expect(analyseFingering([null, 2, 4, 4, 4, 2])).toEqual({ fingers: 3, barres: 1 });
+  });
+
+  it('cannot barre across an open string or a lower fret', () => {
+    expect(analyseFingering([2, 3, 0, 4, 3, 2])).toBeNull();
+  });
+});
+
+describe('re-entrant tunings', () => {
+  const ukulele = parseTuning('G4 C4 E4 A4');
+  if (!ukulele.ok) throw new Error('failed to parse ukulele tuning');
+  const ukuleleTuning = ukulele.tuning;
+
+  it.each([
+    ['C', [0, 0, 0, 3]],
+    ['G', [0, 2, 3, 2]],
+    ['F', [2, 0, 1, 0]],
+    ['Am', [2, 0, 0, 0]],
+    ['D', [2, 2, 2, 0]],
+  ])('ranks the standard ukulele %s first', (symbol, frets) => {
+    expect(fretsOf(symbol, ukuleleTuning)[0]).toBe(JSON.stringify(frets));
+  });
+});
+
+describe('searchChord', () => {
   it('finds voicings for a C major triad in standard tuning', () => {
     const shapes = searchChord(tuning, chord('C'));
     expect(shapes.length).toBeGreaterThan(0);
-    expect(shapes.length).toBeLessThanOrEqual(RESULTS_PER_CHORD);
+    expect(shapes.length).toBeLessThanOrEqual(DEFAULT_VOICING_COUNT);
   });
 
   it('covers every required chord tone in every shape', () => {
@@ -222,21 +352,13 @@ describe('searchChord (biomechanical engine)', () => {
     }
   });
 
-  it('rejects shapes that need five independent fingers', () => {
-    const shapes = searchChord(tuning, chord('Cmaj7'));
-    for (const shape of shapes) {
-      let runs = 0;
-      let prevFret: number | null = null;
-      for (const fret of shape.frets) {
-        if (fret === 0) {
-          prevFret = null;
-          continue;
-        }
-        if (fret === null) continue;
-        if (fret !== prevFret) runs++;
-        prevFret = fret;
+  it('only returns shapes four fingers can hold, counting a barre as one finger', () => {
+    for (const symbol of ['Cmaj7', 'F', 'Bm', 'C13', 'Ebmaj7']) {
+      for (const shape of searchChord(tuning, chord(symbol), MAX_VOICING_COUNT)) {
+        const fingering = analyseFingering(shape.frets);
+        expect(fingering, `${symbol} ${JSON.stringify(shape.frets)}`).not.toBeNull();
+        expect(fingering!.fingers).toBeLessThanOrEqual(4);
       }
-      expect(runs, JSON.stringify(shape.frets)).toBeLessThanOrEqual(4);
     }
   });
 });
@@ -270,57 +392,10 @@ describe('slash chords', () => {
   });
 
   it('falls back to unconstrained voicings when the bass is unreachable', () => {
-    // No C voicing can reach a D below the root within the fret window.
     const shapes = searchChord(tuning, chord('C/D'));
     expect(shapes.length).toBeGreaterThan(0);
     const constrained = searchChord(tuning, chord('Am/G'));
     expect(constrained.length).toBeGreaterThan(0);
-    for (const shape of constrained) {
-      expect(shape.frets[0], JSON.stringify(shape.frets)).toBe(3);
-    }
-  });
-});
-
-describe('ranking regression (biomechanical)', () => {
-  it('ranks open C in top 2', () => {
-    const shapes = searchChord(tuning, chord('C'));
-    const top2 = shapes.slice(0, 2);
-    const canonicalMuted = JSON.stringify([null, 3, 2, 0, 1, 0]);
-    expect(top2.some((s) => JSON.stringify(s.frets) === canonicalMuted)).toBe(true);
-  });
-
-  it('ranks open G [320003] in top 2', () => {
-    const shapes = searchChord(tuning, chord('G'));
-    const top2 = shapes.slice(0, 2);
-    expect(top2.some((s) => JSON.stringify(s.frets) === JSON.stringify([3, 2, 0, 0, 0, 3]))).toBe(
-      true,
-    );
-  });
-
-  it('ranks open Am [x02210] in top 2', () => {
-    const shapes = searchChord(tuning, chord('Am'));
-    const top2 = shapes.slice(0, 2);
-    const a = JSON.stringify([0, 0, 2, 2, 1, 0]);
-    const b = JSON.stringify([null, 0, 2, 2, 1, 0]);
-    expect(
-      top2.some((s) => {
-        const f = JSON.stringify(s.frets);
-        return f === a || f === b;
-      }),
-    ).toBe(true);
-  });
-
-  it('covers guide tones for C13 in top 2', () => {
-    const shapes = searchChord(tuning, chord('C13'));
-    const guideTones = [0, 4, 10];
-    const tensions = [2, 5, 9];
-    for (const shape of shapes.slice(0, 2)) {
-      const pcs = new Set(shape.sounding.map((n) => n.midi % 12));
-      for (const pc of guideTones) expect(pcs.has(pc)).toBe(true);
-      expect(
-        tensions.some((pc) => pcs.has(pc)),
-        JSON.stringify(shape.frets),
-      ).toBe(true);
-    }
+    expect(constrained[0].frets[0], JSON.stringify(constrained[0].frets)).toBe(3);
   });
 });

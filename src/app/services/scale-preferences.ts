@@ -1,5 +1,6 @@
 import { inject, InjectionToken, signal, Service } from '@angular/core';
 import { SCALES } from '../data/scale.constants';
+import { MAX_VOICING_COUNT, MIN_VOICING_COUNT } from '../data/chord-voicing.constants';
 import { DEFAULT_SCALE_PREFERENCES } from '../data/scale-tuning.constants';
 import {
   AccidentalPreference,
@@ -38,6 +39,12 @@ const WORKBENCH_SCALE_STEP = 0.05;
 const WORKBENCH_SCALE_STEPS_PER_UNIT = 1 / WORKBENCH_SCALE_STEP;
 const clampWorkbenchScale = (v: number): number =>
   Math.min(Math.max(v, WORKBENCH_SCALE_MIN), WORKBENCH_SCALE_MAX);
+
+const isVoicingCount = (value: unknown): value is number =>
+  typeof value === 'number' &&
+  Number.isInteger(value) &&
+  value >= MIN_VOICING_COUNT &&
+  value <= MAX_VOICING_COUNT;
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null;
@@ -138,6 +145,9 @@ const parseState = (value: unknown): ScalePreferencesState | null => {
       typeof state['chordRandomProgression'] === 'boolean'
         ? state['chordRandomProgression']
         : DEFAULT_SCALE_PREFERENCES.chordRandomProgression,
+    chordVoicingCount: isVoicingCount(state['chordVoicingCount'])
+      ? state['chordVoicingCount']
+      : DEFAULT_SCALE_PREFERENCES.chordVoicingCount,
     workbenchScale:
       typeof state['workbenchScale'] === 'number' && Number.isFinite(state['workbenchScale'])
         ? clampWorkbenchScale(state['workbenchScale'])
@@ -220,6 +230,11 @@ export class ScalePreferences {
       Math.round(clampWorkbenchScale(scale) * WORKBENCH_SCALE_STEPS_PER_UNIT) /
       WORKBENCH_SCALE_STEPS_PER_UNIT;
     this.update({ workbenchScale: snapped });
+  }
+
+  setChordVoicingCount(count: number): void {
+    if (!isVoicingCount(count)) return;
+    this.update({ chordVoicingCount: count });
   }
 
   resetWorkbenchScale(): void {

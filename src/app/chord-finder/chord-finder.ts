@@ -16,12 +16,14 @@ import {
   parseTuning,
   pcName,
 } from '../utils/chord-theory';
-import { RESULTS_PER_CHORD, searchChord, VoicingShape } from '../utils/chord-voicing';
+import { searchChord, VoicingShape } from '../utils/chord-voicing';
+import { MAX_VOICING_COUNT, MIN_VOICING_COUNT } from '../data/chord-voicing.constants';
 import { DiagramLabelMode, DiagramView, NeckDiagram } from './neck-diagram/neck-diagram';
 import { KeyFinder } from './key-finder/key-finder';
 import { Segmented } from '../ui/segmented/segmented';
 import { Listbox } from '../ui/listbox/listbox';
 import { TextField } from '../ui/text-field/text-field';
+import { StepButton } from '../ui/step-button/step-button';
 import { DetectedKey, detectKey } from '../utils/key-detector';
 import { computeBadgeForPc } from '../utils/chord-theory';
 
@@ -40,7 +42,6 @@ export interface ChordEntry {
 
 export interface GenerationResult {
   readonly tuning: ParsedTuning;
-  readonly options: Record<string, unknown>;
   readonly chords: readonly ChordEntry[];
   readonly detectedKey: DetectedKey | null;
 }
@@ -55,7 +56,7 @@ export interface TabLine {
 
 @Component({
   selector: 'app-chord-finder',
-  imports: [NeckDiagram, Segmented, Listbox, TextField, KeyFinder],
+  imports: [NeckDiagram, Segmented, Listbox, TextField, StepButton, KeyFinder],
   templateUrl: './chord-finder.html',
   styleUrl: './chord-finder.scss',
   host: {
@@ -117,7 +118,20 @@ export class ChordFinder {
   protected readonly selectedInstrument = this.registry.selectedInstrument;
   protected readonly instrumentListOpen = signal(false);
 
-  protected readonly results = signal<GenerationResult | null>(null);
+  protected readonly minVoicingCount = MIN_VOICING_COUNT;
+  protected readonly maxVoicingCount = MAX_VOICING_COUNT;
+  protected readonly voicingCount = computed(() => this.preferencesState().chordVoicingCount);
+
+  private readonly generated = signal<GenerationResult | null>(null);
+  protected readonly results = computed<GenerationResult | null>(() => {
+    const generated = this.generated();
+    if (!generated) return null;
+    const count = this.voicingCount();
+    return {
+      ...generated,
+      chords: generated.chords.map((entry) => ({ ...entry, shapes: entry.shapes.slice(0, count) })),
+    };
+  });
   protected readonly detectedKey = computed(() => this.results()?.detectedKey ?? null);
   protected readonly alternativeKeys = computed<string>(() => {
     const key = this.detectedKey();
@@ -125,7 +139,6 @@ export class ChordFinder {
     return key.alternatives.map((alt) => `${alt.tonicName} ${alt.mode}`).join(', ');
   });
   protected readonly copied = signal(false);
-  private copyBuffer = '';
   private copyResetTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
@@ -350,7 +363,7 @@ export class ChordFinder {
     const chords: ChordEntry[] = tokens.map((token) => {
       const parse = parseChord(token);
       if (!parse.ok) return { token, parse, shapes: [], badge: null };
-      const shapes = searchChord(parsed.tuning, parse.chord);
+      const shapes = searchChord(parsed.tuning, parse.chord, MAX_VOICING_COUNT);
       let badge: DiatonicBadge | null = null;
       if (dk) {
         const useFlats =
@@ -360,32 +373,28 @@ export class ChordFinder {
       return { token, parse, shapes, badge };
     });
 
-    this.results.set({
-      tuning: parsed.tuning,
-      options: {},
-      detectedKey: dk,
-      chords: chords.map((entry) => ({
-        ...entry,
-        shapes: entry.shapes.slice(0, RESULTS_PER_CHORD),
-      })),
-    });
-    this.copyBuffer = this.buildCopyBuffer(parsed.tuning, chords, dk);
+    this.generated.set({ tuning: parsed.tuning, detectedKey: dk, chords });
+  }
+
+  protected setVoicingCount(count: number): void {
+    this.preferences.setChordVoicingCount(count);
   }
 
   protected clearResults(): void {
-    this.results.set(null);
-    this.copyBuffer = '';
+    this.generated.set(null);
   }
 
   protected async copyTab(): Promise<void> {
-    if (!this.copyBuffer) return;
+    const result = this.results();
+    if (!result) return;
+    const copyBuffer = this.buildCopyBuffer(result);
     let ok = false;
     try {
-      await navigator.clipboard.writeText(this.copyBuffer);
+      await navigator.clipboard.writeText(copyBuffer);
       ok = true;
     } catch {
       const textarea = document.createElement('textarea');
-      textarea.value = this.copyBuffer;
+      textarea.value = copyBuffer;
       textarea.style.position = 'fixed';
       textarea.style.opacity = '0';
       document.body.appendChild(textarea);
@@ -442,11 +451,7 @@ export class ChordFinder {
     return 'try a different tuning or chord spelling';
   }
 
-  private buildCopyBuffer(
-    tuning: ParsedTuning,
-    chords: readonly ChordEntry[],
-    dk: DetectedKey | null,
-  ): string {
+  private buildCopyBuffer({ tuning, chords, detectedKey: dk }: GenerationResult): string {
     const parts: string[] = [];
     const keyLabel = dk ? `${dk.tonicName} ${dk.mode}` : '—';
     parts.push(`Chord finder — tuning ${tuning.labels.join(' ')} — key ${keyLabel}`);

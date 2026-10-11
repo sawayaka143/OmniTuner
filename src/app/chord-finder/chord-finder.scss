@@ -84,6 +84,21 @@
   letter-spacing: var(--tracking-wide);
 }
 
+.count-stepper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.count-value {
+  min-width: var(--space-6);
+  color: var(--text);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-semibold);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
 .stage-well {
   flex: 1;
   min-height: 320px;

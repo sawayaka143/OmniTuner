@@ -159,6 +159,32 @@
               (select)="onLabelModeSelect($event)"
             />
 
+            <span class="rail-label" id="voicing-count-label">show:</span>
+            <div class="count-stepper" role="group" aria-labelledby="voicing-count-label">
+              <app-step-button
+                [direction]="-1"
+                [value]="voicingCount()"
+                [min]="minVoicingCount"
+                [max]="maxVoicingCount"
+                ariaLabel="Show fewer fingerings per chord"
+                (step)="setVoicingCount($event)"
+              />
+              <output
+                class="count-value"
+                [attr.aria-label]="voicingCount() + ' fingerings per chord'"
+              >
+                {{ voicingCount() }}
+              </output>
+              <app-step-button
+                [direction]="1"
+                [value]="voicingCount()"
+                [min]="minVoicingCount"
+                [max]="maxVoicingCount"
+                ariaLabel="Show more fingerings per chord"
+                (step)="setVoicingCount($event)"
+              />
+            </div>
+
             <button class="btn small" type="button" (click)="copyTab()">
               {{ copied() ? 'copied ✓' : 'copy tab' }}
             </button>

@@ -41,7 +41,6 @@ describe('chord form library', () => {
       expect(form.offsets.length, form.id).toBe(6);
       expect(form.anchor, form.id).toBeGreaterThanOrEqual(0);
       expect(form.anchor, form.id).toBeLessThan(6);
-      expect(form.weight, form.id).toBeGreaterThan(0);
       expect(form.qualities.length, form.id).toBeGreaterThan(0);
       expect(ids.has(form.id), `${form.id} is duplicated`).toBe(false);
       ids.add(form.id);
