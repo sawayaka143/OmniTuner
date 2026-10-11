@@ -9,7 +9,7 @@
   display: flex;
   align-items: flex-start;
   gap: var(--space-4);
-  margin: var(--space-5) var(--space-5) 0;
+  margin: 0 var(--card-pad) calc(var(--card-pad) * 0.75);
   padding: var(--space-5);
   border: 1px solid var(--border-subtle);
   border-radius: var(--r-md);
@@ -55,7 +55,6 @@
   .intro-card {
     flex-direction: column;
     gap: var(--space-3);
-    margin: var(--space-4) var(--space-4) 0;
     padding: var(--space-4);
   }
 }
