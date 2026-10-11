@@ -65,7 +65,7 @@
     background: var(--needle-color);
     transform: translate(-50%, -50%);
     transition:
-      left var(--dur-slow) var(--ease-spring),
+      left var(--dur-med) var(--ease-spring),
       background-color var(--dur-med) ease,
       opacity var(--dur-med) ease;
     z-index: var(--z-float);

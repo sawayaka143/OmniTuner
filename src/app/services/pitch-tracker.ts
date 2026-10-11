@@ -16,9 +16,9 @@ export interface TrackerOutput {
 }
 
 const SMOOTHING_WINDOW = 3;
-const EMA_ALPHA = 0.12;
+const EMA_ALPHA = 0.25;
 const MAX_SMOOTHING_JUMP_CENTS = 380;
-const ADAPTIVE_ALPHA_CENTS = 100;
+const ADAPTIVE_ALPHA_CENTS = 20;
 
 export const MAX_DROPOUT_HOLD_FRAMES = 6;
 export const AUDIBLE_HOLD_FRAMES = 22;

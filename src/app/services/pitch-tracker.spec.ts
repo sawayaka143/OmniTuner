@@ -210,6 +210,35 @@ describe('PitchTracker', () => {
     });
   });
 
+  describe('responsiveness', () => {
+    const centsFrom = (frequency: number, reference: number): number =>
+      1200 * Math.log2(frequency / reference);
+
+    it('settles within 1 cent of a 15 cent peg turn in at most eight frames', () => {
+      lock(tracker, 82.41);
+      const target = 82.41 * 2 ** (-15 / 1200);
+
+      let frames = 0;
+      let shown = 82.41;
+      while (Math.abs(centsFrom(shown, target)) > 1 && frames < 30) {
+        shown = tracker.update(pitched(target)).frequency!;
+        frames++;
+      }
+
+      expect(frames).toBeLessThanOrEqual(8);
+    });
+
+    it('keeps 2 cent frame-to-frame noise within about a cent on screen', () => {
+      lock(tracker, 196);
+      const noise = [2, -1.5, 0.5, -2, 1.8, -0.4, 1.1, -1.9, 0.2, 1.6, -1.2, 0.9];
+      const shown = noise.map((offset) =>
+        centsFrom(tracker.update(pitched(196 * 2 ** (offset / 1200))).frequency!, 196),
+      );
+
+      expect(Math.max(...shown) - Math.min(...shown)).toBeLessThan(2);
+    });
+  });
+
   it('forgets everything on reset', () => {
     lock(tracker, 110);
     tracker.reset();

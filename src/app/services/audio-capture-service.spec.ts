@@ -143,20 +143,17 @@ describe('AudioCaptureService', () => {
     expect(highSpread / lowSpread).toBeLessThan(1.4);
   });
 
-  it('converges quickly on sustained pitch shifts (adaptive alpha)', () => {
+  it('follows a large sustained pitch shift as soon as the median confirms it', () => {
     worker.emit({ frequency: 146.8, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
     worker.emit({ frequency: 146.8, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
     worker.emit({ frequency: 146.8, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
 
     const target = 146.8 * 2 ** (30 / 1200);
     worker.emit({ frequency: target, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
-    worker.emit({ frequency: target, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
+    expect(service.frequency()).toBeCloseTo(146.8, 2);
 
-    const freq = service.frequency();
-    expect(freq).not.toBeNull();
-    const progress = (freq! - 146.8) / (target - 146.8);
-    expect(progress).toBeGreaterThan(0.35);
-    expect(progress).toBeLessThan(0.6);
+    worker.emit({ frequency: target, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
+    expect(service.frequency()).toBeCloseTo(target, 2);
   });
 
   it('guards non-positive frequencies without losing the lock or producing NaN', () => {
