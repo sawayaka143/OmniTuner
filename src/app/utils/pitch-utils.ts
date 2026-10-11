@@ -122,10 +122,14 @@ export function interpolateColor(from: string, to: string, t: number): string | 
   return `#${channels.map((channel) => channel.toString(16).padStart(2, '0')).join('')}`;
 }
 
+export const NEAR_TUNE_CENTS = 20;
+export const MAX_OUT_OF_TUNE_BLEND = 0.6;
+
 export function tuneColorProgress(cents: number | null, threshold = 5): number {
   if (cents === null || !Number.isFinite(cents)) return 0;
   const magnitude = Math.abs(cents);
-  const endpoint = Math.max(5, threshold);
-  if (endpoint >= 50) return magnitude <= endpoint ? 1 : 0;
-  return Math.max(0, Math.min(1, (50 - magnitude) / (50 - endpoint)));
+  const tolerance = Math.max(0, threshold);
+  if (magnitude <= tolerance) return 1;
+  const closeness = (tolerance + NEAR_TUNE_CENTS - magnitude) / NEAR_TUNE_CENTS;
+  return MAX_OUT_OF_TUNE_BLEND * Math.max(0, Math.min(1, closeness));
 }
