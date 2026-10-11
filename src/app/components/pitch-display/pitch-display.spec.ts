@@ -13,6 +13,8 @@ import { PitchDisplay } from './pitch-display';
       [statusMessage]="status()"
       [isLocked]="locked()"
       [isTuned]="tuned()"
+      [stale]="stale()"
+      [error]="error()"
       [tuneColor]="color()"
     />
   `,
@@ -26,6 +28,8 @@ class PitchDisplayHost {
   readonly locked = signal(false);
   readonly tuned = signal(false);
   readonly color = signal<string | null>(null);
+  readonly stale = signal(false);
+  readonly error = signal(false);
 }
 
 describe('PitchDisplay', () => {
@@ -55,13 +59,32 @@ describe('PitchDisplay', () => {
   it('shows a dash when there is no detected note and hides the octave', () => {
     fixture.componentInstance.note.set(null);
     fixture.componentInstance.octave.set(null);
-    fixture.componentInstance.status.set('IDLE');
+    fixture.componentInstance.status.set('PRESS START TO TUNE');
     fixture.detectChanges();
 
     expect(el('.pitch-note').textContent?.trim()).toBe('—');
     expect(el('.pitch-octave').classList.contains('visible')).toBe(false);
     expect(el('.pitch-octave').textContent).toBe('\u00a0');
-    expect(el('.pitch-status').textContent?.trim()).toBe('IDLE');
+    expect(el('.pitch-status').textContent?.trim()).toBe('PRESS START TO TUNE');
+  });
+
+  it('styles the status as an error when capture fails', () => {
+    expect(el('.pitch-status').classList.contains('error')).toBe(false);
+
+    fixture.componentInstance.error.set(true);
+    fixture.detectChanges();
+
+    expect(el('.pitch-status').classList.contains('error')).toBe(true);
+  });
+
+  it('dims the note and octave, but not the readout text, while a reading is held', () => {
+    fixture.componentInstance.stale.set(true);
+    fixture.detectChanges();
+
+    expect(el('.pitch-note').classList.contains('stale')).toBe(true);
+    expect(el('.pitch-octave').classList.contains('stale')).toBe(true);
+    expect(el('.pitch-hz').classList.contains('stale')).toBe(false);
+    expect(el('.pitch-status').classList.contains('stale')).toBe(false);
   });
 
   it('marks the display as locked and in tune with the tune colour', () => {

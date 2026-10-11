@@ -17,6 +17,8 @@ const TICKS: readonly Tick[] = [
       [needleLeft]="needle()"
       [isTuned]="tuned()"
       [cents]="cents()"
+      [stale]="stale()"
+      [tolerance]="tolerance()"
     />
   `,
   imports: [PitchMeter],
@@ -26,6 +28,8 @@ class PitchMeterHost {
   readonly needle = signal('50%');
   readonly tuned = signal(false);
   readonly cents = signal<number | null>(null);
+  readonly stale = signal(false);
+  readonly tolerance = signal<number | null>(null);
 }
 
 describe('PitchMeter', () => {
@@ -52,12 +56,46 @@ describe('PitchMeter', () => {
     expect(ticks[0].getAttribute('style')).toContain('left: 0%');
   });
 
+  it('shades the in-tune tolerance band around the centre', () => {
+    expect(el('.tolerance-zone')).toBeNull();
+
+    fixture.componentInstance.tolerance.set(5);
+    fixture.detectChanges();
+
+    const zone = el('.tolerance-zone');
+    expect(zone.style.left).toBe('45%');
+    expect(zone.style.width).toBe('10%');
+    expect(zone.classList.contains('active')).toBe(false);
+
+    fixture.componentInstance.tuned.set(true);
+    fixture.detectChanges();
+    expect(zone.classList.contains('active')).toBe(true);
+  });
+
+  it('caps the tolerance band at the ends of the ruler and hides it for zero', () => {
+    fixture.componentInstance.tolerance.set(80);
+    fixture.detectChanges();
+    expect(el('.tolerance-zone').style.width).toBe('100%');
+
+    fixture.componentInstance.tolerance.set(0);
+    fixture.detectChanges();
+    expect(el('.tolerance-zone')).toBeNull();
+  });
+
   it('places the needle and marks it in tune', () => {
     expect(el('.meter-needle').getAttribute('style')).toContain('left: 50%');
 
     fixture.componentInstance.tuned.set(true);
     fixture.detectChanges();
     expect(el('.meter-needle').classList.contains('in-tune')).toBe(true);
+  });
+
+  it('dims the needle while it shows a held reading', () => {
+    expect(el('.meter-needle').classList.contains('stale')).toBe(false);
+
+    fixture.componentInstance.stale.set(true);
+    fixture.detectChanges();
+    expect(el('.meter-needle').classList.contains('stale')).toBe(true);
   });
 
   it('labels the cents scale and exposes the clamped value to assistive tech', () => {

@@ -5,7 +5,9 @@ import {
   firstDipBelow,
   preferLowerFundamental,
   detectionRangeFor,
+  estimateNearLag,
 } from './pitch-detection';
+import { TRACK_CONTINUE_CLARITY } from './pitch-tracker';
 
 const SAMPLE_RATE = 48000;
 const BUFFER_LENGTH = 8192;
@@ -199,6 +201,73 @@ describe('analyseBuffer', () => {
       ]),
       440,
     );
+  });
+});
+
+describe('analyseBuffer with a tracked note', () => {
+  const dWithSubharmonic = (): Float32Array => {
+    let state = 3;
+    const random = (): number => {
+      state = (Math.imul(state, 1664525) + 1013904223) | 0;
+      return (state >>> 0) / 4294967296 - 0.5;
+    };
+    const buffer = new Float32Array(BUFFER_LENGTH);
+    for (let i = 0; i < BUFFER_LENGTH; i++) {
+      const t = i / SAMPLE_RATE;
+      let sample = 0.35 * Math.sin(2 * Math.PI * 73.4 * t);
+      [1, 0.7, 0.5, 0.3].forEach((amp, h) => {
+        sample += amp * Math.sin(2 * Math.PI * 146.8 * (h + 1) * t + h);
+      });
+      buffer[i] = 0.05 * sample + 0.02 * random();
+    }
+    return buffer;
+  };
+
+  it('reproduces the real-audio octave slip on D3 with a weak subharmonic', () => {
+    const result = analyseBuffer(dWithSubharmonic(), SAMPLE_RATE, undefined, 49.4);
+    expect(centsBetween(result.frequency!, 73.4)).toBeLessThanOrEqual(10);
+    expect(result.trackedFrequency).toBeUndefined();
+  });
+
+  it('still measures the tracked note period clearly while the detector slips', () => {
+    const result = analyseBuffer(dWithSubharmonic(), SAMPLE_RATE, undefined, 49.4, 146.8);
+    expect(centsBetween(result.frequency!, 73.4)).toBeLessThanOrEqual(10);
+    expect(centsBetween(result.trackedFrequency!, 146.8)).toBeLessThanOrEqual(5);
+    expect(result.trackedClarity).toBeGreaterThan(TRACK_CONTINUE_CLARITY);
+  });
+
+  it('reports no tracked period for aperiodic noise', () => {
+    const result = analyseBuffer(noise(99), SAMPLE_RATE, undefined, 49.4, 146.8);
+    expect(result.trackedClarity ?? 0).toBeLessThan(TRACK_CONTINUE_CLARITY);
+  });
+
+  it('skips the tracked measurement below the silence gate', () => {
+    const quiet = synthesize([{ freq: 110, amp: 0.001 }]);
+    const result = analyseBuffer(quiet, SAMPLE_RATE, undefined, 49.4, 110);
+    expect(result.frequency).toBeNull();
+    expect(result.trackedFrequency).toBeUndefined();
+  });
+});
+
+describe('estimateNearLag', () => {
+  it('refines the local dip around the tracked lag', () => {
+    const yin = makeYin(1300, { 326: 0.5, 327: 0.42, 328: 0.5 });
+    const estimate = estimateNearLag(yin, 326.9, 32, 1300, SAMPLE_RATE);
+    expect(estimate.trackedFrequency).toBeCloseTo(SAMPLE_RATE / 327, 3);
+    expect(estimate.trackedClarity).toBeCloseTo(0.58, 5);
+  });
+
+  it('rejects a window whose minimum sits on its edge', () => {
+    const yin = makeYin(1300, { 317: 0.1 });
+    expect(estimateNearLag(yin, 327, 32, 1300, SAMPLE_RATE)).toEqual({
+      trackedFrequency: null,
+      trackedClarity: 0,
+    });
+  });
+
+  it('rejects a tracked lag outside the search range', () => {
+    const yin = makeYin(1300, { 1350: 0.1 });
+    expect(estimateNearLag(yin, 1400, 32, 1300, SAMPLE_RATE).trackedFrequency).toBeNull();
   });
 });
 

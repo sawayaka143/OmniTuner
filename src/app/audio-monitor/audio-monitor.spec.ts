@@ -71,15 +71,112 @@ describe('AudioMonitor', () => {
     expect(notification).toHaveBeenCalledWith({ type: NotificationType.Success });
   });
 
-  it('reports idle in the status message until capture starts', () => {
-    const component = create();
-    expect(component.statusMessage()).toBe('IDLE');
+  it('says it is waiting for the microphone while the permission prompt is open', () => {
+    const fixture = TestBed.createComponent(AudioMonitor);
+    fixture.detectChanges();
+    const button = fixture.nativeElement.querySelector('.capture-btn') as HTMLButtonElement;
+
+    expect(fixture.componentInstance.statusMessage()).toBe('WAITING FOR THE MICROPHONE');
+    expect(button.textContent?.trim()).toBe('Starting…');
+    expect(button.disabled).toBe(true);
   });
 
-  it('surfaces capture errors through the status message', () => {
-    const component = create();
-    TestBed.inject(AudioCaptureService).captureError.set('Microphone access is unavailable.');
-    expect(component.statusMessage()).toBe('Microphone access is unavailable.');
+  it('tells an idle user how to start tuning', () => {
+    TestBed.inject(TunerPreferences).setAutoStart(false);
+    const fixture = TestBed.createComponent(AudioMonitor);
+    fixture.detectChanges();
+    const button = fixture.nativeElement.querySelector('.capture-btn') as HTMLButtonElement;
+
+    expect(fixture.componentInstance.statusMessage()).toBe('PRESS START TO TUNE');
+    expect(button.textContent?.trim()).toBe('Start');
+    expect(button.disabled).toBe(false);
+  });
+
+  it('shows a blocked microphone as an error and offers to try again', async () => {
+    TestBed.inject(TunerPreferences).setAutoStart(false);
+    getUserMedia.mockRejectedValue(
+      Object.assign(new Error('blocked'), { name: 'NotAllowedError' }),
+    );
+    const fixture = TestBed.createComponent(AudioMonitor);
+    fixture.detectChanges();
+    await TestBed.inject(AudioCaptureService).startCapture();
+    fixture.detectChanges();
+
+    const status = fixture.nativeElement.querySelector('.pitch-status') as HTMLElement;
+    const button = fixture.nativeElement.querySelector('.capture-btn') as HTMLButtonElement;
+    expect(status.textContent).toContain('Microphone access was blocked');
+    expect(status.classList.contains('error')).toBe(true);
+    expect(button.textContent?.trim()).toBe('Try again');
+    expect(button.disabled).toBe(false);
+  });
+
+  it('disables the capture button when the browser has no microphone API', async () => {
+    TestBed.inject(TunerPreferences).setAutoStart(false);
+    Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: undefined });
+    const fixture = TestBed.createComponent(AudioMonitor);
+    fixture.detectChanges();
+    await TestBed.inject(AudioCaptureService).startCapture();
+    fixture.detectChanges();
+
+    const button = fixture.nativeElement.querySelector('.capture-btn') as HTMLButtonElement;
+    expect(fixture.componentInstance.statusMessage()).toContain("can't access the microphone");
+    expect(button.textContent?.trim()).toBe('Start');
+    expect(button.disabled).toBe(true);
+  });
+
+  it('keeps naming the target string while a reading is held, and dims the readout', () => {
+    const fixture = TestBed.createComponent(AudioMonitor);
+    const service = TestBed.inject(AudioCaptureService);
+    service.isCapturing.set(true);
+    service.frequency.set(110);
+    service.trackingState.set('holding');
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.statusMessage()).toBe('TUNING A2');
+    expect(fixture.componentInstance.isLocked()).toBe(false);
+    expect(fixture.nativeElement.querySelector('.meter-needle').classList).toContain('stale');
+    expect(fixture.nativeElement.querySelector('.pitch-note').classList).toContain('stale');
+  });
+
+  it('confirms a locked reading as in tune but never a held one', () => {
+    vi.useFakeTimers();
+    try {
+      const fixture = TestBed.createComponent(AudioMonitor);
+      const service = TestBed.inject(AudioCaptureService);
+      const holdMs = TestBed.inject(TunerPreferences).tunerSettings().inTune.holdMs;
+      service.isCapturing.set(true);
+      service.frequency.set(110);
+      service.trackingState.set('holding');
+      fixture.detectChanges();
+      vi.advanceTimersByTime(holdMs * 3);
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance.inRange()).toBe(true);
+      expect(fixture.componentInstance.isTuned()).toBe(false);
+
+      service.trackingState.set('locked');
+      fixture.detectChanges();
+      vi.advanceTimersByTime(holdMs + 50);
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance.isTuned()).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('names the tuning once in the header and leaves the strings to the string buttons', () => {
+    const fixture = TestBed.createComponent(AudioMonitor);
+    fixture.detectChanges();
+    const header = fixture.nativeElement.querySelector('.workbench-header') as HTMLElement;
+
+    expect(header.querySelector('h2')?.textContent?.trim()).toBe(
+      fixture.componentInstance.currentTuning().label,
+    );
+    expect(header.querySelector('p')).toBeNull();
+    expect(fixture.nativeElement.querySelectorAll('app-string-list button')).toHaveLength(
+      fixture.componentInstance.currentStrings().length,
+    );
   });
 
   it('auto-starts capture when the tuner page mounts', () => {

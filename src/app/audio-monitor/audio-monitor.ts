@@ -85,6 +85,7 @@ export class AudioMonitor implements OnInit {
   readonly frequency = this.audioCapture.frequency;
   readonly trackingState = this.audioCapture.trackingState;
   readonly captureError = this.audioCapture.captureError;
+  readonly isStarting = this.audioCapture.isStarting;
 
   protected readonly showDiagnostics = new URLSearchParams(globalThis.location?.search ?? '').has(
     'diagnostics',
@@ -133,12 +134,6 @@ export class AudioMonitor implements OnInit {
 
   readonly currentStrings = computed(() => this.currentTuning().strings);
 
-  readonly tuningSummary = computed(() =>
-    this.currentStrings()
-      .map((string) => string.name)
-      .join(' '),
-  );
-
   protected readonly minTunerMidiNote = MIN_TUNER_MIDI_NOTE;
   protected readonly maxTunerMidiNote = MAX_TUNER_MIDI_NOTE;
   protected readonly maxCustomTuningNameLength = MAX_CUSTOM_TUNING_NAME_LENGTH;
@@ -171,6 +166,8 @@ export class AudioMonitor implements OnInit {
   readonly currentHz = computed(() => hzDisplay(this.frequency()));
 
   readonly isLocked = computed(() => this.trackingState() === 'locked');
+
+  readonly isHolding = computed(() => this.trackingState() === 'holding');
 
   readonly manualTarget = computed(() => {
     const strings = this.currentStrings();
@@ -286,13 +283,24 @@ export class AudioMonitor implements OnInit {
   readonly statusMessage = computed(() => {
     const error = this.captureError();
     if (error) return error;
-    if (!this.isCapturing()) return 'IDLE';
+    if (this.isStarting()) return 'WAITING FOR THE MICROPHONE';
+    if (!this.isCapturing()) return 'PRESS START TO TUNE';
     if (this.showTuned()) return 'IN TUNE';
-    if (this.isLocked()) {
+    if (this.isLocked() || this.isHolding()) {
       const target = this.mode() === 'manual' ? this.manualTarget() : this.autoTarget();
       return target ? `TUNING ${target.name}` : 'LISTENING FOR A NOTE';
     }
     return 'LISTENING FOR A NOTE';
+  });
+
+  readonly captureUnsupported = computed(
+    () => this.audioCapture.captureErrorCode() === 'unsupported',
+  );
+
+  readonly captureLabel = computed(() => {
+    if (this.isCapturing()) return 'Stop';
+    if (this.isStarting()) return 'Starting…';
+    return this.captureError() && !this.captureUnsupported() ? 'Try again' : 'Start';
   });
 
   constructor() {
@@ -536,7 +544,7 @@ export class AudioMonitor implements OnInit {
 
   private readonly refPitch = computed(() => this.tunerSettings().referencePitch);
 
-  private readonly tolerance = computed(() => this.tunerSettings().inTune.tolerance);
+  protected readonly tolerance = computed(() => this.tunerSettings().inTune.tolerance);
 
   private initialMode(): TunerMode {
     const settings = this.tunerPreferences.tunerSettings();

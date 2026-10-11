@@ -26,7 +26,7 @@
   flex-direction: column;
   align-items: center;
   gap: var(--space-4);
-  padding: var(--space-6) var(--card-pad) var(--card-pad);
+  padding: var(--space-4) var(--card-pad) var(--card-pad);
   border-top: 1px solid var(--border-subtle);
   background: transparent;
   border-radius: 0 0 var(--r-card) var(--r-card);
@@ -155,20 +155,22 @@ app-string-list {
   }
 }
 
+@media (max-height: 800px) {
+  .tuner-stage {
+    gap: var(--space-3);
+    padding-top: var(--space-3);
+  }
+}
+
 @media (max-width: 760px) {
   .app-main {
     gap: var(--space-4);
     padding: var(--space-4) var(--space-3) var(--space-8);
   }
 
-  // Always reachable: pins above the nav bar while the meter area scrolls.
-  .capture-btn {
-    position: sticky;
-    bottom: calc(
-      var(--nav-bar-h) + var(--nav-gap) * 2 + env(safe-area-inset-bottom) + var(--space-1)
-    );
-    z-index: var(--z-float);
+  .btn.capture-btn {
     width: 100%;
+    margin-top: 0;
   }
 }
 

@@ -5,6 +5,7 @@ import { ImpactStyle } from '@capacitor/haptics';
 
 import { HAPTICS_PLUGIN } from '../../services/haptics.service';
 import { AppShell } from './app-shell';
+import shellStylesheet from './app-shell.scss';
 
 @Component({ selector: 'app-empty-page', template: '' })
 class EmptyPage {}
@@ -44,6 +45,19 @@ describe('AppShell', () => {
 
   it('should be created', () => {
     expect(fixture.componentInstance).toBeTruthy();
+  });
+
+  it('exposes the in-tune colour from settings on the host', () => {
+    fixture.detectChanges();
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.style.getPropertyValue('--in-tune-color')).toBe('#7ecba8');
+  });
+
+  it('derives the in-tune text colour on the same element that receives the in-tune colour', () => {
+    expect(shellStylesheet).toMatch(/:host\s*\{[^}]*--in-tune-text:\s*var\(--in-tune-color\);/);
+    expect(shellStylesheet).toMatch(
+      /:host-context\(html\[data-theme='light'\]\)\s*\{[^}]*--in-tune-text:\s*color-mix\(in srgb, var\(--in-tune-color\) 70%, #1a1a18\);/,
+    );
   });
 
   it('renders four destinations in the bottom navigation', () => {

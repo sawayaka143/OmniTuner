@@ -4,7 +4,7 @@
 
 .horizontal-meter {
   --meter-padding-top: 50px;
-  --meter-padding-bottom: 44px;
+  --meter-padding-bottom: var(--space-4);
   --tick-container-top: 50px;
   --tick-container-height: 48px;
   --tick-offset-top: -10px;
@@ -56,6 +56,20 @@
     }
   }
 
+  .tolerance-zone {
+    position: absolute;
+    top: calc(var(--needle-top) - var(--needle-height) / 2);
+    height: var(--needle-height);
+    background: color-mix(in srgb, var(--in-tune-color) 12%, transparent);
+    border-radius: var(--r-sm);
+    corner-shape: squircle;
+    transition: background-color var(--dur-med) ease;
+
+    &.active {
+      background: color-mix(in srgb, var(--in-tune-color) 24%, transparent);
+    }
+  }
+
   .meter-needle {
     position: absolute;
     top: var(--needle-top);
@@ -65,8 +79,9 @@
     background: var(--needle-color);
     transform: translate(-50%, -50%);
     transition:
-      left var(--dur-slow) var(--ease-spring),
-      background-color var(--dur-med) ease;
+      left var(--dur-med) var(--ease-spring),
+      background-color var(--dur-med) ease,
+      opacity var(--dur-med) ease;
     z-index: var(--z-float);
     border-radius: var(--r-sm);
     corner-shape: squircle;
@@ -75,6 +90,10 @@
       background: var(--in-tune-text);
       width: 5px;
       box-shadow: var(--needle-glow);
+    }
+
+    &.stale {
+      opacity: 0.5;
     }
   }
 
@@ -102,13 +121,8 @@
   }
 }
 
-@media (max-height: 700px), (max-width: 760px) {
-  :host {
-    --meter-padding-top: 36px;
-    --meter-padding-bottom: 32px;
-  }
-
-  .meter-labels {
-    margin-top: var(--space-4);
+@media (max-height: 900px), (max-width: 760px) {
+  .horizontal-meter {
+    --meter-padding-bottom: var(--space-2);
   }
 }

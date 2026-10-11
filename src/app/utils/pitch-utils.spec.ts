@@ -10,6 +10,7 @@ import {
   needlePercentFromCents,
   shouldConfirm,
   tuneCentsText,
+  MAX_OUT_OF_TUNE_BLEND,
   tuneColorProgress,
   tuneDirectionText,
 } from './pitch-utils';
@@ -196,24 +197,31 @@ describe('interpolateColor', () => {
 });
 
 describe('tuneColorProgress', () => {
-  it('maps cents distance onto the 50→5 cent blend window', () => {
+  it('keeps the out-of-tune colour until the note is within 20 cents of the tolerance', () => {
     expect(tuneColorProgress(50)).toBe(0);
-    expect(tuneColorProgress(-50)).toBe(0);
-    expect(tuneColorProgress(5)).toBe(1);
-    expect(tuneColorProgress(-5)).toBe(1);
-    expect(tuneColorProgress(27.5)).toBeCloseTo(0.5, 5);
-    expect(tuneColorProgress(3)).toBe(1);
+    expect(tuneColorProgress(-25)).toBe(0);
     expect(tuneColorProgress(null)).toBe(0);
     expect(tuneColorProgress(Number.NaN)).toBe(0);
   });
 
-  it('ends the ramp at the custom threshold when it exceeds 5¢', () => {
-    expect(tuneColorProgress(8, 8)).toBe(1);
-    expect(tuneColorProgress(-8, 8)).toBe(1);
-    expect(tuneColorProgress(29, 8)).toBeCloseTo(0.5, 5);
-    expect(tuneColorProgress(50, 8)).toBe(0);
+  it('reserves the full in-tune colour for readings inside the tolerance', () => {
+    expect(tuneColorProgress(5)).toBe(1);
+    expect(tuneColorProgress(-3)).toBe(1);
+    expect(tuneColorProgress(5.1)).toBeLessThanOrEqual(MAX_OUT_OF_TUNE_BLEND);
+  });
 
-    expect(tuneColorProgress(3, 1)).toBe(1);
+  it('blends only part of the way while approaching the tolerance', () => {
+    expect(tuneColorProgress(15)).toBeCloseTo(MAX_OUT_OF_TUNE_BLEND / 2, 5);
+    expect(tuneColorProgress(-15)).toBeCloseTo(MAX_OUT_OF_TUNE_BLEND / 2, 5);
+    expect(tuneColorProgress(15)).toBeLessThan(tuneColorProgress(10));
+  });
+
+  it('follows a custom tolerance in both directions', () => {
+    expect(tuneColorProgress(8, 8)).toBe(1);
+    expect(tuneColorProgress(18, 8)).toBeCloseTo(MAX_OUT_OF_TUNE_BLEND / 2, 5);
+    expect(tuneColorProgress(28, 8)).toBe(0);
+    expect(tuneColorProgress(3, 1)).toBeLessThan(MAX_OUT_OF_TUNE_BLEND);
+    expect(tuneColorProgress(1, 1)).toBe(1);
   });
 });
 

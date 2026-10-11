@@ -9,8 +9,10 @@ export class PitchDisplay {
   readonly noteName = input<string | null>(null);
   readonly octave = input<number | null>(null);
   readonly hz = input<string>('\u2014 Hz');
-  readonly statusMessage = input('READY TO TUNE');
+  readonly statusMessage = input('PRESS START TO TUNE');
   readonly isLocked = input(false);
   readonly isTuned = input(false);
+  readonly stale = input(false);
+  readonly error = input(false);
   readonly tuneColor = input<string | null>(null);
 }

@@ -25,7 +25,6 @@
       <div>
         <span class="section-label">Current tuning</span>
         <h2 id="tuner-title">{{ currentTuning().label }}</h2>
-        <p>{{ currentInstrumentLabel() }} · {{ tuningSummary() }}</p>
       </div>
       <div class="header-actions">
         <app-toggle
@@ -80,6 +79,8 @@
           [needleLeft]="needleLeft()"
           [cents]="frameCents()"
           [isTuned]="isTuned()"
+          [stale]="isHolding()"
+          [tolerance]="tolerance()"
         />
 
         <div class="pulse-layer" aria-hidden="true">
@@ -95,6 +96,8 @@
           [statusMessage]="statusMessage()"
           [isLocked]="isLocked()"
           [isTuned]="isTuned()"
+          [stale]="isHolding()"
+          [error]="!!captureError()"
           [tuneColor]="tuneColorHex()"
         />
       </div>
@@ -113,8 +116,9 @@
         [class.active]="isCapturing()"
         type="button"
         [attr.aria-pressed]="isCapturing()"
+        [disabled]="isStarting() || captureUnsupported()"
       >
-        {{ isCapturing() ? 'Stop' : 'Start' }}
+        {{ captureLabel() }}
       </button>
     </div>
   </section>
