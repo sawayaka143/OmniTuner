@@ -8,6 +8,11 @@
   isolation: isolate;
   color: var(--text);
   font-family: var(--font);
+  --in-tune-text: var(--in-tune-color);
+}
+
+:host-context(html[data-theme='light']) {
+  --in-tune-text: color-mix(in srgb, var(--in-tune-color) 70%, #1a1a18);
 }
 
 .app-header {
