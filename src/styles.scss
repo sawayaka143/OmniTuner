@@ -39,6 +39,7 @@
   --out-of-tune-color: #ff8aab;
 
   --font: 'Instrument Sans', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Mono', 'Segoe UI Mono', monospace;
 
   --text-4xs: 8px;
   --text-3xs: 9px;
@@ -553,7 +554,7 @@ h3 {
     border-radius: var(--r-sm);
     corner-shape: squircle;
     background: var(--canvas);
-    font-family: ui-monospace, 'Cascadia Mono', 'Segoe UI Mono', monospace;
+    font-family: var(--font-mono);
     font-size: var(--text-xs);
   }
 }

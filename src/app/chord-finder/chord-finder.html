@@ -140,7 +140,7 @@
               ariaLabel="Voicing display mode"
               indicator="accent"
               [compact]="true"
-              [gridColumns]="'repeat(3, 48px)'"
+              [gridColumns]="'repeat(2, 72px)'"
               [optionLabel]="viewLabelFn"
               [trackByFn]="identityFn"
               (select)="viewMode.set($event)"
@@ -159,6 +159,34 @@
               (select)="onLabelModeSelect($event)"
             />
 
+            <div class="count-stepper" role="group" aria-labelledby="voicing-count-label">
+              <span class="rail-label" id="voicing-count-label">show:</span>
+              <app-step-button
+                [direction]="-1"
+                [value]="voicingCount()"
+                [min]="minVoicingCount"
+                [max]="maxVoicingCount"
+                ariaLabel="Show fewer fingerings per chord"
+                size="sm"
+                (step)="setVoicingCount($event)"
+              />
+              <output
+                class="count-value"
+                [attr.aria-label]="voicingCount() + ' fingerings per chord'"
+              >
+                {{ voicingCount() }}
+              </output>
+              <app-step-button
+                [direction]="1"
+                [value]="voicingCount()"
+                [min]="minVoicingCount"
+                [max]="maxVoicingCount"
+                ariaLabel="Show more fingerings per chord"
+                size="sm"
+                (step)="setVoicingCount($event)"
+              />
+            </div>
+
             <button class="btn small" type="button" (click)="copyTab()">
               {{ copied() ? 'copied ✓' : 'copy tab' }}
             </button>
@@ -175,17 +203,20 @@
         >
           @if (results()) {
             @if (detectedKey()) {
-              <p
-                class="card-note"
-                [class.good]="detectedKey()!.confidence === 'strong'"
-                [class.warn]="detectedKey()!.confidence === 'moderate'"
-              >
-                Detected key: {{ detectedKey()!.tonicName }} {{ detectedKey()!.mode }} ·
-                {{ detectedKey()!.confidence }}
+              <div class="key-row">
                 @if (alternativeKeys()) {
-                  <span> · also: {{ alternativeKeys() }}</span>
+                  <app-pill-button
+                    [label]="keyLabel()"
+                    [pressed]="alternativesOpen()"
+                    (activate)="toggleAlternatives()"
+                  />
+                  @if (alternativesOpen()) {
+                    <span class="key-alternatives">or {{ alternativeKeys() }}</span>
+                  }
+                } @else {
+                  <span class="key-label">{{ keyLabel() }}</span>
                 }
-              </p>
+              </div>
             }
             @for (entry of results()!.chords; track $index; let chordIndex = $index) {
               <article
@@ -204,32 +235,32 @@
                   <header class="card-head">
                     <h3 id="chord-head-{{ chordIndex }}">
                       {{ chordIndex + 1 }}. {{ entry.parse.chord.symbol }}
+                      @if (entry.badge) {
+                        <span
+                          class="numeral-chip"
+                          [class.warn]="entry.badge.kind === 'warn'"
+                          [class.borrowed]="entry.badge.kind === 'borrowed'"
+                          [class.bad]="entry.badge.kind === 'bad'"
+                          [attr.title]="entry.badge.detail"
+                          ><span aria-hidden="true">{{ entry.badge.numeral }}</span
+                          ><span class="sr-only">{{ entry.badge.detail }}</span></span
+                        >
+                      }
                     </h3>
                     <span class="card-subhead">{{
                       chordTonesLabel(entry.parse.chord, flatsFor(results()!, entry.parse.chord))
                     }}</span>
                   </header>
-                  @if (entry.badge) {
-                    <p
-                      class="card-note"
-                      [class.good]="entry.badge.kind === 'good'"
-                      [class.warn]="entry.badge.kind === 'warn'"
-                      [class.borrowed]="entry.badge.kind === 'borrowed'"
-                      [class.bad]="entry.badge.kind === 'bad'"
-                    >
-                      {{ entry.badge.text }}
-                    </p>
-                  }
                   @if (!entry.shapes.length) {
                     <p class="card-note warn">
-                      no voicings satisfy these rules — try: {{ relaxHints() }}
+                      no voicings satisfy these rules — try a different tuning or chord spelling
                     </p>
                   } @else {
                     <div class="card-shapes">
                       @for (shape of entry.shapes; track $index) {
                         <div class="card-shape">
                           <span class="card-rank">FINGERING {{ $index + 1 }}</span>
-                          @if (viewMode() === 'tab') {
+                          @if (viewMode() === 'text') {
                             <div class="tab-block">
                               @for (row of tabLines(shape, results()!.tuning); track $index) {
                                 <div class="tab-line">
@@ -253,7 +284,6 @@
                               [symbol]="entry.parse.chord.symbol"
                               [rootPc]="entry.parse.chord.rootPc"
                               [index]="$index"
-                              [view]="diagramView()"
                               [labelMode]="labelMode()"
                               [flats]="flatsFor(results()!, entry.parse.chord)"
                             />
@@ -275,18 +305,6 @@
               </span>
             </div>
           }
-        </div>
-
-        <div class="legend">
-          <span class="legend-caption">ring / dot colour = function:</span>
-          <span class="legend-item root">● root</span>
-          <span class="legend-item third">● 3rd</span>
-          <span class="legend-item fifth">● 5th</span>
-          <span class="legend-item alt">● 7th/alt</span>
-          <span class="legend-item other">● other</span>
-          <span class="legend-ghost"
-            >· number on the line = fret to press · right edge = note or function</span
-          >
         </div>
       </section>
     </div>

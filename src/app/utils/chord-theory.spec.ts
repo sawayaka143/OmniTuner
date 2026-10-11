@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   computeBadgeForPc,
   DiatonicBadge,
+  keyName,
   midiName,
   ModeName,
   parseChord,
@@ -308,6 +309,14 @@ describe('note names', () => {
   });
 });
 
+describe('keyName', () => {
+  it('names Ionian and Aeolian keys major and minor and keeps other modes', () => {
+    expect(keyName('C', 'Ionian')).toBe('C major');
+    expect(keyName('A', 'Aeolian')).toBe('A minor');
+    expect(keyName('D', 'Dorian')).toBe('D Dorian');
+  });
+});
+
 describe('computeBadgeForPc', () => {
   const parsed = (symbol: string): ParsedChord => {
     const result = parseChord(symbol);
@@ -326,25 +335,26 @@ describe('computeBadgeForPc', () => {
   it('marks a diatonic root with an altered quality as warn', () => {
     const fMinorMajor = badge('Fm(maj7)', 0, 'Ionian');
     expect(fMinorMajor.kind).toBe('warn');
-    expect(fMinorMajor.text).toContain('IV — borrowed');
+    expect(fMinorMajor.numeral).toBe('IV');
+    expect(fMinorMajor.detail).toBe('altered: C major expects major here');
   });
 
   it('marks a chord outside the scale but diatonic to the parallel mode as borrowed', () => {
     const leadingTone = badge('C#dim', 2, 'Aeolian');
     expect(leadingTone.kind).toBe('borrowed');
-    expect(leadingTone.text).toContain('borrowed from D major');
+    expect(leadingTone.detail).toBe('borrowed from D major');
   });
 
   it('marks fully chromatic chords bad', () => {
     const chromatic = badge('C#dim', 0, 'Ionian');
     expect(chromatic.kind).toBe('bad');
-    expect(chromatic.text).toContain('chromatic');
+    expect(chromatic.detail).toContain('chromatic');
   });
 
   it('numbers degrees without spurious accidentals for diatonic roots', () => {
-    expect(badge('Em', 0, 'Ionian').text).toContain('iii —');
-    expect(badge('Fmaj7', 0, 'Ionian').text).toContain('IV —');
-    expect(badge('Db', 0, 'Phrygian').text).toContain('bII —');
-    expect(badge('C#dim', 2, 'Aeolian').text).toContain('vii°');
+    expect(badge('Em', 0, 'Ionian').numeral).toBe('iii');
+    expect(badge('Fmaj7', 0, 'Ionian').numeral).toBe('IV');
+    expect(badge('Db', 0, 'Phrygian').numeral).toBe('bII');
+    expect(badge('C#dim', 2, 'Aeolian').numeral).toBe('vii°');
   });
 });

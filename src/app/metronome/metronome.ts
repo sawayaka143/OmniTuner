@@ -3,13 +3,22 @@ import { DecimalPipe } from '@angular/common';
 import { Listbox } from '../ui/listbox/listbox';
 import { NumberScrubber } from '../ui/number-scrubber';
 import { Toggle } from '../ui/toggle/toggle';
+import { StepButton } from '../ui/step-button/step-button';
 import { BpmDial } from './components/bpm-dial/bpm-dial';
 import {
+  BPM_MAX,
+  BPM_MIN,
   DENOMINATORS,
   Denominator,
   METER_PRESETS,
+  NUMERATOR_MAX,
+  NUMERATOR_MIN,
   PATTERN_PRESETS,
+  POLY_MAX,
+  POLY_MIN,
   POLY_PRESETS,
+  RAMP_BARS_MAX,
+  RAMP_BARS_MIN,
   SUBDIVISIONS,
 } from './models/metronome.model';
 import { MetronomePreferences } from './services/metronome-preferences';
@@ -25,7 +34,7 @@ interface SelectOption<T> {
 
 @Component({
   selector: 'app-metronome',
-  imports: [DecimalPipe, Listbox, BpmDial, Toggle, NumberScrubber],
+  imports: [DecimalPipe, Listbox, BpmDial, Toggle, StepButton, NumberScrubber],
   providers: [MetronomeAudio],
   templateUrl: './metronome.html',
   styleUrl: './metronome.scss',
@@ -38,6 +47,15 @@ export class Metronome {
   private readonly audio = inject(MetronomeAudio);
   private readonly haptics = inject(HapticsService);
   private readonly destroyRef = inject(DestroyRef);
+
+  protected readonly bpmMin = BPM_MIN;
+  protected readonly bpmMax = BPM_MAX;
+  protected readonly numeratorMin = NUMERATOR_MIN;
+  protected readonly numeratorMax = NUMERATOR_MAX;
+  protected readonly polyMin = POLY_MIN;
+  protected readonly polyMax = POLY_MAX;
+  protected readonly rampBarsMin = RAMP_BARS_MIN;
+  protected readonly rampBarsMax = RAMP_BARS_MAX;
 
   protected readonly setupOpen = signal(false);
 

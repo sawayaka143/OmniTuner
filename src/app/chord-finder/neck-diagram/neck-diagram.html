@@ -75,19 +75,8 @@
   }
 
   @for (dot of markers().dots; track $index) {
-    @if (view() === 'dots') {
-      <circle
-        class="note-dot"
-        [class.root]="dot.isRoot"
-        [attr.cx]="dot.x"
-        [attr.cy]="dot.y"
-        [style.fill]="dot.color"
-      />
-      <text class="dot-text" [attr.x]="dot.x" [attr.y]="dot.y">{{ dot.inner }}</text>
-    } @else {
-      <circle class="note-ring" [attr.cx]="dot.x" [attr.cy]="dot.y" [style.stroke]="dot.color" />
-      <text class="ring-text" [attr.x]="dot.x" [attr.y]="dot.y">{{ dot.inner }}</text>
-    }
+    <circle class="note-ring" [attr.cx]="dot.x" [attr.cy]="dot.y" [style.stroke]="dot.color" />
+    <text class="ring-text" [attr.x]="dot.x" [attr.y]="dot.y">{{ dot.inner }}</text>
     <text
       class="edge-label"
       [attr.x]="layout().gridR + 30"

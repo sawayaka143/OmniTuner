@@ -34,14 +34,15 @@
           <span class="section-label">01 · Time signature</span>
           <div class="ts-row">
             <div class="ts-stepper">
-              <button
-                type="button"
-                class="step-btn small"
-                aria-label="Fewer beats"
-                (click)="setTimeSigNumerator(timeSig().numerator - 1)"
-              >
-                −
-              </button>
+              <app-step-button
+                [direction]="-1"
+                [value]="timeSig().numerator"
+                [min]="numeratorMin"
+                [max]="numeratorMax"
+                ariaLabel="Fewer beats"
+                size="sm"
+                (step)="setTimeSigNumerator($event)"
+              />
               <input
                 class="ts-num"
                 type="number"
@@ -51,14 +52,15 @@
                 (change)="setTimeSigNumerator($any($event.target).valueAsNumber)"
                 aria-label="Beats per bar"
               />
-              <button
-                type="button"
-                class="step-btn small"
-                aria-label="More beats"
-                (click)="setTimeSigNumerator(timeSig().numerator + 1)"
-              >
-                +
-              </button>
+              <app-step-button
+                [direction]="1"
+                [value]="timeSig().numerator"
+                [min]="numeratorMin"
+                [max]="numeratorMax"
+                ariaLabel="More beats"
+                size="sm"
+                (step)="setTimeSigNumerator($event)"
+              />
             </div>
             <span class="ts-slash">/</span>
             <app-listbox
@@ -162,9 +164,14 @@
           <div class="poly-details" [class.open]="poly().enabled">
             <div class="poly-row">
               <div class="mini-step">
-                <button type="button" class="step-btn" (click)="setPolyEvents(poly().events - 1)">
-                  −
-                </button>
+                <app-step-button
+                  [direction]="-1"
+                  [value]="poly().events"
+                  [min]="polyMin"
+                  [max]="polyMax"
+                  ariaLabel="Fewer poly events"
+                  (step)="setPolyEvents($event)"
+                />
                 <input
                   type="number"
                   min="1"
@@ -173,9 +180,14 @@
                   (change)="setPolyEvents($any($event.target).valueAsNumber)"
                   aria-label="Poly events per bar"
                 />
-                <button type="button" class="step-btn" (click)="setPolyEvents(poly().events + 1)">
-                  +
-                </button>
+                <app-step-button
+                  [direction]="1"
+                  [value]="poly().events"
+                  [min]="polyMin"
+                  [max]="polyMax"
+                  ariaLabel="More poly events"
+                  (step)="setPolyEvents($event)"
+                />
               </div>
               <app-listbox
                 [options]="polyPresetOptions"
@@ -246,14 +258,14 @@
         <div class="console-display">
           <span class="tempo-marking">{{ tempoMarking() }}</span>
           <div class="bpm-stepper">
-            <button
-              type="button"
-              class="step-btn"
-              aria-label="Decrease tempo"
-              (click)="nudgeBpm(-1)"
-            >
-              −
-            </button>
+            <app-step-button
+              [direction]="-1"
+              [value]="bpm()"
+              [min]="bpmMin"
+              [max]="bpmMax"
+              ariaLabel="Decrease tempo"
+              (step)="setBpm($event)"
+            />
             <input
               class="bpm-input"
               type="number"
@@ -264,14 +276,14 @@
               (change)="setBpm($any($event.target).valueAsNumber)"
               aria-label="Tempo BPM"
             />
-            <button
-              type="button"
-              class="step-btn"
-              aria-label="Increase tempo"
-              (click)="nudgeBpm(1)"
-            >
-              +
-            </button>
+            <app-step-button
+              [direction]="1"
+              [value]="bpm()"
+              [min]="bpmMin"
+              [max]="bpmMax"
+              ariaLabel="Increase tempo"
+              (step)="setBpm($event)"
+            />
           </div>
           <span class="console-bpm-unit">BPM</span>
         </div>
@@ -311,14 +323,14 @@
             @if (ramp().enabled) {
               <div class="ramp-controls">
                 <div class="mini-step">
-                  <button
-                    type="button"
-                    class="step-btn"
-                    aria-label="Decrease ramp target tempo"
-                    (click)="setRampTarget(ramp().targetBpm - 1)"
-                  >
-                    −
-                  </button>
+                  <app-step-button
+                    [direction]="-1"
+                    [value]="ramp().targetBpm"
+                    [min]="bpmMin"
+                    [max]="bpmMax"
+                    ariaLabel="Decrease ramp target tempo"
+                    (step)="setRampTarget($event)"
+                  />
                   <input
                     type="number"
                     min="1"
@@ -327,25 +339,25 @@
                     (change)="setRampTarget($any($event.target).valueAsNumber)"
                     aria-label="Ramp target tempo in BPM"
                   />
-                  <button
-                    type="button"
-                    class="step-btn"
-                    aria-label="Increase ramp target tempo"
-                    (click)="setRampTarget(ramp().targetBpm + 1)"
-                  >
-                    +
-                  </button>
+                  <app-step-button
+                    [direction]="1"
+                    [value]="ramp().targetBpm"
+                    [min]="bpmMin"
+                    [max]="bpmMax"
+                    ariaLabel="Increase ramp target tempo"
+                    (step)="setRampTarget($event)"
+                  />
                 </div>
                 <span class="ramp-unit">BPM in</span>
                 <div class="mini-step">
-                  <button
-                    type="button"
-                    class="step-btn"
-                    aria-label="Fewer ramp bars"
-                    (click)="setRampBars(ramp().bars - 1)"
-                  >
-                    −
-                  </button>
+                  <app-step-button
+                    [direction]="-1"
+                    [value]="ramp().bars"
+                    [min]="rampBarsMin"
+                    [max]="rampBarsMax"
+                    ariaLabel="Fewer ramp bars"
+                    (step)="setRampBars($event)"
+                  />
                   <input
                     type="number"
                     min="1"
@@ -354,14 +366,14 @@
                     (change)="setRampBars($any($event.target).valueAsNumber)"
                     aria-label="Ramp length in bars"
                   />
-                  <button
-                    type="button"
-                    class="step-btn"
-                    aria-label="More ramp bars"
-                    (click)="setRampBars(ramp().bars + 1)"
-                  >
-                    +
-                  </button>
+                  <app-step-button
+                    [direction]="1"
+                    [value]="ramp().bars"
+                    [min]="rampBarsMin"
+                    [max]="rampBarsMax"
+                    ariaLabel="More ramp bars"
+                    (step)="setRampBars($event)"
+                  />
                 </div>
                 <span class="ramp-unit">bars</span>
               </div>

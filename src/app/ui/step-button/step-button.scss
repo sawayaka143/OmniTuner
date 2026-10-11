@@ -1,17 +1,44 @@
-@use '../../styles' as *;
-
 .step-button {
-  @include icon-button();
   width: var(--ctrl-h-md);
   height: var(--ctrl-h-md);
-  border-radius: var(--r-sm);
-  corner-shape: squircle;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-pill);
+  background: var(--glass-bg);
+  box-shadow: var(--shadow-recess);
+  color: var(--text);
+  font-family: var(--font);
   font-size: var(--text-md);
+  cursor: pointer;
   touch-action: none;
   user-select: none;
+  transition:
+    border-color var(--dur-med) var(--ease-standard),
+    transform var(--dur-fast) var(--ease-standard);
+
+  &:hover:not(:disabled) {
+    border-color: var(--border-medium);
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--border-active);
+    outline-offset: 2px;
+  }
 
   &:disabled {
     cursor: not-allowed;
     opacity: 0.35;
+  }
+
+  &.small {
+    width: var(--ctrl-h-sm);
+    height: var(--ctrl-h-sm);
+    font-size: var(--text-sm);
   }
 }

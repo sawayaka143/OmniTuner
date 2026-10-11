@@ -18,4 +18,5 @@ export interface ScalePreferencesState {
   readonly cardColorLight: string | null;
   readonly workbenchScale: number;
   readonly chordRandomProgression: boolean;
+  readonly chordVoicingCount: number;
 }

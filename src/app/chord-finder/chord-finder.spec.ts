@@ -1,8 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { axe } from 'vitest-axe';
 
 import { PROGRESSION_PRESETS } from '../data/chord-progression-presets';
 import { degreesToProgression } from '../utils/degree-to-chord';
 import { flatsForPc } from '../utils/chord-theory';
+import { SCALE_PREFERENCES_STORAGE } from '../services/scale-preferences';
 import { ChordFinder } from './chord-finder';
 
 describe('ChordFinder', () => {
@@ -28,6 +30,7 @@ describe('ChordFinder', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ChordFinder],
+      providers: [{ provide: SCALE_PREFERENCES_STORAGE, useValue: null }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ChordFinder);
@@ -154,8 +157,8 @@ describe('ChordFinder', () => {
     input.dispatchEvent(new Event('input'));
     fixture.detectChanges();
     click('.generate');
-    expect(el().textContent).toContain('Detected key:');
-    expect(el().textContent).toContain('C');
+    expect(el().querySelector('.key-row')?.textContent).toContain('Key: C major');
+    expect(el().querySelector('.legend')).toBeNull();
   });
 
   it('lists the candidate keys alongside the detected key', () => {
@@ -165,12 +168,34 @@ describe('ChordFinder', () => {
     fixture.detectChanges();
     click('.generate');
 
-    const note = [...el().querySelectorAll('.card-note')].find((node) =>
-      node.textContent?.includes('Detected key:'),
-    );
-    expect(note?.textContent).toContain('C Ionian');
-    expect(note?.textContent).toContain('F Ionian');
-    expect(note?.textContent).toContain('D Aeolian');
+    const keyButton = el().querySelector<HTMLButtonElement>('.key-row button')!;
+    expect(keyButton.textContent).toContain('Key: C major');
+    expect(keyButton.getAttribute('aria-pressed')).toBe('false');
+    expect(el().querySelector('.key-alternatives')).toBeNull();
+
+    keyButton.click();
+    fixture.detectChanges();
+    expect(keyButton.getAttribute('aria-pressed')).toBe('true');
+    expect(el().querySelector('.key-alternatives')?.textContent).toContain('F major, D minor');
+  });
+
+  it('marks each chord with its roman numeral and explains it to screen readers', () => {
+    const input = fieldInput('chords, comma-separated')!;
+    input.value = 'Fmaj7, Fm(maj7), C/E, C#dim/E';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    click('.generate');
+
+    const chips = [...el().querySelectorAll<HTMLElement>('.numeral-chip')];
+    expect(chips.map((chip) => chip.querySelector('[aria-hidden]')?.textContent)).toEqual([
+      'IV',
+      'IV',
+      'I',
+      '—',
+    ]);
+    expect(chips[0].querySelector('.sr-only')?.textContent).toBe('diatonic to C major');
+    expect(chips[1].classList).toContain('warn');
+    expect(chips[3].classList).toContain('bad');
   });
 
   it('clears results back to an empty stage', () => {
@@ -240,5 +265,59 @@ describe('ChordFinder', () => {
 
     expect(instrumentTrigger.textContent).toContain('Ukulele');
     expect(fieldInput('custom')?.value).toBe('G4 C4 E4 A4');
+  });
+
+  describe('fingerings per chord', () => {
+    const stepper = (label: string): HTMLButtonElement =>
+      el().querySelector<HTMLButtonElement>(`app-step-button button[aria-label="${label}"]`)!;
+    const countValue = (): string => el().querySelector('.count-value')!.textContent.trim();
+    const shapesInFirstCard = (): number =>
+      el().querySelector('.chord-card')!.querySelectorAll('.card-shape').length;
+    const press = (label: string): void => {
+      stepper(label).click();
+      fixture.detectChanges();
+    };
+
+    beforeEach(() => {
+      const input = fieldInput('chords, comma-separated')!;
+      input.value = 'C';
+      input.dispatchEvent(new Event('input'));
+      fixture.detectChanges();
+      click('.generate');
+    });
+
+    it('shows six fingerings by default', () => {
+      expect(countValue()).toBe('6');
+      expect(shapesInFirstCard()).toBe(6);
+    });
+
+    it('shows more or fewer fingerings without regenerating', () => {
+      press('Show more fingerings per chord');
+      expect(countValue()).toBe('7');
+      expect(shapesInFirstCard()).toBe(7);
+
+      press('Show fewer fingerings per chord');
+      press('Show fewer fingerings per chord');
+      expect(countValue()).toBe('5');
+      expect(shapesInFirstCard()).toBe(5);
+    });
+
+    it('copies only the fingerings on screen', async () => {
+      const writeText = vi.fn().mockResolvedValue(undefined);
+      Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+      press('Show fewer fingerings per chord');
+
+      const toolbarButtons = el().querySelectorAll<HTMLButtonElement>('.control-rail .btn');
+      toolbarButtons[toolbarButtons.length - 2].click();
+      await fixture.whenStable();
+
+      const copied = writeText.mock.calls[0][0] as string;
+      expect(copied.match(/=== C - Fingering/g)).toHaveLength(5);
+    });
+
+    it('passes axe with the stepper in the rail', async () => {
+      const results = await axe(el());
+      expect(results).toHaveNoViolations();
+    });
   });
 });

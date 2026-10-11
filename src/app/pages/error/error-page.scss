@@ -69,7 +69,7 @@
     corner-shape: squircle;
     background: var(--canvas);
     color: var(--text-muted);
-    font-family: ui-monospace, 'Cascadia Mono', 'Segoe UI Mono', monospace;
+    font-family: var(--font-mono);
     font-size: var(--text-xs);
     text-overflow: ellipsis;
     white-space: nowrap;

@@ -95,24 +95,6 @@ rect {
   dominant-baseline: central;
 }
 
-.note-dot {
-  r: 9;
-
-  &.root {
-    stroke: var(--text);
-    stroke-width: 2;
-  }
-}
-
-.dot-text {
-  fill: var(--scale-accent-ink);
-  font-family: var(--font);
-  font-size: var(--text-4xs);
-  font-weight: var(--fw-bold);
-  text-anchor: middle;
-  dominant-baseline: central;
-}
-
 .note-ring {
   r: 9;
   fill: var(--surface-container);

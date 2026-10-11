@@ -12,7 +12,6 @@ describe('NeckDiagram', () => {
     symbol: 'C',
     rootPc: 0,
     index: 0,
-    view: 'dots' as const,
     labelMode: 'notes' as const,
     flats: false,
   };
@@ -31,7 +30,6 @@ describe('NeckDiagram', () => {
     fixture.componentRef.setInput('symbol', baseInputs.symbol);
     fixture.componentRef.setInput('rootPc', baseInputs.rootPc);
     fixture.componentRef.setInput('index', baseInputs.index);
-    fixture.componentRef.setInput('view', baseInputs.view);
     fixture.componentRef.setInput('labelMode', baseInputs.labelMode);
     fixture.componentRef.setInput('flats', baseInputs.flats);
     fixture.detectChanges();
@@ -54,16 +52,8 @@ describe('NeckDiagram', () => {
     expect(el().querySelectorAll('.mute-mark').length).toBe(1);
   });
 
-  it('renders one dot per sounding note in dots view', () => {
-    expect(el().querySelectorAll('.note-dot').length).toBe(5);
-    expect(el().querySelectorAll('.note-ring').length).toBe(0);
-  });
-
-  it('renders fret-number rings in lines view', () => {
-    fixture.componentRef.setInput('view', 'lines');
-    fixture.detectChanges();
+  it('renders a fret-number ring per sounding note', () => {
     expect(el().querySelectorAll('.note-ring').length).toBe(5);
-    expect(el().querySelectorAll('.note-dot').length).toBe(0);
     const ringTexts = [...el().querySelectorAll('.ring-text')].map((t) => t.textContent?.trim());
     expect(ringTexts).toContain('3');
     expect(ringTexts).toContain('0');
@@ -73,14 +63,12 @@ describe('NeckDiagram', () => {
     expect(el().querySelectorAll('.edge-label').length).toBe(5);
   });
 
-  it('shows degree labels when label mode is func', () => {
+  it('shows note names on the edge, or chord functions in func mode', () => {
+    const edges = (): (string | undefined)[] =>
+      [...el().querySelectorAll('.edge-label')].map((t) => t.textContent?.trim());
+    expect(edges()).toContain('C3');
     fixture.componentRef.setInput('labelMode', 'func');
     fixture.detectChanges();
-    const dotTexts = [...el().querySelectorAll('.dot-text')].map((t) => t.textContent?.trim());
-    expect(dotTexts).toContain('R');
-  });
-
-  it('highlights the chord root dot', () => {
-    expect(el().querySelectorAll('.note-dot.root').length).toBeGreaterThan(0);
+    expect(edges()).toContain('R');
   });
 });

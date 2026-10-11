@@ -1,5 +1,5 @@
 import { Component, computed, input } from '@angular/core';
-import { DEGREE_LABELS, midiName, pcName } from '../../utils/chord-theory';
+import { DEGREE_LABELS, midiName } from '../../utils/chord-theory';
 
 const NECK = { ROW: 24, COL: 30, LEFT: 40, IND: 26, RIGHT: 34, PAD: 8, TOP: 24, BOT: 18 } as const;
 
@@ -21,7 +21,6 @@ const OTHER_COLOR = 'var(--neck-other)';
 
 const mod12 = (value: number): number => ((value % 12) + 12) % 12;
 
-export type DiagramView = 'dots' | 'lines';
 export type DiagramLabelMode = 'notes' | 'func';
 
 interface Wire {
@@ -33,7 +32,6 @@ interface Marker {
   readonly x: number;
   readonly y: number;
   readonly color: string;
-  readonly isRoot: boolean;
 
   readonly inner: string;
 
@@ -57,7 +55,6 @@ export class NeckDiagram {
   readonly symbol = input.required<string>();
   readonly rootPc = input.required<number>();
   readonly index = input(0);
-  readonly view = input<DiagramView>('lines');
   readonly labelMode = input<DiagramLabelMode>('notes');
   readonly flats = input(false);
 
@@ -162,27 +159,13 @@ export class NeckDiagram {
       const degree = mod12(midi - rootPc);
       const color = FUNC_COLOR[degree] ?? OTHER_COLOR;
       const x = fret === 0 ? indCx : fretX(fret);
-      const noteLabel = pcName(midi, flats);
-      const degreeLabel = DEGREE_LABELS[degree];
-      if (this.view() === 'dots') {
-        dots.push({
-          x,
-          y,
-          color,
-          isRoot: degree === 0,
-          inner: labelMode === 'notes' ? noteLabel : degreeLabel,
-          edge: labelMode === 'notes' ? degreeLabel : noteLabel,
-        });
-      } else {
-        dots.push({
-          x,
-          y,
-          color,
-          isRoot: degree === 0,
-          inner: String(fret),
-          edge: labelMode === 'notes' ? midiName(midi, flats) : degreeLabel,
-        });
-      }
+      dots.push({
+        x,
+        y,
+        color,
+        inner: String(fret),
+        edge: labelMode === 'notes' ? midiName(midi, flats) : DEGREE_LABELS[degree],
+      });
     }
     return { dots, muted };
   });

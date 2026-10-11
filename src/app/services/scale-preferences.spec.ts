@@ -355,4 +355,33 @@ describe('ScalePreferences', () => {
       expect(service.state().workbenchScale).toBe(1);
     });
   });
+
+  describe('chordVoicingCount', () => {
+    it('defaults to six fingerings per chord', () => {
+      expect(createService().state().chordVoicingCount).toBe(6);
+    });
+
+    it('persists across reload', () => {
+      createService().setChordVoicingCount(9);
+      TestBed.resetTestingModule();
+      expect(createService().state().chordVoicingCount).toBe(9);
+    });
+
+    it('ignores counts outside 1-12 and non-integers', () => {
+      const service = createService();
+      for (const count of [0, 13, 2.5, NaN]) service.setChordVoicingCount(count);
+      expect(service.state().chordVoicingCount).toBe(6);
+    });
+
+    it('falls back to the default for missing or invalid stored counts', () => {
+      for (const chordVoicingCount of [undefined, 'many', 40]) {
+        TestBed.resetTestingModule();
+        storage.setItem(
+          SCALE_PREFERENCES_STORAGE_KEY,
+          JSON.stringify({ version: 2, state: { chordVoicingCount } }),
+        );
+        expect(createService().state().chordVoicingCount).toBe(6);
+      }
+    });
+  });
 });
