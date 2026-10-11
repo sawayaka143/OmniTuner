@@ -18,7 +18,7 @@ import {
 } from '../utils/chord-theory';
 import { searchChord, VoicingShape } from '../utils/chord-voicing';
 import { MAX_VOICING_COUNT, MIN_VOICING_COUNT } from '../data/chord-voicing.constants';
-import { DiagramLabelMode, DiagramView, NeckDiagram } from './neck-diagram/neck-diagram';
+import { DiagramLabelMode, NeckDiagram } from './neck-diagram/neck-diagram';
 import { KeyFinder } from './key-finder/key-finder';
 import { Segmented } from '../ui/segmented/segmented';
 import { Listbox } from '../ui/listbox/listbox';
@@ -45,6 +45,8 @@ export interface GenerationResult {
   readonly chords: readonly ChordEntry[];
   readonly detectedKey: DetectedKey | null;
 }
+
+type VoicingView = 'text' | 'fretboard';
 
 export interface TabLine {
   readonly label: string;
@@ -79,7 +81,7 @@ export class ChordFinder {
     })),
   );
 
-  protected readonly viewChoices = ['tab', 'dots', 'lines'] as const;
+  protected readonly viewChoices = ['text', 'fretboard'] as const;
   protected readonly labelChoices = ['notes', 'func'] as const;
   protected readonly identityFn = <T>(value: T): T => value;
   protected readonly tuningLabelFn = (o: TuningOption): string => o.label;
@@ -87,7 +89,7 @@ export class ChordFinder {
   protected readonly tuningTrackFn = (o: TuningOption): string => o.id;
   protected readonly instrumentLabelFn = (o: Instrument): string => o.label;
   protected readonly instrumentTrackFn = (o: Instrument): string => o.id;
-  protected readonly viewLabelFn = (o: 'tab' | 'dots' | 'lines'): string => o;
+  protected readonly viewLabelFn = (o: VoicingView): string => o;
   protected readonly labelChoiceLabelFn = (o: 'notes' | 'func'): string =>
     o === 'notes' ? 'notes' : 'R b3';
 
@@ -107,11 +109,8 @@ export class ChordFinder {
   private resizeState: { startX: number; startW: number } | null = null;
   private onResizeMove = (e: PointerEvent): void => this.handleResizeMove(e);
   private onResizeUp = (): void => this.handleResizeEnd();
-  protected readonly viewMode = signal<DiagramView | 'tab'>('lines');
+  protected readonly viewMode = signal<VoicingView>('fretboard');
   protected readonly controlsOpen = signal(false);
-  protected readonly diagramView = computed<DiagramView>(() =>
-    this.viewMode() === 'dots' ? 'dots' : 'lines',
-  );
   protected readonly labelMode = signal<DiagramLabelMode>('notes');
   protected readonly tuningListOpen = signal(false);
   protected readonly instruments = this.registry.instruments;

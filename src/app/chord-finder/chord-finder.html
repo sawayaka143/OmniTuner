@@ -140,7 +140,7 @@
               ariaLabel="Voicing display mode"
               indicator="accent"
               [compact]="true"
-              [gridColumns]="'repeat(3, 48px)'"
+              [gridColumns]="'repeat(2, 72px)'"
               [optionLabel]="viewLabelFn"
               [trackByFn]="identityFn"
               (select)="viewMode.set($event)"
@@ -159,8 +159,8 @@
               (select)="onLabelModeSelect($event)"
             />
 
-            <span class="rail-label" id="voicing-count-label">show:</span>
             <div class="count-stepper" role="group" aria-labelledby="voicing-count-label">
+              <span class="rail-label" id="voicing-count-label">show:</span>
               <app-step-button
                 [direction]="-1"
                 [value]="voicingCount()"
@@ -257,7 +257,7 @@
                       @for (shape of entry.shapes; track $index) {
                         <div class="card-shape">
                           <span class="card-rank">FINGERING {{ $index + 1 }}</span>
-                          @if (viewMode() === 'tab') {
+                          @if (viewMode() === 'text') {
                             <div class="tab-block">
                               @for (row of tabLines(shape, results()!.tuning); track $index) {
                                 <div class="tab-line">
@@ -281,7 +281,6 @@
                               [symbol]="entry.parse.chord.symbol"
                               [rootPc]="entry.parse.chord.rootPc"
                               [index]="$index"
-                              [view]="diagramView()"
                               [labelMode]="labelMode()"
                               [flats]="flatsFor(results()!, entry.parse.chord)"
                             />
