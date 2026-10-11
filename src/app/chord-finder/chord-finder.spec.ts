@@ -157,8 +157,8 @@ describe('ChordFinder', () => {
     input.dispatchEvent(new Event('input'));
     fixture.detectChanges();
     click('.generate');
-    expect(el().textContent).toContain('Detected key:');
-    expect(el().textContent).toContain('C');
+    expect(el().querySelector('.key-row')?.textContent).toContain('Key: C major');
+    expect(el().querySelector('.legend')).toBeNull();
   });
 
   it('lists the candidate keys alongside the detected key', () => {
@@ -168,12 +168,34 @@ describe('ChordFinder', () => {
     fixture.detectChanges();
     click('.generate');
 
-    const note = [...el().querySelectorAll('.card-note')].find((node) =>
-      node.textContent?.includes('Detected key:'),
-    );
-    expect(note?.textContent).toContain('C Ionian');
-    expect(note?.textContent).toContain('F Ionian');
-    expect(note?.textContent).toContain('D Aeolian');
+    const keyButton = el().querySelector<HTMLButtonElement>('.key-row button')!;
+    expect(keyButton.textContent).toContain('Key: C major');
+    expect(keyButton.getAttribute('aria-pressed')).toBe('false');
+    expect(el().querySelector('.key-alternatives')).toBeNull();
+
+    keyButton.click();
+    fixture.detectChanges();
+    expect(keyButton.getAttribute('aria-pressed')).toBe('true');
+    expect(el().querySelector('.key-alternatives')?.textContent).toContain('F major, D minor');
+  });
+
+  it('marks each chord with its roman numeral and explains it to screen readers', () => {
+    const input = fieldInput('chords, comma-separated')!;
+    input.value = 'Fmaj7, Fm(maj7), C/E, C#dim/E';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    click('.generate');
+
+    const chips = [...el().querySelectorAll<HTMLElement>('.numeral-chip')];
+    expect(chips.map((chip) => chip.querySelector('[aria-hidden]')?.textContent)).toEqual([
+      'IV',
+      'IV',
+      'I',
+      '—',
+    ]);
+    expect(chips[0].querySelector('.sr-only')?.textContent).toBe('diatonic to C major');
+    expect(chips[1].classList).toContain('warn');
+    expect(chips[3].classList).toContain('bad');
   });
 
   it('clears results back to an empty stage', () => {

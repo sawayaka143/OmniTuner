@@ -13,6 +13,7 @@ import {
   ChordParseResult,
   ParsedChord,
   ParsedTuning,
+  keyName,
   parseTuning,
   pcName,
 } from '../utils/chord-theory';
@@ -23,6 +24,7 @@ import { KeyFinder } from './key-finder/key-finder';
 import { Segmented } from '../ui/segmented/segmented';
 import { Listbox } from '../ui/listbox/listbox';
 import { TextField } from '../ui/text-field/text-field';
+import { PillButton } from '../ui/pill-button/pill-button';
 import { StepButton } from '../ui/step-button/step-button';
 import { DetectedKey, detectKey } from '../utils/key-detector';
 import { computeBadgeForPc } from '../utils/chord-theory';
@@ -58,7 +60,7 @@ export interface TabLine {
 
 @Component({
   selector: 'app-chord-finder',
-  imports: [NeckDiagram, Segmented, Listbox, TextField, StepButton, KeyFinder],
+  imports: [NeckDiagram, Segmented, Listbox, TextField, PillButton, StepButton, KeyFinder],
   templateUrl: './chord-finder.html',
   styleUrl: './chord-finder.scss',
   host: {
@@ -132,11 +134,16 @@ export class ChordFinder {
     };
   });
   protected readonly detectedKey = computed(() => this.results()?.detectedKey ?? null);
+  protected readonly keyLabel = computed<string>(() => {
+    const key = this.detectedKey();
+    return key ? `Key: ${keyName(key.tonicName, key.mode)}` : '';
+  });
   protected readonly alternativeKeys = computed<string>(() => {
     const key = this.detectedKey();
     if (!key) return '';
-    return key.alternatives.map((alt) => `${alt.tonicName} ${alt.mode}`).join(', ');
+    return key.alternatives.map((alt) => keyName(alt.tonicName, alt.mode)).join(', ');
   });
+  protected readonly alternativesOpen = signal(false);
   protected readonly copied = signal(false);
   private copyResetTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -372,7 +379,12 @@ export class ChordFinder {
       return { token, parse, shapes, badge };
     });
 
+    this.alternativesOpen.set(false);
     this.generated.set({ tuning: parsed.tuning, detectedKey: dk, chords });
+  }
+
+  protected toggleAlternatives(): void {
+    this.alternativesOpen.update((open) => !open);
   }
 
   protected setVoicingCount(count: number): void {
@@ -448,7 +460,7 @@ export class ChordFinder {
 
   private buildCopyBuffer({ tuning, chords, detectedKey: dk }: GenerationResult): string {
     const parts: string[] = [];
-    const keyLabel = dk ? `${dk.tonicName} ${dk.mode}` : '—';
+    const keyLabel = dk ? keyName(dk.tonicName, dk.mode) : '—';
     parts.push(`Chord finder — tuning ${tuning.labels.join(' ')} — key ${keyLabel}`);
     parts.push('');
     for (const entry of chords) {

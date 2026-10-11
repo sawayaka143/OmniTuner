@@ -203,17 +203,20 @@
         >
           @if (results()) {
             @if (detectedKey()) {
-              <p
-                class="card-note"
-                [class.good]="detectedKey()!.confidence === 'strong'"
-                [class.warn]="detectedKey()!.confidence === 'moderate'"
-              >
-                Detected key: {{ detectedKey()!.tonicName }} {{ detectedKey()!.mode }} ·
-                {{ detectedKey()!.confidence }}
+              <div class="key-row">
                 @if (alternativeKeys()) {
-                  <span> · also: {{ alternativeKeys() }}</span>
+                  <app-pill-button
+                    [label]="keyLabel()"
+                    [pressed]="alternativesOpen()"
+                    (activate)="toggleAlternatives()"
+                  />
+                  @if (alternativesOpen()) {
+                    <span class="key-alternatives">or {{ alternativeKeys() }}</span>
+                  }
+                } @else {
+                  <span class="key-label">{{ keyLabel() }}</span>
                 }
-              </p>
+              </div>
             }
             @for (entry of results()!.chords; track $index; let chordIndex = $index) {
               <article
@@ -232,22 +235,22 @@
                   <header class="card-head">
                     <h3 id="chord-head-{{ chordIndex }}">
                       {{ chordIndex + 1 }}. {{ entry.parse.chord.symbol }}
+                      @if (entry.badge) {
+                        <span
+                          class="numeral-chip"
+                          [class.warn]="entry.badge.kind === 'warn'"
+                          [class.borrowed]="entry.badge.kind === 'borrowed'"
+                          [class.bad]="entry.badge.kind === 'bad'"
+                          [attr.title]="entry.badge.detail"
+                          ><span aria-hidden="true">{{ entry.badge.numeral }}</span
+                          ><span class="sr-only">{{ entry.badge.detail }}</span></span
+                        >
+                      }
                     </h3>
                     <span class="card-subhead">{{
                       chordTonesLabel(entry.parse.chord, flatsFor(results()!, entry.parse.chord))
                     }}</span>
                   </header>
-                  @if (entry.badge) {
-                    <p
-                      class="card-note"
-                      [class.good]="entry.badge.kind === 'good'"
-                      [class.warn]="entry.badge.kind === 'warn'"
-                      [class.borrowed]="entry.badge.kind === 'borrowed'"
-                      [class.bad]="entry.badge.kind === 'bad'"
-                    >
-                      {{ entry.badge.text }}
-                    </p>
-                  }
                   @if (!entry.shapes.length) {
                     <p class="card-note warn">
                       no voicings satisfy these rules — try a different tuning or chord spelling
@@ -302,18 +305,6 @@
               </span>
             </div>
           }
-        </div>
-
-        <div class="legend">
-          <span class="legend-caption">ring / dot colour = function:</span>
-          <span class="legend-item root">● root</span>
-          <span class="legend-item third">● 3rd</span>
-          <span class="legend-item fifth">● 5th</span>
-          <span class="legend-item alt">● 7th/alt</span>
-          <span class="legend-item other">● other</span>
-          <span class="legend-ghost"
-            >· number on the line = fret to press · right edge = note or function</span
-          >
         </div>
       </section>
     </div>

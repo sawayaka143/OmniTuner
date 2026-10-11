@@ -625,7 +625,14 @@ export function tokenizeProgression(raw: string): string[] {
 
 export interface DiatonicBadge {
   readonly kind: 'good' | 'warn' | 'borrowed' | 'bad';
-  readonly text: string;
+  readonly numeral: string;
+  readonly detail: string;
+}
+
+const MODE_KEY_WORDS: Partial<Record<ModeName, string>> = { Ionian: 'major', Aeolian: 'minor' };
+
+export function keyName(tonicName: string, mode: ModeName): string {
+  return `${tonicName} ${MODE_KEY_WORDS[mode] ?? mode}`;
 }
 
 export function computeBadgeForPc(
@@ -636,6 +643,7 @@ export function computeBadgeForPc(
   tonicFlats: boolean,
 ): DiatonicBadge | null {
   const scaleRootName = pcName(tonicPc, tonicFlats || tuningFlats);
+  const key = keyName(scaleRootName, modeName);
   const rootName = pcName(chord.rootPc, chord.flats || tuningFlats);
 
   const actualThird = chord.intervals.includes(4) ? 4 : chord.intervals.includes(3) ? 3 : null;
@@ -702,7 +710,8 @@ export function computeBadgeForPc(
     if (qualityMatches(primary)) {
       return {
         kind: 'good',
-        text: `◈ ${primary.numeral} — diatonic to ${scaleRootName} ${modeName}`,
+        numeral: primary.numeral,
+        detail: `diatonic to ${key}`,
       };
     }
     const QUALITY_WORD: Readonly<Record<string, string>> = {
@@ -713,7 +722,8 @@ export function computeBadgeForPc(
     };
     return {
       kind: 'warn',
-      text: `◈ ${primary.numeral} — borrowed: ${modeName} expects ${primary.expectedQuality} (${QUALITY_WORD[primary.expectedQuality]}) here`,
+      numeral: primary.numeral,
+      detail: `altered: ${key} expects ${QUALITY_WORD[primary.expectedQuality]} here`,
     };
   }
 
@@ -725,10 +735,11 @@ export function computeBadgeForPc(
     if (lookup && qualityMatches(lookup)) {
       return {
         kind: 'borrowed',
-        text: `◈ ${lookup.numeral} — borrowed from ${scaleRootName} ${label}`,
+        numeral: lookup.numeral,
+        detail: `borrowed from ${scaleRootName} ${label}`,
       };
     }
   }
 
-  return { kind: 'bad', text: `◈ chromatic — ${rootName} isn't in ${scaleRootName} ${modeName}` };
+  return { kind: 'bad', numeral: '—', detail: `chromatic: ${rootName} isn't in ${key}` };
 }
