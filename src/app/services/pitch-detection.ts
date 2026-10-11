@@ -6,6 +6,8 @@ export interface PitchEstimate {
   inputLevel: number;
   clarity?: number;
   candidateFrequency?: number | null;
+  trackedFrequency?: number | null;
+  trackedClarity?: number;
 }
 
 export const MIN_FREQUENCY = 27;
@@ -18,6 +20,8 @@ export const MIN_CONFIDENCE = 0.58;
 export const SILENCE_RMS = 0.004;
 
 export const DIP_MARGIN = 0.05;
+
+export const TRACKED_LAG_TOLERANCE = 0.03;
 
 export const DEFAULT_HIGHPASS_HZ = 20;
 export const DETECTION_FLOOR_RATIO = 0.6;
@@ -59,6 +63,7 @@ export function analyseBuffer(
   sampleRate: number,
   silenceGate = SILENCE_RMS,
   minFrequency = MIN_FREQUENCY,
+  trackedFrequency: number | null = null,
 ): PitchEstimate {
   const inputLevel = computeRMS(buffer);
   if (inputLevel < silenceGate) {
@@ -66,7 +71,12 @@ export function analyseBuffer(
   }
 
   removeDCOffset(buffer);
-  const result = yinDetect(buffer, sampleRate, Math.max(MIN_FREQUENCY, minFrequency));
+  const result = yinDetect(
+    buffer,
+    sampleRate,
+    Math.max(MIN_FREQUENCY, minFrequency),
+    trackedFrequency,
+  );
   return { ...result, inputLevel };
 }
 
@@ -93,7 +103,12 @@ function removeDCOffset(buffer: Float32Array): void {
 let yinBuffer: Float64Array | null = null;
 let yinBufferSize = 0;
 
-function yinDetect(buffer: Float32Array, sampleRate: number, minFrequency: number): PitchEstimate {
+function yinDetect(
+  buffer: Float32Array,
+  sampleRate: number,
+  minFrequency: number,
+  trackedFrequency: number | null,
+): PitchEstimate {
   const N = buffer.length;
   const minLag = Math.max(1, Math.floor(sampleRate / MAX_FREQUENCY));
   const maxLag = Math.min(Math.floor(N / 2), Math.ceil(sampleRate / minFrequency));
@@ -118,6 +133,52 @@ function yinDetect(buffer: Float32Array, sampleRate: number, minFrequency: numbe
     yin[lag] = runningSum > 0 ? (sum * lag) / runningSum : 1;
   }
 
+  const tracked =
+    trackedFrequency !== null && Number.isFinite(trackedFrequency) && trackedFrequency > 0
+      ? estimateNearLag(yin, sampleRate / trackedFrequency, minLag, maxLag, sampleRate)
+      : {};
+  return { ...pickFundamental(yin, minLag, maxLag, sampleRate), ...tracked };
+}
+
+export function estimateNearLag(
+  yin: Float64Array,
+  lag: number,
+  minLag: number,
+  maxLag: number,
+  sampleRate: number,
+): { trackedFrequency: number | null; trackedClarity: number } {
+  const low = Math.max(minLag + 1, Math.floor(lag * (1 - TRACKED_LAG_TOLERANCE)));
+  const high = Math.min(maxLag - 1, Math.ceil(lag * (1 + TRACKED_LAG_TOLERANCE)));
+  if (high - low < 2) return { trackedFrequency: null, trackedClarity: 0 };
+
+  let best = low;
+  for (let candidate = low + 1; candidate <= high; candidate++) {
+    if (yin[candidate] < yin[best]) best = candidate;
+  }
+  if (best === low || best === high) return { trackedFrequency: null, trackedClarity: 0 };
+
+  return {
+    trackedFrequency: sampleRate / refineLag(yin, best),
+    trackedClarity: Math.max(0, 1 - yin[best]),
+  };
+}
+
+function refineLag(yin: Float64Array, tau: number): number {
+  const y0 = yin[tau - 1];
+  const y1 = yin[tau];
+  const y2 = yin[tau + 1];
+  const denom = y0 - 2 * y1 + y2;
+  if (denom === 0) return tau;
+  const shift = (0.5 * (y0 - y2)) / denom;
+  return tau + Math.max(-1, Math.min(1, shift));
+}
+
+function pickFundamental(
+  yin: Float64Array,
+  minLag: number,
+  maxLag: number,
+  sampleRate: number,
+): PitchEstimate {
   let deepestDip = Infinity;
   for (let lag = minLag; lag <= maxLag; lag++) {
     deepestDip = Math.min(deepestDip, yin[lag]);
@@ -130,17 +191,7 @@ function yinDetect(buffer: Float32Array, sampleRate: number, minFrequency: numbe
 
   tau = preferLowerFundamental(tau, yin, maxLag, sampleRate);
 
-  let refinedTau: number = tau;
-  if (tau > 0 && tau < maxLag) {
-    const y0 = yin[tau - 1];
-    const y1 = yin[tau];
-    const y2 = yin[tau + 1];
-    const denom = y0 - 2 * y1 + y2;
-    if (denom !== 0) {
-      const shift = (0.5 * (y0 - y2)) / denom;
-      refinedTau = tau + Math.max(-1, Math.min(1, shift));
-    }
-  }
+  const refinedTau = tau > 0 && tau < maxLag ? refineLag(yin, tau) : tau;
 
   if (refinedTau <= 0) {
     return { frequency: null, confidence: 0, inputLevel: 0 };

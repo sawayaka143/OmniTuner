@@ -13,6 +13,7 @@ import { PitchDisplay } from './pitch-display';
       [statusMessage]="status()"
       [isLocked]="locked()"
       [isTuned]="tuned()"
+      [stale]="stale()"
       [tuneColor]="color()"
     />
   `,
@@ -26,6 +27,7 @@ class PitchDisplayHost {
   readonly locked = signal(false);
   readonly tuned = signal(false);
   readonly color = signal<string | null>(null);
+  readonly stale = signal(false);
 }
 
 describe('PitchDisplay', () => {
@@ -62,6 +64,16 @@ describe('PitchDisplay', () => {
     expect(el('.pitch-octave').classList.contains('visible')).toBe(false);
     expect(el('.pitch-octave').textContent).toBe('\u00a0');
     expect(el('.pitch-status').textContent?.trim()).toBe('IDLE');
+  });
+
+  it('dims the note and octave, but not the readout text, while a reading is held', () => {
+    fixture.componentInstance.stale.set(true);
+    fixture.detectChanges();
+
+    expect(el('.pitch-note').classList.contains('stale')).toBe(true);
+    expect(el('.pitch-octave').classList.contains('stale')).toBe(true);
+    expect(el('.pitch-hz').classList.contains('stale')).toBe(false);
+    expect(el('.pitch-status').classList.contains('stale')).toBe(false);
   });
 
   it('marks the display as locked and in tune with the tune colour', () => {

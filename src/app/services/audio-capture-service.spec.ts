@@ -1,11 +1,14 @@
 import { TestBed } from '@angular/core/testing';
 
 import { AudioCaptureService } from './audio-capture-service';
+import { AUDIBLE_HOLD_FRAMES, MAX_DROPOUT_HOLD_FRAMES } from './pitch-tracker';
 
 interface PitchAnalysisResponse {
   frequency: number | null;
   confidence: number;
   inputLevel: number;
+  trackedFrequency?: number | null;
+  trackedClarity?: number;
   sessionId: number;
 }
 
@@ -181,7 +184,7 @@ describe('AudioCaptureService', () => {
     expect(service.frequency()).not.toBeNull();
   });
 
-  it('holds a locked note through momentary dropout frames before releasing it', () => {
+  it('holds a locked note through momentary dropout frames as a held, not locked, reading', () => {
     worker.emit({ frequency: 146.8, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
     worker.emit({ frequency: 146.9, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
     worker.emit({ frequency: 146.8, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
@@ -189,9 +192,12 @@ describe('AudioCaptureService', () => {
 
     for (let frame = 0; frame < 5; frame++) {
       worker.emit({ frequency: null, confidence: 0, inputLevel: SILENT, sessionId: 0 });
-      expect(service.trackingState()).toBe('locked');
+      expect(service.trackingState()).toBe('holding');
       expect(service.frequency()).toBe(lockedFrequency);
     }
+
+    worker.emit({ frequency: 146.8, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
+    expect(service.trackingState()).toBe('locked');
   });
 
   it('releases a note after sustained true silence', () => {
@@ -213,9 +219,9 @@ describe('AudioCaptureService', () => {
     worker.emit({ frequency: 196, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
     expect(service.trackingState()).toBe('locked');
 
-    for (let frame = 0; frame < 6; frame++) {
+    for (let frame = 0; frame < MAX_DROPOUT_HOLD_FRAMES; frame++) {
       worker.emit({ frequency: null, confidence: 0, inputLevel: SILENT, sessionId: 0 });
-      expect(service.trackingState()).toBe('locked');
+      expect(service.trackingState()).toBe('holding');
       expect(service.frequency()).not.toBeNull();
     }
 
@@ -224,16 +230,16 @@ describe('AudioCaptureService', () => {
     expect(service.frequency()).toBeNull();
   });
 
-  it('holds the note through a long audible decay tail instead of blanking', () => {
+  it('holds the note through an audible decay tail without reporting it as locked', () => {
     worker.emit({ frequency: 146.8, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
     worker.emit({ frequency: 146.8, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
     worker.emit({ frequency: 146.8, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
     const lockedFrequency = service.frequency();
     expect(lockedFrequency).not.toBeNull();
 
-    for (let frame = 0; frame < 40; frame++) {
+    for (let frame = 0; frame < AUDIBLE_HOLD_FRAMES; frame++) {
       worker.emit({ frequency: null, confidence: 0, inputLevel: AUDIBLE, sessionId: 0 });
-      expect(service.trackingState()).toBe('locked');
+      expect(service.trackingState()).toBe('holding');
       expect(service.frequency()).toBe(lockedFrequency);
     }
   });
@@ -244,10 +250,10 @@ describe('AudioCaptureService', () => {
     worker.emit({ frequency: 146.8, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
     expect(service.trackingState()).toBe('locked');
 
-    for (let frame = 0; frame < 60; frame++) {
+    for (let frame = 0; frame < AUDIBLE_HOLD_FRAMES; frame++) {
       worker.emit({ frequency: null, confidence: 0, inputLevel: AUDIBLE, sessionId: 0 });
     }
-    expect(service.trackingState()).toBe('locked');
+    expect(service.trackingState()).toBe('holding');
 
     worker.emit({ frequency: null, confidence: 0, inputLevel: AUDIBLE, sessionId: 0 });
     expect(service.trackingState()).toBe('listening');
@@ -266,6 +272,43 @@ describe('AudioCaptureService', () => {
 
     worker.emit({ frequency: 82.4, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
     expect(service.frequency()).toBeCloseTo(82.4, 1);
+  });
+
+  it('keeps the tracked note when the detector slips an octave down but the note is still there', () => {
+    for (let frame = 0; frame < 3; frame++) {
+      worker.emit({ frequency: 146.9, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
+    }
+
+    for (let frame = 0; frame < 8; frame++) {
+      worker.emit({
+        frequency: 73.3,
+        confidence: 0.65,
+        inputLevel: AUDIBLE,
+        trackedFrequency: 146.7,
+        trackedClarity: 0.58,
+        sessionId: 0,
+      });
+      expect(service.trackingState()).toBe('locked');
+      expect(service.frequency()).toBeGreaterThan(146);
+    }
+  });
+
+  it('follows a fading note through frames the detector alone would reject', () => {
+    for (let frame = 0; frame < 3; frame++) {
+      worker.emit({ frequency: 110, confidence: 0.9, inputLevel: AUDIBLE, sessionId: 0 });
+    }
+
+    worker.emit({
+      frequency: null,
+      confidence: 0,
+      inputLevel: AUDIBLE,
+      trackedFrequency: 109.7,
+      trackedClarity: 0.55,
+      sessionId: 0,
+    });
+
+    expect(service.trackingState()).toBe('locked');
+    expect(service.frequency()).toBeCloseTo(110, 0);
   });
 
   it('commits to a new note only after two coherent far frames', () => {
@@ -652,8 +695,27 @@ describe('AudioCaptureService diagnostics', () => {
     expect(MockWorker.latest!.messages.at(-1)).toMatchObject({
       minFrequency: expect.closeTo(49.45, 2),
       silenceGate: expect.any(Number),
+      trackedFrequency: null,
       sessionId: 1,
     });
+  });
+
+  it('asks the worker to measure the tracked note once a pitch is locked', async () => {
+    const frameCallbacks: FrameRequestCallback[] = [];
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+      frameCallbacks.push(callback);
+      return frameCallbacks.length;
+    });
+    vi.stubGlobal('cancelAnimationFrame', () => undefined);
+    await service.startCapture();
+    const worker = MockWorker.latest!;
+
+    for (let frame = 0; frame < 3; frame++) {
+      worker.emit({ frequency: 196, confidence: 0.9, inputLevel: 0.02, sessionId: 1 });
+    }
+    frameCallbacks.at(-1)!(1000);
+
+    expect(worker.messages.at(-1)).toMatchObject({ trackedFrequency: expect.closeTo(196, 5) });
   });
 
   it('collects analysis frames into a recorded sample', async () => {

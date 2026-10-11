@@ -66,7 +66,8 @@
     transform: translate(-50%, -50%);
     transition:
       left var(--dur-slow) var(--ease-spring),
-      background-color var(--dur-med) ease;
+      background-color var(--dur-med) ease,
+      opacity var(--dur-med) ease;
     z-index: var(--z-float);
     border-radius: var(--r-sm);
     corner-shape: squircle;
@@ -75,6 +76,10 @@
       background: var(--in-tune-text);
       width: 5px;
       box-shadow: var(--needle-glow);
+    }
+
+    &.stale {
+      opacity: 0.5;
     }
   }
 

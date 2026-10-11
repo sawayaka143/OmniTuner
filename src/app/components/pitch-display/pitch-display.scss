@@ -24,7 +24,12 @@
     padding-bottom: var(--space-1);
     transition:
       color var(--dur-slow) ease,
-      text-shadow var(--dur-slow) ease;
+      text-shadow var(--dur-slow) ease,
+      opacity var(--dur-med) ease;
+
+    &.stale {
+      opacity: 0.55;
+    }
 
     &.in-tune {
       color: var(--in-tune-text);
@@ -62,6 +67,10 @@
     &.visible {
       visibility: visible;
       opacity: 1;
+    }
+
+    &.visible.stale {
+      opacity: 0.55;
     }
 
     &.in-tune {

@@ -17,6 +17,7 @@ const TICKS: readonly Tick[] = [
       [needleLeft]="needle()"
       [isTuned]="tuned()"
       [cents]="cents()"
+      [stale]="stale()"
     />
   `,
   imports: [PitchMeter],
@@ -26,6 +27,7 @@ class PitchMeterHost {
   readonly needle = signal('50%');
   readonly tuned = signal(false);
   readonly cents = signal<number | null>(null);
+  readonly stale = signal(false);
 }
 
 describe('PitchMeter', () => {
@@ -58,6 +60,14 @@ describe('PitchMeter', () => {
     fixture.componentInstance.tuned.set(true);
     fixture.detectChanges();
     expect(el('.meter-needle').classList.contains('in-tune')).toBe(true);
+  });
+
+  it('dims the needle while it shows a held reading', () => {
+    expect(el('.meter-needle').classList.contains('stale')).toBe(false);
+
+    fixture.componentInstance.stale.set(true);
+    fixture.detectChanges();
+    expect(el('.meter-needle').classList.contains('stale')).toBe(true);
   });
 
   it('labels the cents scale and exposes the clamped value to assistive tech', () => {

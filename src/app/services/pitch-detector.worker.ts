@@ -5,6 +5,7 @@ interface AnalyseRequest {
   sampleRate: number;
   silenceGate?: number;
   minFrequency?: number;
+  trackedFrequency?: number | null;
   sessionId: number;
 }
 
@@ -14,17 +15,25 @@ interface AnalyseResponse {
   inputLevel: number;
   clarity?: number;
   candidateFrequency?: number | null;
+  trackedFrequency?: number | null;
+  trackedClarity?: number;
   analysisMs?: number;
   sessionId: number;
   error?: string;
 }
 
 self.onmessage = (event: MessageEvent<AnalyseRequest>) => {
-  const { buffer, sampleRate, silenceGate, minFrequency, sessionId } = event.data;
+  const { buffer, sampleRate, silenceGate, minFrequency, trackedFrequency, sessionId } = event.data;
 
   try {
     const startedAt = performance.now();
-    const result = analyseBuffer(buffer, sampleRate, silenceGate, minFrequency);
+    const result = analyseBuffer(
+      buffer,
+      sampleRate,
+      silenceGate,
+      minFrequency,
+      trackedFrequency ?? null,
+    );
     const analysisMs = performance.now() - startedAt;
     self.postMessage({ ...result, analysisMs, sessionId } satisfies AnalyseResponse);
   } catch (err) {

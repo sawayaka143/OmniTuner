@@ -1,12 +1,17 @@
 <div class="pitch-display">
   <div class="pitch-row">
-    <span class="pitch-note" [class.in-tune]="isTuned()" [style.color]="tuneColor()">{{
-      noteName() || '\u2014'
-    }}</span>
+    <span
+      class="pitch-note"
+      [class.in-tune]="isTuned()"
+      [class.stale]="stale()"
+      [style.color]="tuneColor()"
+      >{{ noteName() || '\u2014' }}</span
+    >
     <span
       class="pitch-octave"
       [class.in-tune]="isTuned()"
       [class.visible]="octave() !== null"
+      [class.stale]="stale()"
       [style.color]="tuneColor()"
       >{{ octave() ?? '\u00a0' }}</span
     >

@@ -3,6 +3,7 @@ import { Capacitor } from '@capacitor/core';
 import { KeepAwake } from '@capacitor-community/keep-awake';
 import { AdaptiveNoiseGate } from './noise-gate';
 import { DetectionRange, detectionRangeFor } from './pitch-detection';
+import { PitchTracker, PitchTrackingState } from './pitch-tracker';
 import {
   CaptureDiagnostics,
   CaptureDiagnosticsTracker,
@@ -10,7 +11,7 @@ import {
   describeMic,
 } from './capture-diagnostics';
 
-export type PitchTrackingState = 'idle' | 'listening' | 'locked';
+export type { PitchTrackingState } from './pitch-tracker';
 
 export type CaptureErrorCode = 'unsupported' | 'denied' | 'not-found' | 'in-use' | 'unknown';
 
@@ -30,21 +31,14 @@ interface PitchAnalysisResponse {
   inputLevel: number;
   clarity?: number;
   candidateFrequency?: number | null;
+  trackedFrequency?: number | null;
+  trackedClarity?: number;
   analysisMs?: number;
   sessionId: number;
   error?: string;
 }
 
 const ANALYSIS_INTERVAL_MS = 45;
-const SMOOTHING_WINDOW = 3;
-const EMA_ALPHA = 0.12;
-const MAX_SMOOTHING_JUMP_CENTS = 380;
-
-const ADAPTIVE_ALPHA_CENTS = 100;
-
-const MAX_DROPOUT_HOLD_FRAMES = 6;
-
-const AUDIBLE_HOLD_FRAMES = 60;
 
 const HIGHPASS_STAGE_Q = [0.5412, 1.3066] as const;
 const LOWPASS_FREQUENCY_HZ = 1800;
@@ -66,6 +60,7 @@ export class AudioCaptureService {
 
   private readonly diagnosticsTracker = new CaptureDiagnosticsTracker();
   private readonly noiseGate = new AdaptiveNoiseGate();
+  private readonly tracker = new PitchTracker();
   private recording: {
     frames: Float32Array[];
     gates: number[];
@@ -98,33 +93,25 @@ export class AudioCaptureService {
   private onUnlockTouch: (() => void) | null = null;
   private onUnlockClick: (() => void) | null = null;
 
-  private recentLogFreqs: number[] = [];
-  private smoothedFrequency: number | null = null;
-  private emaLogFreq: number | null = null;
-  private missedFrames = 0;
-  private pendingLogFreq: number | null = null;
-
   constructor() {
     this.worker = new Worker(new URL('./pitch-detector.worker', import.meta.url));
 
     this.worker.onmessage = (event: MessageEvent<PitchAnalysisResponse>) => {
-      const { frequency, confidence, inputLevel, sessionId, error } = event.data;
+      const { inputLevel, sessionId, error } = event.data;
       if (!this.isCapturing() || sessionId !== this.captureSession) return;
 
       this.analysisInFlight = false;
       this.clearAnalysisTimeout();
       this.recordDiagnostics(event.data);
-      this.noiseGate.update(inputLevel, frequency !== null && confidence > 0);
 
       if (error && isDevMode()) {
         console.error('[AudioCaptureService] analysis failed:', error);
       }
 
-      if (frequency === null || confidence <= 0) {
-        this.handleDropout(inputLevel);
-      } else {
-        this.handleDetection(frequency);
-      }
+      const tracked = this.tracker.update({ ...event.data, gate: this.noiseGate.gate });
+      this.noiseGate.update(inputLevel, tracked.pitched);
+      this.frequency.set(tracked.frequency);
+      this.trackingState.set(tracked.state);
     };
 
     this.worker.onerror = (err: ErrorEvent) => {
@@ -433,11 +420,7 @@ export class AudioCaptureService {
   }
 
   private resetTracking(): void {
-    this.recentLogFreqs = [];
-    this.smoothedFrequency = null;
-    this.emaLogFreq = null;
-    this.missedFrames = 0;
-    this.pendingLogFreq = null;
+    this.tracker.reset();
   }
 
   private scheduleAnalysis(): void {
@@ -459,6 +442,7 @@ export class AudioCaptureService {
           sampleRate: this.audioContext.sampleRate,
           silenceGate,
           minFrequency: this.detectionRange.minFrequency,
+          trackedFrequency: this.tracker.trackedFrequency,
           sessionId: this.captureSession,
         });
         this.captureRecordingFrame(frame, silenceGate);
@@ -481,96 +465,5 @@ export class AudioCaptureService {
       clearTimeout(this.analysisTimeout);
       this.analysisTimeout = null;
     }
-  }
-
-  private handleDetection(rawFrequency: number): void {
-    this.missedFrames = 0;
-
-    const smoothed = this.smoothFrequency(rawFrequency);
-    if (smoothed === null) return;
-
-    this.frequency.set(smoothed);
-
-    if (this.recentLogFreqs.length >= 3) {
-      this.smoothedFrequency = smoothed;
-      this.trackingState.set('locked');
-    } else {
-      this.smoothedFrequency = smoothed;
-      this.trackingState.set('listening');
-    }
-  }
-
-  private handleDropout(inputLevel: number): void {
-    this.missedFrames += 1;
-    const audible = inputLevel >= this.noiseGate.gate;
-
-    if (audible && this.missedFrames <= AUDIBLE_HOLD_FRAMES) return;
-
-    if (this.missedFrames <= MAX_DROPOUT_HOLD_FRAMES && this.smoothedFrequency !== null) {
-      return;
-    }
-
-    this.resetTracking();
-    this.frequency.set(null);
-    this.trackingState.set('listening');
-  }
-
-  private smoothFrequency(frequency: number): number | null {
-    if (!Number.isFinite(frequency) || frequency <= 0) {
-      if (this.emaLogFreq !== null) return 2 ** this.emaLogFreq;
-      if (this.recentLogFreqs.length > 0) return 2 ** this.median(this.recentLogFreqs);
-      if (this.smoothedFrequency !== null) return this.smoothedFrequency;
-
-      return null;
-    }
-    const candidateLog = Math.log2(frequency);
-
-    if (this.recentLogFreqs.length > 0) {
-      const medianLog = this.median(this.recentLogFreqs);
-
-      const jumpCents = Math.abs((candidateLog - medianLog) * 1200);
-
-      if (jumpCents > MAX_SMOOTHING_JUMP_CENTS) {
-        const coherent =
-          this.pendingLogFreq !== null &&
-          Math.abs((candidateLog - this.pendingLogFreq) * 1200) <= MAX_SMOOTHING_JUMP_CENTS;
-        this.pendingLogFreq = candidateLog;
-
-        if (!coherent) {
-          return this.emaLogFreq !== null
-            ? 2 ** this.emaLogFreq
-            : 2 ** this.median(this.recentLogFreqs);
-        }
-
-        this.pendingLogFreq = null;
-        this.recentLogFreqs = [candidateLog, candidateLog, candidateLog];
-        this.emaLogFreq = candidateLog;
-        return frequency;
-      }
-      this.pendingLogFreq = null;
-    }
-
-    this.recentLogFreqs.push(candidateLog);
-    if (this.recentLogFreqs.length > SMOOTHING_WINDOW) {
-      this.recentLogFreqs.shift();
-    }
-
-    const currentMedianLog = this.median(this.recentLogFreqs);
-
-    if (this.emaLogFreq === null || this.recentLogFreqs.length < 3) {
-      this.emaLogFreq = currentMedianLog;
-    } else {
-      const innovationCents = Math.abs((currentMedianLog - this.emaLogFreq) * 1200);
-      const alpha = Math.min(1, EMA_ALPHA + innovationCents / ADAPTIVE_ALPHA_CENTS);
-      this.emaLogFreq = alpha * currentMedianLog + (1 - alpha) * this.emaLogFreq;
-    }
-
-    return 2 ** this.emaLogFreq;
-  }
-
-  private median(values: readonly number[]): number {
-    const sorted = [...values].sort((a, b) => a - b);
-    const mid = Math.floor(sorted.length / 2);
-    return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
   }
 }

@@ -80,6 +80,7 @@
           [needleLeft]="needleLeft()"
           [cents]="frameCents()"
           [isTuned]="isTuned()"
+          [stale]="isHolding()"
         />
 
         <div class="pulse-layer" aria-hidden="true">
@@ -95,6 +96,7 @@
           [statusMessage]="statusMessage()"
           [isLocked]="isLocked()"
           [isTuned]="isTuned()"
+          [stale]="isHolding()"
           [tuneColor]="tuneColorHex()"
         />
       </div>

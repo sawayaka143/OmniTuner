@@ -172,6 +172,8 @@ export class AudioMonitor implements OnInit {
 
   readonly isLocked = computed(() => this.trackingState() === 'locked');
 
+  readonly isHolding = computed(() => this.trackingState() === 'holding');
+
   readonly manualTarget = computed(() => {
     const strings = this.currentStrings();
     if (strings.length === 0) return null;
@@ -288,7 +290,7 @@ export class AudioMonitor implements OnInit {
     if (error) return error;
     if (!this.isCapturing()) return 'IDLE';
     if (this.showTuned()) return 'IN TUNE';
-    if (this.isLocked()) {
+    if (this.isLocked() || this.isHolding()) {
       const target = this.mode() === 'manual' ? this.manualTarget() : this.autoTarget();
       return target ? `TUNING ${target.name}` : 'LISTENING FOR A NOTE';
     }

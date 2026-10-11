@@ -82,6 +82,47 @@ describe('AudioMonitor', () => {
     expect(component.statusMessage()).toBe('Microphone access is unavailable.');
   });
 
+  it('keeps naming the target string while a reading is held, and dims the readout', () => {
+    const fixture = TestBed.createComponent(AudioMonitor);
+    const service = TestBed.inject(AudioCaptureService);
+    service.isCapturing.set(true);
+    service.frequency.set(110);
+    service.trackingState.set('holding');
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.statusMessage()).toBe('TUNING A2');
+    expect(fixture.componentInstance.isLocked()).toBe(false);
+    expect(fixture.nativeElement.querySelector('.meter-needle').classList).toContain('stale');
+    expect(fixture.nativeElement.querySelector('.pitch-note').classList).toContain('stale');
+  });
+
+  it('confirms a locked reading as in tune but never a held one', () => {
+    vi.useFakeTimers();
+    try {
+      const fixture = TestBed.createComponent(AudioMonitor);
+      const service = TestBed.inject(AudioCaptureService);
+      const holdMs = TestBed.inject(TunerPreferences).tunerSettings().inTune.holdMs;
+      service.isCapturing.set(true);
+      service.frequency.set(110);
+      service.trackingState.set('holding');
+      fixture.detectChanges();
+      vi.advanceTimersByTime(holdMs * 3);
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance.inRange()).toBe(true);
+      expect(fixture.componentInstance.isTuned()).toBe(false);
+
+      service.trackingState.set('locked');
+      fixture.detectChanges();
+      vi.advanceTimersByTime(holdMs + 50);
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance.isTuned()).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('auto-starts capture when the tuner page mounts', () => {
     create();
     expect(getUserMedia).toHaveBeenCalledTimes(1);

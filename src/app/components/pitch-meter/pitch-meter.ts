@@ -20,6 +20,7 @@ export class PitchMeter {
   readonly ticks = input.required<Tick[]>();
   readonly needleLeft = input.required<string>();
   readonly isTuned = input(false);
+  readonly stale = input(false);
 
   readonly cents = input<number | null>(null);
 
