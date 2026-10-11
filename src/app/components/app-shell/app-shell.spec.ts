@@ -146,4 +146,72 @@ describe('AppShell', () => {
     expect(shell.shortcutOpen()).toBe(true);
     input.remove();
   });
+
+  describe('bottom navigation indicator', () => {
+    const indicator = (): HTMLElement =>
+      fixture.nativeElement.querySelector('.bottom-nav .nav-indicator');
+
+    const layoutItems = (): void => {
+      navItems().forEach((item, index) => {
+        Object.defineProperty(item, 'offsetLeft', { configurable: true, value: 4 + index * 84 });
+        Object.defineProperty(item, 'offsetWidth', { configurable: true, value: 80 });
+      });
+    };
+
+    const measure = async (): Promise<void> => {
+      window.dispatchEvent(new Event('resize'));
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      fixture.detectChanges();
+    };
+
+    it('stays hidden while the bottom navigation has no layout', async () => {
+      await router.navigateByUrl('/tuner');
+      await measure();
+
+      expect(indicator().classList.contains('visible')).toBe(false);
+      expect(indicator().classList.contains('ready')).toBe(false);
+    });
+
+    it('sits under the active destination and follows navigation', async () => {
+      await router.navigateByUrl('/chords');
+      fixture.detectChanges();
+      layoutItems();
+      await measure();
+
+      expect(indicator().classList.contains('visible')).toBe(true);
+      expect(indicator().style.transform).toBe('translateX(88px)');
+      expect(indicator().style.width).toBe('80px');
+
+      await router.navigateByUrl('/metronome');
+      fixture.detectChanges();
+      await measure();
+
+      expect(indicator().style.transform).toBe('translateX(256px)');
+    });
+
+    it('enables the slide transition only after the first visible measurement', async () => {
+      await router.navigateByUrl('/scales');
+      fixture.detectChanges();
+      layoutItems();
+      await measure();
+
+      expect(indicator().classList.contains('ready')).toBe(true);
+    });
+
+    it('drops the slide transition while hidden so it reappears in place', async () => {
+      await router.navigateByUrl('/scales');
+      fixture.detectChanges();
+      layoutItems();
+      await measure();
+
+      navItems().forEach((item) =>
+        Object.defineProperty(item, 'offsetWidth', { configurable: true, value: 0 }),
+      );
+      await measure();
+
+      expect(indicator().classList.contains('visible')).toBe(false);
+      expect(indicator().classList.contains('ready')).toBe(false);
+    });
+  });
 });
