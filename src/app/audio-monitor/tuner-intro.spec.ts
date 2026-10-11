@@ -1,6 +1,8 @@
+import { WritableSignal, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { axe } from 'vitest-axe';
 
+import { AudioCaptureService } from '../services/audio-capture-service';
 import { ONBOARDING_STORAGE, ONBOARDING_STORAGE_KEY, Onboarding } from '../services/onboarding';
 import { TunerIntro } from './tuner-intro';
 
@@ -19,12 +21,17 @@ class FakeStorage {
 describe('TunerIntro', () => {
   let fixture: ComponentFixture<TunerIntro>;
   let storage: FakeStorage;
+  let capture: { isCapturing: WritableSignal<boolean> };
 
   beforeEach(async () => {
     storage = new FakeStorage();
+    capture = { isCapturing: signal(false) };
     await TestBed.configureTestingModule({
       imports: [TunerIntro],
-      providers: [{ provide: ONBOARDING_STORAGE, useValue: storage }],
+      providers: [
+        { provide: ONBOARDING_STORAGE, useValue: storage },
+        { provide: AudioCaptureService, useValue: capture },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(TunerIntro);
@@ -54,7 +61,10 @@ describe('TunerIntro', () => {
     TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
       imports: [TunerIntro],
-      providers: [{ provide: ONBOARDING_STORAGE, useValue: storage }],
+      providers: [
+        { provide: ONBOARDING_STORAGE, useValue: storage },
+        { provide: AudioCaptureService, useValue: capture },
+      ],
     }).compileComponents();
 
     const refreshed = TestBed.createComponent(TunerIntro);
@@ -62,6 +72,21 @@ describe('TunerIntro', () => {
 
     expect(refreshed.nativeElement.querySelector('.intro-card')).toBeNull();
     refreshed.destroy();
+  });
+
+  it('dismisses itself for good once the tuner starts capturing', () => {
+    capture.isCapturing.set(true);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.intro-card')).toBeNull();
+    expect(JSON.parse(storage.getItem(ONBOARDING_STORAGE_KEY) as string)).toEqual(['tuner-intro']);
+  });
+
+  it('stays visible while the tuner is idle', () => {
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.intro-card')).not.toBeNull();
+    expect(storage.getItem(ONBOARDING_STORAGE_KEY)).toBeNull();
   });
 
   it('has no axe violations', async () => {
