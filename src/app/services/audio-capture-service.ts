@@ -51,6 +51,7 @@ export class AudioCaptureService {
 
   readonly frequency = signal<number | null>(null);
   readonly isCapturing = signal(false);
+  readonly isStarting = signal(false);
   readonly trackingState = signal<PitchTrackingState>('idle');
   readonly captureError = signal<string | null>(null);
   readonly captureErrorCode = signal<CaptureErrorCode | null>(null);
@@ -82,7 +83,6 @@ export class AudioCaptureService {
   private worker: Worker | null = null;
   private analysisInFlight = false;
   private captureSession = 0;
-  private startInFlight = false;
   private userStopped = false;
 
   private analysisTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -128,9 +128,9 @@ export class AudioCaptureService {
   }
 
   async startCapture(): Promise<void> {
-    if (this.isCapturing() || this.startInFlight) return;
+    if (this.isCapturing() || this.isStarting()) return;
 
-    this.startInFlight = true;
+    this.isStarting.set(true);
     this.userStopped = false;
     this.captureError.set(null);
     this.captureErrorCode.set(null);
@@ -242,7 +242,7 @@ export class AudioCaptureService {
       this.setCaptureError(this.captureErrorCodeFor(error));
       this.trackingState.set('idle');
     } finally {
-      this.startInFlight = false;
+      this.isStarting.set(false);
     }
   }
 
@@ -280,7 +280,7 @@ export class AudioCaptureService {
     this.clearAnalysisTimeout();
     this.captureSession += 1;
     this.analysisInFlight = false;
-    this.startInFlight = false;
+    this.isStarting.set(false);
     this.abortRecording();
     void this.releaseKeepAwake();
     this.releaseAudioResources();
@@ -361,7 +361,7 @@ export class AudioCaptureService {
   }
 
   attemptAutoStart(): void {
-    if (this.isCapturing() || this.startInFlight || this.userStopped) return;
+    if (this.isCapturing() || this.isStarting() || this.userStopped) return;
     void this.startCapture();
   }
 

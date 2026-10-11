@@ -109,6 +109,12 @@
       color: var(--in-tune-text);
       font-weight: var(--fw-semibold);
     }
+
+    &.error {
+      color: var(--danger);
+      font-size: var(--text-sm);
+      letter-spacing: normal;
+    }
   }
 }
 

@@ -80,6 +80,7 @@
           [cents]="frameCents()"
           [isTuned]="isTuned()"
           [stale]="isHolding()"
+          [tolerance]="tolerance()"
         />
 
         <div class="pulse-layer" aria-hidden="true">
@@ -96,6 +97,7 @@
           [isLocked]="isLocked()"
           [isTuned]="isTuned()"
           [stale]="isHolding()"
+          [error]="!!captureError()"
           [tuneColor]="tuneColorHex()"
         />
       </div>
@@ -114,8 +116,9 @@
         [class.active]="isCapturing()"
         type="button"
         [attr.aria-pressed]="isCapturing()"
+        [disabled]="isStarting() || captureUnsupported()"
       >
-        {{ isCapturing() ? 'Stop' : 'Start' }}
+        {{ captureLabel() }}
       </button>
     </div>
   </section>

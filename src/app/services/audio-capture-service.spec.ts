@@ -590,6 +590,19 @@ describe('AudioCaptureService capture errors', () => {
     expect(getUserMedia).not.toHaveBeenCalled();
   });
 
+  it('exposes the pending start while the permission prompt is open', async () => {
+    let grant: (stream: FakeMediaStream) => void = () => {};
+    getUserMedia.mockReturnValue(new Promise((resolve) => (grant = resolve)));
+
+    const starting = service.startCapture();
+    expect(service.isStarting()).toBe(true);
+
+    grant(new FakeMediaStream());
+    await starting;
+    expect(service.isStarting()).toBe(false);
+    expect(service.isCapturing()).toBe(true);
+  });
+
   it('clears a previous error when capture starts successfully', async () => {
     rejectingWith('NotAllowedError');
     await service.startCapture();

@@ -21,6 +21,7 @@ export class PitchMeter {
   readonly needleLeft = input.required<string>();
   readonly isTuned = input(false);
   readonly stale = input(false);
+  readonly tolerance = input<number | null>(null);
 
   readonly cents = input<number | null>(null);
 
@@ -31,6 +32,13 @@ export class PitchMeter {
     { leftPos: '75%', text: '+25', center: false },
     { leftPos: '100%', text: '+50', center: false },
   ];
+
+  protected readonly toleranceZone = computed(() => {
+    const tolerance = this.tolerance();
+    if (tolerance === null || !Number.isFinite(tolerance) || tolerance <= 0) return null;
+    const halfWidth = Math.min(50, tolerance);
+    return { left: 50 - halfWidth, width: halfWidth * 2 };
+  });
 
   protected readonly ariaNow = computed(() => Math.max(-50, Math.min(50, this.cents() ?? 0)));
 }

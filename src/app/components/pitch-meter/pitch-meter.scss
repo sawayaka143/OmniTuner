@@ -56,6 +56,20 @@
     }
   }
 
+  .tolerance-zone {
+    position: absolute;
+    top: calc(var(--needle-top) - var(--needle-height) / 2);
+    height: var(--needle-height);
+    background: color-mix(in srgb, var(--in-tune-color) 12%, transparent);
+    border-radius: var(--r-sm);
+    corner-shape: squircle;
+    transition: background-color var(--dur-med) ease;
+
+    &.active {
+      background: color-mix(in srgb, var(--in-tune-color) 24%, transparent);
+    }
+  }
+
   .meter-needle {
     position: absolute;
     top: var(--needle-top);

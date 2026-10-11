@@ -7,6 +7,14 @@
   [attr.aria-valuenow]="ariaNow()"
 >
   <div class="meter-track"></div>
+  @if (toleranceZone(); as zone) {
+    <div
+      class="tolerance-zone"
+      [class.active]="isTuned()"
+      [style.left.%]="zone.left"
+      [style.width.%]="zone.width"
+    ></div>
+  }
   <div
     class="needle meter-needle"
     [class.in-tune]="isTuned()"

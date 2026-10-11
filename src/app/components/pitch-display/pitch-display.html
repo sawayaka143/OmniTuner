@@ -17,7 +17,12 @@
     >
   </div>
   <div class="pitch-hz">{{ hz() }}</div>
-  <p class="pitch-status" [class.locked]="isLocked()" [class.in-tune]="isTuned()">
+  <p
+    class="pitch-status"
+    [class.locked]="isLocked()"
+    [class.in-tune]="isTuned()"
+    [class.error]="error()"
+  >
     {{ statusMessage() }}
   </p>
 </div>

@@ -18,6 +18,7 @@ const TICKS: readonly Tick[] = [
       [isTuned]="tuned()"
       [cents]="cents()"
       [stale]="stale()"
+      [tolerance]="tolerance()"
     />
   `,
   imports: [PitchMeter],
@@ -28,6 +29,7 @@ class PitchMeterHost {
   readonly tuned = signal(false);
   readonly cents = signal<number | null>(null);
   readonly stale = signal(false);
+  readonly tolerance = signal<number | null>(null);
 }
 
 describe('PitchMeter', () => {
@@ -52,6 +54,32 @@ describe('PitchMeter', () => {
     expect(ticks[1].classList.contains('center')).toBe(true);
     expect(ticks[2].classList.contains('major')).toBe(true);
     expect(ticks[0].getAttribute('style')).toContain('left: 0%');
+  });
+
+  it('shades the in-tune tolerance band around the centre', () => {
+    expect(el('.tolerance-zone')).toBeNull();
+
+    fixture.componentInstance.tolerance.set(5);
+    fixture.detectChanges();
+
+    const zone = el('.tolerance-zone');
+    expect(zone.style.left).toBe('45%');
+    expect(zone.style.width).toBe('10%');
+    expect(zone.classList.contains('active')).toBe(false);
+
+    fixture.componentInstance.tuned.set(true);
+    fixture.detectChanges();
+    expect(zone.classList.contains('active')).toBe(true);
+  });
+
+  it('caps the tolerance band at the ends of the ruler and hides it for zero', () => {
+    fixture.componentInstance.tolerance.set(80);
+    fixture.detectChanges();
+    expect(el('.tolerance-zone').style.width).toBe('100%');
+
+    fixture.componentInstance.tolerance.set(0);
+    fixture.detectChanges();
+    expect(el('.tolerance-zone')).toBeNull();
   });
 
   it('places the needle and marks it in tune', () => {
