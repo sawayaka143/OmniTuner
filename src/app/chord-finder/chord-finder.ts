@@ -447,10 +447,6 @@ export class ChordFinder {
     return lines;
   }
 
-  protected relaxHints(): string {
-    return 'try a different tuning or chord spelling';
-  }
-
   private buildCopyBuffer({ tuning, chords, detectedKey: dk }: GenerationResult): string {
     const parts: string[] = [];
     const keyLabel = dk ? `${dk.tonicName} ${dk.mode}` : '—';

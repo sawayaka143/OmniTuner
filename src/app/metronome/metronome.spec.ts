@@ -50,6 +50,24 @@ describe('Metronome', () => {
     expect(component.timeSig()).toEqual({ numerator: 4, denominator: 4 });
   });
 
+  it('steps tempo and beats with the shared step buttons, stopping at the limits', () => {
+    const stepButton = (label: string): HTMLButtonElement =>
+      el().querySelector<HTMLButtonElement>(`app-step-button button[aria-label="${label}"]`)!;
+
+    stepButton('Increase tempo').click();
+    fixture.detectChanges();
+    expect(component.bpm()).toBe(BPM_DEFAULT + 1);
+
+    stepButton('Fewer beats').click();
+    fixture.detectChanges();
+    expect(component.timeSig().numerator).toBe(3);
+
+    component.setTimeSigNumerator(1);
+    fixture.detectChanges();
+    expect(stepButton('Fewer beats').disabled).toBe(true);
+    expect(stepButton('More beats').disabled).toBe(false);
+  });
+
   it('sets and nudges the tempo within bounds', () => {
     component.setBpm(142);
     expect(component.bpm()).toBe(142);

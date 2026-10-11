@@ -167,6 +167,7 @@
                 [min]="minVoicingCount"
                 [max]="maxVoicingCount"
                 ariaLabel="Show fewer fingerings per chord"
+                size="sm"
                 (step)="setVoicingCount($event)"
               />
               <output
@@ -181,6 +182,7 @@
                 [min]="minVoicingCount"
                 [max]="maxVoicingCount"
                 ariaLabel="Show more fingerings per chord"
+                size="sm"
                 (step)="setVoicingCount($event)"
               />
             </div>
@@ -248,7 +250,7 @@
                   }
                   @if (!entry.shapes.length) {
                     <p class="card-note warn">
-                      no voicings satisfy these rules — try: {{ relaxHints() }}
+                      no voicings satisfy these rules — try a different tuning or chord spelling
                     </p>
                   } @else {
                     <div class="card-shapes">

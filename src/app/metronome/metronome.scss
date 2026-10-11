@@ -293,28 +293,6 @@
   }
 }
 
-.step-btn {
-  width: var(--ctrl-h-md);
-  height: var(--ctrl-h-md);
-  border-radius: var(--r-pill);
-  border: 1px solid var(--border-subtle);
-  background: var(--glass-bg);
-  color: var(--text);
-  font-size: 16px;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  box-shadow: var(--shadow-recess);
-  &:active {
-    transform: scale(0.97);
-  }
-  &.small {
-    width: 30px;
-    height: 30px;
-    font-size: 14px;
-  }
-}
-
 .pat-edit {
   display: grid;
   gap: var(--space-2);

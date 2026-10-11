@@ -8,6 +8,7 @@ import { PressRepeat } from '../press-repeat';
     <button
       type="button"
       class="step-button"
+      [class.small]="size() === 'sm'"
       [disabled]="isDisabled()"
       [attr.aria-label]="ariaLabel()"
       [appPressRepeat]="onStep"
@@ -25,6 +26,7 @@ export class StepButton {
   readonly max = input.required<number>();
   readonly ariaLabel = input.required<string>();
   readonly disabled = input(false);
+  readonly size = input<'md' | 'sm'>('md');
 
   readonly step = output<number>();
 

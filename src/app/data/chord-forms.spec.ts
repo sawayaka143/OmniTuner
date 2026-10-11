@@ -1,11 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { CHORD_FORMULAS, parseChord, parseTuning, ParsedChord } from '../utils/chord-theory';
-import {
-  instantiateForm,
-  requiredExtensionChoices,
-  requiredPitchClasses,
-} from '../utils/chord-voicing';
+import { instantiateForm, requiredExtensions, requiredPitchClasses } from '../utils/chord-voicing';
 import { CHORD_FORMS, ChordForm } from './chord-forms';
 
 const STANDARD = parseTuning('E2 A2 D3 G3 B3 E4');
@@ -80,12 +76,8 @@ describe('chord form library', () => {
             expect(chordPcs.has(pc), `${label} foreign pc ${pc}`).toBe(true);
           for (const pc of requiredPitchClasses(chord))
             expect(sounding.has(pc), `${label} missing required pc ${pc}`).toBe(true);
-          const extensions = requiredExtensionChoices(chord);
-          if (extensions.length)
-            expect(
-              extensions.some((pc) => sounding.has(pc)),
-              `${label} missing every extension`,
-            ).toBe(true);
+          for (const pc of requiredExtensions(chord))
+            expect(sounding.has(pc), `${label} missing extension pc ${pc}`).toBe(true);
         }
       }
     }

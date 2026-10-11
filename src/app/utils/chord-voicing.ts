@@ -33,6 +33,7 @@ const WEIGHTS = {
 } as const;
 
 export const EXTENSION_INTERVALS: readonly number[] = [13, 14, 15, 17, 18, 20, 21];
+const ALTERED_EXTENSION_INTERVALS: readonly number[] = [13, 15, 18, 20];
 
 export interface SoundingNote {
   readonly stringIndex: number;
@@ -117,8 +118,14 @@ export function requiredPitchClasses(chord: ParsedChord): ReadonlySet<number> {
   );
 }
 
-export function requiredExtensionChoices(chord: ParsedChord): readonly number[] {
-  return chord.pcs.filter((_, index) => EXTENSION_INTERVALS.includes(chord.intervals[index]));
+export function requiredExtensions(chord: ParsedChord): readonly number[] {
+  const extensions = chord.intervals.filter((interval) => EXTENSION_INTERVALS.includes(interval));
+  if (!extensions.length) return [];
+  const highest = Math.max(...extensions);
+  return chord.pcs.filter((_, index) => {
+    const interval = chord.intervals[index];
+    return interval === highest || ALTERED_EXTENSION_INTERVALS.includes(interval);
+  });
 }
 
 export function isNarrowingOf(narrow: Frets, wide: Frets): boolean {
@@ -204,7 +211,6 @@ function compareRanked(a: RankedShape, b: RankedShape): number {
 class VoicingSearch {
   private readonly chordPcs: ReadonlySet<number>;
   private readonly requiredPcs: ReadonlySet<number>;
-  private readonly extensionChoices: readonly number[];
   private readonly extensionPcs: ReadonlySet<number>;
   private readonly bassPc: number | undefined;
   private readonly allowedPcs: ReadonlySet<number>;
@@ -215,12 +221,16 @@ class VoicingSearch {
     private readonly tuning: ParsedTuning,
     private readonly chord: ParsedChord,
     enforceBass: boolean,
-    private readonly enforceExtensions: boolean,
+    enforceExtensions: boolean,
   ) {
     this.chordPcs = new Set(chord.pcs);
-    this.requiredPcs = requiredPitchClasses(chord);
-    this.extensionChoices = requiredExtensionChoices(chord);
-    this.extensionPcs = new Set(this.extensionChoices);
+    this.requiredPcs = new Set([
+      ...requiredPitchClasses(chord),
+      ...(enforceExtensions ? requiredExtensions(chord) : []),
+    ]);
+    this.extensionPcs = new Set(
+      chord.pcs.filter((_, index) => EXTENSION_INTERVALS.includes(chord.intervals[index])),
+    );
     this.bassPc = enforceBass ? chord.bassPc : undefined;
     this.allowedPcs =
       this.bassPc === undefined ? this.chordPcs : new Set([...this.chordPcs, this.bassPc]);
@@ -279,12 +289,6 @@ class VoicingSearch {
 
     const walk = (idx: number, played: number): void => {
       for (const pc of this.requiredPcs) if (!has(pc, idx)) return;
-      if (
-        this.enforceExtensions &&
-        this.extensionChoices.length &&
-        !this.extensionChoices.some((pc) => has(pc, idx))
-      )
-        return;
       if (played + (n - idx) < MIN_NOTES) return;
       if (needsDistinct && this.distinctChordTones(counts) + (n - idx) < MIN_DISTINCT) return;
       if (idx === n) {
@@ -314,12 +318,6 @@ class VoicingSearch {
     if (this.bassPc !== undefined && mod12(shape.bassMidi) !== this.bassPc) return false;
     if (shape.pcs.size < MIN_DISTINCT && this.requiredPcs.size >= MIN_DISTINCT) return false;
     for (const pc of this.requiredPcs) if (!shape.pcs.has(pc)) return false;
-    if (
-      this.enforceExtensions &&
-      this.extensionChoices.length &&
-      !this.extensionChoices.some((pc) => shape.pcs.has(pc))
-    )
-      return false;
     return this.mutesReachable(shape.frets) && this.spanReachable(shape);
   }
 

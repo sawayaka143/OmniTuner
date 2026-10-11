@@ -5,7 +5,7 @@ import { DEFAULT_VOICING_COUNT, MAX_VOICING_COUNT } from '../data/chord-voicing.
 import {
   analyseFingering,
   isNarrowingOf,
-  requiredExtensionChoices,
+  requiredExtensions,
   requiredPitchClasses,
   searchChord,
 } from './chord-voicing';
@@ -61,27 +61,45 @@ describe('requiredPitchClasses', () => {
     }
   });
 
-  it('keeps guide tones and altered fifths, moving extensions to the any-of set', () => {
+  it('keeps guide tones and altered fifths, leaving extensions to requiredExtensions', () => {
     const c13 = chord('C13');
     const required = requiredPitchClasses(c13);
     for (const pc of [0, 4, 10]) expect(required.has(pc)).toBe(true);
     expect(required.has(7)).toBe(false);
     expect(required.has(2)).toBe(false);
 
-    const extensions = requiredExtensionChoices(c13);
-    expect(extensions).toContain(2);
-    expect(extensions).toContain(5);
-    expect(extensions).toContain(9);
-
     const altered = requiredPitchClasses(chord('C7#5'));
     expect(altered.has(8)).toBe(true);
     expect(altered.has(7)).toBe(false);
   });
 
-  it('has no extension choices for chords without tension tones', () => {
+  it('has no required extensions for chords without tension tones', () => {
     for (const symbol of ['C', 'Cm', 'Caug', 'C7', 'Cmaj7']) {
-      expect(requiredExtensionChoices(chord(symbol)), symbol).toHaveLength(0);
+      expect(requiredExtensions(chord(symbol)), symbol).toHaveLength(0);
     }
+  });
+});
+
+describe('requiredExtensions', () => {
+  it.each([
+    ['C9', [2]],
+    ['C11', [5]],
+    ['C13', [9]],
+    ['Cmaj13', [9]],
+    ['Cm11', [5]],
+    ['C6/9', [2]],
+  ])('requires the highest natural tension of %s', (symbol, expected) => {
+    expect([...requiredExtensions(chord(symbol))].sort((a, b) => a - b)).toEqual(expected);
+  });
+
+  it.each([
+    ['C7b9', [1]],
+    ['C7#9', [3]],
+    ['C13b9', [1, 9]],
+    ['C7#9b13', [3, 8]],
+    ['C9#11', [6]],
+  ])('requires every altered tension of %s', (symbol, expected) => {
+    expect([...requiredExtensions(chord(symbol))].sort((a, b) => a - b)).toEqual(expected);
   });
 });
 
@@ -325,19 +343,12 @@ describe('searchChord', () => {
     for (const shape of shapes) expect(shape.frets.length).toBe(6);
   });
 
-  it('voices extended chords with the guide tones plus at least one tension', () => {
-    const c13 = chord('C13');
-    const guideTones = [0, 4, 10];
-    const tensions = [2, 5, 9];
-    const shapes = searchChord(tuning, c13);
+  it('voices a 13 chord with its guide tones and the 13th itself', () => {
+    const shapes = searchChord(tuning, chord('C13'), MAX_VOICING_COUNT);
     expect(shapes.length).toBeGreaterThan(0);
     for (const shape of shapes) {
       const pcs = new Set(shape.sounding.map((n) => n.midi % 12));
-      for (const pc of guideTones) expect(pcs.has(pc)).toBe(true);
-      expect(
-        tensions.some((pc) => pcs.has(pc)),
-        JSON.stringify(shape.frets),
-      ).toBe(true);
+      for (const pc of [0, 4, 10, 9]) expect(pcs.has(pc), JSON.stringify(shape.frets)).toBe(true);
     }
   });
 
