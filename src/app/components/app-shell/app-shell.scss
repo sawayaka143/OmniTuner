@@ -187,7 +187,7 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--border-active);
+    outline: 2px solid var(--text);
     outline-offset: -2px;
   }
 }
@@ -278,7 +278,7 @@
     }
 
     .nav-label {
-      font-size: var(--text-xs);
+      font-size: var(--text-2xs);
       font-weight: var(--fw-medium);
       letter-spacing: var(--tracking-narrow);
       line-height: 1;
@@ -317,7 +317,7 @@
     }
 
     &:focus-visible {
-      outline: 2px solid var(--border-active);
+      outline: 2px solid var(--text);
       outline-offset: -2px;
     }
   }
