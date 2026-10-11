@@ -123,6 +123,20 @@ describe('AudioMonitor', () => {
     }
   });
 
+  it('names the tuning once in the header and leaves the strings to the string buttons', () => {
+    const fixture = TestBed.createComponent(AudioMonitor);
+    fixture.detectChanges();
+    const header = fixture.nativeElement.querySelector('.workbench-header') as HTMLElement;
+
+    expect(header.querySelector('h2')?.textContent?.trim()).toBe(
+      fixture.componentInstance.currentTuning().label,
+    );
+    expect(header.querySelector('p')).toBeNull();
+    expect(fixture.nativeElement.querySelectorAll('app-string-list button')).toHaveLength(
+      fixture.componentInstance.currentStrings().length,
+    );
+  });
+
   it('auto-starts capture when the tuner page mounts', () => {
     create();
     expect(getUserMedia).toHaveBeenCalledTimes(1);

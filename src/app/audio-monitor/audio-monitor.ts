@@ -133,12 +133,6 @@ export class AudioMonitor implements OnInit {
 
   readonly currentStrings = computed(() => this.currentTuning().strings);
 
-  readonly tuningSummary = computed(() =>
-    this.currentStrings()
-      .map((string) => string.name)
-      .join(' '),
-  );
-
   protected readonly minTunerMidiNote = MIN_TUNER_MIDI_NOTE;
   protected readonly maxTunerMidiNote = MAX_TUNER_MIDI_NOTE;
   protected readonly maxCustomTuningNameLength = MAX_CUSTOM_TUNING_NAME_LENGTH;

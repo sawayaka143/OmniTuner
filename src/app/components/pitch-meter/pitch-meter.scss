@@ -4,7 +4,7 @@
 
 .horizontal-meter {
   --meter-padding-top: 50px;
-  --meter-padding-bottom: 44px;
+  --meter-padding-bottom: var(--space-4);
   --tick-container-top: 50px;
   --tick-container-height: 48px;
   --tick-offset-top: -10px;
@@ -107,13 +107,8 @@
   }
 }
 
-@media (max-height: 700px), (max-width: 760px) {
-  :host {
-    --meter-padding-top: 36px;
-    --meter-padding-bottom: 32px;
-  }
-
-  .meter-labels {
-    margin-top: var(--space-4);
+@media (max-height: 900px), (max-width: 760px) {
+  .horizontal-meter {
+    --meter-padding-bottom: var(--space-2);
   }
 }
