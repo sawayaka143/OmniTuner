@@ -84,6 +84,7 @@ export class AppShell {
 
   private readonly themeTrigger = viewChild('themeTrigger', { read: ElementRef });
   private readonly navLinks = viewChildren<ElementRef<HTMLAnchorElement>>('navLink');
+  private readonly bottomNavLinks = viewChildren<ElementRef<HTMLAnchorElement>>('bottomNavLink');
 
   private readonly navigationEvents = this.router.events.subscribe((event) => {
     if (event instanceof NavigationEnd) {
@@ -108,12 +109,16 @@ export class AppShell {
   );
   protected readonly indicator = signal<NavIndicatorState>({ x: 0, width: 0, visible: false });
   protected readonly indicatorReady = signal(false);
+  protected readonly bottomIndicator = signal<NavIndicatorState>({
+    x: 0,
+    width: 0,
+    visible: false,
+  });
+  protected readonly bottomIndicatorReady = signal(false);
   protected readonly activePath = signal(this.routePathOf(this.router.url));
   protected readonly mobileTitle = computed(
     () => NAV_ITEMS.find((item) => item.path === this.activePath())?.label ?? 'OmniTuner',
   );
-
-  private firstIndicatorMeasure = true;
 
   constructor() {
     this.destroyRef.onDestroy(() => this.navigationEvents.unsubscribe());
@@ -335,7 +340,12 @@ export class AppShell {
   }
 
   private measureIndicator(): void {
-    this.measureIndicatorFor(this.navLinks(), this.indicator);
+    this.measureIndicatorFor(this.navLinks(), this.indicator, this.indicatorReady);
+    this.measureIndicatorFor(
+      this.bottomNavLinks(),
+      this.bottomIndicator,
+      this.bottomIndicatorReady,
+    );
   }
 
   private routePathOf(url: string): string {
@@ -351,20 +361,21 @@ export class AppShell {
   private measureIndicatorFor(
     links: readonly ElementRef<HTMLAnchorElement>[],
     indicator: WritableSignal<NavIndicatorState>,
+    ready: WritableSignal<boolean>,
   ): void {
     const index = links.findIndex((link) => link.nativeElement.classList.contains('active'));
     const link = index === -1 ? null : links[index].nativeElement;
 
     if (!link || link.offsetWidth === 0) {
       indicator.set({ x: 0, width: 0, visible: false });
+      ready.set(false);
       return;
     }
 
     indicator.set({ x: link.offsetLeft, width: link.offsetWidth, visible: true });
 
-    if (this.firstIndicatorMeasure) {
-      this.firstIndicatorMeasure = false;
-      this.document.defaultView?.requestAnimationFrame(() => this.indicatorReady.set(true));
+    if (!ready()) {
+      this.document.defaultView?.requestAnimationFrame(() => ready.set(true));
     }
   }
 }

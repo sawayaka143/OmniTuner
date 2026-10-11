@@ -79,6 +79,14 @@
 <app-update-banner />
 
 <nav class="bottom-nav" aria-label="Primary navigation">
+  <span
+    class="nav-indicator"
+    aria-hidden="true"
+    [class.visible]="bottomIndicator().visible"
+    [class.ready]="bottomIndicatorReady()"
+    [style.transform]="'translateX(' + bottomIndicator().x + 'px)'"
+    [style.width.px]="bottomIndicator().width"
+  ></span>
   @for (item of navItems; track item.path) {
     <a
       class="bottom-nav-item"
@@ -86,10 +94,9 @@
       routerLinkActive="active"
       ariaCurrentWhenActive="page"
       (click)="onNavActivate()"
+      #bottomNavLink
     >
-      <span class="nav-well" aria-hidden="true">
-        <span class="app-icon ti" [class]="item.icon"></span>
-      </span>
+      <span class="app-icon ti" [class]="item.icon" aria-hidden="true"></span>
       <span class="nav-label">{{ item.label }}</span>
     </a>
   }
