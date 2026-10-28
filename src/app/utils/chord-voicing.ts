@@ -14,6 +14,9 @@ const FIRST_POSITION_MAX_FRET = 4;
 const COMFORTABLE_SPAN = 2;
 const COMFORTABLE_RANGE = 24;
 const REVERSE_STRETCH_FRETS = 3;
+const MAX_INTERIOR_MUTES = 2;
+const MAX_SOUNDING_STRINGS = 8;
+const RANKED_KEEP = 400;
 
 const WEIGHTS = {
   rootInBass: 100,
@@ -169,6 +172,48 @@ export function analyseFingering(frets: Frets): Fingering | null {
   return fingers <= MAX_FINGERS ? { fingers, barres } : null;
 }
 
+export function handFits(prefix: Frets, stringCount: number): boolean {
+  return fingerGroups(prefix) <= MAX_FINGERS && spanFits(prefix, stringCount);
+}
+
+function fingerGroups(frets: Frets): number {
+  let groups = 0;
+  for (let s = 0; s < frets.length; s++) {
+    const fret = frets[s];
+    if (fret === null || fret === 0) continue;
+    let joins = false;
+    for (let p = s - 1; p >= 0; p--) {
+      const other = frets[p];
+      if (other === null) continue;
+      if (other === 0 || other < fret) break;
+      if (other === fret) {
+        joins = true;
+        break;
+      }
+    }
+    if (!joins) groups++;
+  }
+  return groups;
+}
+
+function spanFits(frets: Frets, stringCount: number): boolean {
+  let low = Infinity;
+  let high = -Infinity;
+  for (let s = 1; s < frets.length; s++) {
+    const fret = frets[s];
+    if (fret === null || fret === 0) continue;
+    low = Math.min(low, fret);
+    high = Math.max(high, fret);
+  }
+  const others = low <= high;
+  if (others && high - low > MAX_SPAN) return false;
+  const thumb = frets[0];
+  if (thumb === undefined || thumb === null || thumb <= 0) return true;
+  if (!others || Math.max(high, thumb) - Math.min(low, thumb) <= MAX_SPAN) return true;
+  if (stringCount < 4 || thumb > low) return false;
+  return high - thumb <= MAX_SPAN + MAX_THUMB_REACH;
+}
+
 function describeShape(frets: Frets, tuning: ParsedTuning): ShapeFeatures | null {
   const fingering = analyseFingering(frets);
   if (!fingering) return null;
@@ -239,18 +284,17 @@ class VoicingSearch {
   }
 
   run(count: number): VoicingShape[] {
-    const seen = new Set<string>();
+    const keep = Math.max(RANKED_KEEP, count * 20);
     const ranked: RankedShape[] = [];
-    const consider = (frets: Frets): void => {
-      const key = fretsKey(frets);
-      if (seen.has(key)) return;
-      seen.add(key);
+    this.enumerate((frets) => {
       const features = describeShape(frets, this.tuning);
       if (!features || !this.isPlayable(features)) return;
       ranked.push({ features, score: this.score(features) });
-    };
-    this.enumerate(consider);
-    for (const grip of this.gripsForChord()) consider(grip);
+      if (ranked.length >= keep * 2) {
+        ranked.sort(compareRanked);
+        ranked.length = keep;
+      }
+    });
     ranked.sort(compareRanked);
     return this.pickDistinct(ranked, count).map((entry) => this.toShape(entry));
   }
@@ -282,34 +326,57 @@ class VoicingSearch {
       }
     }
     const current: (number | null)[] = [];
-    const counts = new Map<number, number>();
-    const has = (pc: number, idx: number): boolean =>
-      (counts.get(pc) ?? 0) > 0 || reachable[idx].has(pc);
+    const counts = new Int32Array(12);
     const needsDistinct = this.requiredPcs.size >= MIN_DISTINCT;
+    const muteOnly: (number | null)[] = [null];
 
-    const walk = (idx: number, played: number): void => {
-      for (const pc of this.requiredPcs) if (!has(pc, idx)) return;
+    const walk = (
+      idx: number,
+      played: number,
+      muteRest: boolean,
+      pendingMutes: number,
+      interiorMutes: number,
+      firstSounding: number,
+    ): void => {
+      for (const pc of this.requiredPcs) if (counts[pc] === 0 && !reachable[idx].has(pc)) return;
       if (played + (n - idx) < MIN_NOTES) return;
       if (needsDistinct && this.distinctChordTones(counts) + (n - idx) < MIN_DISTINCT) return;
       if (idx === n) {
         visit([...current]);
         return;
       }
-      for (const fret of options[idx]) {
+      const outOfReach = firstSounding >= 0 && idx - firstSounding >= MAX_SOUNDING_STRINGS;
+      for (const fret of muteRest || outOfReach ? muteOnly : options[idx]) {
+        const interior = fret !== null && played > 0 ? interiorMutes + pendingMutes : interiorMutes;
+        if (interior > MAX_INTERIOR_MUTES) continue;
         current.push(fret);
-        const pc = fret === null ? null : mod12(this.tuning.midi[idx] + fret);
-        if (pc !== null) counts.set(pc, (counts.get(pc) ?? 0) + 1);
-        walk(idx + 1, played + (pc === null ? 0 : 1));
-        if (pc !== null) counts.set(pc, counts.get(pc)! - 1);
+        const lock = muteRest || this.strandsMute(current, played);
+        if ((fret === null || !lock) && handFits(current, n)) {
+          const pc = fret === null ? null : mod12(this.tuning.midi[idx] + fret);
+          if (pc !== null) counts[pc]++;
+          const pending = fret !== null ? 0 : played > 0 ? pendingMutes + 1 : 0;
+          const first = firstSounding < 0 && fret !== null ? idx : firstSounding;
+          walk(idx + 1, played + (pc === null ? 0 : 1), lock, pending, interior, first);
+          if (pc !== null) counts[pc]--;
+        }
         current.pop();
       }
     };
-    walk(0, 0);
+    walk(0, 0, false, 0, 0, -1);
   }
 
-  private distinctChordTones(counts: ReadonlyMap<number, number>): number {
+  private strandsMute(frets: Frets, playedBefore: number): boolean {
+    const last = frets.length - 1;
+    if (last < 1 || frets[last - 1] !== null) return false;
+    if (playedBefore === 0) return false;
+    const below = last >= 2 ? frets[last - 2] : null;
+    const above = frets[last];
+    return !(below !== null && below > 0) && !(above !== null && above > 0);
+  }
+
+  private distinctChordTones(counts: Int32Array): number {
     let distinct = 0;
-    for (const [pc, count] of counts) if (count > 0 && this.chordPcs.has(pc)) distinct++;
+    for (const pc of this.chordPcs) if (counts[pc] > 0) distinct++;
     return distinct;
   }
 

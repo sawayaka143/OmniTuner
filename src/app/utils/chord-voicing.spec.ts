@@ -4,6 +4,7 @@ import { parseChord, parseTuning, ParsedChord, ParsedTuning } from './chord-theo
 import { DEFAULT_VOICING_COUNT, MAX_VOICING_COUNT } from '../data/chord-voicing.constants';
 import {
   analyseFingering,
+  handFits,
   isNarrowingOf,
   requiredExtensions,
   requiredPitchClasses,
@@ -251,6 +252,32 @@ describe('analyseFingering', () => {
   });
 });
 
+describe('handFits', () => {
+  it('accepts prefixes a hand can hold', () => {
+    expect(handFits([1, 3, 3, 2, 1, 1], 6)).toBe(true);
+    expect(handFits([5, 5, 5, 5, 5, 5], 6)).toBe(true);
+    expect(handFits([3, null, null], 6)).toBe(true);
+    expect(handFits([1, 6], 6)).toBe(true);
+  });
+
+  it('rejects spans past four frets without the thumb', () => {
+    expect(handFits([null, 1, 6], 6)).toBe(false);
+  });
+
+  it('rejects prefixes that need five fingers', () => {
+    expect(handFits([1, 2, 3, 4, 5], 6)).toBe(false);
+  });
+
+  it('rejects a thumb above the hand or too far below it', () => {
+    expect(handFits([6, 1], 6)).toBe(false);
+    expect(handFits([1, 10], 6)).toBe(false);
+  });
+
+  it('rejects a thumb stretch on shapes with fewer than four strings', () => {
+    expect(handFits([1, 6], 3)).toBe(false);
+  });
+});
+
 describe('re-entrant tunings', () => {
   const ukulele = parseTuning('G4 C4 E4 A4');
   if (!ukulele.ok) throw new Error('failed to parse ukulele tuning');
@@ -319,6 +346,35 @@ describe('searchChord', () => {
     if (!seven.ok) throw new Error('parse failed');
     const shapes = searchChord(seven.tuning, chord('C'));
     expect(shapes.length).toBeGreaterThan(0);
+  });
+
+  it('searches extended-range tunings', () => {
+    const eight = parseTuning('F#1 B1 E2 A2 D3 G3 B3 E4');
+    if (!eight.ok) throw new Error('parse failed');
+    for (const symbol of ['C', 'Cmaj13', 'C13#11']) {
+      expect(searchChord(eight.tuning, chord(symbol)).length, symbol).toBeGreaterThan(0);
+    }
+  }, 20_000);
+
+  it('keeps every shape on a 12-string tuning within eight adjacent strings', () => {
+    const twelve = parseTuning('E1 A1 D2 G2 C3 F3 A#3 D#4 G#4 C#5 F#5 B5');
+    if (!twelve.ok) throw new Error('parse failed');
+    const shapes = searchChord(twelve.tuning, chord('C'));
+    expect(shapes.length).toBeGreaterThan(0);
+    for (const shape of shapes) {
+      const strings = shape.sounding.map((note) => note.stringIndex);
+      expect(Math.max(...strings) - Math.min(...strings)).toBeLessThan(8);
+    }
+  });
+
+  it('never returns more than two muted strings inside a shape', () => {
+    for (const symbol of ['C', 'G7', 'Dm7b5', 'E13']) {
+      for (const shape of searchChord(tuning, chord(symbol), MAX_VOICING_COUNT)) {
+        const strings = shape.sounding.map((note) => note.stringIndex);
+        const interior = Math.max(...strings) - Math.min(...strings) + 1 - strings.length;
+        expect(interior, JSON.stringify(shape.frets)).toBeLessThanOrEqual(2);
+      }
+    }
   });
 
   it('prefers the open-position C shape over a high barre C', () => {
