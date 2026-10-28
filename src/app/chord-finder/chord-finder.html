@@ -200,7 +200,16 @@
           role="region"
           aria-label="Generated voicing output"
           aria-live="polite"
+          [class.searching]="searchProgress()"
         >
+          @if (searchProgress(); as progress) {
+            <div class="search-status">
+              <div class="search-pill" role="status">
+                <span class="search-spinner" aria-hidden="true"></span>
+                Finding voicings · {{ progress.done }} of {{ progress.total }} chords
+              </div>
+            </div>
+          }
           @if (results()) {
             @if (detectedKey()) {
               <div class="key-row">

@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, PendingTasks, signal } from '@angular/core';
 import { ScalePreferences } from '../services/scale-preferences';
 import { InstrumentRegistry } from '../services/instrument-registry';
 import { Instrument } from '../models/instrument.model';
@@ -17,7 +17,8 @@ import {
   parseTuning,
   pcName,
 } from '../utils/chord-theory';
-import { searchChord, VoicingShape } from '../utils/chord-voicing';
+import { VoicingShape } from '../utils/chord-voicing';
+import { VoicingSearch } from './voicing-search';
 import { MAX_VOICING_COUNT, MIN_VOICING_COUNT } from '../data/chord-voicing.constants';
 import { DiagramLabelMode, NeckDiagram } from './neck-diagram/neck-diagram';
 import { KeyFinder } from './key-finder/key-finder';
@@ -71,6 +72,10 @@ export interface TabLine {
 export class ChordFinder {
   private readonly preferences = inject(ScalePreferences);
   private readonly registry = inject(InstrumentRegistry);
+  private readonly voicingSearch = inject(VoicingSearch);
+  private readonly pendingTasks = inject(PendingTasks);
+
+  protected readonly searchProgress = this.voicingSearch.progress;
 
   protected readonly preferencesState = this.preferences.state;
   protected readonly accentInk = computed(() => textColorOn(this.preferencesState().accent));
@@ -151,6 +156,7 @@ export class ChordFinder {
     const saved = this.readControlsWidth();
     if (saved !== null) this.applyControlsWidth(saved);
     if (this.preferencesState().chordRandomProgression) this.applyRandomPreset();
+    inject(DestroyRef).onDestroy(() => this.voicingSearch.cancel());
   }
 
   private pickRandomPreset() {
@@ -357,30 +363,28 @@ export class ChordFinder {
     const tokens = tokenizeProgression(this.progressionText());
     if (!tokens.length) return;
 
-    const validChords: ParsedChord[] = [];
-    for (const token of tokens) {
-      const p = parseChord(token);
-      if (p.ok) validChords.push(p.chord);
-    }
-    const dk = validChords.length
-      ? detectKey(validChords, { tuningFlats: parsed.tuning.flats })
-      : null;
+    const tuning = parsed.tuning;
+    const parses = tokens.map((token) => parseChord(token));
+    const chords = parses.map((parse) => (parse.ok ? parse.chord : null));
+    const validChords = chords.filter((chord): chord is ParsedChord => chord !== null);
+    const dk = validChords.length ? detectKey(validChords, { tuningFlats: tuning.flats }) : null;
+    const useFlats =
+      validChords.some((c) => c.flats) || tuning.flats || (dk ? flatsForPc(dk.tonicPc) : false);
 
-    const chords: ChordEntry[] = tokens.map((token) => {
-      const parse = parseChord(token);
-      if (!parse.ok) return { token, parse, shapes: [], badge: null };
-      const shapes = searchChord(parsed.tuning, parse.chord, MAX_VOICING_COUNT);
-      let badge: DiatonicBadge | null = null;
-      if (dk) {
-        const useFlats =
-          validChords.some((c) => c.flats) || parsed.tuning.flats || flatsForPc(dk.tonicPc);
-        badge = computeBadgeForPc(parse.chord, dk.tonicPc, dk.mode, parsed.tuning.flats, useFlats);
-      }
-      return { token, parse, shapes, badge };
+    void this.pendingTasks.run(async () => {
+      const shapes = await this.voicingSearch.search(tuning, chords, MAX_VOICING_COUNT);
+      if (!shapes) return;
+      const entries: ChordEntry[] = tokens.map((token, i) => {
+        const parse = parses[i];
+        if (!parse.ok) return { token, parse, shapes: [], badge: null };
+        const badge = dk
+          ? computeBadgeForPc(parse.chord, dk.tonicPc, dk.mode, tuning.flats, useFlats)
+          : null;
+        return { token, parse, shapes: shapes[i], badge };
+      });
+      this.alternativesOpen.set(false);
+      this.generated.set({ tuning, detectedKey: dk, chords: entries });
     });
-
-    this.alternativesOpen.set(false);
-    this.generated.set({ tuning: parsed.tuning, detectedKey: dk, chords });
   }
 
   protected toggleAlternatives(): void {
@@ -392,6 +396,7 @@ export class ChordFinder {
   }
 
   protected clearResults(): void {
+    this.voicingSearch.cancel();
     this.generated.set(null);
   }
 
