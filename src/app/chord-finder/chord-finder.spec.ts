@@ -117,7 +117,7 @@ describe('ChordFinder', () => {
     expect(el().querySelectorAll('.chord-card').length).toBe(2);
     expect(el().querySelectorAll('.chord-card .card-note.error').length).toBe(0);
 
-    expect(el().textContent).toContain('tones C E G A# D (F) (A)');
+    expect(el().textContent).toContain('tones C E G A# D (A)');
   });
 
   it('generates a single card for slash chords and parenthesized alterations', async () => {

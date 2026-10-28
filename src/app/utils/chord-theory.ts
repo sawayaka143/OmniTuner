@@ -56,7 +56,7 @@ export const CHORD_FORMULAS: Readonly<Record<string, ChordFormula>> = {
   maj7: { intervals: [0, 4, 7, 11] },
   maj9: { intervals: [0, 4, 7, 11, 14] },
   maj11: { intervals: [0, 4, 7, 11, 14, 17], optional: [17] },
-  maj13: { intervals: [0, 4, 7, 11, 14, 17, 21], optional: [17, 21] },
+  maj13: { intervals: [0, 4, 7, 11, 14, 21], optional: [21] },
   'maj7#11': { intervals: [0, 4, 7, 11, 18], optional: [18] },
   'maj13#11': { intervals: [0, 4, 7, 11, 14, 18, 21], optional: [18, 21] },
   'maj7#5': { intervals: [0, 4, 8, 11] },
@@ -65,7 +65,7 @@ export const CHORD_FORMULAS: Readonly<Record<string, ChordFormula>> = {
   '7': { intervals: [0, 4, 7, 10] },
   '9': { intervals: [0, 4, 7, 10, 14] },
   '11': { intervals: [0, 4, 7, 10, 14, 17], optional: [17] },
-  '13': { intervals: [0, 4, 7, 10, 14, 17, 21], optional: [17, 21] },
+  '13': { intervals: [0, 4, 7, 10, 14, 21], optional: [21] },
   '7b5': { intervals: [0, 4, 6, 10] },
   '7#5': { intervals: [0, 4, 8, 10] },
   '7b9': { intervals: [0, 4, 7, 10, 13] },
@@ -75,6 +75,7 @@ export const CHORD_FORMULAS: Readonly<Record<string, ChordFormula>> = {
   '9#11': { intervals: [0, 4, 7, 10, 14, 18], optional: [18] },
   '13b9': { intervals: [0, 4, 7, 10, 13, 21], optional: [21] },
   '7#9b13': { intervals: [0, 4, 7, 10, 15, 20], optional: [20] },
+  '7alt': { intervals: [0, 4, 10, 15, 20] },
 
   min: { intervals: [0, 3, 7] },
   m6: { intervals: [0, 3, 7, 9] },
@@ -181,7 +182,9 @@ const QUALITY_ALIASES: Readonly<Record<string, string>> = {
   'maj9#5': 'maj9#5',
   'M9#5': 'maj9#5',
   'Δ9#5': 'maj9#5',
-  '9+5': 'maj9#5',
+  '9+5': '9#5',
+  aug9: '9#5',
+  '+9': '9#5',
   maj6: '6',
   '6/9': '6/9',
   '69': '6/9',
@@ -203,6 +206,8 @@ const QUALITY_ALIASES: Readonly<Record<string, string>> = {
   '9#11': '9#11',
   '13b9': '13b9',
   '7#9b13': '7#9b13',
+  '7alt': '7alt',
+  alt: '7alt',
 
   m11: 'm11',
   m13: 'm13',
@@ -236,6 +241,7 @@ const QUALITY_ALIASES: Readonly<Record<string, string>> = {
   add11: 'add11',
   add4: 'add11',
   madd9: 'madd9',
+  madd2: 'madd9',
   madd11: 'madd11',
   madd4: 'madd11',
   '+maj7': 'maj7#5',
@@ -357,14 +363,42 @@ const stripParens = (raw: string): string | null => {
   return depth === 0 ? out : null;
 };
 
-const normalizeQuality = (raw: string): string | null => {
+const MAJOR_M_RE = /M(?![aAiI])/g;
+const BARE_DELTA_RE = /(?:Δ|delta)(?!\d)/g;
+const DELTA_RE = /Δ|delta/g;
+const MINOR_WORD_RE = /^min?/;
+const MINUS_MINOR_RE = /^-(?!5)/;
+const SEVEN_MAJOR_RE = /^(m?)7maj/;
+
+function canonicalQuality(raw: string): string | null {
   const stripped = stripParens(raw.replace(/♯/g, '#').replace(/♭/g, 'b'));
-  return stripped === null ? null : stripped.toLowerCase();
+  if (stripped === null) return null;
+  return stripped
+    .replace(BARE_DELTA_RE, 'maj7')
+    .replace(DELTA_RE, 'maj')
+    .replace(MAJOR_M_RE, 'maj')
+    .toLowerCase()
+    .replace(MINOR_WORD_RE, 'm')
+    .replace(MINUS_MINOR_RE, 'm')
+    .replace(SEVEN_MAJOR_RE, '$1maj7');
+}
+
+const CANONICAL_ALIASES: ReadonlyMap<string, string> = new Map(
+  Object.entries(QUALITY_ALIASES).map(([key, quality]) => [canonicalQuality(key) ?? key, quality]),
+);
+
+const ALTERATION_RE =
+  /(?:b|#)?(?:5|9|11|13)|[b#]6|add(?:[b#]?(?:9|11|13)|2|4|6)|sus(?:2|4)?|[+-]5/g;
+
+const CANONICAL_TOKENS: Readonly<Record<string, string>> = {
+  '+5': '#5',
+  '-5': 'b5',
+  sus: 'sus4',
+  add2: 'add9',
+  add4: 'add11',
 };
 
-const ALTERATION_RE = /(?:b|#)?(?:5|9|11|13)|[b#]6|add(?:9|11)|sus(?:2|4)?|[+-]5/g;
-
-const CANONICAL_TOKENS: Readonly<Record<string, string>> = { '+5': '#5', '-5': 'b5', sus: 'sus4' };
+const IMPLIED_SEVENTH_AFTER_AUG = new Set(['9', '11', '13']);
 
 interface ComposedQuality {
   readonly key: string;
@@ -373,7 +407,7 @@ interface ComposedQuality {
 }
 
 function composeQuality(raw: string): ComposedQuality | null {
-  const normalized = normalizeQuality(raw);
+  const normalized = canonicalQuality(raw);
   if (!normalized) return null;
 
   let baseKey: string | null = null;
@@ -392,9 +426,11 @@ function composeQuality(raw: string): ComposedQuality | null {
     } else if (normalized.startsWith('sus')) {
       baseKey = 'sus4';
       prefixLength = 3;
+    } else {
+      baseKey = 'maj';
+      prefixLength = 0;
     }
   }
-  if (baseKey === null) return null;
 
   const base = CHORD_FORMULAS[baseKey];
   const remainder = normalized.slice(prefixLength);
@@ -428,6 +464,11 @@ function composeQuality(raw: string): ComposedQuality | null {
     if (!optional.includes(value)) optional.push(value);
   };
 
+  if (baseKey === 'aug' && IMPLIED_SEVENTH_AFTER_AUG.has(tokens[0])) {
+    add(10);
+    if (tokens[0] !== '9') add(14);
+  }
+
   for (const token of tokens) {
     switch (token) {
       case 'b5':
@@ -456,15 +497,23 @@ function composeQuality(raw: string): ComposedQuality | null {
         add(14);
         break;
       case '11':
+        drop(18);
+        removeOptional(18);
         addOptional(17);
         break;
       case '#11':
+        drop(17);
+        removeOptional(17);
         addOptional(18);
         break;
       case '13':
+        drop(20);
+        removeOptional(20);
         addOptional(21);
         break;
       case 'b13':
+        drop(21);
+        removeOptional(21);
         addOptional(20);
         break;
       case 'b6':
@@ -485,10 +534,30 @@ function composeQuality(raw: string): ComposedQuality | null {
         add(5);
         break;
       case 'add9':
+      case 'add2':
         add(14);
         break;
+      case 'addb9':
+        add(13);
+        break;
+      case 'add#9':
+        add(15);
+        break;
       case 'add11':
+      case 'add4':
         addOptional(17);
+        break;
+      case 'add#11':
+        add(18);
+        break;
+      case 'add6':
+        add(9);
+        break;
+      case 'add13':
+        add(21);
+        break;
+      case 'addb13':
+        add(20);
         break;
       default:
         break;
@@ -525,11 +594,8 @@ export function parseChord(raw: string): ChordParseResult {
   if (!match) return { ok: false, symbol, error: `'${symbol}' is not a chord symbol` };
   const rootPc = pcOf(match[1], match[2]);
   const qualityRaw = match[3];
-  const hasAlias = (key: string): boolean =>
-    Object.prototype.hasOwnProperty.call(QUALITY_ALIASES, key);
-  let quality: string | undefined;
-  if (hasAlias(qualityRaw)) quality = QUALITY_ALIASES[qualityRaw];
-  else if (hasAlias(qualityRaw.toLowerCase())) quality = QUALITY_ALIASES[qualityRaw.toLowerCase()];
+  const canonical = canonicalQuality(qualityRaw);
+  let quality = canonical === null ? undefined : CANONICAL_ALIASES.get(canonical);
   let formula: ChordFormula | undefined;
   if (quality) formula = CHORD_FORMULAS[quality];
   if (!formula) {

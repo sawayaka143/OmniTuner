@@ -93,9 +93,8 @@ describe('parseChord', () => {
 
     const thirteen = parseChord('C13');
     expect(thirteen.ok && thirteen.chord.quality).toBe('13');
-    expect(thirteen.ok && thirteen.chord.pcs).toEqual([0, 4, 7, 10, 2, 5, 9]);
-
-    expect(thirteen.ok && thirteen.chord.optionalPcs).toEqual([5, 9]);
+    expect(thirteen.ok && thirteen.chord.pcs).toEqual([0, 4, 7, 10, 2, 9]);
+    expect(thirteen.ok && thirteen.chord.optionalPcs).toEqual([9]);
 
     const b13 = parseChord('C7b13');
     expect(b13.ok && b13.chord.quality).toBe('7b13');
@@ -217,6 +216,87 @@ describe('parseChord', () => {
 
     const plain = parseChord('C');
     expect(plain.ok && plain.chord.bassPc).toBeUndefined();
+  });
+
+  const intervalsOf = (symbol: string): readonly number[] | null => {
+    const result = parseChord(symbol);
+    return result.ok ? result.chord.intervals : null;
+  };
+  const qualityOf = (symbol: string): string | null => {
+    const result = parseChord(symbol);
+    return result.ok ? result.chord.quality : null;
+  };
+
+  it('reads a capital M as major and a lowercase m as minor', () => {
+    expect(intervalsOf('CM6')).toEqual([0, 4, 7, 9]);
+    expect(intervalsOf('CM7b5')).toEqual([0, 4, 6, 11]);
+    expect(intervalsOf('CM9#11')).toEqual([0, 4, 7, 11, 14, 18]);
+    expect(qualityOf('CM7')).toBe('maj7');
+    expect(intervalsOf('Cm6')).toEqual([0, 3, 7, 9]);
+    expect(qualityOf('Cm7b5')).toBe('m7b5');
+    expect(qualityOf('CmM7')).toBe('mMaj7');
+  });
+
+  it('accepts spelled-out and European qualities', () => {
+    expect(qualityOf('Cmin7')).toBe('m7');
+    expect(qualityOf('Cmin7b5')).toBe('m7b5');
+    expect(qualityOf('Cmi7')).toBe('m7');
+    expect(qualityOf('C-7')).toBe('m7');
+    expect(qualityOf('C-')).toBe('min');
+    expect(qualityOf('C7M')).toBe('maj7');
+    expect(qualityOf('Cm7M')).toBe('mMaj7');
+    expect(qualityOf('CMaj7')).toBe('maj7');
+  });
+
+  it('replaces natural 11ths and 13ths with altered ones', () => {
+    expect(intervalsOf('C13#11')).toEqual([0, 4, 7, 10, 14, 18, 21]);
+    expect(intervalsOf('Cmaj13')).toEqual([0, 4, 7, 11, 14, 21]);
+    expect(intervalsOf('C9b13')).toEqual([0, 4, 7, 10, 14, 20]);
+    expect(intervalsOf('C13b13')).toEqual([0, 4, 7, 10, 14, 20]);
+    expect(intervalsOf('C9#11(11)')).toEqual([0, 4, 7, 10, 14, 17]);
+  });
+
+  it('leaves the natural 11 out of major and dominant 13ths', () => {
+    for (const symbol of ['C13', 'Cmaj13', 'C13#11', 'CM13']) {
+      expect(intervalsOf(symbol), symbol).not.toContain(17);
+    }
+    expect(intervalsOf('Cm13')).toContain(17);
+  });
+
+  it.each(['Caug9', 'C+9', 'C9+5', 'C9#5', 'Caug(9)'])('keeps the b7 in %s', (symbol) => {
+    expect(intervalsOf(symbol)).toEqual([0, 4, 8, 10, 14]);
+  });
+
+  it('keeps aug(add9) a triad and gives aug13 its seventh and ninth', () => {
+    expect(intervalsOf('Caug(add9)')).toEqual([0, 4, 8, 14]);
+    expect(intervalsOf('Caug11')).toEqual([0, 4, 8, 10, 14, 17]);
+    expect(intervalsOf('Caug13')).toEqual([0, 4, 8, 10, 14, 21]);
+  });
+
+  it('parses altered dominants', () => {
+    expect(intervalsOf('C7alt')).toEqual([0, 4, 10, 15, 20]);
+    expect(qualityOf('C7alt')).toBe('7alt');
+    expect(qualityOf('Calt')).toBe('7alt');
+  });
+
+  it('parses added tones', () => {
+    expect(intervalsOf('Cadd13')).toEqual([0, 4, 7, 21]);
+    expect(intervalsOf('Cadd#11')).toEqual([0, 4, 7, 18]);
+    expect(intervalsOf('Cadd2')).toEqual([0, 4, 7, 14]);
+    expect(intervalsOf('C7add4')).toEqual([0, 4, 7, 10, 17]);
+    expect(intervalsOf('C7add6')).toEqual([0, 4, 7, 9, 10]);
+    expect(intervalsOf('Cmadd2')).toEqual([0, 3, 7, 14]);
+    expect(qualityOf('Cmadd2')).toBe('madd9');
+    expect(intervalsOf('C7addb9')).toEqual([0, 4, 7, 10, 13]);
+    expect(intervalsOf('C7add#9')).toEqual([0, 4, 7, 10, 15]);
+    expect(intervalsOf('C7addb13')).toEqual([0, 4, 7, 10, 20]);
+    expect(qualityOf('C7add2')).toBe('7add9');
+    expect(qualityOf('C7add4')).toBe('7add11');
+  });
+
+  it('parses a bare list of alterations on a major triad', () => {
+    expect(intervalsOf('C(b9)')).toEqual([0, 4, 7, 13]);
+    expect(intervalsOf('C(#11)')).toEqual([0, 4, 7, 18]);
   });
 
   it('rejects unknown qualities and non-symbols', () => {

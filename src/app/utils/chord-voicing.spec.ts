@@ -408,6 +408,22 @@ describe('searchChord', () => {
     }
   });
 
+  it('ranks the common altered grip first for C7alt', () => {
+    expect(fretsOf('C7alt')[0]).toBe(JSON.stringify([null, 3, 2, 3, 4, 4]));
+  });
+
+  it.each(['C13', 'Cmaj13', 'C13#11'])(
+    'leaves the natural 11 out of every %s voicing',
+    (symbol) => {
+      const parsed = chord(symbol);
+      const eleventh = (parsed.rootPc + 5) % 12;
+      for (const shape of searchChord(tuning, parsed, MAX_VOICING_COUNT)) {
+        const pcs = new Set(shape.sounding.map((n) => n.midi % 12));
+        expect(pcs.has(eleventh), JSON.stringify(shape.frets)).toBe(false);
+      }
+    },
+  );
+
   it('voices two-note power chords instead of pruning every candidate', () => {
     for (const symbol of ['C5', 'G5', 'E5']) {
       const shapes = searchChord(tuning, chord(symbol));
