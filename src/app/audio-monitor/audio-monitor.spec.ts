@@ -4,7 +4,8 @@ import { ImpactStyle, NotificationType } from '@capacitor/haptics';
 import { AudioCaptureService } from '../services/audio-capture-service';
 import { HAPTICS_PLUGIN } from '../services/haptics.service';
 import { SCALE_AUDIO_CONTEXT_FACTORY } from '../services/scale-playback';
-import { TunerPreferences } from '../services/tuner-preferences';
+import { INSTRUMENT_REGISTRY_STORAGE } from '../services/instrument-registry';
+import { TUNER_PREFERENCES_STORAGE, TunerPreferences } from '../services/tuner-preferences';
 import { AudioMonitor } from './audio-monitor';
 
 class MockWorker {
@@ -34,6 +35,8 @@ describe('AudioMonitor', () => {
       providers: [
         { provide: HAPTICS_PLUGIN, useValue: { impact, notification } },
         { provide: SCALE_AUDIO_CONTEXT_FACTORY, useValue: () => null },
+        { provide: TUNER_PREFERENCES_STORAGE, useValue: null },
+        { provide: INSTRUMENT_REGISTRY_STORAGE, useValue: null },
       ],
     });
     TestBed.inject(TunerPreferences).setAutoStart(true);
